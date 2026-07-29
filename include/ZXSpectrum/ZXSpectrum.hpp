@@ -29,8 +29,13 @@ namespace ZXSPECTRUM
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		// The speed of the processor...
-		static const unsigned int _CLOCK		= 3500000;	// 3.5 MHz
+		/** CPU clocks derived from the master crystal by the ULA. */
+		static const unsigned int _PALCLOCK		= 3500000;	// 14.000 MHz / 4
+		static const unsigned int _NTSCCLOCK	= 3527500;	// 14.110 MHz / 4
+
+		static unsigned int clockFor (VisualSystem vS)
+							{ return (vS == VisualSystem::_PAL
+								? _PALCLOCK : _NTSCCLOCK); }
 
 		SinclairZXSpectrum (
 			const MCHEmul::ASCIIToCodeConverter* cvs,

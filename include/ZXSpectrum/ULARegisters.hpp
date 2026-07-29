@@ -44,29 +44,41 @@ namespace ZXSPECTRUM
 		void setBorderColor (unsigned char bC)
 							{ _borderColor = bC; }
 
-		// The MIC Signal
-		bool MICSignal () const
-							{ return (_MICSignal); }
-		bool MICSignalChanged () const
-							{ return (_MICSignalChanged); }
-		bool peekMICSignalChanged () const
-							{ return (_MICSignalChanged.peekValue ()); }
-		inline void setMICSignal (bool cs);
+		// The MIC output signal
+		bool MICOutputSignal () const
+							{ return (_MICOutputSignal); }
+		bool MICOutputSignalChanged () const
+							{ return (_MICOutputSignalChanged); }
+		bool peekMICOutputSignalChanged () const
+							{ return (_MICOutputSignalChanged.peekValue ()); }
+		inline void setMICOutputSignal (bool cs);
 
-		// The EAR Signal
-		bool EARSignal () const
-							{ return (_EARSignal); }
-		bool EARSignalChanged () const
-							{ return (_EARSignalChanged); }
-		bool peekEARSignalChanged () const
-							{ return (_EARSignalChanged.peekValue ()); }
-		inline void setEARSignal (bool cs);
+		// The EAR output signal
+		bool EAROutputSignal () const
+							{ return (_EAROutputSignal); }
+		bool EAROutputSignalChanged () const
+							{ return (_EAROutputSignalChanged); }
+		bool peekEAROutputSignalChanged () const
+							{ return (_EAROutputSignalChanged.peekValue ()); }
+		inline void setEAROutputSignal (bool cs);
+
+		// The EAR input signal from the cassette
+		bool EARInputSignal () const
+							{ return (_EARInputSignal); }
+		bool EARInputSignalChanged () const
+							{ return (_EARInputSignalChanged); }
+		bool peekEARInputSignalChanged () const
+							{ return (_EARInputSignalChanged.peekValue ()); }
+		inline void setEARInputSignal (bool cs);
+
+		/** Value returned in D6 when reading port FE in the emulated Issue 3. */
+		bool EARReadSignal () const
+							{ return (_EAROutputSignal != _EARInputSignal); }
 
 		// The buzzer signal
 		bool buzzerSignal () const
 							{ return (_buzzerSignal); }
-		/** According with the status of the EAR and MIC signals. 
-			EAR affect directly, but when it doesn't change, the sound is managed by the MIC. */
+		/** Aligns the simplified digital buzzer with the signal that has just changed. */
 		inline void alignBuzzerSignal ();
 
 		// Info about the situation of the keyboard!
@@ -87,12 +99,13 @@ namespace ZXSPECTRUM
 
 		/**
 		  *	The name of the fields are: \n
-		  * The ones from the parent class +
-		  * BORDER		= Attribute: The color or the border. \n
-		  *	MICST		= Attribute: Whether the MIC signal is activated. \n
-		  *	MIC			= Attribute: The value of the MIC signal \n
-		  *	EARST		= Attribute: Whether the EAR signal is activated. \n
-		  *	EAR			= Attribute: The value of the EAR signal.
+		  * The attributes and infostructures of the parent class, plus: \n
+		  * BORDER		= Attribute: The color of the border. \n
+		  *	MICOUT		= Attribute: The value of the MIC output signal. \n
+		  *	EAROUT		= Attribute: The value of the EAR output signal. \n
+		  *	EARIN		= Attribute: The value of the EAR input signal from the cassette. \n
+		  *	EARREAD		= Attribute: The value returned in D6 when reading port FE. \n
+		  *	BUZZER		= Attribute: The simplified digital buzzer level.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -111,14 +124,17 @@ namespace ZXSPECTRUM
 		private:
 		/** The border color. */
 		unsigned char _borderColor;
-		/** The MIC signal and the signal to indicate whether it has changed. */
-		bool _MICSignal;
-		MCHEmul::OBool _MICSignalChanged;
-		/** The EAR signal and the signal to indicate whether it has changed. */
-		bool _EARSignal;
-		MCHEmul::OBool _EARSignalChanged;
+		/** The MIC output signal and the signal to indicate whether it has changed. */
+		bool _MICOutputSignal;
+		MCHEmul::OBool _MICOutputSignalChanged;
+		/** The EAR output signal and the signal to indicate whether it has changed. */
+		bool _EAROutputSignal;
+		MCHEmul::OBool _EAROutputSignalChanged;
+		/** The cassette EAR input signal and the signal to indicate whether it has changed. */
+		bool _EARInputSignal;
+		MCHEmul::OBool _EARInputSignalChanged;
 		/** The buzzer signal.
-			It is not directly the EAR signal, but it is also affected by the MIC one. */
+			It is a simplified digital representation of the analogue output network. */
 		bool _buzzerSignal;
 		/** Where the status of the keyboard matrix is kept. */
 		std::vector <MCHEmul::UByte> _keyboardStatus;
@@ -134,34 +150,45 @@ namespace ZXSPECTRUM
 	};
 
 	// ---
-	inline void ULARegisters::setMICSignal (bool cs)
+	inline void ULARegisters::setMICOutputSignal (bool cs)
 	{ 
-		if (_MICSignal != cs) 
+		if (_MICOutputSignal != cs)
 		{ 
-			_MICSignal = cs;
+			_MICOutputSignal = cs;
 			
-			_MICSignalChanged = true; 
+			_MICOutputSignalChanged = true;
 		}
 	}
 
 	// ---
-	inline void ULARegisters::setEARSignal (bool cs)
+	inline void ULARegisters::setEAROutputSignal (bool cs)
 	{ 
-		if (_EARSignal != cs) 
+		if (_EAROutputSignal != cs)
 		{ 
-			_EARSignal = cs;
+			_EAROutputSignal = cs;
 			
-			_EARSignalChanged = true;
+			_EAROutputSignalChanged = true;
 		} 
+	}
+
+	// ---
+	inline void ULARegisters::setEARInputSignal (bool cs)
+	{
+		if (_EARInputSignal != cs)
+		{
+			_EARInputSignal = cs;
+
+			_EARInputSignalChanged = true;
+		}
 	}
 
 	// ---
 	inline void ULARegisters::alignBuzzerSignal ()
 	{
-		if (_EARSignalChanged) _buzzerSignal = _EARSignal;
-		else if (_MICSignalChanged.peekValue ()) _buzzerSignal = _MICSignal;
-		// Here it is used peekMICSignalChanged () to avoid changing the value
-		// Because the simulate method of ULA uses the chan ge to send and event (usually to the datasette)!
+		if (_EARInputSignalChanged) _buzzerSignal = _EARInputSignal;
+		else if (_EAROutputSignalChanged) _buzzerSignal = _EAROutputSignal;
+		else if (_MICOutputSignalChanged.peekValue ()) _buzzerSignal = _MICOutputSignal;
+		// MIC is only peeked because ULA::simulate consumes the change to notify the cassette.
 	}
 }
 

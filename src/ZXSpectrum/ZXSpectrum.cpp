@@ -23,7 +23,7 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (
 		 new ZXSPECTRUM::Memory (cfg, t, lang), // Depending on the configuration, the type, and the languaje!
 		 ZXSPECTRUM::SinclairZXSpectrum::standardDevices (vS),
 		 loadSystemVariablesFrom ("ZXSpectrumSysVars.txt"),
-		 _CLOCK,
+		 clockFor (vS),
 		 cvs,
 		 { }, { }, // The ZXSpectrum, emulation has been done without neither Buses nor Wires!
 		 { { "Name", "ZXSpectrum" },
@@ -129,7 +129,7 @@ void ZXSPECTRUM::SinclairZXSpectrum::specificComputerCycle ()
 	// A instruction (just executed) can access to the VRAM in different moments
 
 	// FIRST:
-	// If the instrucción is located in the video memory,
+	// If the instrucciÃ³n is located in the video memory,
 	// the access to the VRAM happens every time a byte of the definition of the instruction is loaded...
 	// So the number of accesses will be equal to the number of bytes loaded!
 	// The address bus to load the byte is accessed in every first T cycle of every M cycles
@@ -148,7 +148,7 @@ void ZXSPECTRUM::SinclairZXSpectrum::specificComputerCycle ()
 	}
 
 	// Another possibility would be the refresh of the RAM, but is done by the ULA
-	// ...and as it manages the contention possibilitiesm it is not needed to take those here into account!
+	// ...and as it manages the contention possibilities, it is not needed to take those here into account!
 	
 	// SECOND:
 	// The instruction itself can access the memory (LD, ST,...)
@@ -210,8 +210,8 @@ MCHEmul::Chips ZXSPECTRUM::SinclairZXSpectrum::standardChips (ZXSPECTRUM::Sincla
 	ZXSPECTRUM::ULA* ula = nullptr;
 	result.insert (MCHEmul::Chips::value_type (ZXSPECTRUM::ULA::_ID, 
 		ula = ((vS == ZXSPECTRUM::SinclairZXSpectrum::VisualSystem::_PAL) // Will depend on the type of screen...
-			? (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_PAL (ZXSPECTRUM::Memory::_ULA_VIEW, _CLOCK)
-			: (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_NTSC (ZXSPECTRUM::Memory::_ULA_VIEW, _CLOCK))));
+			? (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_PAL (ZXSPECTRUM::Memory::_ULA_VIEW, clockFor (vS))
+			: (ZXSPECTRUM::ULA*) new ZXSPECTRUM::ULA_NTSC (ZXSPECTRUM::Memory::_ULA_VIEW, clockFor (vS)))));
 
 	// ...and the simulation of the sound function within the ULA!
 	result.insert (MCHEmul::Chips::value_type (ZXSPECTRUM::ULA::SoundFunction::_ID, ula -> soundFunction ()));

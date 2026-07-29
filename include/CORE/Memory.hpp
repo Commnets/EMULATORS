@@ -855,7 +855,7 @@ namespace MCHEmul
 							{ _tracker.start (); }
 		/** To get the last accesses to the memory. 
 			Notice that this method generates a copy, so it can be slow... */
-		MemoryAccesses lasMemoryAccesses () const
+		MemoryAccesses lastMemoryAccesses () const
 							{ return (_tracker.lastAccesses ()); }
 
 		// Fill up the memory...

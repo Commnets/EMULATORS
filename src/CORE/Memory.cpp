@@ -497,6 +497,9 @@ void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const MCHEmul::UByte& 
 void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 { 
 	// If there are more bytes to set than max available nothing is done...
+	if (v.size () > _numPositions)
+		return;
+
 	int dtT = _minAddress.distanceWith (a);
 	if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
 	{

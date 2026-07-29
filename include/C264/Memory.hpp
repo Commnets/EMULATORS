@@ -269,6 +269,8 @@ namespace C264
 			In C264 the memory can be configured to have some RAM zones no directly accesible in writting like IO/TED. \n
 			This method is to load a data block just in the memory RAM. */
 		void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
+		/** Verify a data block against RAM, including the zones hidden by IO/TED. */
+		bool verifyDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
 
 		protected:
 		virtual MCHEmul::Stack* lookForStack () override

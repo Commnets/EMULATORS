@@ -1,5 +1,6 @@
 #include <ZXSpectrum/Screen.hpp>
 #include <ZXSpectrum/ULA.hpp>
+#include <ZXSpectrum/ZXSpectrum.hpp>
 
 // ---
 ZXSPECTRUM::Screen::Screen (double hz, int w, int h, const MCHEmul::Attributes& attrs)
@@ -53,23 +54,31 @@ void ZXSPECTRUM::Screen::drawAdditional ()
 
 // ---
 ZXSPECTRUM::ScreenNTSC::ScreenNTSC ()
-	: ZXSPECTRUM::Screen (60.03f, 
+	: ZXSPECTRUM::Screen (
+		ZXSPECTRUM::ULA_NTSC::frameFrequency (
+			ZXSPECTRUM::SinclairZXSpectrum::_NTSCCLOCK),
 		(int) ZXSPECTRUM::ULA_NTSC::_HRASTERDATA.visiblePositions (), 
 		(int) ZXSPECTRUM::ULA_NTSC::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen NTSC" },
 		  { "Type", "Output" },
-		  { "Frequency", "60.03Hz" } })
+		  { "Frequency",
+			std::to_string (ZXSPECTRUM::ULA_NTSC::frameFrequency (
+				ZXSPECTRUM::SinclairZXSpectrum::_NTSCCLOCK)) + "Hz" } })
 { 
 	// Nothing else to do...
 }
 
 ZXSPECTRUM::ScreenPAL::ScreenPAL ()
-	: ZXSPECTRUM::Screen (50.04f,
+	: ZXSPECTRUM::Screen (
+		ZXSPECTRUM::ULA_PAL::frameFrequency (
+			ZXSPECTRUM::SinclairZXSpectrum::_PALCLOCK),
 		(int) ZXSPECTRUM::ULA_PAL::_HRASTERDATA.visiblePositions (), 
 		(int) ZXSPECTRUM::ULA_PAL::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen PAL" },
 		  { "Type", "Output" },
-		  { "Frequency", "50.04Hz" } })
+		  { "Frequency",
+			std::to_string (ZXSPECTRUM::ULA_PAL::frameFrequency (
+				ZXSPECTRUM::SinclairZXSpectrum::_PALCLOCK)) + "Hz" } })
 { 
 	// Nothing else to do
 }

@@ -20,6 +20,7 @@ Use the framework's existing idioms deliberately:
 - For emulator methods that implement protocol, hardware, DOS, filesystem, media-layout, or state-machine behavior, add moderate in-method comments explaining why state transitions, status codes, buffer resets, compatibility choices, traversal guards, and data mutations exist.
 - For long or functionally complex methods, comment the main phases with a density comparable to the existing `buildAnswerToDirCommand`: validation, syntax parsing, linked-structure traversal, cycle/corruption guards, allocation/mutation, status/EOF decisions, and compatibility limits.
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `static_cast <T>`, `_ptr -> method ()`, `return (value);`.
+- Use the fundamental integer types already established by the framework, such as `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`. Do not introduce fixed-width aliases from `<cstdint>` such as `int8_t`, `uint16_t`, `int32_t`, or `int64_t`. Use `size_t` for sizes, memory positions, and indices into arrays or containers.
 - Put non-trivial method implementations in `.cpp` and separate them with `// ---`.
 - Define extremely short methods, consisting of a single instruction or expression, directly with their declaration inside the class and omit the `inline` keyword.
 - For short methods that are slightly longer than one instruction or a couple of lines, declare them `inline` inside the class and place their definition immediately after the class definition in the same header.

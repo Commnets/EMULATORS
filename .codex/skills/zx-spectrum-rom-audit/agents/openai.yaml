@@ -1,0 +1,4 @@
+interface:
+  display_name: "ZX Spectrum ROM Audit"
+  short_description: "Validate 48K ROM and firmware contracts"
+  default_prompt: "Use $zx-spectrum-rom-audit to audit ZX Spectrum 48K ROM-visible behavior and emulator traps."

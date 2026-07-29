@@ -11,7 +11,7 @@ const COMMODORE::Datasette1530Injection::Definition
 	MCHEmul::Address ({ 0x00, 0x00 }, false), // Not used in C264
 	0x0000,									  // Not used in C264
 	MCHEmul::Address ({ 0xb4, 0x00 }, false), // Pointer (0xb4, 0xb5) to the beginning of the RAM being loaded...
-	MCHEmul::Address ({ 0x9d, 0x00 }, false), // Pointer (0xae, 0xaf) to the end of the load operation...
+	MCHEmul::Address ({ 0x9d, 0x00 }, false), // Pointer (0x9d, 0x9e) to the end of the load operation...
 	MCHEmul::Address ({ 0x27, 0x05 }, false), // Keyboard buffer start address...
 	MCHEmul::Address ({ 0xef, 0x00 }, false), // Number of characters in the keyboard buffer... (to simulate "run")
 	// Traps...
@@ -28,7 +28,7 @@ const COMMODORE::Datasette1530Injection::Definition
 			COMMODORE::Datasette1530Injection::_RECEIVEDATATRAP,
 			"Receive",
 			MCHEmul::Address ({ 0x4b, 0xe7 }, false),
-			MCHEmul::Address ({ 0xc7, 0xe8 }, false),
+			MCHEmul::Address ({ 0xc8, 0xe8 }, false),
 			{ 0xba, 0x8e, 0xbe }
 		}
 	}
@@ -163,7 +163,6 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 
 	// Cleans up everthing...
 	cpu -> memoryRef () -> put (_definition._statusAddr, MCHEmul::UByte::_0);
-	cpu -> memoryRef () -> put (_definition._verifyFlagAddr, MCHEmul::UByte::_0);
 
 	// Before finishing, check whether STOP key was or not pressed
 	// before this trap wwas reached...
@@ -190,6 +189,18 @@ bool C264::Datasette1531Injection::executeFindHeaderTrap (MCHEmul::CPU* cpu)
 // ---
 bool C264::Datasette1531Injection::executeReceiveDataTrap (MCHEmul::CPU* cpu)
 {
+	// The receive trap can also be reached after an unsuccessful header search.
+	// Do not dereference the selected block unless it is still valid.
+	if (_data._data.empty () ||
+		_dataCounter >= _data._data.size ())
+	{
+		cpu -> memoryRef () -> put (_definition._statusAddr,
+			cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** End of cassette. */);
+		cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true);
+
+		return (true);
+	}
+
 	_IFDEBUG debugDataFileFound (cpu);
 
 	const MCHEmul::Address start (cpu -> memoryRef () ->
@@ -198,12 +209,43 @@ bool C264::Datasette1531Injection::executeReceiveDataTrap (MCHEmul::CPU* cpu)
 	// The KERNAL has already selected either the relocated LOAD address
 	// or the absolute address stored in the tape header.
 	const MCHEmul::DataMemoryBlock& sourceBlock = _data._data [_dataCounter];
+	if (start.value () + sourceBlock.size () > 0x10000)
+	{
+		// A cassette block cannot wrap around the 16-bit address space.
+		cpu -> memoryRef () -> put (_definition._statusAddr, 0x60);
+		cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, true);
+
+		return (true);
+	}
+
 	MCHEmul::DataMemoryBlock destinationBlock (start, sourceBlock.bytes ());
+	C264::Memory* memory = dynamic_cast <C264::Memory*> (cpu -> memoryRef ());
+	assert (memory != nullptr);
 
-	loadDataBlockInRAM (destinationBlock, cpu);
+	bool error = false;
+	if (cpu -> memoryRef () -> value (_definition._verifyFlagAddr) != MCHEmul::UByte::_0)
+	{
+		// The KERNAL uses bit 7 while the data is being verified.
+		cpu -> memoryRef () -> put (_definition._verifyFlagAddr, 0x80);
+		if (!memory -> verifyDataBlockInRAM (destinationBlock))
+		{
+			cpu -> memoryRef () -> put (_definition._statusAddr, 0x10 /** Verify error. */);
 
-	cpu -> memoryRef () -> put (_definition._statusAddr, 
-		cpu -> memoryRef () -> value (_definition._statusAddr) | 0x40 /** EOF. */);
+			error = true;
+		}
+	}
+	else
+		memory -> loadDataBlockInRAM (destinationBlock);
+
+	if (!error)
+	{
+		cpu -> memoryRef () -> put (_definition._endProgramAddr,
+			MCHEmul::UBytes ((start + sourceBlock.size ()).bytes (),
+				false /** little - endian. */).bytes ());
+		cpu -> memoryRef () -> put (_definition._statusAddr, MCHEmul::UByte::_0);
+	}
+
+	cpu -> statusRegister ().setBitStatus (F6500::C6500::_CARRYFLAG, error);
 
 	return (true);
 }

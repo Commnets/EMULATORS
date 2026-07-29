@@ -510,14 +510,45 @@ bool C264::Memory::initialize ()
 // ----
 void C264::Memory::loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
 {
-	bool ra = ROMactive ();
+	bool ra		= ROMactive ();
+	bool tra	= TEDROMactive ();
+	int oldView = activeView () -> id ();
 
-	// RAM
+	// The TED view exposes RAM throughout the address space and preserves
+	// the mirrors of the configured 16/32/64 KiB machine.
 	setROMactive (false);
-	// Load the information...
+	setActiveView (_TED_VIEW);
+
 	put (dB);
-	// Previous status
+
+	// restore the previous views...
+	setActiveView (oldView);
 	setROMactive (ra);
+	setTEDROMActive (tra);
+}
+
+// ----
+bool C264::Memory::verifyDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
+{
+	bool ra		= ROMactive ();
+	bool tra	= TEDROMactive ();
+	int oldView = activeView () -> id ();
+
+	// VERIFY must inspect the underlying RAM rather than any ROM or IO
+	// currently visible to the CPU.
+	setROMactive (false);
+	setActiveView (_TED_VIEW);
+
+	// Verify...
+	bool result = 
+		bytes (dB.startAddress (), dB.size ()) == dB.bytes ();
+
+	// Restore the previous views...
+	setActiveView (oldView);
+	setROMactive (ra);
+	setTEDROMActive (tra);
+
+	return (result);
 }
 
 // ---

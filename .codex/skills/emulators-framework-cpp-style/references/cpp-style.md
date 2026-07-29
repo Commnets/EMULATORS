@@ -82,6 +82,14 @@ Headers end with:
 - Enums often use leading underscore values: `_RAM`, `_ROM`, `_TRIANGLE`.
 - Type aliases use plural domain names for collections: `using SoundWaves = std::vector <SoundWave*>;`.
 
+## Integer Types
+
+- Match the framework's existing use of fundamental integer types: `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`.
+- Do not introduce the fixed-width aliases from `<cstdint>`, including `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, and `uint64_t`.
+- Use `size_t` when a value represents a size, a memory position, or an index into an array, vector, string, or another container.
+- Use the nearby domain type for hardware values and counters: typically `unsigned char` for bytes, `unsigned short` for 16-bit addresses, and `unsigned int` for clock or cycle counters.
+- When signed arithmetic is required for a bounded displacement or difference, use `int` if its verified range is sufficient instead of selecting a wider fixed-width type.
+
 ## Function Ownership
 
 - Do not add free functions outside the existing `global.hpp` and `global.cpp`, including `static` file helpers and functions inside anonymous namespaces.

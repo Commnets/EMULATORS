@@ -5,8 +5,11 @@
 #---
 ;ULARegisters
 BORDER:@BORDER@
-MIC:@MIC@
-EAR:@EAR@
+MIC output:@MICOUT@
+EAR output:@EAROUT@
+EAR input:@EARIN@
+EAR read D6:@EARREAD@
+Buzzer:@BUZZER@
 #---
 #---
 ;ULASoundFunction
@@ -21,6 +24,7 @@ Id:@ID@, Active:@ACTIVE@
 #---
 ;ULA
 Id:@ID@
+/INT active:@INTLINE@, ULA clocks remaining:@INTCLOCKS@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
 ->Registers:
 @ULARegisters>@

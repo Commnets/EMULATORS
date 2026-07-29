@@ -1,0 +1,4 @@
+interface:
+  display_name: "ZX Spectrum ULA Audit"
+  short_description: "Validate 16K/48K ULA timing and hardware"
+  default_prompt: "Use $zx-spectrum-ula-audit to audit or implement cycle-accurate ZX Spectrum 16K/48K ULA behavior."
