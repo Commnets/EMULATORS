@@ -90,6 +90,18 @@ Headers end with:
 - Use the nearby domain type for hardware values and counters: typically `unsigned char` for bytes, `unsigned short` for 16-bit addresses, and `unsigned int` for clock or cycle counters.
 - When signed arithmetic is required for a bounded displacement or difference, use `int` if its verified range is sufficient instead of selecting a wider fixed-width type.
 
+## Runtime Performance
+
+- Design every proposal and implementation for maximum runtime performance while preserving observable emulation correctness.
+- Treat CPU instruction execution, memory and I/O access, chip simulation, raster/cycle processing, audio sample generation, and inner protocol loops as hot paths unless measurement proves otherwise.
+- Avoid allocations, container growth, copies, repeated address translation, repeated map or string lookup, redundant validation, unnecessary branches, virtual dispatch, formatting, and logging work inside hot loops.
+- Reserve container capacity when the final size is known, reuse existing buffers and computed values, hoist loop-invariant work, and prefer the cheapest existing framework operation that preserves semantics.
+- Do not add defensive checks to a lower-level hot path merely for general robustness when its callers already guarantee the invariant. Keep the invariant documented and use `assert` when debug-only verification is appropriate.
+- Consider algorithmic complexity, data locality, branch predictability, and the number of operations performed per emulated cycle, not only source-code brevity.
+- Validate meaningful hot-path changes with the available performance tests or a focused before/after measurement when practical. Do not claim an optimization without evidence when its effect is uncertain.
+- When an optimized expression, lookup, bit manipulation, indexing scheme, cache, or combined operation is complex or non-obvious, place a concise comment immediately beside it explaining how it works, which invariant makes it safe, and which repeated or slower work it avoids.
+- Keep straightforward optimized code uncommented when its behavior is already obvious; comments are required for complexity introduced specifically to gain runtime performance.
+
 ## Function Ownership
 
 - Do not add free functions outside the existing `global.hpp` and `global.cpp`, including `static` file helpers and functions inside anonymous namespaces.

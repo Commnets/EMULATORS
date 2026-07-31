@@ -419,27 +419,28 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& 
 std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address& a, size_t nB) const
 {
 	std::vector <MCHEmul::UByte> result;
+	result.reserve (nB);
 
-	// If more bytes are required than max available nothing is returned...
-	int dtT = _minAddress.distanceWith (a);
-	if (dtT >= 0 && (size_t) dtT <= (_numPositions - nB))
+	for (size_t i = 0; i < nB; i++)
 	{
-		for (size_t i = 0; i < nB; i++)
-		{ 
-			MCHEmul::PhysicalStorageSubset* fS = nullptr;
-			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
-			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
-				if (pL [j] -> active () && pL [j] -> activeForReading ()) 
-					fS = pL [j];
+		MCHEmul::Address cA = a.next (i);
 
-			// At this point it is sure that the first position requested is inside the memory identified...
-			// ..but not necessary the last one. So it is needed to control that we don't exceed the boundaries!
-			// and if this happen a DEFAULT value is kept into the list to be returned!
-			size_t pos = (fS != nullptr) 
-				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
-			result.emplace_back ((fS != nullptr && pos < fS -> size ())
-				? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		int dtT = _minAddress.distanceWith (cA);
+		if (dtT >= 0 && (size_t) dtT < _numPositions)
+		{
+			const MCHEmul::PhysicalStorageSubsetsList& pL =
+				_memPositions [(size_t) dtT]._storages;
+			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+				if (pL [j] -> active () && pL [j] -> activeForReading ())
+					fS = pL [j];
 		}
+
+		size_t pos = (fS != nullptr)
+			? (size_t) (cA - fS -> initialAddress ())
+			: 0;
+		result.emplace_back ((fS != nullptr && pos < fS -> size ())
+			? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 	}
 			
 	return (result);
@@ -448,30 +449,30 @@ std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address&
 // ---
 void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 { 
-	// If there are more bytes to set than max available nothing is done...
-	int dtT = _minAddress.distanceWith (a);
-	if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
+	for (size_t i = 0; i < v.size (); i++)
 	{
-		for (size_t i = 0; i < v.size (); i++)
+		MCHEmul::Address cA = a.next (i);
+
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		int dtT = _minAddress.distanceWith (cA);
+		if (dtT >= 0 && (size_t) dtT < _numPositions)
 		{
-			MCHEmul::PhysicalStorageSubset* fS = nullptr;
-			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+			const MCHEmul::PhysicalStorageSubsetsList& pL =
+				_memPositions [(size_t) dtT]._storages;
 			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
 				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
+		}
 
-			// At this point it is guarantteed that the first position will be inside the memory
-			// but the rests won't. To avoid a crash in the system it is needed to control
-			// the boundaries..
-			size_t pos = (fS != nullptr) 
-				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
-			if (fS != nullptr && pos < fS -> size ())
-			{
-				if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
-					MCHEmul::Memory::configuration ().addMemorySetCommand 
-						(MCHEmul::SetMemoryCommand (fS, pos, v [i]));
-				else
-					fS -> setValue (pos, v [i]);
-			}
+		size_t pos = (fS != nullptr)
+			? (size_t) (cA - fS -> initialAddress ())
+			: 0;
+		if (fS != nullptr && pos < fS -> size ())
+		{
+			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
+				MCHEmul::Memory::configuration ().addMemorySetCommand
+					(MCHEmul::SetMemoryCommand (fS, pos, v [i]));
+			else
+				fS -> setValue (pos, v [i]);
 		}
 	}
 }
@@ -496,28 +497,25 @@ void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const MCHEmul::UByte& 
 // ---
 void MCHEmul::MemoryView::put (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 { 
-	// If there are more bytes to set than max available nothing is done...
-	if (v.size () > _numPositions)
-		return;
-
-	int dtT = _minAddress.distanceWith (a);
-	if (dtT >= 0 && (size_t) dtT <= (_numPositions - v.size ()))
+	for (size_t i = 0; i < v.size (); i++)
 	{
-		for (size_t i = 0; i < v.size (); i++)
+		MCHEmul::Address cA = a.next (i);
+
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		int dtT = _minAddress.distanceWith (cA);
+		if (dtT >= 0 && (size_t) dtT < _numPositions)
 		{
-			MCHEmul::PhysicalStorageSubset* fS = nullptr;
-			const MCHEmul::PhysicalStorageSubsetsList& pL = _memPositions [dtT + i]._storages;
+			const MCHEmul::PhysicalStorageSubsetsList& pL =
+				_memPositions [(size_t) dtT]._storages;
 			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
 				if (pL [j] -> active () && pL [j] -> canBeWriten (f)) fS = pL [j];
-
-			// The next action goes directly against the memory,
-			// so to avoid unexpected results (or even a crash of the system),
-			// it is needed to verify that we don't go over the boundaries...
-			size_t pos = (fS != nullptr) 
-				? ((size_t) (a - fS -> initialAddress ()) + i) : 0;
-			if (fS != nullptr && pos < fS -> size ())
-				fS -> setValue (pos, v [i]); // If it were out the limits, the operations wouldn't take place...
 		}
+
+		size_t pos = (fS != nullptr)
+			? (size_t) (cA - fS -> initialAddress ())
+			: 0;
+		if (fS != nullptr && pos < fS -> size ())
+			fS -> setValue (pos, v [i]);
 	}
 }
 
