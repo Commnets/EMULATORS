@@ -53,6 +53,21 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 }
 
 // ---
+void FZ80::CZ80::aknowledgeInterrupt (const MCHEmul::CPUInterruptRequest& iR)
+{
+	if (iR.type () != FZ80::INTInterrupt::_ID)
+		return;
+
+	assert (iR.data ().size () <= 1);
+
+	// An empty request represents an undriven acknowledge bus. The default
+	// high value matches a bare Z80 system and the ZX Spectrum at frame INT.
+	static_cast <FZ80::INTInterrupt*> (interrupt (FZ80::INTInterrupt::_ID)) ->
+		setDataBusValue (iR.data ().size () == 0
+			? MCHEmul::UByte::_FF : iR.data ()[0]);
+}
+
+// ---
 void FZ80::CZ80::addPorts (const FZ80::Z80PortsMap& pts)
 {
 	for (const auto& i : pts)

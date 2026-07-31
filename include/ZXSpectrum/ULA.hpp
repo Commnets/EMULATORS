@@ -99,19 +99,49 @@ namespace ZXSPECTRUM
 
 		static const unsigned int _ID = 210;
 
-		// 44,1MHz (more or less standard in current sound cards)
+		// Related with the sound created...
+		/** 44, 1MHz (more or less standard in current sound cards) */
 		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
-		// 8 bits sound data, very simple nothing complicated...
+		/** 8 bits sound data, very simple nothing complicated... */
 		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
-		// Number of channels..
+		/** Number of channels.. */
 		static const unsigned char _SOUNDCHANNELS			= 1;
+
+		// Related with ULA's behaviour...
+		/** One CPU T-state spans two ULA clocks. */
+		static const unsigned int _ULACLOCKSPERCPUTSTATE	= 2;
 		/** Every horizontal line lasts 448 ULA clocks or 224 CPU T-states. */
 		static const unsigned int _CPUTSTATESPERLINE		= 224;
-		// The /INT line remains active for 32 Z80 T-states.
+		static const unsigned int _ULACLOCKSPERLINE			= _CPUTSTATESPERLINE * _ULACLOCKSPERCPUTSTATE;
+		static const unsigned int _DISPLAYLINES				= 192;
+		static const unsigned int _FLOATINGBUSFETCHTSTATES	= 128;
+		static const unsigned int _FLOATINGBUSGROUPTSTATES	= 8;
+		static const unsigned int _FLOATINGBUSACTIVEPHASES	= 4;
+
+		/** The / INT line remains active for 32 Z80 T - states. */
 		static const unsigned int _INTPULSEULACLOCKS		= 64;
-		// FLASH changes phase every 16 frames and completes a cycle every 32.
+
+		// Related witj the flash phase...
+		/** FLASH changes phase every 16 frames and completes a cycle every 32. */
 		static const unsigned char _FLASHCOUNTERMASK		= 0x1f;
 		static const unsigned char _FLASHINVERSIONBIT		= 0x10;
+
+		/** Model-specific raster timing used to project floating-bus reads and I/O contention. */
+		struct FloatingBusTiming
+		{
+			FloatingBusTiming
+				(unsigned int lF, unsigned int fDL, unsigned int fFT, unsigned int fCT)
+				: _linesPerFrame (lF),
+				  _firstDisplayLine (fDL),
+				  _firstFetchTState (fFT),
+				  _firstContentionTState (fCT)
+							{ }
+
+			unsigned int _linesPerFrame;
+			unsigned int _firstDisplayLine;
+			unsigned int _firstFetchTState;
+			unsigned int _firstContentionTState;
+		};
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The ULA constructor receives info over the raster data, the memory view to use,
@@ -120,7 +150,8 @@ namespace ZXSPECTRUM
 			and additional attributes. */
 		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, 
 			unsigned int cF,
-			int vV, const MCHEmul::Attributes& attrs = { });
+			int vV, const FloatingBusTiming& fBT,
+			const MCHEmul::Attributes& attrs = { });
 
 		virtual ~ULA () override;
 
@@ -169,18 +200,18 @@ namespace ZXSPECTRUM
 		  *	The name of the fields are: \n
 		  * ULARegisters	= InfoStructire: Info about the registers.
 		  * Raster			= InfoStructure: Info about the raster.
+		  * ULASoundFunction	= InfoStructure: Info about the sound function.
 		  * INTLINE			= Attribute: Whether the /INT line is active.
 		  * INTCLOCKS		= Attribute: ULA clocks remaining before releasing /INT.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		// To control the video memory contention
-		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
-		const MCHEmul::UByte& lastVRAMByteRead () const
-							{ return (_videoSignalData._attributeLatch); }
-		/** To know whether the ULA was accessed from the PortManager. */
-		bool ULABeingAccesedFromPortManager () const
-							{ return (_ULARegisters -> ULABeingAccessedFromPortManager ()); }
+		/** Value exposed by the ULA-side data bus at the specified CPU T-state. */
+		MCHEmul::UByte floatingBusValueAt (unsigned int cC) const;
+		/** Additional cycles imposed on an I/O machine cycle starting at cC. */
+		unsigned int IOContentionDelayAt
+			(unsigned short ab, unsigned int cC) const;
 		/** Called from Computer specific cycle method,
 			to determine whether the CPU accesed or not to the screen memory. \n
 			This is important to detect contentions and then to whether stop the CPU. */
@@ -207,6 +238,15 @@ namespace ZXSPECTRUM
 		/** Whether FLASH attributes must currently exchange INK and PAPER. */
 		bool flashInverted () const
 							{ return ((_flashFrameCounter & _FLASHINVERSIONBIT) != 0); }
+		/** Projects the current raster to a CPU T-state without advancing the ULA. */
+		void rasterPositionAt (unsigned int cC,
+			unsigned int& line, unsigned int& tState) const;
+		/** Returns the contention delay corresponding to one absolute CPU T-state. */
+		unsigned int contentionDelayAt (unsigned int cC) const;
+		/** Applies one contended or uncontended phase of an I/O machine cycle. */
+		void addIOContentionPhase
+			(bool c, unsigned int l,
+			 unsigned int& cC, unsigned int& d) const;
 		/** Updates the physical /INT pulse at every ULA clock. */
 		void clockINTLine (MCHEmul::CPU* cpu, unsigned int cC);
 		/** Requests INT when the Z80 can sample the asserted line. */
@@ -238,6 +278,8 @@ namespace ZXSPECTRUM
 		int _ULAView;
 		/** The raster. */
 		MCHEmul::Raster _raster;
+		/** Model timing needed to identify the bytes exposed on the floating bus. */
+		FloatingBusTiming _floatingBusTiming;
 		/** To show or no the main events that affects the visualization. */
 		bool _showEvents;
 		/** Whether the active-low /INT line is asserted. */
@@ -408,6 +450,10 @@ namespace ZXSPECTRUM
 	{
 		public:
 		static const unsigned int _LINESPERFRAME = 312;
+		static const unsigned int _FIRSTDISPLAYLINE = 64;
+		static const unsigned int _FIRSTFETCHTSTATE = 11;
+		static const unsigned int _FIRSTCONTENTIONTSTATE =
+			(_FIRSTDISPLAYLINE * ULA::_CPUTSTATESPERLINE) - 1;
 		static const unsigned int _CPUTSTATESPERFRAME =
 			ULA::_CPUTSTATESPERLINE * _LINESPERFRAME; // Calculatus...
 
@@ -426,6 +472,10 @@ namespace ZXSPECTRUM
 	{
 		public:
 		static const unsigned int _LINESPERFRAME = 264;
+		static const unsigned int _FIRSTDISPLAYLINE = 48;
+		static const unsigned int _FIRSTFETCHTSTATE = 11;
+		static const unsigned int _FIRSTCONTENTIONTSTATE =
+			(_FIRSTDISPLAYLINE * ULA::_CPUTSTATESPERLINE) - 1;
 		static const unsigned int _CPUTSTATESPERFRAME =
 			ULA::_CPUTSTATESPERLINE * _LINESPERFRAME;
 

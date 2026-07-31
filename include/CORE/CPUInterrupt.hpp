@@ -199,12 +199,14 @@ namespace MCHEmul
 
 		CPUInterruptRequest ()
 			: _number (_COUNTER++),
-			  _type (-1) /** like _NOINTREQUEST. */, _cycles (0), _from (nullptr), _reason (0)
+			  _type (-1) /** like _NOINTREQUEST. */, _cycles (0), _from (nullptr), _reason (0),
+			  _data ()
 							{ }
 
-		CPUInterruptRequest (int t, unsigned int c, Chip* f, int r)
+		CPUInterruptRequest (int t, unsigned int c, Chip* f, int r, const UBytes& d = { })
 			: _number (_COUNTER++),
-			  _type (t), _cycles (c), _from (f), _reason (r)
+			  _type (t), _cycles (c), _from (f), _reason (r),
+			  _data (d)
 							{ }
 
 		unsigned long number () const
@@ -219,6 +221,8 @@ namespace MCHEmul
 							{ return (_from); }
 		int reason () const
 							{ return (_reason); }
+		const UBytes& data () const
+							{ return (_data); }
 
 		std::string toString () const;
 
@@ -235,6 +239,8 @@ namespace MCHEmul
 		Chip* _from;
 		/** Reason to invoke it. */
 		int _reason;
+		/** Data placed on the CPU bus while the interrupt is acknowledged, if any. */
+		UBytes _data;
 
 		// Implementation
 		static unsigned long _COUNTER;
@@ -269,8 +275,9 @@ namespace MCHEmul
 		/** To request an interrupt. \n
 			It receives the id of the interrupt requested, the clockCycle status when it happened,
 			the sender (optional), and a code indicating the reason (also optional, -1 = not defined). */
-		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
-							{ requestInterrupt (CPUInterruptRequest ({ id, nC, src, cR })); }
+		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1,
+			const UBytes& d = { })
+							{ requestInterrupt (CPUInterruptRequest ({ id, nC, src, cR, d })); }
 		/** Important method: \n
 			Same than previous, but receiving a CPUInterruptRequest as parameter. \n
 			This is the one that can be overloaded. \n
@@ -360,5 +367,4 @@ namespace MCHEmul
   
 // End of the file
 /*@}*/
-
 

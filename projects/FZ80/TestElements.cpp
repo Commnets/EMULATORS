@@ -117,3 +117,98 @@ FZ80::TestZ80::TestZ80 (MCHEmul::Memory* m)
 	setPorts (pM);
 	setMemoryRef (m);
 }
+
+// ---
+bool FZ80::TestZ80::prepareInterruptTest
+	(unsigned char mode, unsigned short pc, unsigned short sp, unsigned char i)
+{
+	if (!_memory -> initialize () || !initialize ())
+		return (false);
+
+	setINTMode (mode);
+	iRegister ().set ({ i });
+	rRegister ().set ({ 0x10 });
+	setIFF1 (true);
+	setIFF2 (true);
+	setHalt ();
+	programCounter ().setAddress (MCHEmul::Address (2, pc));
+	memoryRef () -> stack () -> reset ();
+	memoryRef () -> stack () -> setPosition (sp);
+	memoryRef () -> stack () -> setNotUsed (false);
+	statusRegister ().set ({ 0x00 });
+
+	return (true);
+}
+
+// ---
+bool FZ80::TestZ80::reportInterruptTest
+	(bool ok, const std::string& name, std::ostream& o) const
+{
+	o << "Z80 interrupt " << name << ": " << (ok ? "OK" : "ERROR") << std::endl;
+
+	return (ok);
+}
+
+// ---
+bool FZ80::TestZ80::testInterrupts (std::ostream& o)
+{
+	bool result = true;
+
+	// IM 2 must use the acknowledged byte and then dereference the table entry.
+	bool ok = prepareInterruptTest (2, 0x73a0, 0xbd80, 0xfb);
+	memoryRef () -> put (MCHEmul::Address (2, 0xfb7e), 0x78);
+	memoryRef () -> put (MCHEmul::Address (2, 0xfb7f), 0x56);
+	memoryRef () -> put (MCHEmul::Address (2, 0xfbff), 0x34);
+	memoryRef () -> put (MCHEmul::Address (2, 0xfc00), 0x12);
+	setLastINOUTData (MCHEmul::UBytes (std::vector <MCHEmul::UByte> ({ 0x7e })));
+	requestInterrupt (FZ80::INTInterrupt::_ID, clockCycles (), nullptr, -1,
+		MCHEmul::UBytes ({ 0xff }));
+	ok &= executeNextCycle ();
+	MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+	ok &= programCounter ().internalRepresentation () == 0x1234;
+	ok &= memoryRef () -> stack () -> currentAddress () == MCHEmul::Address (2, 0xbd7e);
+	ok &= memoryRef () -> value (MCHEmul::Address (2, 0xbd7f)) == 0x73;
+	ok &= memoryRef () -> value (MCHEmul::Address (2, 0xbd7e)) == 0xa1;
+	ok &= clockCycles () == 19;
+	ok &= rRegister ().values ()[0] == 0x11;
+	ok &= !IFF1 () && !IFF2 () && !haltActive ();
+	if (!ok)
+		o << "  PC=" << programCounter ().internalRepresentation ()
+		  << " SP=" << memoryRef () -> stack () -> currentAddress ().value ()
+		  << " stack=" << (unsigned int) memoryRef () -> value (MCHEmul::Address (2, 0xbd7f)).value ()
+		  << "," << (unsigned int) memoryRef () -> value (MCHEmul::Address (2, 0xbd7e)).value ()
+		  << " cycles=" << clockCycles ()
+		  << " R=" << (unsigned int) rRegister ().values ()[0].value ()
+		  << " IFF=" << IFF1 () << "," << IFF2 ()
+		  << " HALT=" << haltActive () << std::endl;
+	result &= reportInterruptTest (ok, "IM 2 vector indirection", o);
+
+	// A table entry at $ffff reads its high byte from $0000.
+	ok = prepareInterruptTest (2, 0x2000, 0xf000, 0xff);
+	memoryRef () -> put (MCHEmul::Address (2, 0xffff), 0x34);
+	memoryRef () -> put (MCHEmul::Address (2, 0x0000), 0x12);
+	requestInterrupt (FZ80::INTInterrupt::_ID, clockCycles ());
+	ok &= executeNextCycle ();
+	ok &= programCounter ().internalRepresentation () == 0x1234;
+	result &= reportInterruptTest (ok, "IM 2 default bus and wrap", o);
+
+	// IM 1 remains a fixed jump to $0038.
+	ok = prepareInterruptTest (1, 0x2000, 0xf000, 0xfb);
+	requestInterrupt (FZ80::INTInterrupt::_ID, clockCycles (), nullptr, -1,
+		MCHEmul::UBytes ({ 0x7e }));
+	ok &= executeNextCycle ();
+	ok &= programCounter ().internalRepresentation () == 0x0038;
+	ok &= clockCycles () == 13;
+	result &= reportInterruptTest (ok, "IM 1 regression", o);
+
+	// IM 0 executes the acknowledged opcode, not stale instruction data.
+	ok = prepareInterruptTest (0, 0x2000, 0xf000, 0xfb);
+	setLastINOUTData (MCHEmul::UBytes (std::vector <MCHEmul::UByte> ({ 0x00 })));
+	requestInterrupt (FZ80::INTInterrupt::_ID, clockCycles (), nullptr, -1,
+		MCHEmul::UBytes ({ 0x37 /** SCF. */ }));
+	ok &= executeNextCycle ();
+	ok &= statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+	result &= reportInterruptTest (ok, "IM 0 acknowledge data", o);
+
+	return (result);
+}

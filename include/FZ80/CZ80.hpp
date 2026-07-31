@@ -60,6 +60,11 @@ namespace FZ80
 		virtual MCHEmul::UByte peekValue (unsigned short ab, unsigned char id) const
 							{ return (value (ab, id)); } // Same than previous but to avoid modify the status... equal by defautl
 		virtual void setValue (unsigned short ab, unsigned char id, const MCHEmul::UByte& v) = 0;
+		/** Additional cycles imposed by the hardware on an I/O machine cycle.
+			The cycle received is the absolute CPU T-state when the I/O cycle starts. */
+		virtual unsigned int additionalClockCyclesForIO
+			(unsigned short ab, unsigned int cC) const
+							{ return (0); }
 
 		virtual void initialize ()
 							{ setValue (0, 0, 0); }
@@ -180,11 +185,11 @@ namespace FZ80
 		/** The type of interrupt type 1 uses this address and it is constant. */
 		MCHEmul::Address INT1VectorAddress () const
 							{ return (MCHEmul::Address ({ 0x38, 0x00 }, false /** Little - endian */)); }
-		/** In the case of the interrupt type 2, the address to jump to is deducted from the values in the dataBus and register I. */
-		MCHEmul::Address INT2VectorAddress () const
+		/** In interrupt mode 2, register I and the byte read during the acknowledge
+			identify the address of an entry in the vector table. */
+		MCHEmul::Address INT2VectorTableAddress (const MCHEmul::UByte& d) const
 							{ return (MCHEmul::Address 
-								({ ((lastINOUTData ().size () == 0) ? 0x00 : lastINOUTData () [0]),
-								   iRegister ().values () [0] }, false /** Little - endian */)); }
+								({ d, iRegister ().values () [0] }, false /** Little - endian */)); }
 		MCHEmul::Address NMIVectorAddress () const
 							{ return (MCHEmul::Address ({ 0x66, 0x00 }, false /** Little - endian */)); }
 
@@ -419,6 +424,11 @@ namespace FZ80
 							{ return ((*(_portsRaw [(size_t) p]).begin ()) -> value (ab, p)); }
 		void setPortValue (unsigned short ab, unsigned char p, const MCHEmul::UByte& v)
 							{ for (const auto& i : _portsRaw [(size_t) p]) i -> setValue (ab, p, v); }
+		/** To get the additional cycles imposed on an I/O machine cycle. */
+		unsigned int additionalClockCyclesForIO
+			(unsigned short ab, unsigned char p, unsigned int cC) const
+							{ return ((*(_portsRaw [(size_t) p]).begin ()) ->
+								additionalClockCyclesForIO (ab, cC)); }
 
 		virtual bool initialize () override;
 
@@ -438,6 +448,8 @@ namespace FZ80
 							{ return (new MCHEmul::StandardCPUInterruptSystem 
 								({ { FZ80::INTInterrupt::_ID, new FZ80::INTInterrupt }, 
 								   { FZ80::NMIInterrupt::_ID, new FZ80::NMIInterrupt } })); }
+		virtual void aknowledgeInterrupt
+			(const MCHEmul::CPUInterruptRequest& iR) override;
 
 		// Implementation...
 		void deletePorts ();

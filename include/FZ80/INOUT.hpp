@@ -39,6 +39,11 @@ namespace FZ80
 		inline bool execute0FromC ();
 
 		private:
+		static const unsigned int _INAIOSTARTCYCLE		= 7;
+		static const unsigned int _INAIOACCESSCYCLE		= 10;
+		static const unsigned int _INRCIOSTARTCYCLE		= 8;
+		static const unsigned int _INRCIOACCESSCYCLE	= 11;
+
 		inline void affectFlags (const MCHEmul::UByte& v);
 	};
 
@@ -50,8 +55,12 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerA ().values ()[0], np }, true /** Already in big endian. */);
 
-		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), np) }); 
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
+
+		prepareIOAccess (ab, np, _INAIOSTARTCYCLE);
+		setIOAccessClockCycle (_INAIOACCESSCYCLE);
+		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (ab, np) });
 		// No flags affection...
 		
 		return (true); 
@@ -67,9 +76,14 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
-		MCHEmul::UByte v;
-		r.set ({ v = static_cast <CZ80*> (cpu ()) -> portValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), np) });
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
+
+		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
+		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
+		MCHEmul::UByte v =
+			static_cast <CZ80*> (cpu ()) -> portValue (ab, np);
+		r.set ({ v });
 		affectFlags (v);
 
 		return (true);
@@ -85,9 +99,13 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
+
 		// The value is not kept anywhere...(lost)
-		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), np));
+		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
+		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
+		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (ab, np));
 
 		return (true);
 	}
@@ -134,6 +152,9 @@ namespace FZ80
 							{ }
 
 		protected:
+		static const unsigned int _IOSTARTCYCLE		= 9;
+		static const unsigned int _IOACCESSCYCLE	= 12;
+
 		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */
 		bool executeWith (int a);
@@ -174,6 +195,10 @@ namespace FZ80
 		inline bool executeWithToC (MCHEmul::Register& r);
 		/** Put 0 in the port pointed by C. */
 		inline bool execute0WithToC ();
+
+		private:
+		static const unsigned int _OUTAIOSTARTCYCLE		= 7;
+		static const unsigned int _OUTRCIOSTARTCYCLE	= 8;
 	};
 
 	// ---
@@ -184,8 +209,12 @@ namespace FZ80
 		_lastExecutionData._INOUTAddress = 
 			MCHEmul::Address ({ registerA ().values ()[0], np }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPortValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), np, registerA ().values ()[0].value ()); 
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
+
+		prepareIOAccess (ab, np, _OUTAIOSTARTCYCLE);
+		static_cast <CZ80*> (cpu ()) -> setPortValue
+			(ab, np, registerA ().values ()[0]);
 		// No flags impact!
 		
 		return (true);
@@ -194,15 +223,19 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::executeWithToC (MCHEmul::Register& r)
 	{
-		unsigned char v = registerC ().values ()[0].value ();
+		unsigned char np = registerC ().values ()[0].value ();
 
 		// In the case of using the OUT r, (C)...
 		// ...the address bus is kept with Bn
 		_lastExecutionData._INOUTAddress =
-			MCHEmul::Address ({ registerB ().values ()[0], v }, true);
+			MCHEmul::Address ({ registerB ().values ()[0], np }, true);
 
-		static_cast <CZ80*> (cpu ()) -> setPortValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), v, r.values () [0].value ());
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
+
+		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
+		static_cast <CZ80*> (cpu ()) -> setPortValue
+			(ab, np, r.values ()[0]);
 		// No flags impact...
 		
 		return (true); 
@@ -211,15 +244,19 @@ namespace FZ80
 	// ---
 	inline bool OUT_General::execute0WithToC ()
 	{ 
-		unsigned char v = registerC ().values ()[0].value ();
+		unsigned char np = registerC ().values ()[0].value ();
 
 		_lastExecutionData._INOUTAddress = 
-			MCHEmul::Address ({ registerB ().values ()[0], v }, true /** Already in big endian. */);
+			MCHEmul::Address ({ registerB ().values ()[0], np }, true /** Already in big endian. */);
+
+		unsigned short ab =
+			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		// Same behaviour that IN r,(C)
 		// But nothing is written instead...
-		static_cast <CZ80*> (cpu ()) -> setPortValue 
-			((unsigned short) _lastExecutionData._INOUTAddress.value (), v, MCHEmul::UByte::_0); 
+		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
+		static_cast <CZ80*> (cpu ()) -> setPortValue
+			(ab, np, MCHEmul::UByte::_0);
 		// ..and no impact in flags either!
 		
 		return (true);  
@@ -251,6 +288,8 @@ namespace FZ80
 							{ }
 
 		protected:
+		static const unsigned int _IOSTARTCYCLE = 12;
+
 		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */
 		bool executeWith (int a);

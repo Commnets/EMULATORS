@@ -5,7 +5,7 @@
 ?./Standard.fmt
 #---
 ;INTInterrupt
-Type:INT, Id:@ID{length=3}@, Active:@ACTIVE{length=3}@, In Execution:@EXECUTION{length=3}@, At Address:$@ADDRESS{length=5}@, Mode:@MODE{length=2}@
+Type:INT, Id:@ID{length=3}@, Active:@ACTIVE{length=3}@, In Execution:@EXECUTION{length=3}@, At Address:$@ADDRESS{length=5}@, Mode:@MODE{length=2}@, Data bus:$@DATABUS{length=2}@
 #---
 #---
 ;NMIInterrupt

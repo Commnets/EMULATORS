@@ -420,7 +420,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 				case CPUInterrupt::_EXECUTIONALLOWED:
 					{
 						// The acknowledge has to be issued!
-						aknowledgeInterrupt ();
+						aknowledgeInterrupt (iR);
 
 						_currentInterruptRequest = iR;
 						_currentInterrupt = interr;
@@ -499,7 +499,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 				_IFDEBUG debugInterruptLaunched ();
 
 				// The acknowledge has to be issued!
-				aknowledgeInterrupt ();
+				aknowledgeInterrupt (iR);
 
 				_lastCPUClockCycles = _currentInterrupt -> cyclesToLaunch ();
 				if (_currentInterrupt -> executeOver (this, iR.cycles ())) // Thismethod returns true when ok, and false with errors...

@@ -175,7 +175,9 @@ std::string MCHEmul::CPUInterruptRequest::toString () const
 	return (
 		"type " +	std::to_string (_type) + ", " +
 		"from " + ((_from == nullptr) ? " - " : std::to_string (_from -> id ())) + ", " +
-		"reason " + std::to_string (_reason));
+		"reason " + std::to_string (_reason) + ", " +
+		"data " + ((_data.size () == 0) ? "-" : _data.asString
+			(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)));
 }
 
 // ---

@@ -6,6 +6,12 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 {
 	_lastExecutionData._INOUTAddress = MCHEmul::Address ();
 
+	_IOAccessClockCycle = 0;
+	_IOContentionClockCycles = 0;
+	_IOAccessed = false;
+	_lastINOUTAccessWasIO = false;
+	copyIOExecutionDataToCurrentInstruction (c);
+
 	// Any fetch operation increment the register R (@see FZ80::CZ80::incrementRegisterR)
 	static_cast <FZ80::CZ80*> (c) -> incrementRegisterR ();
 
@@ -24,9 +30,62 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 }
 
 // ---
+unsigned int FZ80::Instruction::instructionClockCycleAt (unsigned int c) const
+{
+	assert (c < clockCycles ());
+
+	return ((cpu () -> ticksCounter () == nullptr)
+		? cpu () -> clockCycles () + c
+		: cpu () -> clockCycles () - (clockCycles () - c - 1));
+}
+
+// ---
+void FZ80::Instruction::copyIOExecutionDataToCurrentInstruction (MCHEmul::CPU* c)
+{
+	// During a prefixed instruction the CPU exposes the outer undefined
+	// instruction while the selected instruction is being executed.
+	MCHEmul::CPU* cR = (c == nullptr) ? cpu () : c;
+	FZ80::InstructionUndefined* i = dynamic_cast <FZ80::InstructionUndefined*>
+		(const_cast <MCHEmul::Instruction*> (cR -> currentInstruction ()));
+	if (i != nullptr)
+	{
+		i -> _IOAccessClockCycle = _IOAccessClockCycle;
+		i -> _IOAccessed = _IOAccessed;
+		i -> _lastINOUTAccessWasIO = _lastINOUTAccessWasIO;
+	}
+}
+
+// ---
+void FZ80::Instruction::prepareIOAccess
+	(unsigned short ab, unsigned char p, unsigned int c, bool lAIO)
+{
+	_IOContentionClockCycles = static_cast <FZ80::CZ80*> (cpu ()) ->
+		additionalClockCyclesForIO (ab, p, instructionClockCycleAt (c));
+
+	_IOAccessed = true;
+	_lastINOUTAccessWasIO = lAIO;
+
+	addAdditionalClockCycles (_IOContentionClockCycles);
+
+	copyIOExecutionDataToCurrentInstruction ();
+}
+
+// ---
+void FZ80::Instruction::setIOAccessClockCycle (unsigned int c)
+{
+	_IOAccessClockCycle =
+		instructionClockCycleAt (c) + _IOContentionClockCycles;
+
+	copyIOExecutionDataToCurrentInstruction ();
+}
+
+// ---
 FZ80::InstructionUndefined::InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst)
 	: MCHEmul::InstructionUndefined (c, inst),
-	  _rawInstructions ()
+	  _rawInstructions (),
+	  _IOAccessClockCycle (0),
+	  _IOAccessed (false),
+	  _lastINOUTAccessWasIO (false)
 {
 	auto numberBytes = [](unsigned int c) -> size_t
 		{

@@ -2,11 +2,20 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
+void FZ80::INTInterrupt::initialize ()
+{
+	MCHEmul::CPUInterrupt::initialize ();
+
+	_dataBusValue = MCHEmul::UByte::_FF;
+}
+
+// ---
 MCHEmul::InfoStructure FZ80::INTInterrupt::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (FZ80::Interrupt::getInfoStructure ());
 
 	result.add ("MODE", _INTMode);
+	result.add ("DATABUS", _dataBusValue);
 
 	return (result);
 }
@@ -44,7 +53,7 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 			{
 				_exeAddress = MCHEmul::Address (); // Not important!
 
-				MCHEmul::UByte nC = c -> lastInstruction () -> INOUTData ()[0];
+				MCHEmul::UByte nC = _dataBusValue;
 				if (!c -> existsInstruction ((unsigned int) nC.value ()))
 					result = false; // The instruction doesn't exist!
 				else
@@ -75,8 +84,14 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 			{
 				c -> memoryRef () -> stack () -> 
 					push ((_exeAddress = c -> programCounter ().asAddress ()).bytes ());
-	
-				c -> programCounter ().setAddress (c80 -> INT2VectorAddress ());
+
+				// The first address is the table entry, not the service routine.
+				// Read both bytes independently so $ffff wraps to $0000.
+				MCHEmul::Address vA = c80 -> INT2VectorTableAddress (_dataBusValue);
+				c -> programCounter ().setAddress (MCHEmul::Address
+					({ c -> memoryRef () -> value (vA),
+					   c -> memoryRef () -> value (vA.next (1)) },
+					 false /** Little - endian */));
 			}
 
 			break;

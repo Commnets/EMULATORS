@@ -91,12 +91,19 @@ bool FZ80::INBlock_General::executeWith (int a)
 	MCHEmul::UByte vR = MCHEmul::UByte::_0;
 	// The value of the component BC is pushed into the address bus...
 	_lastExecutionData._INOUTAddress = addressBC ();
+	unsigned short ab =
+		(unsigned short) _lastExecutionData._INOUTAddress.value ();
 	// ...and then the value read from the port is pushed into the memory...
-	memory () -> set (addressHL (), vR = static_cast <CZ80*> (cpu ()) -> portValue 
-		((unsigned short) _lastExecutionData._INOUTAddress.value (), (unsigned char) rCA));
+	prepareIOAccess (ab, (unsigned char) rCA, _IOSTARTCYCLE, false);
+	setIOAccessClockCycle (_IOACCESSCYCLE);
+	vR = static_cast <CZ80*> (cpu ()) ->
+		portValue (ab, (unsigned char) rCA);
 	// The internal register RW used later in BIT instructions...
 	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
-		((unsigned char) (((unsigned short) (_lastExecutionData._INOUTAddress.value () + 1)) >> 8));
+		((unsigned char) ((ab + 1) >> 8));
+	// The final write to (HL) is the last bus access made by INI/IND.
+	memory () -> set (hlA, vR);
+	_lastExecutionData._INOUTAddress = hlA;
 
 	// Moves to the next position 
 	// or the previous (depending on the value of a...
@@ -143,7 +150,7 @@ _INST_IMPL (FZ80::INIR)
 	bool result = executeWith (1); // move up...
 	// The instruction only finish when reaches the limit...
 	if (result && (_FINISH = _b0) == false) 
-		_additionalCycles = 5; // ...and if not, it costs 5 additional cycles always!
+		addAdditionalClockCycles (5); // ...and if not, it costs 5 additional cycles always!
 
 	return (result);
 }
@@ -164,7 +171,7 @@ _INST_IMPL (FZ80::INDR)
 	bool result = executeWith (-1); // move down...
 	// The instruction only finish when reaches the limit...
 	if (result && (_FINISH = _b0) == false) 
-		_additionalCycles = 5; // ...and if not it costs 5 additional cycles always!
+		addAdditionalClockCycles (5); // ...and if not it costs 5 additional cycles always!
 
 	return (result);
 }
@@ -257,19 +264,22 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 
 	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
 
-	MCHEmul::UByte vR = MCHEmul::UByte::_0;
+	// OUTI/OUTD read memory before starting the I/O cycle.
+	MCHEmul::Address hlA = addressHL (); // Target...
+	MCHEmul::UByte vR = memory () -> value (hlA);
 	// The number of elements to move is decremented into 1, 
 	// and _b becomes true if data data is 0
 	_b0 = (--rBA) == 0; 
 	// The value of the component BC is pushed into the address bus...
-	_lastExecutionData._INOUTAddress = MCHEmul::Address ({ rBA, rCA });
+	_lastExecutionData._INOUTAddress = MCHEmul::Address ({ rBA, rCA }, true);
+	unsigned short ab =
+		(unsigned short) _lastExecutionData._INOUTAddress.value ();
 	// The internal register RW used later in BIT instructions...
 	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
-		((unsigned char) (((unsigned short) (_lastExecutionData._INOUTAddress.value () + 1)) >> 8));
-	// ...and then the value read from the port is pushed into the memory...
-	MCHEmul::Address hlA = addressHL (); // Target...
-	static_cast <CZ80*> (cpu ()) -> setPortValue 
-		((unsigned short) _lastExecutionData._INOUTAddress.value (), rCA, vR = memory () -> value (hlA));
+		((unsigned char) ((ab + 1) >> 8));
+	// ...and then the value read from memory is pushed into the port...
+	prepareIOAccess (ab, rCA, _IOSTARTCYCLE);
+	static_cast <CZ80*> (cpu ()) -> setPortValue (ab, rCA, vR);
 
 	// Moves to the next position 
 	// or the previous (depending on the value of a...
@@ -313,7 +323,7 @@ _INST_IMPL (FZ80::OTIR)
 	bool result = executeWith (1); // move up...
 	// The instruction only finish when reaches the limit...
 	if (result && (_FINISH = _b0) == false) 
-		_additionalCycles = 5; // ...and if not, it costs 5 additional cycles always!
+		addAdditionalClockCycles (5); // ...and if not, it costs 5 additional cycles always!
 
 	return (result);
 }
@@ -334,7 +344,7 @@ _INST_IMPL (FZ80::OTDR)
 	bool result = executeWith (-1); // move down...
 	// The instruction only finish when reaches the limit...
 	if (result && (_FINISH = _b0) == false) 
-		_additionalCycles = 5; // ...and if not it costs 5 additional cycles always!
+		addAdditionalClockCycles (5); // ...and if not it costs 5 additional cycles always!
 
 	return (result);
 }

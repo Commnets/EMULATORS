@@ -38,6 +38,10 @@ namespace MSX
 		/** The initialization does nothing. */
 		virtual void initialize () override
 							{ /** Do nothing. */ }
+
+		private:
+		mutable std::vector <unsigned char> _portWriteNotLinked;
+		mutable std::vector <unsigned char> _portReadNotLinked;
 	};
 
 	/** Port Manager to manage block (groups) of ports linked with the VDP. */

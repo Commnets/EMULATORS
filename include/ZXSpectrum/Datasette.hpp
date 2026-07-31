@@ -59,22 +59,31 @@ namespace ZXSPECTRUM
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		private:
+		enum class TrapResult
+		{
+			_NOTAPPLIED,
+			_BLOCKCONSUMED
+		};
+
+		/** To validate that the ROM code around the trap and its return point
+			matches the standard 48K loading routine. */
+		bool validLoadTrapContext (MCHEmul::CPU* cpu) const;
+
 		/** Pure trap simulation. \n
 			On exit: \n
-			A	= calculated parity byte if parity checked, else 0 (CHECKME). \n
-			F	= if parity checked, all flags are modified
-				  else carry only is modified (FIXME).
-			B	= 0xB0 (success) or 0x00 (failure). \n
-			C	= 0x01 (confirmed), 0x21, 0xFE or 0xDE (CHECKME). ºn
+			A	= calculated parity byte if parity checked, else 0. \n
+			F	= flags resulting from the parity check, or carry reset on error. \n
+			B	= 0xB0 when the parity byte has been checked. \n
+			C	= 0x01 when a block has been processed. \n
 			DE	= decremented by number of bytes loaded or verified. \n
-			H	= calculated parity byte or undefined. \n
-			L	= last byte read, or 1 if none. \n
+			H	= calculated parity byte. \n
+			L	= last byte loaded or verified, or the block flag if none. \n
 			IX	= incremented by number of bytes loaded or verified. \n
-			A'	= unchanged on error + no flag byte, else 0x01. \n
-			F'	= 0x01      on error + no flag byte, else 0x45. \n
-			R	= no point in altering it :-). \n
-			Other registers unchanged. **/
-		bool simulateTrap (MCHEmul::CPU* cpu);
+			AF'	= 0x0145 after processing a non-empty request. \n
+			R and the other registers are unchanged. \n
+			The result distinguishes an unsupported trap context from a block
+			that was consumed, including normal tape errors. */
+		TrapResult simulateTrap (MCHEmul::CPU* cpu);
 
 		// -----
 		// Different debug methods to simplify the internal code
@@ -83,7 +92,7 @@ namespace ZXSPECTRUM
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugSimulation (MCHEmul::CPU* cpu);
 		void debugStatus (const std::string& where, FZ80::CZ80* cpu);
-		void debugErrorTrap ();
+		void debugTrapNotApplied (const std::string& reason);
 		void debugNothingToRead ();
 		// -----
 

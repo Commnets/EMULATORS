@@ -21,6 +21,12 @@ int _tmain (int argc, _TCHAR *argv [])
 	std::cout << "/o\t\tTo print out the status of the CPU after every test" << std::endl;
 	std::cout << "/m\t\tTo simulate the access to the memory." << std::endl << std::endl;
 
+	FZ80::TestZ80* interruptCPU = new FZ80::TestZ80 (new FZ80::PlainMemoryTest);
+	bool interruptsOK = interruptCPU -> testInterrupts (std::cout);
+	delete (interruptCPU);
+	if (!interruptsOK)
+		return (1);
+
 	MCHEmul::TestCPUSpeed (new FZ80::TestZ80 (new FZ80::FragmentatedMemoryTest)).
 		testAllInstructionSet (std::cout, nTimes, accessM, output);
 

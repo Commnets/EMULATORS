@@ -15,6 +15,7 @@
 #define __FZ80_TESTELMNTS__
 
 #include <FZ80/CZ80.hpp>
+#include <ostream>
 
 namespace FZ80
 {
@@ -85,6 +86,15 @@ namespace FZ80
 
 		~TestZ80 ()
 			{ delete (_memory); }
+
+		/** Functional checks for the Z80 maskable interrupt modes. */
+		bool testInterrupts (std::ostream& o);
+
+		private:
+		bool prepareInterruptTest
+			(unsigned char mode, unsigned short pc, unsigned short sp, unsigned char i);
+		bool reportInterruptTest
+			(bool ok, const std::string& name, std::ostream& o) const;
 
 		protected:
 		// Implementation

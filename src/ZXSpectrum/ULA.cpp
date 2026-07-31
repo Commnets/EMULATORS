@@ -30,7 +30,7 @@ ZXSPECTRUM::ULA::SoundFunction::SoundFunction (unsigned int cF, unsigned int sF)
 	  _clocksPerSample ((unsigned int) (((double) cF * 1.0f) / (double) (sF))),
 	  _counterClocksPerSample (0)
 {
-	setClassName ("SoundFunction");
+	setClassName ("ULASoundFunction");
 }
 
 // ---
@@ -112,7 +112,7 @@ void ZXSPECTRUM::ULA::SoundFunction::debugULASoundCycle (MCHEmul::CPU* cpu, unsi
 // ---
 ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
 		unsigned int cF,
-		int vV, const MCHEmul::Attributes& attrs)
+		int vV, const FloatingBusTiming& fBT, const MCHEmul::Attributes& attrs)
 	: MCHEmul::GraphicalChip (_ID, 
 		{ { "Name", "ULA" },
 		  // https://www.spectrumforeveryone.com/technical/zx-spectrum-ula-types/
@@ -126,6 +126,7 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _ULARegisters (new ZXSPECTRUM::ULARegisters),
 	  _ULAView (vV),
 	  _raster (vd, hd, 1 /** The step is 1 pixel. */),
+	  _floatingBusTiming (fBT),
 	  _showEvents (false),
 	  _INTLineActive (false),
 	  _INTClocksRemaining (0),
@@ -144,6 +145,150 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 
 	// Asign the ULA registers also to the ULA function...
 	_soundFunction -> setULARegisters (_ULARegisters);
+}
+
+// ---
+void ZXSPECTRUM::ULA::rasterPositionAt (unsigned int cC,
+	unsigned int& line, unsigned int& tState) const
+{
+	// Calculate where the raster within the current frame in ters of cycles
+	// using the cycles received and the last cycles simulated
+	// Usually the cyclesForward will drive the situation, but just in case...
+	const unsigned int cyclesForward = cC - _lastCPUCycles;
+	const unsigned int cyclesBackward = _lastCPUCycles - cC;
+	const int cycleOffset = (cyclesForward <= cyclesBackward)
+		? (int) cyclesForward : -(int) cyclesBackward;
+	const int clocksPerFrame =
+		(int) (_floatingBusTiming._linesPerFrame * _ULACLOCKSPERLINE);
+	int rasterPosition = ((int) _raster.currentLineAtBase0 () * (int) _ULACLOCKSPERLINE) +
+		(int) _raster.currentColumnAtBase0 () + (cycleOffset * (int) _ULACLOCKSPERCPUTSTATE);
+	rasterPosition %= clocksPerFrame; // Adjusted, just in case...
+	if (rasterPosition < 0)
+		rasterPosition += clocksPerFrame; // It might be negative, but strange!
+
+	// Calculates the line, and the t state that will be executed...
+	line = (unsigned int) (rasterPosition / (int) _ULACLOCKSPERLINE);
+	tState = (unsigned int)
+		((rasterPosition % (int) _ULACLOCKSPERLINE) / (int) _ULACLOCKSPERCPUTSTATE);
+}
+
+// ---
+MCHEmul::UByte ZXSPECTRUM::ULA::floatingBusValueAt (unsigned int cC) const
+{
+	// Where the raster will be: the line and the tstate under execution...
+	unsigned int line = 0;
+	unsigned int tState = 0;
+	rasterPositionAt (cC, line, tState);
+
+	// Out of the screen?...
+	if (line < _floatingBusTiming._firstDisplayLine ||
+		line >= (_floatingBusTiming._firstDisplayLine + _DISPLAYLINES) ||
+		tState < _floatingBusTiming._firstFetchTState)
+		return (MCHEmul::UByte::_FF); // ...then 0xff
+
+	// In the margin?...
+	const unsigned int fetchTState =
+		tState - _floatingBusTiming._firstFetchTState;
+	if (fetchTState >= _FLOATINGBUSFETCHTSTATES)
+		return (MCHEmul::UByte::_FF); // ...then 0xff too...
+
+	// No accesing the bus?...
+	const unsigned int phase = fetchTState % _FLOATINGBUSGROUPTSTATES;
+	if (phase >= _FLOATINGBUSACTIVEPHASES)
+		return (MCHEmul::UByte::_FF); //...the 0xff too...
+
+	// In the screen!
+	const unsigned int y = line - _floatingBusTiming._firstDisplayLine;
+	const unsigned int column =
+		((fetchTState / _FLOATINGBUSGROUPTSTATES) << 1) + (phase >> 1);
+	const unsigned int address = ((phase & 0x01) == 0)
+		? ((y & 0x38) << 2) + ((y & 0x07) << 8) + ((y & 0xc0) << 5) + column
+		: 0x1800 + ((y >> 3) << 5) + column;
+	// Returns the value of the attribute or the ram attending the pahse beging executed...
+	return (_memory -> view (_ULAView) -> value (MCHEmul::Address (2, address)));
+}
+
+// ---
+unsigned int ZXSPECTRUM::ULA::contentionDelayAt (unsigned int cC) const
+{
+	static const unsigned int ULAWAIT [8] = { 6, 5, 4, 3, 2, 1, 0, 0 };
+
+	unsigned int line = 0;
+	unsigned int tState = 0;
+	rasterPositionAt (cC, line, tState);
+
+	unsigned int frameTState = (line * _CPUTSTATESPERLINE) + tState;
+	if (frameTState < _floatingBusTiming._firstContentionTState)
+		return (0);
+
+	unsigned int contentionTState =
+		frameTState - _floatingBusTiming._firstContentionTState;
+	if (contentionTState >= (_DISPLAYLINES * _CPUTSTATESPERLINE))
+		return (0);
+
+	// Only the first 128 T-states of every contention line
+	// participate in ULA video fetches.
+	unsigned int lineTState = contentionTState % _CPUTSTATESPERLINE;
+	if (lineTState >= _FLOATINGBUSFETCHTSTATES)
+		return (0);
+
+	return (ULAWAIT [lineTState & 0x07]);
+}
+
+// ---
+void ZXSPECTRUM::ULA::addIOContentionPhase
+	(bool c, unsigned int l, unsigned int& cC, unsigned int& d) const
+{
+	if (c)
+	{
+		unsigned int nD = contentionDelayAt (cC);
+
+		d += nD;
+		cC += nD;
+	}
+
+	cC += l;
+}
+
+// ---
+unsigned int ZXSPECTRUM::ULA::IOContentionDelayAt
+	(unsigned short ab, unsigned int cC) const
+{
+	bool highByteContended = ((ab & 0xc000) == 0x4000);
+	bool evenPort = ((ab & 0x0001) == 0);
+
+	unsigned int currentCycle = cC;
+	unsigned int delay = 0;
+
+	// The first T-state is contended when the high byte addresses lower RAM.
+	addIOContentionPhase
+		(highByteContended, 1, currentCycle, delay);
+
+	if (evenPort)
+	{
+		// N:1,C:3 or C:1,C:3.
+		addIOContentionPhase
+			(true, 3, currentCycle, delay);
+	}
+	else
+	if (highByteContended)
+	{
+		// C:1,C:1,C:1,C:1.
+		addIOContentionPhase
+			(true, 1, currentCycle, delay);
+		addIOContentionPhase
+			(true, 1, currentCycle, delay);
+		addIOContentionPhase
+			(true, 1, currentCycle, delay);
+	}
+	else
+	{
+		// N:4.
+		addIOContentionPhase
+			(false, 3, currentCycle, delay);
+	}
+
+	return (delay);
 }
 
 // ---
@@ -323,7 +468,7 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULA::getInfoStructure () const
 	result.add ("Raster",			std::move (_raster.getInfoStructure ()));
 	result.add ("ULASoundFunction",	std::move (_soundFunction -> getInfoStructure ()));
 	result.add ("INTLINE",			_INTLineActive);
-	result.add ("INTCLOCKS",			std::to_string (_INTClocksRemaining));
+	result.add ("INTCLOCKS",		std::to_string (_INTClocksRemaining));
 
 	return (result);
 }
@@ -761,6 +906,9 @@ void ZXSPECTRUM::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 // ---
 ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF /** Clock frequency. */)
 	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, vV,
+		 FloatingBusTiming
+			(_LINESPERFRAME, _FIRSTDISPLAYLINE,
+			 _FIRSTFETCHTSTATE, _FIRSTCONTENTIONTSTATE),
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },
@@ -772,6 +920,9 @@ ZXSPECTRUM::ULA_PAL::ULA_PAL (int vV, unsigned int cF /** Clock frequency. */)
 // ---
 ZXSPECTRUM::ULA_NTSC::ULA_NTSC (int vV, unsigned int cF /** Clock frequency. */)
 	: ZXSPECTRUM::ULA (_VRASTERDATA, _HRASTERDATA, cF, vV,
+		 FloatingBusTiming
+			(_LINESPERFRAME, _FIRSTDISPLAYLINE,
+			 _FIRSTFETCHTSTATE, _FIRSTCONTENTIONTSTATE),
 		 { { "Name", "ULA" },
 		  { "Code", "5C102E, 5C112E, 5C112E-2, 5C112E-3, 6C001E-5, 6C001E-6, 6C001E-7, 7K010E-5 ULA / Amstrad 40056, +2A/+3 Gate Array" },
 		  { "Manufacturer", "Ferranti" },

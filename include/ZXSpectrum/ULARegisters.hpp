@@ -109,15 +109,6 @@ namespace ZXSPECTRUM
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		/** This method is invoked from PortManager to point out 
-			that the port is being accessed. */
-		void setULABeingAccessedFromPortManager ()
-							{ _ULABeingAccessedFromPortManager = true; }
-		/** And a method to know wether it was accessed or not. 
-			Once the attributed is checked, becomes false back. */
-		bool ULABeingAccessedFromPortManager () const
-							{ return (_ULABeingAccessedFromPortManager); }
-
 		private:
 		void initializeInternalValues ();
 
@@ -145,8 +136,6 @@ namespace ZXSPECTRUM
 			-> 3 = up position selected. \n
 			-> 4 = fire button pressed. */
 		std::vector <bool> _joystickStatus;
-		/** When the ULA is being accessed from outside. */
-		MCHEmul::OBool _ULABeingAccessedFromPortManager;
 	};
 
 	// ---

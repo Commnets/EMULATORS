@@ -1,6 +1,7 @@
 #include <ZXSpectrum/PortManager.hpp>
 #include <ZXSpectrum/ULA.hpp>
 #include <ZXSpectrum/ULARegisters.hpp>
+#include <FZ80/Instruction.hpp>
 
 const std::string ZXSPECTRUM::PortManager::_NAME = "ZX81 PortManager";
 
@@ -12,7 +13,8 @@ ZXSPECTRUM::PortManager::PortManager ()
 		  { "Detail", "FE (to read the keyboard status), FE (to enable NMI generation), FD (to disable NMI generation)" }
 		}),
 	  _ULA (nullptr),
-	  _ULARegisters (nullptr)
+	  _ULARegisters (nullptr),
+	  _portWriteNotLinked (), _portReadNotLinked ()
 {
 	setClassName ("PortManager");
 }
@@ -24,10 +26,6 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
 	if ((id & 0b00000001) == 0b00000000) 
 	{
-		// The access to the ULA is "noticed"
-		// This is used later to verify content access problems...
-		_ULARegisters -> setULABeingAccessedFromPortManager ();
-
 		// The three lowest significant bits defines the border color
 		// Bear in mind than in ZXSpectrum the border can not have bright!
 		_ULARegisters -> setBorderColor (v.value () & 0x07);
@@ -46,10 +44,51 @@ void ZXSPECTRUM::PortManager::setValue (unsigned short ab, unsigned char id, con
 		// Both output signals affect the simplified digital buzzer.
 		_ULARegisters -> alignBuzzerSignal ();
 	}
+	else
+	{
+		// First access to a no codified port might be interesting 
+		// to force a contention without affecting the ULA work
+		// T o avoid continuous entries in the log, just the fist one is kept...
+		if (std::find (_portWriteNotLinked.begin (), 
+				_portWriteNotLinked.end (), id) == _portWriteNotLinked.end ())
+		{
+			_portWriteNotLinked.push_back (id);
+
+			_LOG ("PortManager::setValue: Unattached output port " +
+				std::to_string ((int) id) + ". It might generate contention");
+		}
+	}
 
 	// Accessing to a no codified port might be instesting to force
 	// a contention without affecting the ULA work
 	// It would depend on the type of OUT sentence used and the value of the registers B, C and A...
+}
+
+// ---
+unsigned int ZXSPECTRUM::PortManager::additionalClockCyclesForIO
+	(unsigned short ab, unsigned int cC) const
+{
+	assert (_ULA != nullptr);
+
+	return (_ULA -> IOContentionDelayAt (ab, cC));
+}
+
+// ---
+unsigned int ZXSPECTRUM::PortManager::IOAccessClockCycle () const
+{
+	assert (cpu () != nullptr);
+	assert (cpu () -> currentInstruction () != nullptr);
+
+	const FZ80::Instruction* i =
+		dynamic_cast <const FZ80::Instruction*> (cpu () -> currentInstruction ());
+	if (i != nullptr)
+		return (i -> IOAccessClockCycle ());
+
+	const FZ80::InstructionUndefined* uI =
+		dynamic_cast <const FZ80::InstructionUndefined*> (cpu () -> currentInstruction ());
+	assert (uI != nullptr);
+
+	return (uI -> IOAccessClockCycle ());
 }
 
 // ---
@@ -61,10 +100,6 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 	// However, 0xfe is the ZXSpectrum common one, but many others will behave similar...
 	if ((id & 0b00000001) == 0b00000000) // The post 254 is the typical one...
 	{ 
-		// The access to the ULA is "noticed"
-		// This is used later to verify content access problems...
-		_ULARegisters -> setULABeingAccessedFromPortManager ();
-
 		// The bit 6 of the final result will be the value in the EAR socket...
 		/** The EAR signal can be used to identify which is the ZXSpectrum issue (1,2 or 3),
 			as it is described in: http://fizyka.umk.pl/~jacek/zx/faq/reference/48kreference.htm \n
@@ -109,10 +144,22 @@ MCHEmul::UByte ZXSPECTRUM::PortManager::getValue (unsigned short ab, unsigned ch
 
 		// The bits 5 - 7 are not used...
 	}
-	// When accesing a no codified port, 
-	// The value of the last data read from the ULA (usually an attribute byte) is put into the data bus...
+	// An unattached input samples the ULA-side bus at the end of its I/O cycle.
+	// A peek is not an instruction execution, so it uses the current CPU time.
 	else
-		result = _ULA -> lastVRAMByteRead ();
+	{
+		if (std::find (_portReadNotLinked.begin (), 
+				_portReadNotLinked.end (), id) == _portReadNotLinked.end ())
+		{
+			_portReadNotLinked.push_back (id); // It is mutable...
+
+			_LOG ("PortManager::getValue: Unattached input port " +
+				std::to_string ((int) id) + ". It might generate contention");
+		}
+
+		result = _ULA -> floatingBusValueAt
+			(ms ? IOAccessClockCycle () : cpu () -> clockCycles ());
+	}
 
 	return (result);
 }

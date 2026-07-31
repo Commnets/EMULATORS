@@ -27,7 +27,8 @@ namespace FZ80
 
 		INTInterrupt ()
 			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */, 0 /** The lowest priority. */),
-			  _INTMode (0) // The basic one by default...
+			  _INTMode (0), // The basic one by default...
+			  _dataBusValue (MCHEmul::UByte::_FF)
 							{ _cyclesToLaunch = 2; // By default...
 							  setClassName ("INTInterrupt"); }
 
@@ -36,10 +37,18 @@ namespace FZ80
 							{ return (_INTMode); }
 		inline void setINTMode (unsigned char iM); // To set also the number of cycles to lunch...
 
+		const MCHEmul::UByte& dataBusValue () const
+							{ return (_dataBusValue); }
+		void setDataBusValue (const MCHEmul::UByte& v)
+							{ _dataBusValue = v; }
+
+		virtual void initialize () override;
+
 		/**
 		  *	The name of the fields are: \n
 		  *	The ones from the FZ80::Interrupt +
-		  *	MODE			= The mode of execution of the interruption.
+		  *	MODE			= The mode of execution of the interruption. \n
+		  *	DATABUS			= The byte read during the interrupt acknowledge.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -53,6 +62,8 @@ namespace FZ80
 			1:	The interruption executes the routine in a specific memory address. 
 			2:	The interruption executes the routine through out a table. */
 		unsigned char _INTMode;
+		/** The byte read from the data bus during the interrupt acknowledge. */
+		MCHEmul::UByte _dataBusValue;
 	};
 
 	// ---

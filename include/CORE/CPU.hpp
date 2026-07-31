@@ -374,8 +374,9 @@ namespace MCHEmul
 
 		// Managing the requests of interrutps...
 		// This block delegates everything in the interrupt system acting as a Facade design pattern...
-		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1)
-							{ requestInterrupt (CPUInterruptRequest (id, nC, src, cR)); }
+		void requestInterrupt (int id, unsigned int nC, Chip* src = nullptr, int cR = -1,
+			const UBytes& d = { })
+							{ requestInterrupt (CPUInterruptRequest (id, nC, src, cR, d)); }
 		void requestInterrupt (const CPUInterruptRequest& iR)
 							{ if (interruptSystem () -> requestInterrupt (iR)) 
 								_IFDEBUG debugInterruptRequest (iR); }
@@ -491,7 +492,7 @@ namespace MCHEmul
 		/** To recognize the execution interrupt. \n 
 		 	By default, it does nothing, but it can be overloaded. \n
 			This method is invoked from the methods above. */
-		virtual void aknowledgeInterrupt ()	{ }
+		virtual void aknowledgeInterrupt (const CPUInterruptRequest&)	{ }
 		/** ...and finally execute the instruction.
 		 	NOTE: It returns true if a instruction was finally "executed" and false if not. \n 
 			The variable "e" holds whether there were or nor an error executing the instruction (if any). \n
