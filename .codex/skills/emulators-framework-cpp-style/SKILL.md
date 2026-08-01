@@ -23,6 +23,7 @@ Use the framework's existing idioms deliberately:
 - When a performance optimization makes a line or construct complex or non-obvious, add a nearby comment explaining how it works, the invariant it relies on, and why it avoids slower work. Do not leave optimized code unexplained.
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `static_cast <T>`, `_ptr -> method ()`, `return (value);`.
 - Use the fundamental integer types already established by the framework, such as `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`. Do not introduce fixed-width aliases from `<cstdint>` such as `int8_t`, `uint16_t`, `int32_t`, or `int64_t`. Use `size_t` for sizes, memory positions, and indices into arrays or containers.
+- Do not introduce SDL width aliases such as `Sint8`, `Uint8`, `Sint16`, `Uint16`, `Sint32`, or `Uint32` when a fundamental integer type can be used. Keep semantic SDL types such as `SDL_AudioFormat` and `SDL_AudioDeviceID` where they express an API domain rather than only an integer width.
 - Put non-trivial method implementations in `.cpp` and separate them with `// ---`.
 - Define extremely short methods, consisting of a single instruction or expression, directly with their declaration inside the class and omit the `inline` keyword.
 - For short methods that are slightly longer than one instruction or a couple of lines, declare them `inline` inside the class and place their definition immediately after the class definition in the same header.

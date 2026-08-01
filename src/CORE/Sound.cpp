@@ -14,7 +14,8 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	  _soundReady (false),
 	  _audioSpec (), _deviceId (0), // Defined later...
 	  _conversionNeeded (false),
-	  _conversionData () // Set when the system is initialized (becuase is when the sound chip will be finally linked)...
+	  _conversionData (), // Set when the system is initialized (becuase is when the sound chip will be finally linked)...
+	  _conversionBuffer ()
 { 
 	setClassName ("SoundSystem");
 
@@ -22,26 +23,30 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	SDL_zero (specIn);
 	specIn.freq = _samplingFrequency;
 	specIn.format = _type;
-	specIn.channels = (Uint8) _numberChannels;
+	specIn.channels = (unsigned char) _numberChannels;
 	specIn.callback = nullptr; // SDL_QueueAudio will be used instead...
 	specIn.userdata = nullptr; // No callback no special data to be passed...
-	_deviceId = SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
-	
-	// After openning the device the initial variables can be changed...
-	bool changed = false;
-	if (_audioSpec.freq != _samplingFrequency) { _samplingFrequency = _audioSpec.freq; changed = true; }
-	if (_audioSpec.format != _type) { _type = _audioSpec.format; changed = true; }
-	if (_audioSpec.channels != _numberChannels) { _numberChannels = _audioSpec.channels; changed = true; }
-	if (changed)
-		_LOG ("Original sound format has been changed");
+	if ((_deviceId = // When the device is opened the parameters can be changed by the sound card driver...
+			SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE)) != 0) // ..and cannot be 0!
+	{	
+		bool changed = false;
+		if (_audioSpec.freq != _samplingFrequency) { _samplingFrequency = _audioSpec.freq; changed = true; }
+		if (_audioSpec.format != _type) { _type = _audioSpec.format; changed = true; }
+		if (_audioSpec.channels != _numberChannels) { _numberChannels = _audioSpec.channels; changed = true; }
+		if (changed)
+			_LOG ("Original sound format has been changed");
 
-	SDL_PauseAudioDevice (_deviceId, 0); // 0 to start...
+		SDL_PauseAudioDevice (_deviceId, 0); // 0 to start...
+	}
+	else
+		_LOG ("Failed to open audio device");
 }
 
 // ---
 MCHEmul::SoundSystem::~SoundSystem ()
 {
-	SDL_CloseAudioDevice (_deviceId);
+	if (_deviceId != 0)
+		SDL_CloseAudioDevice (_deviceId);
 }
 
 // ---
@@ -68,12 +73,27 @@ bool MCHEmul::SoundSystem::initialize ()
 	SDL_memset (&_conversionData, 0, sizeof (_conversionData));
 	int tC = SDL_BuildAudioCVT 
 			(&_conversionData, 
-			 _soundChip -> type (), (Uint8) _soundChip -> numberChannels (), _soundChip -> samplingFrecuency (),
+			 _soundChip -> type (), (unsigned char) _soundChip -> numberChannels (), _soundChip -> samplingFrecuency (),
 			 _type, _numberChannels, _samplingFrequency);
 
 	result = (tC >= 0);
 
 	_conversionNeeded = (tC != 0);
+
+	if (result && _conversionNeeded)
+	{
+		assert (_conversionData.len_mult > 0);
+
+		_conversionBuffer.resize (
+			(size_t) _soundChip -> soundBufferSize () *
+			(size_t) _conversionData.len_mult);
+		_conversionData.buf = _conversionBuffer.data ();
+	}
+	else
+	{
+		_conversionBuffer.clear ();
+		_conversionData.buf = nullptr;
+	}
 
 	// If the conversion action is not possible the initialization doesn't progress...
 	return (result ? MCHEmul::IODevice::initialize () : result);
@@ -82,6 +102,9 @@ bool MCHEmul::SoundSystem::initialize ()
 // ---
 bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 {
+	if (_deviceId == 0)
+		return (false);
+
 	if (!MCHEmul::IODevice::simulate (cpu))
 		return (false);
 
@@ -97,19 +120,19 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 			if (_conversionNeeded)
 			{
 				_conversionData.len = _soundChip -> soundBufferSize ();
-				int cvt_lencvt = _conversionData.len * _conversionData.len_mult;
-				_conversionData.buf = (Uint8*) SDL_malloc (cvt_lencvt);
+				_conversionData.buf = _conversionBuffer.data ();
 				memcpy ((void*) _conversionData.buf, 
-					(void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
-				SDL_ConvertAudio (&_conversionData);
-				result = (SDL_QueueAudio (_deviceId, 
-					(void*) _conversionData.buf, _conversionData.len_cvt) != -1);
-				SDL_free (_conversionData.buf);
+					(const void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
+				if (SDL_ConvertAudio (&_conversionData) < 0)
+					result = false;
+				else
+					result = (SDL_QueueAudio (_deviceId,
+						(const void*) _conversionData.buf, (unsigned int) _conversionData.len_cvt) != -1);
 			}
 			else
 			{
-				result = (SDL_QueueAudio (_deviceId, (void*) _soundChip -> soundMemory () -> samplingData (), 
-							(Uint32) _soundChip -> soundBufferSize ()) != -1);
+				result = (SDL_QueueAudio (_deviceId, (const void*) _soundChip -> soundMemory () -> samplingData (),
+							(unsigned int) _soundChip -> soundBufferSize ()) != -1);
 			}
 		}
 
@@ -124,9 +147,9 @@ MCHEmul::InfoStructure MCHEmul::SoundSystem::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::IODevice::getInfoStructure ());
 
-	result.add ("DATA", _type);
-	result.add ("FREQUENCY", std::to_string ((double) _samplingFrequency / 1000.0f));
-	result.add ("CHANNELS", _numberChannels);
+	result.add ("DATA",			_type);
+	result.add ("FREQUENCY",	std::to_string ((double) _samplingFrequency / 1000.0f));
+	result.add ("CHANNELS",		_numberChannels);
 
 	return (result);
 }

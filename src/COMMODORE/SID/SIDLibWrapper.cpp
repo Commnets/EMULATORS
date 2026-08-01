@@ -107,18 +107,20 @@ MCHEmul::InfoStructure COMMODORE::SIDLibWrapper::getInfoStructure () const
 // ---
 bool COMMODORE::SoundRESIDWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
 {
+	bool result = false;
+
 	// Maximum 1 element...
 	RESID::cycle_count nC = 1;
 	// A minumum buffer (it could be even shorter!)
 	short buffer [4];
-	if (_resid_sid.clock (nC, buffer, 1) != 0) // When element ready...
+	if (result = (_resid_sid.clock (nC, buffer, 1) != 0)) // When element ready...
 	{
 		const double sample = (double) buffer [0] / 32768.0f;
 		dt = MCHEmul::UBytes ({
 			MCHEmul::normalizedSoundSampleToU8 (sample) });
 	}
 
-	return (true);
+	return (result);
 }
 
 // ---

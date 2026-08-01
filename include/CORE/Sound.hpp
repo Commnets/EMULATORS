@@ -17,6 +17,7 @@
 #include <CORE/IO.hpp>
 #include <CORE/SoundChip.hpp>
 #include <SDL.h>
+#include <vector>
 
 namespace MCHEmul
 {
@@ -95,6 +96,9 @@ namespace MCHEmul
 			To identify whether the conversion of info is needed. */
 		bool _conversionNeeded;
 		SDL_AudioCVT _conversionData;
+		/** Buffer allocated during initialization and reused
+			for every conversion. */
+		std::vector <unsigned char> _conversionBuffer;
 	};
 }
 

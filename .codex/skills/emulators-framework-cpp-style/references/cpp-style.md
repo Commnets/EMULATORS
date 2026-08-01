@@ -86,6 +86,7 @@ Headers end with:
 
 - Match the framework's existing use of fundamental integer types: `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`.
 - Do not introduce the fixed-width aliases from `<cstdint>`, including `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, and `uint64_t`.
+- Do not introduce SDL width aliases such as `Sint8`, `Uint8`, `Sint16`, `Uint16`, `Sint32`, or `Uint32` when a fundamental integer type is sufficient. Retain semantic SDL types such as `SDL_AudioFormat` and `SDL_AudioDeviceID` when they describe an API concept instead of merely selecting an integer width.
 - Use `size_t` when a value represents a size, a memory position, or an index into an array, vector, string, or another container.
 - Use the nearby domain type for hardware values and counters: typically `unsigned char` for bytes, `unsigned short` for 16-bit addresses, and `unsigned int` for clock or cycle counters.
 - When signed arithmetic is required for a bounded displacement or difference, use `int` if its verified range is sufficient instead of selecting a wider fixed-width type.
