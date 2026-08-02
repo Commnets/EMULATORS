@@ -26,7 +26,8 @@ namespace MCHEmul
 	{
 		public:
 		SoundSystem (int id, 
-			SDL_AudioFormat tp, int sF, unsigned char nC, const Attributes& attrs = { });
+			SDL_AudioFormat tp, int sF, unsigned char nC,
+				const Attributes& attrs = { }, double mADelay = 0.05 /** Meaning 5%. */);
 
 		~SoundSystem ();
 
@@ -71,6 +72,17 @@ namespace MCHEmul
 		protected:
 		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
+		private:
+		/** Completes a sound block with the requested number of additional bytes. \n
+			The buffer is modified in place and the returned value is its final valid
+			size. No data is added unless _addAdditionalSoundData is true. \n
+			additionalData must contain complete output frames and the buffer must
+			already include enough capacity, reserved during initialize (). */
+		size_t fillAdditionalSoundData (
+			std::vector <unsigned char>& soundBuffer,
+			size_t soundSize,
+			size_t additionalData);
+
 		protected:
 		/** The type of any sample. \n
 			It is used by SDL to determine later the structure of the internal buffer used
@@ -96,9 +108,41 @@ namespace MCHEmul
 			To identify whether the conversion of info is needed. */
 		bool _conversionNeeded;
 		SDL_AudioCVT _conversionData;
-		/** Buffer allocated during initialization and reused
-			for every conversion. */
+		/** Common sound buffer allocated during initialization and reused continuously. \n
+			It is used whether the source data needs conversion or not, and includes
+			unused room for the maximum delay that could be compensated later. */
 		std::vector <unsigned char> _conversionBuffer;
+
+		// Special parameters dedicated to adjust the buffer simulated...
+		/** The maximum delay allowed in the buffer. \n
+			It is a percentage of the total buffer size. */
+		double _maxAllowedDelay;
+		/** Size in bytes of one output frame, including all its channels. */
+		size_t _outputFrameSize;
+		/** Maximum number of complete output frames reserved to compensate delay. \n
+			This space is allocated but not used or queued yet. */
+		size_t _maximumAdditionalFrames;
+		/** Frequency, in counters per second, of SDL's high-resolution clock. */
+		unsigned long long _performanceCounterFrequency;
+		/** Nominal number of high-resolution counters between two sound-ready events. */
+		unsigned long long _nominalSoundReadyCounters;
+		/** Maximum number of delayed counters accepted according to _maxAllowedDelay. */
+		unsigned long long _maximumAllowedDelayCounters;
+		/** High-resolution counter captured when the previous sound-ready event arrived. \n
+			A zero value means that there is no previous event to compare with yet. */
+		unsigned long long _lastSoundReadyCounter;
+		/** Real number of counters elapsed between the last two sound-ready events. */
+		unsigned long long _lastSoundReadyElapsedCounters;
+		/** Counters by which the last sound-ready event exceeded its nominal period. */
+		unsigned long long _soundReadyDelayCounters;
+		/** Additional bytes that would be needed to cover the accepted delay. \n
+			It is always zero or a multiple of _outputFrameSize. */
+		size_t _additionalSoundData;
+		/** Whether the last sound-ready event arrived after its nominal time. */
+		bool _soundReadyDelayed;
+		/** Whether _additionalSoundData contains a compensable amount of data. \n
+			The reserved data is only described by these variables and is not used yet. */
+		bool _addAdditionalSoundData;
 	};
 }
 

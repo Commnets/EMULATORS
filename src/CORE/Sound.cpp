@@ -1,10 +1,11 @@
 #include <CORE/Sound.hpp>
 #include <CORE/LogChannel.hpp>
+#include <cmath>
 
 // ---
 MCHEmul::SoundSystem::SoundSystem (int id, 
 		unsigned short tp, int sF, unsigned char nC,
-		const MCHEmul::Attributes& attrs)
+		const MCHEmul::Attributes& attrs, double mADelay)
 	: MCHEmul::IODevice (Type::_OUTPUT, id, attrs),
 	  _type (tp),
 	  _samplingFrequency (sF),
@@ -15,8 +16,23 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	  _audioSpec (), _deviceId (0), // Defined later...
 	  _conversionNeeded (false),
 	  _conversionData (), // Set when the system is initialized (becuase is when the sound chip will be finally linked)...
-	  _conversionBuffer ()
-{ 
+	  _conversionBuffer (),
+	  _maxAllowedDelay (mADelay),
+	  _outputFrameSize (0),
+	  _maximumAdditionalFrames (0),
+	  _performanceCounterFrequency (0),
+	  _nominalSoundReadyCounters (0),
+	  _maximumAllowedDelayCounters (0),
+	  _lastSoundReadyCounter (0),
+	  _lastSoundReadyElapsedCounters (0),
+	  _soundReadyDelayCounters (0),
+	  _additionalSoundData (0),
+	  _soundReadyDelayed (false),
+	  _addAdditionalSoundData (false)
+{
+	assert (_maxAllowedDelay >= 0.0 &&
+			_maxAllowedDelay <= 0.1); // A maximum of a 10% delay is allowed in the buffer.
+
 	setClassName ("SoundSystem");
 
 	SDL_AudioSpec specIn;
@@ -67,6 +83,19 @@ bool MCHEmul::SoundSystem::initialize ()
 	bool result = false;
 
 	_soundReady = false;
+	// A new execution cannot use the timestamp or the pending decision from a
+	// previous one. The first new sound-ready event will only establish a baseline.
+	_lastSoundReadyCounter = 0;
+	_lastSoundReadyElapsedCounters = 0;
+	_soundReadyDelayCounters = 0;
+	_additionalSoundData = 0;
+	_soundReadyDelayed = false;
+	_addAdditionalSoundData = false;
+	_nominalSoundReadyCounters = 0;
+	_maximumAllowedDelayCounters = 0;
+	_performanceCounterFrequency =
+		static_cast <unsigned long long> (SDL_GetPerformanceFrequency ());
+	assert (_performanceCounterFrequency != 0);
 
 	SDL_ClearQueuedAudio (_deviceId);
 
@@ -80,17 +109,59 @@ bool MCHEmul::SoundSystem::initialize ()
 
 	_conversionNeeded = (tC != 0);
 
+	size_t normalBufferCapacity =
+		(size_t) _soundChip -> soundBufferSize ();
 	if (result && _conversionNeeded)
 	{
 		assert (_conversionData.len_mult > 0);
 
+		normalBufferCapacity *= (size_t) _conversionData.len_mult;
+	}
+
+	if (result)
+	{
+		const size_t sourceFrameSize =
+			(size_t) _soundChip -> sampleSize () *
+			(size_t) _soundChip -> numberChannels ();
+		assert (sourceFrameSize != 0);
+		assert (((size_t) _soundChip -> soundBufferSize () % sourceFrameSize) == 0);
+		assert (_soundChip -> samplingFrecuency () > 0);
+
+		// This is the actual duration represented by a complete source block. It is
+		// normally 10 ms, but deriving it avoids assuming a fixed buffer duration.
+		const double nominalSoundReadyTime =
+			(((double) _soundChip -> soundBufferSize () / (double) sourceFrameSize) /
+			 (double) _soundChip -> samplingFrecuency ());
+		// Runtime comparisons remain in counter units: the conversion from seconds
+		// and the rounding cost are therefore paid only once during initialization.
+		_nominalSoundReadyCounters =
+			static_cast <unsigned long long> (std::ceil (
+				nominalSoundReadyTime * (double) _performanceCounterFrequency));
+		_maximumAllowedDelayCounters =
+			static_cast <unsigned long long> (std::ceil (
+				nominalSoundReadyTime * _maxAllowedDelay *
+				(double) _performanceCounterFrequency));
+		assert (_nominalSoundReadyCounters != 0);
+
+		// The extra capacity is expressed in complete output frames. This keeps the
+		// reserved area independent of the sample format and the number of channels.
+		_outputFrameSize =
+			(size_t) (SDL_AUDIO_BITSIZE (_type) >> 3) *
+			(size_t) _numberChannels;
+		assert (_outputFrameSize != 0);
+		_maximumAdditionalFrames = (size_t) std::ceil (
+			nominalSoundReadyTime * (double) _samplingFrequency * _maxAllowedDelay);
+
+		// SDL requires the original size multiplied by len_mult for a conversion.
+		// The additional area follows that workspace and remains unused for now.
 		_conversionBuffer.resize (
-			(size_t) _soundChip -> soundBufferSize () *
-			(size_t) _conversionData.len_mult);
+			normalBufferCapacity + (_maximumAdditionalFrames * _outputFrameSize));
 		_conversionData.buf = _conversionBuffer.data ();
 	}
 	else
 	{
+		_outputFrameSize = 0;
+		_maximumAdditionalFrames = 0;
 		_conversionBuffer.clear ();
 		_conversionData.buf = nullptr;
 	}
@@ -117,22 +188,29 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
  			if (SDL_GetQueuedAudioSize (_deviceId) >= (_audioSpec.size * 20))
 				SDL_ClearQueuedAudio (_deviceId); // If the data queued is too much...it is taken off!
 
+			// Both converted and already compatible data use the same reusable buffer.
+			// Only the nominal valid size is queued; the reserved tail is untouched.
+			_conversionData.len = _soundChip -> soundBufferSize ();
+			memcpy ((void*) _conversionBuffer.data (),
+				(const void*) _soundChip -> soundMemory () -> samplingData (),
+				(size_t) _conversionData.len);
+			size_t soundSize = (size_t) _conversionData.len;
+
 			if (_conversionNeeded)
 			{
-				_conversionData.len = _soundChip -> soundBufferSize ();
 				_conversionData.buf = _conversionBuffer.data ();
-				memcpy ((void*) _conversionData.buf, 
-					(const void*) _soundChip -> soundMemory () -> samplingData (), _conversionData.len);
 				if (SDL_ConvertAudio (&_conversionData) < 0)
 					result = false;
 				else
-					result = (SDL_QueueAudio (_deviceId,
-						(const void*) _conversionData.buf, (unsigned int) _conversionData.len_cvt) != -1);
+					soundSize = (size_t) _conversionData.len_cvt;
 			}
-			else
+
+			if (result)
 			{
-				result = (SDL_QueueAudio (_deviceId, (const void*) _soundChip -> soundMemory () -> samplingData (),
-							(unsigned int) _soundChip -> soundBufferSize ()) != -1);
+				soundSize = fillAdditionalSoundData (
+					_conversionBuffer, soundSize, _additionalSoundData);
+				result = (SDL_QueueAudio (_deviceId,
+					(const void*) _conversionBuffer.data (), (unsigned int) soundSize) != -1);
 			}
 		}
 
@@ -143,6 +221,33 @@ bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 }
 
 // ---
+size_t MCHEmul::SoundSystem::fillAdditionalSoundData (
+	std::vector <unsigned char>& soundBuffer,
+	size_t soundSize,
+	size_t additionalData)
+{
+	// This is the usual path. No buffer contents or sizes are modified unless
+	// processEvent () marked the last delay as compensable.
+	if (!_addAdditionalSoundData || additionalData == 0)
+		return (soundSize);
+
+	// TO BE IMPLEMENTED: The following checks are not strictly necessary, but they
+	assert (_outputFrameSize != 0);
+	assert ((soundSize % _outputFrameSize) == 0);
+	assert ((additionalData % _outputFrameSize) == 0);
+	assert (soundSize <= soundBuffer.size ());
+	assert (additionalData <= (soundBuffer.size () - soundSize));
+
+	// TODO
+
+	// The calculated compensation belongs only to the sound block now queued.
+	// Consuming it here prevents it from being applied again to a later block.
+	_additionalSoundData = 0;
+	_addAdditionalSoundData = false;
+
+	return (soundSize);
+}
+
 MCHEmul::InfoStructure MCHEmul::SoundSystem::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result = std::move (MCHEmul::IODevice::getInfoStructure ());
@@ -158,5 +263,54 @@ MCHEmul::InfoStructure MCHEmul::SoundSystem::getInfoStructure () const
 void MCHEmul::SoundSystem::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	if (evnt.id () == MCHEmul::SoundChip::_SOUNDREADY)
+	{
+		const unsigned long long currentCounter =
+			static_cast <unsigned long long> (SDL_GetPerformanceCounter ());
+
+		// These values always describe only the interval ending at the event just
+		// received. No stale correction may survive an early or unsupported interval.
+		_lastSoundReadyElapsedCounters = 0;
+		_soundReadyDelayCounters = 0;
+		_additionalSoundData = 0;
+		_soundReadyDelayed = false;
+		_addAdditionalSoundData = false;
+
+		// The first event has no preceding timestamp. After initialization succeeds,
+		// all later events can be compared directly in high-resolution counter units.
+		if (_lastSoundReadyCounter != 0 &&
+			_performanceCounterFrequency != 0 &&
+			_nominalSoundReadyCounters != 0)
+		{
+			_lastSoundReadyElapsedCounters =
+				currentCounter - _lastSoundReadyCounter;
+			if (_lastSoundReadyElapsedCounters > _nominalSoundReadyCounters)
+			{
+				_soundReadyDelayed = true;
+				_soundReadyDelayCounters =
+					_lastSoundReadyElapsedCounters - _nominalSoundReadyCounters;
+				if (_soundReadyDelayCounters <= _maximumAllowedDelayCounters)
+				{
+					// Integer ceiling of delaySeconds * outputFrequency. It avoids
+					// floating-point work in the event path and produces complete frames.
+					const unsigned long long additionalFramesNumerator =
+						_soundReadyDelayCounters *
+						static_cast <unsigned long long> (_samplingFrequency);
+					const size_t additionalFrames = static_cast <size_t> (
+						(additionalFramesNumerator + _performanceCounterFrequency - 1) /
+						_performanceCounterFrequency);
+
+					// The time and frame checks together guarantee that a later consumer
+					// can never address beyond the area reserved in initialize ().
+					if (additionalFrames <= _maximumAdditionalFrames)
+					{
+						_additionalSoundData = additionalFrames * _outputFrameSize;
+						_addAdditionalSoundData = (_additionalSoundData != 0);
+					}
+				}
+			}
+		}
+
+		_lastSoundReadyCounter = currentCounter;
 		_soundReady = true; // To be processed in simulation...
+	}
 }
