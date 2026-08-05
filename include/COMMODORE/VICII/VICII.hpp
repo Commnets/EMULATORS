@@ -400,9 +400,6 @@ namespace COMMODORE
 		/** Treat the visible zone.
 			Draws the graphics, detects collisions, and finally draws the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
-		/** To determine whether the visualization of the current frame is active. */
-		bool displayEnabledForCurrentFrame () const
-							{ return (_DENSeenAtLine30); }
 
 		// Border management.
 		/** To manage the main border status for the current visible slice. */
@@ -411,10 +408,12 @@ namespace COMMODORE
 		inline void actualizeVerticalBorderStatus ();
 
 		// Graphics, sprites and collision composition.
-		/** Invoked from drawVisibleZone() to draw graphics/sprites and detect collisions. \n
-		  *	@param dC	= The parameter is the drawing context. \n
-		  * @param sdCA = Sprite data collision acrive. Sometimes (depending on the border) it shouldn't \n 
-		  * @param dTS	= Whether the info has or not to be draw to the screen.
+		/** Invoked from drawVisibleZone() to compose graphics and sprites and detect collisions. \n
+		  *	@param dC	= The drawing context. \n
+		  * @param sdCA = Whether sprite-data collisions are enabled. The vertical border
+						  flip-flop disables the graphics-data output and these collisions. \n
+		  * @param dTS	= Whether the priority-multiplexer output has to be copied to ScreenMemory.
+						  Sprite sequencers and collision detection are processed regardless of this value.
 		  *	@see DrawContext and DrawResult. */
 		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC, bool sdCA, bool dTS);
 		/** To draw any text or bitmap graphic mode. \n
@@ -493,7 +492,6 @@ namespace COMMODORE
 		void debugSpriteDrawToStart (size_t nS);
 		void debugReadingVideoMatrix ();
 		void debugReadingGraphics ();
-		void debugVideoNoActiveAt (unsigned short cav);
 		void debugDrawPixelAt (unsigned short cav);
 		void debugDrawSpriteAt (size_t nS, unsigned short x, unsigned short r);
 		// -----

@@ -107,9 +107,14 @@ void MCHEmul::LocalConsole::createAndExecuteCommand ()
 			(prmsFor (_command, cmdClearPeripheralData))) << std::endl;
 	else
 	{
-		MCHEmul::Command* cmd = commandBuilder () -> command (_command);
-		if (cmd == nullptr) outputStream () << _command << ":" << _commandDoesnExitTxt << std::endl;
-		else executeCommandNow (cmd, _emulator -> computer ());
+		if (_command == "")
+			outputStream () << "Empty command" << std::endl; // Just a blank line, nothing to do...
+		else
+		{
+			MCHEmul::Command* cmd = commandBuilder () -> command (_command);
+			if (cmd == nullptr) outputStream () << _command << ":" << _commandDoesnExitTxt << std::endl;
+			else executeCommandNow (cmd, _emulator -> computer ());
+		}
 	}
 }
 

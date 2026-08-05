@@ -725,42 +725,35 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 		/** _RR	 */ rv												// Where the vertical raster is inside the window (it is not the chip raster line)
 	};
 
-	// The vertical border disables the graphics sequencer output.
-	// Sprite-sprite collisions still come from the sprite sequencers.
-	const bool sdCA =
-		displayEnabledForCurrentFrame () && !_vicGraphicInfo._ffVBorder;
+	// The vertical border flip-flop disables the graphics-data output.
+	// Sprite-sprite collisions and sprite shift-register activity continue.
+	const bool sdCA = !_vicGraphicInfo._ffVBorder;
 
-	// If the display has not been enabled for this frame,
-	// the visible area is covered with the border color.
-	if (!displayEnabledForCurrentFrame ())
-	{
-		_IFDEBUG debugVideoNoActiveAt (cav);
+	// When the main border covers the complete slice, the graphics and sprite
+	// sequencers still advance, but their output does not have to be copied.
+	// Transitional left/right slices must be composed before the partial border
+	// is drawn over them.
+	const bool borderCoversEntireSlice =
+		_vicGraphicInfo._ffMBorder &&
+		!_vicGraphicInfo._ffLBorder &&
+		!_vicGraphicInfo._ffRBorder;
+	const size_t visiblePixels = (cav + 8) >= _raster.visibleColumns ()
+		? (size_t) (_raster.visibleColumns () - cav)
+		: 8;
 
-		screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-			(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-				_VICIIRegisters -> foregroundColor ());
-
-		drawGraphicsSpritesAndDetectCollisions (dC, sdCA, false);
-
-		return;
-	}
-
-	// In other case...
-	// Everyting is the color of the background initially...
-	// ..and it will be covered with the foreground (border) later if needed..
-	// This is how the VICII works...
 	screenMemory () -> setHorizontalLine ((size_t) cav, (size_t) rv,
-		(cav + 8) >= _raster.visibleColumns () ? (_raster.visibleColumns () - cav) : 8, 
-			_VICIIRegisters -> backgroundColor ());
+		visiblePixels, borderCoversEntireSlice
+			? _VICIIRegisters -> foregroundColor ()
+			: _VICIIRegisters -> backgroundColor ());
 
-	// Now the information is drawn,...
-	// ...and also the collisions detected at the same time
-	drawGraphicsSpritesAndDetectCollisions (dC, sdCA, true);
+	// The priority-multiplexer output is only copied when some part of the
+	// current slice is not covered by the main border.
+	drawGraphicsSpritesAndDetectCollisions (dC, sdCA, !borderCoversEntireSlice);
 
-	// If the raster is not in the very visible zone...
-	// it is time to cover with the border...
-	if (_vicGraphicInfo._ffMBorder || 
-		_vicGraphicInfo._ffLBorder || _vicGraphicInfo._ffRBorder /** The temporal ones. */)
+	// The main border is the final and highest-priority video layer.
+	if (!borderCoversEntireSlice &&
+		(_vicGraphicInfo._ffMBorder ||
+		 _vicGraphicInfo._ffLBorder || _vicGraphicInfo._ffRBorder /** The temporal ones. */))
 	{
 		screenMemory () -> setHorizontalLine ((size_t) _vicGraphicInfo._ffMBorderBegin, 
 			(size_t) rv, (size_t) _vicGraphicInfo._ffMBorderPixels, _VICIIRegisters -> foregroundColor ());
@@ -1686,15 +1679,6 @@ void COMMODORE::VICII::debugReadingGraphics ()
 	
 	_deepDebugFile -> writeLineData ("Reading Graphics [" + 
 		_vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
-}
-
-// ---
-void COMMODORE::VICII::debugVideoNoActiveAt (unsigned short cav)
-{
-	assert (_deepDebugFile != nullptr);
-	
-	_deepDebugFile -> writeLineData ("Video no active at pixel " + std::to_string (cav) +
-		", foreground color " + std::to_string ((unsigned int) _VICIIRegisters -> foregroundColor ()));
 }
 
 // ---
