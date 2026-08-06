@@ -509,9 +509,6 @@ namespace COMMODORE
 		int _VICIIView;
 		/** The number of cycles per raster line as it depends on the type of Chip. */
 		unsigned short _cyclesPerRasterLine;
-		/** The position in the line when the IRQ should be launched in case it is active. 
-			Depends on the implementation of the VICII. */
-		unsigned short _IRQrasterPosition;
 		/** The difference with the PAL System. */
 		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
@@ -533,6 +530,9 @@ namespace COMMODORE
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
+		/** True when the raster comparison has already generated its event
+			in the current raster line. */
+		bool _rasterIRQAlreadyTriggeredThisLine;
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. \n
 			It is updated by matrix, graphics, sprite and invalid DMA-delay/FLI
 			accesses. It is not yet connected to CPU open-bus reads. */
@@ -1260,6 +1260,7 @@ namespace COMMODORE
 		if (cLine)
 		{
 			_cycleInRasterLine = 1;
+			_rasterIRQAlreadyTriggeredThisLine = false;
 
 			resetBadLineStateForNewRasterLine ();
 
@@ -1283,9 +1284,13 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatRasterIRQAtCurrentPosition ()
 	{
-		if (_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt () &&
-			_raster.currentColumn () == _IRQrasterPosition)
+		if (!_rasterIRQAlreadyTriggeredThisLine &&
+			_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt ())
+		{
+			_rasterIRQAlreadyTriggeredThisLine = true;
+
 			_VICIIRegisters -> activateRasterIRQ ();
+		}
 	}
 
 	// ---

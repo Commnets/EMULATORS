@@ -36,13 +36,13 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _VICIIRegisters (nullptr), 
 	  _VICIIView (vV),
 	  _cyclesPerRasterLine (cRL),
-	  _IRQrasterPosition (0), // Assigned within the constructor of the specific version of the VICII...
 	  _incCyclesPerRasterLine (cRL - COMMODORE::VICII_PAL::_CYCLESPERRASTERLINE),
 	  _raster (vd, hd, 8 /** @see above. This is the step. */),
 	  _drawRasterInterruptPositions (false), _drawSpritesBorder (false), _drawOtherEvents (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
+	  _rasterIRQAlreadyTriggeredThisLine (false),
 	  _lastVICDataRead (MCHEmul::UByte::_0),
 	  _DENSeenAtLine30 (false),
 	  _badLineAlreadyDetectedThisLine (false), 
@@ -108,6 +108,7 @@ bool COMMODORE::VICII::initialize ()
 	_lastCPUCycles = 0;
 	
 	_cycleInRasterLine = 1;
+	_rasterIRQAlreadyTriggeredThisLine = false;
 
 	_lastVICDataRead = MCHEmul::UByte::_0;
 
@@ -1725,8 +1726,6 @@ COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR,
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1982-1983 (depending on version)" } })
 {
-	// This value - the initial position in the row divided by 8 must have a rest of 0
-	_IRQrasterPosition = 404;
 }
 
 // ---
@@ -1779,8 +1778,6 @@ COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR
 		   { "Manufacturer", "MOS Technology INC/Commodore Semiconductor Group (CBM)"},
 		   { "Year", "1983" } })
 {
-	// This value - the initial position in the row divided by 8 must have a rest of 0
-	_IRQrasterPosition = 412;
 }
 
 // ---

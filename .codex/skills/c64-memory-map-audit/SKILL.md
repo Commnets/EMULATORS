@@ -21,6 +21,7 @@ Use this skill to audit whether EMULATORS presents the same memory view as real 
 3. When changing C++ code, also use `$emulators-framework-cpp-style`.
 4. Separate CPU-visible mapping from VIC-visible mapping. The CPU sees PLA-selected RAM/ROM/I/O overlays; the VIC sees a selected 16 KB bank plus its own color/char-ROM behavior.
 5. For findings, cite the address range, controlling signal/bit, expected visibility, and the class or method that violates it.
+6. Audit every `MCHEmul::Address` construction that uses byte lists. Never use the ambiguous form `MCHEmul::Address ({ xx, xx })`: overload resolution can select `Address (size_t, unsigned int)` instead of a byte-container constructor. Always pass the endian flag explicitly, for example `MCHEmul::Address ({ 0x00, 0xd0 }, false)` for the framework's little-endian address notation, and verify the resulting address size and numeric value.
 
 ## Audit Priorities
 
