@@ -18,9 +18,9 @@
 
 namespace COMMODORE
 {
-	/** The serial port inside the CIA reads and sends bits sequentially.
-		Input samples SP on CNT rising edges. Output uses Timer A underflows
-		to generate the CNT clock. */
+	/** The serial port inside the CIA reads and sends bits sequentially. \n
+		Input samples SP on CNT rising edges. \n
+		Output uses Timer A underflows to generate the CNT clock. */
 	class CIASerialPort final : public MCHEmul::InfoClass, public MCHEmul::Notifier
 	{
 		public:
@@ -40,14 +40,14 @@ namespace COMMODORE
 
 		Status status () const
 							{ return (_status); }
-		void setStatus (Status s)
-							{ _status = s; }
+		inline void setStatus (Status s);
 
 		// To manage the value of the port...
-		/** The value is always set when there is an intention to transmit it. ºn
-			This is done within the method simulate. \n
-			The value can be only set when the port has been configured for ouput purpouses. */
+		/** Stores a byte in SDR for a future or active transmission. \n
+			A pending byte is loaded into the shift register when Timer A is running. */
 		inline void setValue (const MCHEmul::UByte& v);
+		/** Loads a pending SDR byte when Timer A is running. */
+		inline void tryStartTransmission (bool timerARunning);
 		const MCHEmul::UByte& value () const
 							{ return (_value); }
 
@@ -77,8 +77,7 @@ namespace COMMODORE
 
 		void initialize ();
 
-		void simulate (bool CNTRisingEdge, bool CNTFallingEdge,
-			bool timerAUnderflow, bool timerAContinuous);
+		void simulate (bool CNTRisingEdge, bool CNTFallingEdge, bool timerAUnderflow);
 
 		/**
 		  *	The name of the fields are: \n
@@ -89,16 +88,17 @@ namespace COMMODORE
 
 		private:
 		// Implementation
-		/** Adds a bit to the value stored. \n
-			If the maximum bits expected is reached a true is returned, false in other case. 
-			In that case an interrupt should be generated if active. */
+		/** Adds a bit to the input shift register. \n
+			Returns true when a complete byte has been received. */
 		inline bool addBit (bool b);
 
-		/** Removes a bit from the value stored.
-			Returns true when the maximum bits to extract has been reached and false in other case. 
-			The variable passed as reference will hold the bt removed. */
+		/** Removes one bit from the output shift register. \n
+			Returns true when a complete byte has been transmitted. */
 		bool removeBit (bool& b)
-							{ b = _bufferValue.shiftLeftC (); return (++_numberBitsTransmitted >= 8); }
+							{ b = _shiftRegister.shiftLeftC (); return (++_numberBitsTransmitted >= 8); }
+
+		/** Loads the pending SDR byte into the active shift register. */
+		inline void startTransmission ();
 
 
 		private:
@@ -109,36 +109,75 @@ namespace COMMODORE
 		bool _SPPin;
 
 		// Implementation
-		bool _toTransmit;
 		unsigned int _numberBitsTransmitted;
 		bool _interruptEnabled;
 		mutable bool _interruptRequested;
-		/** used for receiving and sending info. */
-		MCHEmul::UByte _bufferValue;
+		/** Active input/output shift register. */
+		MCHEmul::UByte _shiftRegister;
+		/** Buffered SDR value waiting to be transmitted. */
+		MCHEmul::UByte _transmitBuffer;
+		bool _transmitBufferFull;
+		bool _transmissionActive;
 		bool _generatedCNTSignal;
 	};
 
 	// ---
+	inline void CIASerialPort::setStatus (Status s)
+	{
+		if (_status == s)
+			return;
+
+		_status = s;
+
+		// Changing the serial direction aborts the active shift operation,
+		// but does not discard a byte already written to SDR.
+		_transmissionActive = false;
+		_numberBitsTransmitted = 0;
+
+		if (_status == Status::_SAVING)
+			_generatedCNTSignal = true;
+	}
+
+	// ---
 	inline void CIASerialPort::setValue (const MCHEmul::UByte& v)
 	{ 
-		// The official register is loaded with the data...
-		// but also the buffer that it is used to receive information...
-		_value = _bufferValue = v;
+		// SDR and the active shift register are separate hardware stages.
+		// A new SDR write must not overwrite or restart an active transfer.
+		_value = _transmitBuffer = v;
+		_transmitBufferFull = true;
+	}
 
-		// Now it is ready to transmit info if needed...
-		_toTransmit = true; 
-		// ...and the number of bits transmitted is set back to 0
-		_numberBitsTransmitted = 0; 
+	// ---
+	inline void CIASerialPort::tryStartTransmission (bool timerARunning)
+	{
+		if (timerARunning &&
+			!_transmissionActive &&
+			_transmitBufferFull &&
+			_status == Status::_SAVING)
+			startTransmission ();
+	}
+
+	// ---
+	inline void CIASerialPort::startTransmission ()
+	{
+		_shiftRegister = _transmitBuffer;
+		_transmitBufferFull = false;
+		_transmissionActive = true;
+		_numberBitsTransmitted = 0;
 	}
 
 	// ---
 	inline bool CIASerialPort::addBit (bool b)
 	{ 
-		bool r = false;
-		_bufferValue.shiftLeftC (b); 
-		if (r = (++_numberBitsTransmitted >= 8))
-			_value = _bufferValue; // The value in the buffer is moved into the real one...
-		return (r); 
+		_shiftRegister.shiftLeftC (b);
+
+		if (++_numberBitsTransmitted < 8)
+			return (false);
+
+		_value = _shiftRegister;
+		_numberBitsTransmitted = 0;
+
+		return (true);
 	}
 }
 

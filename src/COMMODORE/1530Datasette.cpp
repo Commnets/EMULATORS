@@ -112,10 +112,13 @@ bool COMMODORE::Datasette1530Injection::connectData (MCHEmul::FileData* dt)
 {
 	if (dynamic_cast <COMMODORE::T64FileData*> (dt) == nullptr &&
 		dynamic_cast <COMMODORE::PRGFileData*> (dt) == nullptr)
-		return (false); // These formats are the only ones accepted only...
+		return (false);
 
-	_data = dt -> asMemoryBlocks ();
+	MCHEmul::ExtendedDataMemoryBlocks data = dt -> asMemoryBlocks ();
+	if (data._data.empty ())
+		return (false);
 
+	_data = std::move (data);
 	_dataCounter = 0;
 	_elementCounter = 0;
 
@@ -319,6 +322,12 @@ bool COMMODORE::Datasette1530Injection::executeReceiveDataTrap (MCHEmul::CPU* cp
 					(start, sourceBlock.bytes ());
 
 				loadDataBlockInRAM (destinationBlock, cpu);
+
+				// The sequence of commands to move the head of 
+				// the datasette to the next block is: STOP, FORWARD, PLAY.
+				executeCommand (MCHEmul::StandardDatasette::_KEYSTOP, {}); 
+				executeCommand (MCHEmul::StandardDatasette::_KEYFOWARD, {}); 
+				executeCommand (MCHEmul::StandardDatasette::_KEYPLAY, {}); 
 			}
 
 			break;

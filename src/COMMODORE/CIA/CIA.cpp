@@ -91,8 +91,8 @@ bool COMMODORE::CIA::simulate (MCHEmul::CPU* cpu)
 			(_timerB.affectPortDataB (), _timerB.portOutput ());
 
 		_clock.simulate (cpu);
-		_serialPort.simulate (CNTRisingEdge, CNTFallingEdge, timerAResult._underflow,
-			_timerA.runMode () == CIATimer::RunMode::_RESTART);
+		_serialPort.simulate
+			(CNTRisingEdge, CNTFallingEdge, timerAResult._underflow);
 
 		int cI = -1;
 		if ((cI = (int) _CIARegisters -> reasonIRQCode ()) != 0)

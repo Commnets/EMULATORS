@@ -72,6 +72,7 @@ Headers end with:
 - Avoid comments that only repeat the expression, assignment, or method name.
 - Match nearby comment style: short `//` comments inside functions, Doxygen-style block comments for public API/member documentation, and existing explanatory multi-line comments for hardware behaviour.
 - Keep comments concise and close to the code they explain.
+- In multi-line Doxygen comments, terminate every line that must appear separately in generated browser documentation with a period followed by one space and `\n`: `First rendered line. \n`.
 
 ## Naming
 

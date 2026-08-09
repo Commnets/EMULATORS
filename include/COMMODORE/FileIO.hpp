@@ -179,15 +179,19 @@ namespace COMMODORE
 			TapeRecord ()
 				: _descriptor (""),
 				  _version (0),
-				  _entries (),
-				  _usedEntries (),
+				  _entries (0),
+				  _declaredUsedEntries (0),
+				  _usedEntries (0),
 				  _userDescriptor ("")
 							{ }
 
 			std::string _descriptor;				// $00 - $20 : 32 bytes. DOS tape descriptor. Internal.
 			unsigned short _version;				// $20 - $21 : 2 bytes. Tape version ($0200 e.g.).
 			unsigned short _entries;				// $22 - $23 : 2 bytes. Number of directory entries (potentially).
-			unsigned short _usedEntries;			// $24 - $25 : 2 bytes. Number of used entries (the ones really used).
+			/** Value declared in the T64 header. Zero means unknown in some legacy images. */
+			unsigned short _declaredUsedEntries;	// $24 - $25 : 2 bytes.
+			/** Effective number of usable entries found in the directory. */
+			unsigned short _usedEntries;
 			// $26 - $27 : 2 bytes. Free for future uses.
 			std::string _userDescriptor;			// $28 - $3f : 24 bytes. User descriptor displayed
 													// in the tape menu.
@@ -207,12 +211,14 @@ namespace COMMODORE
 			};
 
 			FileRecord ()
-				: _entryType (),
+				: _entryType (_FREE),
 				  _fileType ('\0'),
 				  _startLoadAddress (),
 				  _endLoadAddress (),
 				  _offset (0),
-				  _fileName ("")
+				  _fileName (""),
+				  _dataSize (0),
+				  _endLoadAddressAdjusted (false)
 							{ }
 
 			EntryType _entryType;					// $00 - $00 : 1 bytes. Entry type (@see above).
@@ -223,6 +229,10 @@ namespace COMMODORE
 			unsigned int _offset;					// $08 - $0b : 4-byte absolute offset from the beginning of the T64 file.
 			// $0c - $0f : 4 bytes. Free for future uses...
 			std::string _fileName;					// $10 - $1f : Name of the file.
+			/** Effective size after validating the directory entry. */
+			size_t _dataSize;
+			/** Whether the known faulty $c3c6 end address was repaired. */
+			bool _endLoadAddressAdjusted;
 		};
 
 		// In the tape format there might be more than a file record...

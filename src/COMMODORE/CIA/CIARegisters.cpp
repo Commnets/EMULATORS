@@ -202,6 +202,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0c:
 			{
 				_serialPort -> setValue (v.value ());
+				_serialPort -> tryStartTransmission (_timerA -> enabled ());
 			}
 
 			break;
@@ -249,6 +250,7 @@ void COMMODORE::CIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				_timerA -> setEnabled (v.bit (0));
 				_serialPort -> setStatus
 					(v.bit (6) ? CIASerialPort::Status::_SAVING : CIASerialPort::Status::_READING);
+				_serialPort -> tryStartTransmission (_timerA -> enabled ());
 			}
 
 			break;

@@ -63,6 +63,10 @@ namespace COMMODORE
 		/** Bauer bad-line BA/c-access start window. */
 		static const unsigned short _BADLINE_START_FIRST_CYCLE				= 12;
 		static const unsigned short _BADLINE_START_LAST_CYCLE				= 54;
+		/** Window where a Bad Line Condition can switch the graphics
+			sequencer from idle to screen/display state. */
+		static const unsigned short _BADLINE_DISPLAY_FIRST_CYCLE			= 12;
+		static const unsigned short _BADLINE_DISPLAY_LAST_CYCLE			= 57;
 		/** Late Bad Line Condition window that can prevent idle entry at cycle 58. */
 		static const unsigned short _BADLINE_IDLE_PREVENT_FIRST_CYCLE		= 54;
 		static const unsigned short _BADLINE_IDLE_PREVENT_LAST_CYCLE		= 57;
@@ -178,19 +182,18 @@ namespace COMMODORE
 		  * Raster							= InfoStructure: Info about the raster. \n
 		  * VICIIInternal					= InfoStructure: Info about the internal registers of the VICII. \n
 		  * DENSeenAtLine30					= Attribute: Whether the DEN signal has been seen at line 30. \n
-		  * BadlineCondition				= Attribute: Whether the raster is or not in a bad line. \n
-		  * BadlinePreventedIdleThisLine	= Attribute: Whether a bad line has prevented idle in the current line. \n
-		  * BadlineDetected                 = Attribute: Whether a bad-line condition has already been accepted in the current raster line. \n
-		  * BadlineCAccess                  = Attribute: Whether a bad-line c-access sequence is latched for the current raster line. \n
-		  * BadlineDetected					= Attribute: Whether a bad line has been detected in the current cycle. \n
-		  * BadlineCAccess					= Attribute: Whether the VICII is accessing to the character data. \n
-		  * BadlineBARequested				= Attribute: Whether the VICII has requested the bus to access to the character data. \n
-		  * BadlineBARequestCycle			= Attribute: Number of the VICII internal cycle where the bus 
+		  * BadlineCondition				= Attribute: Whether the instantaneous Bad Line Condition is active. \n
+		  * BadlinePreventedIdleThisLine	= Attribute: Whether a late Bad Line Condition has prevented idle entry. \n
+		  * BadlineDetected					= Attribute: Whether a Bad Line Condition has been accepted during the display-state window. \n
+		  * BadlineBARequested				= Attribute: Whether a BA-like bus request has been issued for the current bad line. \n
+		  * BadlineBARequestCycle			= Attribute: Number of the VICII internal cycle where the bus
 		  *		request to access to the character data happens. \n
-		  * BadlineFirstCAccessCycle		= Attribute: Number of the VICII internal cycle where the first 
+		  * BadlineFirstCAccessCycle			= Attribute: Number of the VICII internal cycle where the first
 		  *		access to the character data happens. \n
-		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed 
+		  * BadlineCAccess					= Attribute: Whether a bad-line c-access sequence is latched for the current raster line. \n
+		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed
 		  *		to perform normal Video Matrix / Color RAM reads in this raster line. \n
+		  * BadlineInvalidCAccessCycles		= Attribute: Number of initial invalid c-access attempts in the current raster line. \n
 		  * BadlineCAccessStartCycle		= Attribute: Number of the VICII internal cycle where the access to the character data starts. \n
 		  * Cycle							= Attribute: Number of the VICII internal cycle where the raster beam is. \n
 		  * LastVICDataRead					= Attribute: The last byte read by the VICII. \n
@@ -805,10 +808,13 @@ namespace COMMODORE
 			_cycleInRasterLine <= _BADLINE_IDLE_PREVENT_LAST_CYCLE)
 			_badLinePreventedIdleThisLine = true;
 
-		// The first accepted Bad Line Condition in a raster line puts the graphics
-		// sequencer into display/screen state. It is latched once per line.
+		// A Bad Line Condition can switch the sequencer to display state only
+		// during the hardware acceptance window. Conditions before cycle 12
+		// remain observable but must not alter VC, VCBASE, RC or the idle state.
 		if (_badLineConditionActive &&
-			!_badLineAlreadyDetectedThisLine)
+			!_badLineAlreadyDetectedThisLine &&
+			_cycleInRasterLine >= _BADLINE_DISPLAY_FIRST_CYCLE &&
+			_cycleInRasterLine <= _BADLINE_DISPLAY_LAST_CYCLE)
 		{
 			_badLineAlreadyDetectedThisLine = true;
 
