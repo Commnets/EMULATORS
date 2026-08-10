@@ -360,7 +360,6 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		case 0x10:
 		case 0x15:
 		case 0x17:
-		case 0x18:
 		case 0x1b:
 		case 0x1c:
 		case 0x1d:
@@ -427,6 +426,16 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 			{
 				/** bit 6 & 7 always on. */
 				result = MCHEmul::UByte (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x3f | 0xc0);
+			}
+
+			break;
+
+		// VMCSB: VICII Chip Memory Control Register
+		case 0x18:
+			{
+				/** Bit 0 is not connected and always reads as 1. */
+				result = MCHEmul::UByte
+					(MCHEmul::PhysicalStorageSubset::readValue (pp).value () | 0x01);
 			}
 
 			break;
@@ -530,6 +539,44 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 			}
 
 			break;
+	}
+
+	return (_lastValueRead = result);
+}
+
+// ---
+const MCHEmul::UByte& COMMODORE::VICIIRegisters::peekValue (size_t p) const
+{
+	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+
+	size_t pp = p % 0x40;
+
+	switch (pp)
+	{
+		// SPSPCL: Sprite - Sprite Collision Register
+		// Peeking must not clear the collision latches.
+		case 0x1e:
+			{
+				result = MCHEmul::UByte::_0;
+				for (size_t i = 0; i < 8; i++)
+					result.setBit (i, _spriteCollisionHappened [i]);
+			}
+
+			break;
+
+		// SPBGCL: Sprite - Data Collision Register
+		// Peeking must not clear the collision latches.
+		case 0x1f:
+			{
+				result = MCHEmul::UByte::_0;
+				for (size_t i = 0; i < 8; i++)
+					result.setBit (i, _spriteCollisionWithDataHappened [i]);
+			}
+
+			break;
+
+		default:
+			return (readValue (p));
 	}
 
 	return (_lastValueRead = result);

@@ -220,6 +220,7 @@ namespace COMMODORE
 		private:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
 
 		// Implementation
 		/** Just to initialize the internal values. */

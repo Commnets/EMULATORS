@@ -597,8 +597,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		
 		case 0x1a:
 			{
-				result = ((unsigned char) ((_graphicalInfo._currentCharacterPosition & 0xff00) >> 8)) 
-					| ~0b00000001; // The bits not used must be to 1...
+				result = ((unsigned char) ((_graphicalInfo._currentCharacterPosition & 0x0300) >> 8))
+					| ~0b00000011; // Bits 2 to 7 are not used and must read as 1...
 			}
 
 			break;

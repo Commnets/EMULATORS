@@ -414,8 +414,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 				// In timer A there can only run PROCESSORCYCLES OR SIGNALONCNTLINE...
 				result.setBit (5, (_timerA -> countMode () == CIATimer::CountMode::_SIGNALSONCNTLINE) ? true : false);
 				result.setBit (6, (_serialPort -> status () == COMMODORE::CIASerialPort::Status::_SAVING) ? true : false);
-				// Bit 7 to select whether the TOD is actualized under 50Hz or 60Hz is not still implemented...
-				// By default it is left to 0 when read.
+				// Bit 7 selects the TOD input frequency: 0 = 60Hz, 1 = 50Hz...
+				result.setBit (7, MCHEmul::PhysicalStorageSubset::readValue (pp).bit (7));
 			}
 
 			break;
@@ -432,7 +432,8 @@ const MCHEmul::UByte& COMMODORE::CIARegisters::readValue (size_t p) const
 								   _timerB -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
 				result.setBit (6, (_timerB -> countMode () == CIATimer::CountMode::_TIMERCOUNTSDOWNTO0 || 
 								   _timerB -> countMode () == CIATimer::CountMode::_0ONCNTPULSES) ? true : false);
-				// Bit 7 is always 0 when read...
+				// Bit 7 selects TOD clock or alarm access...
+				result.setBit (7, MCHEmul::PhysicalStorageSubset::readValue (pp).bit (7));
 			}
 
 			break;

@@ -145,7 +145,8 @@ const MCHEmul::UByte& COMMODORE::TEDSoundSimpleLibWrapper::readValue (size_t p) 
 	{
 		case 0x10:
 			{
-				result = MCHEmul::UByte ((_registers [0x10].value () & 0x03) | 0xc0);
+				/** Bits 2 to 7 are not used and always read as 1. */
+				result = MCHEmul::UByte ((_registers [0x10].value () & 0x03) | 0xfc);
 			}
 
 			break;
