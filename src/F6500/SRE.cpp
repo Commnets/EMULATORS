@@ -22,7 +22,7 @@ _INST_IMPL (F6500::SRE_ZeroPageIndirectX)
 // ---
 _INST_IMPL (F6500::SRE_ZeroPageIndirectY)
 {
-	return (executeOn (address_indirectZeroPageY ()));
+	return (executeOn (address_indirectZeroPageY (PageCrossingCycle::_IGNORE)));
 }
 
 // ---
@@ -34,11 +34,11 @@ _INST_IMPL (F6500::SRE_ZeroPageX)
 // ---
 _INST_IMPL (F6500::SRE_AbsoluteX)
 {
-	return (executeOn (address_absoluteX ()));
+	return (executeOn (address_absoluteX (PageCrossingCycle::_IGNORE)));
 }
 
 // ---
 _INST_IMPL (F6500::SRE_AbsoluteY)
 {
-	return (executeOn (address_absoluteY ()));
+	return (executeOn (address_absoluteY (PageCrossingCycle::_IGNORE)));
 }

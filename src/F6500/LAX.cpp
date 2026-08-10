@@ -22,7 +22,7 @@ _INST_IMPL (F6500::LAX_ZeroPageIndirectX)
 // ---
 _INST_IMPL (F6500::LAX_ZeroPageIndirectY)
 {
-	return (executeOn (address_indirectZeroPageY ()));
+	return (executeOn (address_indirectZeroPageY (PageCrossingCycle::_ADD)));
 }
 
 // ---
@@ -34,5 +34,5 @@ _INST_IMPL (F6500::LAX_ZeroPageY)
 // ---
 _INST_IMPL (F6500::LAX_AbsoluteY)
 {
-	return (executeOn (address_absoluteY ()));
+	return (executeOn (address_absoluteY (PageCrossingCycle::_ADD)));
 }

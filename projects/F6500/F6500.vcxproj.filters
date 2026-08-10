@@ -167,6 +167,12 @@
     <ClCompile Include="..\..\src\F6500\LAX.cpp">
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\F6500\LAS.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\LXA.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\F6500\RLA.cpp">
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>
@@ -195,6 +201,12 @@
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\SHY.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\TAS.cpp">
+      <Filter>Archivos de origen\Instructions\undocumented</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\F6500\XAA.cpp">
       <Filter>Archivos de origen\Instructions\undocumented</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\F6500\JAM.cpp">

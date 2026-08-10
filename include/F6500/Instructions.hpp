@@ -61,7 +61,7 @@ namespace F6500
 	#define _6500JSR { \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
-		MCHEmul::InstructionDefined::_CYCLEWRITE, \
+		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEREAD }
@@ -84,6 +84,12 @@ namespace F6500
 							{ /** Nothing else. */ }
 	
 		protected:
+		enum class PageCrossingCycle
+		{
+			_ADD,
+			_IGNORE
+		};
+
 		/** To access the different registers. */
 		const MCHEmul::Register& registerA () const
 							{ return (cpu () -> internalRegister (C6510::_ACCUMULATOR)); }
@@ -108,11 +114,13 @@ namespace F6500
 		/** 1 parameter representing an address in the page 0. */
 		inline const MCHEmul::Address& address_zeroPage () const;
 		/** 2 parameters representing a base address. 
-			The final one is got adding the X register to the base. */
-		inline const MCHEmul::Address& address_absoluteX () const;
+			The final one is got adding the X register to the base.
+			Whether crossing a page adds a clock cycle is explicitly indicated. */
+		inline const MCHEmul::Address& address_absoluteX (PageCrossingCycle pC) const;
 		/** 2 parameters representing a base address. 
-			The final one is got adding the Y register to the base. */
-		inline const MCHEmul::Address& address_absoluteY () const;
+			The final one is got adding the Y register to the base.
+			Whether crossing a page adds a clock cycle is explicitly indicated. */
+		inline const MCHEmul::Address& address_absoluteY (PageCrossingCycle pC) const;
 		/** 1 parameter representing a base address in page 0. 
 			The final one is got adding the X register to the base. */
 		inline const MCHEmul::Address& address_zeroPageX () const;
@@ -123,8 +131,9 @@ namespace F6500
 			The final one is got from the position in page 0 result of adding the X register to the base. */
 		inline const MCHEmul::Address& address_indirectZeroPageX () const;
 		/** 1 parameter representing a base address in page 0. 
-			The final one is got from the position in page 0 result of adding the X register to position found in the base. */
-		inline const MCHEmul::Address& address_indirectZeroPageY () const;
+			The final one is got from the position in page 0 result of adding the Y register to the address found in the base.
+			Whether crossing a page adds a clock cycle is explicitly indicated. */
+		inline const MCHEmul::Address& address_indirectZeroPageY (PageCrossingCycle pC) const;
 		/** 2 parameters representint a base addreess. 
 			The final one is got at the position of that first base address. */
 		inline const MCHEmul::Address& address_indirect () const;
@@ -140,10 +149,12 @@ namespace F6500
 								MCHEmul::UBytes ({ memory () -> value (address_zeroPage ()) }))[0]); }
 		const MCHEmul::UByte& value_absoluteX () const
 							{ return ((_lastExecutionData._INOUTData = 
-								MCHEmul::UBytes ({ memory () -> value (address_absoluteX ()) }))[0]); }
+								MCHEmul::UBytes ({ memory () -> value (
+									address_absoluteX (PageCrossingCycle::_ADD)) }))[0]); }
 		const MCHEmul::UByte& value_absoluteY () const
 							{ return ((_lastExecutionData._INOUTData = 
-								MCHEmul::UBytes ({ memory () -> value (address_absoluteY ()) }))[0]); }
+								MCHEmul::UBytes ({ memory () -> value (
+									address_absoluteY (PageCrossingCycle::_ADD)) }))[0]); }
 		/** Just 1 parameter that can be negative value. It us used in jumps. */
 		inline const MCHEmul::UByte& value_relative () const;
 		const MCHEmul::UByte& value_zeroPageX () const
@@ -157,7 +168,8 @@ namespace F6500
 								MCHEmul::UBytes ({ memory () -> value (address_indirectZeroPageX ()) }))[0]); }
 		const MCHEmul::UByte& value_indirectZeroPageY () const
 							{ return ((_lastExecutionData._INOUTData = 
-								MCHEmul::UBytes ({ memory () -> value (address_indirectZeroPageY ()) }))[0]); }
+								MCHEmul::UBytes ({ memory () -> value (
+									address_indirectZeroPageY (PageCrossingCycle::_ADD)) }))[0]); }
 
 		// Implementation
 		// Addition & subtraction with the accumulator is reused in non documented instructions
@@ -213,7 +225,7 @@ namespace F6500
 	}
 
 	// ---
-	inline const MCHEmul::Address& Instruction::address_absoluteX () const
+	inline const MCHEmul::Address& Instruction::address_absoluteX (PageCrossingCycle pC) const
 	{
 		assert (parameters ().size () == 3);
 
@@ -221,14 +233,14 @@ namespace F6500
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (x [0].value ()); // It could go out of the limits (0xffff), but it will be adjusted...
-		if (iA [0] != fA [0]) 
+		if (pC == PageCrossingCycle::_ADD && iA [0] != fA [0])
 			_additionalCycles = 1; // Page jump in the address so one cycle more
 		
 		return (_lastExecutionData._INOUTAddress = fA);
 	}
 
 	// ---
-	inline const MCHEmul::Address& Instruction::address_absoluteY () const
+	inline const MCHEmul::Address& Instruction::address_absoluteY (PageCrossingCycle pC) const
 	{
 		assert (parameters ().size () == 3);
 
@@ -236,7 +248,7 @@ namespace F6500
 
 		MCHEmul::Address iA ({ parameters ()[1], parameters ()[2] }, false);
 		MCHEmul::Address fA = iA + (size_t) (y [0].value ()); // It could also go aout of the limits (0xffff), but adjusted anycase...
-		if (iA [0] != fA [0]) 
+		if (pC == PageCrossingCycle::_ADD && iA [0] != fA [0])
 			_additionalCycles = 1; // Page jump in the address so one cycle more
 		
 		return (_lastExecutionData._INOUTAddress = fA);
@@ -284,7 +296,7 @@ namespace F6500
 	}
 
 	// ---
-	inline const MCHEmul::Address& Instruction::address_indirectZeroPageY () const
+	inline const MCHEmul::Address& Instruction::address_indirectZeroPageY (PageCrossingCycle pC) const
 	{
 		assert (parameters ().size () == 2);
 
@@ -302,7 +314,7 @@ namespace F6500
 			iA = MCHEmul::Address (memory () -> values (MCHEmul::Address ({ parameters ()[1] }), 2), false);
 
 		MCHEmul::Address fA = iA + (size_t) (y [0].value ()); // It could go out of the limits (0xffff), but it will adjusted...
-		if (iA [0] != fA [0]) 
+		if (pC == PageCrossingCycle::_ADD && iA [0] != fA [0])
 			_additionalCycles = 1; // Page jump in the address so one cycle more...
 
 		return (_lastExecutionData._INOUTAddress = fA);
@@ -503,6 +515,56 @@ namespace F6500
 	}
 
 	_INST6500_FROM (0x4b, 2, 2, _6500R(2),		"ALR#[#1]",				ALR_Inmediate, ALR_General);
+
+	// Non documented
+	// Some NMOS immediate instructions combine the accumulator with
+	// an unstable internal bus value before applying the operand.
+	class UnstableImmediate_General : public Instruction
+	{
+		public:
+		UnstableImmediate_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
+				const std::string& t)
+			: Instruction (c, mp, cc, cS, t)
+							{ }
+
+		protected:
+		/** Deterministic approximation of the unstable NMOS internal bus value. */
+		static const unsigned char _MAGICVALUE = 0xee;
+	};
+
+	// XAA / ANE: (A OR magic value) AND X AND immediate value.
+	/** XAA_General: To aggregate common steps in every XAA instruction. */
+	class XAA_General : public UnstableImmediate_General
+	{
+		public:
+		XAA_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
+				const std::string& t)
+			: UnstableImmediate_General (c, mp, cc, cS, t)
+							{ }
+
+		protected:
+		inline bool executeWith (const MCHEmul::UByte& u);
+	};
+
+	// ---
+	inline bool XAA_General::executeWith (const MCHEmul::UByte& u)
+	{
+		MCHEmul::UByte m (static_cast <unsigned char> (_MAGICVALUE));
+		MCHEmul::UByte r =
+			(registerA ().values ()[0] | m) & registerX ().values ()[0] & u;
+
+		registerA ().set ({ r });
+
+		MCHEmul::StatusRegister& st = statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
+
+	_INST6500_FROM (0x8b, 2, 2, _6500R(2),		"XAA#[#1]",				XAA_Inmediate, XAA_General);
 
 	// Non documented
 	// ANC: AND + Carry flag
@@ -1155,6 +1217,43 @@ namespace F6500
 	_INST6500_FROM (0xb9, 3, 4, _6500R(4),		"LDA[$2],Y",			LDA_AbsoluteY, LDA_General);
 
 	// Non documented
+	// LAS / LAE: Memory AND stack pointer copied into A, X and SP.
+	/** LAS_General: To aggregate common steps in every LAS instruction. */
+	class LAS_General : public Instruction
+	{
+		public:
+		LAS_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
+				const std::string& t)
+			: Instruction (c, mp, cc, cS, t)
+							{ }
+
+		protected:
+		inline bool executeOn (const MCHEmul::Address& a);
+	};
+
+	// ---
+	inline bool LAS_General::executeOn (const MCHEmul::Address& a)
+	{
+		MCHEmul::UByte m = memory () -> value (a);
+		_lastExecutionData._INOUTData = MCHEmul::UBytes ({ m });
+
+		MCHEmul::UByte r = m & MCHEmul::UByte (
+			static_cast <unsigned char> (stack () -> position ()));
+		registerA ().set ({ r });
+		registerX ().set ({ r });
+		stack () -> setPosition ((int) r.value ());
+
+		MCHEmul::StatusRegister& st = statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
+
+	_INST6500_FROM (0xbb, 3, 4, _6500R(4),		"LAS[$2],Y",				LAS_AbsoluteY, LAS_General);
+
+	// Non documented
 	// LAX: LDA + TAX
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	/** LAX_General: To aggregate common steps in every LAX instruction. */
@@ -1188,12 +1287,47 @@ namespace F6500
 		return (true);
 	}
 
-	_INST6500_FROM (0xaf, 3, 6, _6500R(6),		"LAX[$2]",				LAX_Absolute, LAX_General);
-	_INST6500_FROM (0xa7, 2, 5, _6500R(5),		"LAX[$1]",				LAX_ZeroPage, LAX_General);
-	_INST6500_FROM (0xa3, 2, 8, _6500R(8),		"LAX([$1],X)",			LAX_ZeroPageIndirectX, LAX_General);
-	_INST6500_FROM (0xb3, 2, 8, _6500R(8),		"LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
-	_INST6500_FROM (0xb7, 2, 6, _6500R(6),		"LAX[$1],Y",			LAX_ZeroPageY, LAX_General);
-	_INST6500_FROM (0xbf, 3, 7, _6500R(7),		"LAX[$2],Y",			LAX_AbsoluteY, LAX_General);
+	_INST6500_FROM (0xaf, 3, 4, _6500R(4),		"LAX[$2]",				LAX_Absolute, LAX_General);
+	_INST6500_FROM (0xa7, 2, 3, _6500R(3),		"LAX[$1]",				LAX_ZeroPage, LAX_General);
+	_INST6500_FROM (0xa3, 2, 6, _6500R(6),		"LAX([$1],X)",			LAX_ZeroPageIndirectX, LAX_General);
+	_INST6500_FROM (0xb3, 2, 5, _6500R(5),		"LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
+	_INST6500_FROM (0xb7, 2, 4, _6500R(4),		"LAX[$1],Y",			LAX_ZeroPageY, LAX_General);
+	_INST6500_FROM (0xbf, 3, 4, _6500R(4),		"LAX[$2],Y",			LAX_AbsoluteY, LAX_General);
+
+	// Non documented
+	// LXA / OAL: (A OR magic value) AND immediate value copied into A and X.
+	/** LXA_General: To aggregate common steps in every LXA instruction. */
+	class LXA_General : public UnstableImmediate_General
+	{
+		public:
+		LXA_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
+				const std::string& t)
+			: UnstableImmediate_General (c, mp, cc, cS, t)
+							{ }
+
+		protected:
+		inline bool executeWith (const MCHEmul::UByte& u);
+	};
+
+	// ---
+	inline bool LXA_General::executeWith (const MCHEmul::UByte& u)
+	{
+		MCHEmul::UByte r =
+			(registerA ().values ()[0] |
+			 MCHEmul::UByte (static_cast <unsigned char> (_MAGICVALUE))) & u;
+
+		registerA ().set ({ r });
+		registerX ().set ({ r });
+
+		MCHEmul::StatusRegister& st = statusRegister ();
+		st.setBitStatus (C6500::_NEGATIVEFLAG, r [7]);
+		st.setBitStatus (C6500::_ZEROFLAG, r == MCHEmul::UByte::_0);
+
+		return (true);
+	}
+
+	_INST6500_FROM (0xab, 2, 2, _6500R(2),		"LXA#[#1]",				LXA_Inmediate, LXA_General);
 
 	// LDX
 	/** LDX_General: To aggregate common steps in every LDX instruction. */
@@ -1336,10 +1470,10 @@ namespace F6500
 	// The rest are undocumented...
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	_INST6500_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, _6500R(2), "NOP#[#1]", NOP_Inmediate, NOP_General);
-	_INST6500_FROM (0x0c, 3, 6, _6500R(6),		"NOP[$2]",				NOP_Absolute, NOP_General);
-	_INST6500_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 5, _6500R(5), "NOP[$1]", NOP_ZeroPage, NOP_General);
-	_INST6500_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 6, _6500R(6), "NOP[$1],X", NOP_ZeroPageX, NOP_General);
-	_INST6500_FROM (0x1c /** 0x3c, 0x5c, 0x7x, 0xdc, 0xfc */, 3, 7, _6500R(7), "NOP[$2],X", NOP_AbsoluteX, NOP_General);
+	_INST6500_FROM (0x0c, 3, 4, _6500R(4),		"NOP[$2]",				NOP_Absolute, NOP_General);
+	_INST6500_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 3, _6500R(3), "NOP[$1]", NOP_ZeroPage, NOP_General);
+	_INST6500_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 4, _6500R(4), "NOP[$1],X", NOP_ZeroPageX, NOP_General);
+	_INST6500_FROM (0x1c /** 0x3c, 0x5c, 0x7c, 0xdc, 0xfc */, 3, 4, _6500R(4), "NOP[$2],X", NOP_AbsoluteX, NOP_General);
 
 	// ORA
 	/** ORA_General: To aggregate common steps in every ORA instruction. */
@@ -1618,7 +1752,7 @@ namespace F6500
 
 	_INST6500_FROM (0x8f, 3, 4, _6500RW(4,3),	"SAX[$2]",				SAX_Absolute, SAX_General);
 	_INST6500_FROM (0x87, 2, 3, _6500RW(3,2),	"SAX[$1]",				SAX_ZeroPage, SAX_General);
-	_INST6500_FROM (0x97, 2, 6, _6500RW(6,5),	"SAX[$1],Y",			SAX_ZeroPageY, SAX_General);
+	_INST6500_FROM (0x97, 2, 4, _6500RW(4,3),	"SAX[$1],Y",			SAX_ZeroPageY, SAX_General);
 	_INST6500_FROM (0x83, 2, 6, _6500RW(6,5),	"SAX([$1],X)",			SAX_ZeroPageIndirectX, SAX_General);
 
 	// SBC
@@ -1770,6 +1904,9 @@ namespace F6500
 
 	// SHY: Y AND high byte of the operand plus one.
 	_INST6500_FROM (0x9c, 3, 5, _6500RW(5,4),	"SHY[$2],X",			SHY_AbsoluteX, UnstableStore_General);
+
+	// TAS / SHS: SP = A AND X, followed by an unstable indexed store.
+	_INST6500_FROM (0x9b, 3, 5, _6500RW(5,4),	"TAS[$2],Y",			TAS_AbsoluteY, UnstableStore_General);
 
 	// SEC
 	_INST6500_FROM (0x38, 1, 2, _6500R(2),		"SEC",					SEC, Instruction);

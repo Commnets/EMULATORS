@@ -44,7 +44,9 @@
     <ClCompile Include="..\..\src\F6500\IRQInterrupt.cpp" />
     <ClCompile Include="..\..\src\F6500\ISC.cpp" />
     <ClCompile Include="..\..\src\F6500\JAM.cpp" />
+    <ClCompile Include="..\..\src\F6500\LAS.cpp" />
     <ClCompile Include="..\..\src\F6500\LAX.cpp" />
+    <ClCompile Include="..\..\src\F6500\LXA.cpp" />
     <ClCompile Include="..\..\src\F6500\NMIInterrupt.cpp" />
     <ClCompile Include="..\..\src\F6500\NOP.cpp" />
     <ClCompile Include="..\..\src\F6500\RLA.cpp" />
@@ -54,6 +56,7 @@
     <ClCompile Include="..\..\src\F6500\SHA.cpp" />
     <ClCompile Include="..\..\src\F6500\SHX.cpp" />
     <ClCompile Include="..\..\src\F6500\SHY.cpp" />
+    <ClCompile Include="..\..\src\F6500\TAS.cpp" />
     <ClCompile Include="..\..\src\F6500\SLO.cpp" />
     <ClCompile Include="..\..\src\F6500\SRE.cpp" />
     <ClCompile Include="..\..\src\F6500\TestElements.cpp" />
@@ -85,6 +88,7 @@
     <ClCompile Include="..\..\src\F6500\STACK.cpp" />
     <ClCompile Include="..\..\src\F6500\STX.cpp" />
     <ClCompile Include="..\..\src\F6500\STY.cpp" />
+    <ClCompile Include="..\..\src\F6500\XAA.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

@@ -60,11 +60,10 @@ bool F6500::C6500::unbufferCommands ()
 	// At this point could be nullptr, but all instructions are alll defined in 6500 family...
 	const MCHEmul::InstructionDefined* inst = 
 			static_cast <const MCHEmul::InstructionDefined*> (lastInstruction ()); 
-	// The number of cycles finally executed can be more than the ones defined in the structure
-	// In some instructions, like relative jumps, when the condition is not fit, there is one cycle more executed
-	// or in indirect storing instructions, if the final position calculated jump over the page of the original one
-	// again there is one more cycle executed...
-	// In both situations the new cycle will have the same characetristics that the last definied one.
+	// The number of cycles finally executed can be more than the ones defined in the structure.
+	// A taken relative branch adds one read cycle, and another one when its destination crosses a page.
+	// An indexed read also adds one read cycle when its effective address crosses a page.
+	// In both situations the new cycle has the same characteristics as the last defined one.
 	size_t nC = stopStatusData ()._cyclesLastInstructionExecutedStopRequest;
 	if (inst != nullptr && 
 		nC >= inst -> cycleStructure ().size ()) 
@@ -308,6 +307,10 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// JSR
 	result [0x20] = new F6500::JSR_Absolute;
 
+	// LAS: Memory AND SP copied into A, X and SP.
+	// Instruction totally undocumented...
+	result [0xBB] = new F6500::LAS_AbsoluteY;
+
 	// LAX: LDA + TAX
 	// Instructions totally undocumented...
 	result [0xA7] = new F6500::LAX_ZeroPage;
@@ -348,8 +351,9 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x56] = new F6500::LSR_ZeroPageX;
 	result [0x5E] = new F6500::LSR_AbsoluteX;
 
-	// LXA is not created, very unestable...
-	// AB code...
+	// LXA / OAL
+	// Instruction totally undocumented and electrically unstable...
+	result [0xAB] = new F6500::LXA_Inmediate;
 
 	// NOP
 	// The official one...
@@ -529,8 +533,9 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	result [0x84] = new F6500::STY_ZeroPage;
 	result [0x94] = new F6500::STY_ZeroPageX;
 
-	// TAS not created, very unestable...
-	// Code 9B
+	// TAS / SHS
+	// Instruction totally undocumented...
+	result [0x9B] = new F6500::TAS_AbsoluteY;
 
 	// TAX
 	result [0xAA] = new F6500::TAX;
@@ -550,7 +555,11 @@ MCHEmul::Instructions F6500::C6500::createInstructions ()
 	// TYA
 	result [0x98] = new F6500::TYA;
 
-	assert (result.size () == 252);
+	// XAA / ANE
+	// Instruction totally undocumented and electrically unstable...
+	result [0x8B] = new F6500::XAA_Inmediate;
+
+	assert (result.size () == 256);
 
 	return (result);
 }

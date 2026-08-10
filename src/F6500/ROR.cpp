@@ -44,5 +44,5 @@ _INST_IMPL (F6500::ROR_ZeroPageX)
 // ---
 _INST_IMPL (F6500::ROR_AbsoluteX)
 {
-	return (executeOn (address_absoluteX ()));
+	return (executeOn (address_absoluteX (PageCrossingCycle::_IGNORE)));
 }

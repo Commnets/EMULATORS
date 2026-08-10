@@ -78,9 +78,38 @@ void Test::runTest (F6500::C6500* cpu)
 		// ...and also the program counter...
 		bool eI5 = 
 			cpu -> programCounter ().internalRepresentation () == tOut._PC;
+		// ...the total number of cycles used by the instruction...
+		bool eI6 =
+			inst -> totalClockCyclesExecuted () == (*i).second._cycles.size ();
+		// ...and the type of every cycle, including any additional cycles...
+		const MCHEmul::InstructionDefined* instDef =
+			static_cast <const MCHEmul::InstructionDefined*> (inst);
+		bool eI7 = true;
+		size_t wrongCycle = 0;
+		unsigned int actualCycleType = MCHEmul::InstructionDefined::_CYCLENOTDEFINED;
+		unsigned int expectedCycleType = MCHEmul::InstructionDefined::_CYCLENOTDEFINED;
+		for (size_t j = 0; j < (*i).second._cycles.size (); j++)
+		{
+			expectedCycleType = ((*i).second._cycles [j]._type == Test::Cycle::Type::_MR)
+				? MCHEmul::InstructionDefined::_CYCLEREAD
+				: MCHEmul::InstructionDefined::_CYCLEWRITE;
+			actualCycleType = instDef -> cycleStructure ().empty ()
+				? MCHEmul::InstructionDefined::_CYCLENOTDEFINED
+				: instDef -> cycleStructure ()[
+					(j < instDef -> cycleStructure ().size ())
+						? j
+						: instDef -> cycleStructure ().size () - 1];
+			if (actualCycleType != expectedCycleType)
+			{
+				eI7 = false;
+				wrongCycle = j;
+
+				break;
+			}
+		}
 
 		// If after all testings, there is no error...
-		if (!(e && eI1 && eI2 && eI3 && eI4 && eI5))
+		if (!(e && eI1 && eI2 && eI3 && eI4 && eI5 && eI6 && eI7))
 		{
 			auto cpuRegs = [&]() -> std::string 
 				{ 
@@ -116,6 +145,15 @@ void Test::runTest (F6500::C6500* cpu)
 					return (result);
 				};
 
+			auto cycleTypeName = [](unsigned int t) -> std::string
+				{
+					return ((t == MCHEmul::InstructionDefined::_CYCLEREAD)
+						? "READ"
+						: ((t == MCHEmul::InstructionDefined::_CYCLEWRITE)
+							? "WRITE"
+							: "NOT DEFINED"));
+				};
+
 			std::string sInst = inst -> asString ();
 			std::cout << "Error:" << inst -> asString () << std::endl;
 			if (!e) _errors.emplace_back
@@ -146,6 +184,19 @@ void Test::runTest (F6500::C6500* cpu)
 						inst -> asString () + " in Program Counter (" + 
 							std::to_string (cpu -> programCounter ().internalRepresentation ()) + " vs " +
 							std::to_string (tOut._PC) + ")");
+			if (!eI6) _errors.emplace_back
+				("Error in test " + ((*i).first) + ", file:" + (*i).second._file +
+					", line:" + std::to_string ((*i).second._line) + ". " +
+						inst -> asString () + " in Clock Cycles (" +
+							std::to_string (inst -> totalClockCyclesExecuted ()) + " vs " +
+							std::to_string ((*i).second._cycles.size ()) + ")");
+			if (!eI7) _errors.emplace_back
+				("Error in test " + ((*i).first) + ", file:" + (*i).second._file +
+					", line:" + std::to_string ((*i).second._line) + ". " +
+						inst -> asString () + " in Cycle Structure at cycle " +
+							std::to_string (wrongCycle + 1) + " (" +
+							cycleTypeName (actualCycleType) + " vs " +
+							cycleTypeName (expectedCycleType) + ")");
 		}
 	}
 

@@ -22,5 +22,5 @@ _INST_IMPL (F6500::INC_ZeroPageX)
 // ---
 _INST_IMPL (F6500::INC_AbsoluteX)
 {
-	return (executeOn (address_absoluteX ()));
+	return (executeOn (address_absoluteX (PageCrossingCycle::_IGNORE)));
 }
