@@ -1,0 +1,4 @@
+interface:
+  display_name: "Documentación de EMULATORS"
+  short_description: "Crea manuales DOCX con la plantilla del proyecto"
+  default_prompt: "Usa $emulators-documentation-authoring para crear documentación de un aspecto del emulador en formato DOCX."

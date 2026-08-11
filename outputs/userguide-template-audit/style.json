@@ -1,0 +1,47 @@
+{
+  "input": "C:\\Workspaces\\EMULATORS\\docs\\UserGuide.docx",
+  "fonts_by_char_count": {},
+  "direct_run_formatting_runs": 5,
+  "direct_paragraph_formatting_paragraphs": 1,
+  "heading_like_paragraphs_not_heading_style": [],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 69,
+        "text": "P\u00e1gina 1 | 1",
+        "style": "Normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 69,
+        "run_text": "P\u00e1gina",
+        "style": "Normal"
+      },
+      {
+        "para_index": 69,
+        "run_text": " ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 69,
+        "run_text": "1",
+        "style": "Normal"
+      },
+      {
+        "para_index": 69,
+        "run_text": " | ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 69,
+        "run_text": "1",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

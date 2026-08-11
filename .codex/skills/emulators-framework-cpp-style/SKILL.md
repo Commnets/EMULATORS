@@ -34,6 +34,7 @@ Use the framework's existing idioms deliberately:
 - Use raw pointers and explicit ownership only where the framework already does. If a class owns pointers, document ownership and delete them in the destructor.
 - Add `assert` checks for required non-null dependencies and impossible modes, matching local debug-only validation.
 - Do not perform unrelated modernization, formatting sweeps, or broad refactors while adding code.
+- Treat user-facing documentation and formatter output as part of the interface contract. When changing a C64 or VIC-20 emulator startup option, `LocalConsole` operation, `CommandBuilder` registration, command syntax/behavior, or command `InfoStructure`, review and update the corresponding maintained guide: `docs/C64Emulator_UserGuide.docx` or `docs/VIC20Data/VIC20Emulator_UserGuide.docx`. Audit the complete machine-specific -> `COMMODORE::CommandBuilder` -> `MCHEmul::StandardCommandBuilder` chain, distinguish local-only commands from the non-console remote channel, and synchronize canonical `.fmt` files under `projects` when the visible structure changes.
 
 ## Detailed Reference
 

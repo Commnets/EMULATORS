@@ -44,6 +44,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _cycleInRasterLine (1),
 	  _rasterIRQAlreadyTriggeredThisLine (false),
 	  _lastVICDataRead (MCHEmul::UByte::_0),
+	  _cpuOpcodeLowNibble (MCHEmul::UByte::_0),
 	  _DENSeenAtLine30 (false),
 	  _badLineAlreadyDetectedThisLine (false), 
 	  _badLineConditionActive (false),
@@ -53,6 +54,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _badLineCAccessActive (false),
 	  _badLineCAccessAllowedThisLine (false),
 	  _badLineInvalidCAccessCycles (0),
+	  _badLineInvalidColorData (MCHEmul::UByte::_0),
 	  _badLineCAccessStartCycle (0),
 	  _lastVBlankEntered (false),
 	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
@@ -111,6 +113,7 @@ bool COMMODORE::VICII::initialize ()
 	_rasterIRQAlreadyTriggeredThisLine = false;
 
 	_lastVICDataRead = MCHEmul::UByte::_0;
+	_cpuOpcodeLowNibble = MCHEmul::UByte::_0;
 
 	_DENSeenAtLine30 = false;
 	_badLineAlreadyDetectedThisLine = false;
@@ -121,6 +124,7 @@ bool COMMODORE::VICII::initialize ()
 	_badLineCAccessActive = false;
 	_badLineCAccessAllowedThisLine = false;
 	_badLineInvalidCAccessCycles = 0;
+	_badLineInvalidColorData = MCHEmul::UByte::_0;
 	_badLineCAccessStartCycle = 0;
 
 	_lastVBlankEntered = false;

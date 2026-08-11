@@ -1,0 +1,4 @@
+﻿{
+    "ok":  false,
+    "error":  "El objeto invocado ha desconectado de sus clientes. (Excepción de HRESULT: 0x80010108 (RPC_E_DISCONNECTED))"
+}

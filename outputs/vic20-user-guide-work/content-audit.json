@@ -1,0 +1,664 @@
+{
+  "paragraphs": 1436,
+  "headings": [
+    {
+      "index": 0,
+      "style": "Heading 1",
+      "text": "Contents"
+    },
+    {
+      "index": 130,
+      "style": "Title",
+      "text": "Foreword"
+    },
+    {
+      "index": 135,
+      "style": "Title",
+      "text": "1. Startup Parameters: Version Without a Local Console"
+    },
+    {
+      "index": 137,
+      "style": "Heading 1",
+      "text": "/o"
+    },
+    {
+      "index": 148,
+      "style": "Heading 1",
+      "text": "/p"
+    },
+    {
+      "index": 158,
+      "style": "Heading 1",
+      "text": "/h"
+    },
+    {
+      "index": 166,
+      "style": "Heading 1",
+      "text": "/f"
+    },
+    {
+      "index": 175,
+      "style": "Heading 1",
+      "text": "/k"
+    },
+    {
+      "index": 183,
+      "style": "Heading 1",
+      "text": "/c"
+    },
+    {
+      "index": 191,
+      "style": "Heading 1",
+      "text": "/l"
+    },
+    {
+      "index": 205,
+      "style": "Heading 1",
+      "text": "/a"
+    },
+    {
+      "index": 214,
+      "style": "Heading 1",
+      "text": "/d"
+    },
+    {
+      "index": 223,
+      "style": "Heading 1",
+      "text": "/s"
+    },
+    {
+      "index": 234,
+      "style": "Heading 1",
+      "text": "/i"
+    },
+    {
+      "index": 245,
+      "style": "Heading 1",
+      "text": "/r"
+    },
+    {
+      "index": 256,
+      "style": "Heading 1",
+      "text": "/g"
+    },
+    {
+      "index": 267,
+      "style": "Heading 1",
+      "text": "/n"
+    },
+    {
+      "index": 275,
+      "style": "Heading 1",
+      "text": "/w"
+    },
+    {
+      "index": 294,
+      "style": "Heading 1",
+      "text": "/b"
+    },
+    {
+      "index": 304,
+      "style": "Title",
+      "text": "2. Startup Parameters: Version With a Local Console"
+    },
+    {
+      "index": 306,
+      "style": "Heading 1",
+      "text": "/h"
+    },
+    {
+      "index": 314,
+      "style": "Heading 1",
+      "text": "/f"
+    },
+    {
+      "index": 323,
+      "style": "Heading 1",
+      "text": "/k"
+    },
+    {
+      "index": 331,
+      "style": "Heading 1",
+      "text": "/c"
+    },
+    {
+      "index": 339,
+      "style": "Heading 1",
+      "text": "/l"
+    },
+    {
+      "index": 353,
+      "style": "Heading 1",
+      "text": "/a"
+    },
+    {
+      "index": 362,
+      "style": "Heading 1",
+      "text": "/d"
+    },
+    {
+      "index": 371,
+      "style": "Heading 1",
+      "text": "/s"
+    },
+    {
+      "index": 382,
+      "style": "Heading 1",
+      "text": "/i"
+    },
+    {
+      "index": 393,
+      "style": "Heading 1",
+      "text": "/r"
+    },
+    {
+      "index": 404,
+      "style": "Heading 1",
+      "text": "/p"
+    },
+    {
+      "index": 419,
+      "style": "Heading 1",
+      "text": "/g"
+    },
+    {
+      "index": 430,
+      "style": "Heading 1",
+      "text": "/n"
+    },
+    {
+      "index": 438,
+      "style": "Heading 1",
+      "text": "/w"
+    },
+    {
+      "index": 457,
+      "style": "Heading 1",
+      "text": "/b"
+    },
+    {
+      "index": 467,
+      "style": "Title",
+      "text": "3. Command Console Reference"
+    },
+    {
+      "index": 469,
+      "style": "Heading 1",
+      "text": "3.1 Standard Framework Commands"
+    },
+    {
+      "index": 470,
+      "style": "Heading 2",
+      "text": "HELP"
+    },
+    {
+      "index": 481,
+      "style": "Heading 2",
+      "text": "AUTHOR"
+    },
+    {
+      "index": 492,
+      "style": "Heading 2",
+      "text": "STATUS"
+    },
+    {
+      "index": 503,
+      "style": "Heading 2",
+      "text": "PC"
+    },
+    {
+      "index": 514,
+      "style": "Heading 2",
+      "text": "REGISTERS"
+    },
+    {
+      "index": 525,
+      "style": "Heading 2",
+      "text": "CHANGEREG"
+    },
+    {
+      "index": 537,
+      "style": "Heading 2",
+      "text": "STACK"
+    },
+    {
+      "index": 549,
+      "style": "Heading 2",
+      "text": "CPUSTATUS"
+    },
+    {
+      "index": 560,
+      "style": "Heading 2",
+      "text": "CPUSSTATUS"
+    },
+    {
+      "index": 571,
+      "style": "Heading 2",
+      "text": "CPUSTATE"
+    },
+    {
+      "index": 582,
+      "style": "Heading 2",
+      "text": "CPUINFO"
+    },
+    {
+      "index": 593,
+      "style": "Heading 2",
+      "text": "MEMORY"
+    },
+    {
+      "index": 606,
+      "style": "Heading 2",
+      "text": "MEMORYDUMP"
+    },
+    {
+      "index": 618,
+      "style": "Heading 2",
+      "text": "MEMORYSTR"
+    },
+    {
+      "index": 630,
+      "style": "Heading 2",
+      "text": "SETMEMORY"
+    },
+    {
+      "index": 644,
+      "style": "Heading 2",
+      "text": "MEMORYANALYSIS"
+    },
+    {
+      "index": 655,
+      "style": "Heading 2",
+      "text": "STOP"
+    },
+    {
+      "index": 666,
+      "style": "Heading 2",
+      "text": "RUN"
+    },
+    {
+      "index": 678,
+      "style": "Heading 2",
+      "text": "SETPC"
+    },
+    {
+      "index": 689,
+      "style": "Heading 2",
+      "text": "NEXT"
+    },
+    {
+      "index": 701,
+      "style": "Heading 2",
+      "text": "NEXTSTACK"
+    },
+    {
+      "index": 712,
+      "style": "Heading 2",
+      "text": "SHOWNEXT"
+    },
+    {
+      "index": 724,
+      "style": "Heading 2",
+      "text": "INST"
+    },
+    {
+      "index": 735,
+      "style": "Heading 2",
+      "text": "BREAKS"
+    },
+    {
+      "index": 746,
+      "style": "Heading 2",
+      "text": "SETBREAK"
+    },
+    {
+      "index": 757,
+      "style": "Heading 2",
+      "text": "REMOVEBREAK"
+    },
+    {
+      "index": 768,
+      "style": "Heading 2",
+      "text": "REMOVEBREAKS"
+    },
+    {
+      "index": 779,
+      "style": "Heading 2",
+      "text": "SPEED"
+    },
+    {
+      "index": 790,
+      "style": "Heading 2",
+      "text": "LOADBIN"
+    },
+    {
+      "index": 802,
+      "style": "Heading 2",
+      "text": "SAVEBIN"
+    },
+    {
+      "index": 815,
+      "style": "Heading 2",
+      "text": "DEBUGON"
+    },
+    {
+      "index": 832,
+      "style": "Heading 2",
+      "text": "DEBUGOFF"
+    },
+    {
+      "index": 843,
+      "style": "Heading 2",
+      "text": "IDEBUGON"
+    },
+    {
+      "index": 855,
+      "style": "Heading 2",
+      "text": "IDEBUGOFF"
+    },
+    {
+      "index": 866,
+      "style": "Heading 2",
+      "text": "RESTART"
+    },
+    {
+      "index": 879,
+      "style": "Heading 2",
+      "text": "DEVICES"
+    },
+    {
+      "index": 891,
+      "style": "Heading 2",
+      "text": "PERIPHERALS"
+    },
+    {
+      "index": 903,
+      "style": "Heading 2",
+      "text": "PERCOMMAND"
+    },
+    {
+      "index": 916,
+      "style": "Heading 2",
+      "text": "ASSIGNJOY"
+    },
+    {
+      "index": 928,
+      "style": "Heading 2",
+      "text": "CLOCKFACTOR"
+    },
+    {
+      "index": 939,
+      "style": "Heading 2",
+      "text": "SOUNDON"
+    },
+    {
+      "index": 950,
+      "style": "Heading 2",
+      "text": "SOUNDOFF"
+    },
+    {
+      "index": 961,
+      "style": "Heading 2",
+      "text": "INTERRUPTS"
+    },
+    {
+      "index": 972,
+      "style": "Heading 2",
+      "text": "INTSET"
+    },
+    {
+      "index": 984,
+      "style": "Heading 2",
+      "text": "CHIPS"
+    },
+    {
+      "index": 995,
+      "style": "Heading 2",
+      "text": "CRTON"
+    },
+    {
+      "index": 1006,
+      "style": "Heading 2",
+      "text": "CRTOFF"
+    },
+    {
+      "index": 1017,
+      "style": "Heading 2",
+      "text": "DATASETTE"
+    },
+    {
+      "index": 1028,
+      "style": "Heading 2",
+      "text": "GRIDON"
+    },
+    {
+      "index": 1041,
+      "style": "Heading 2",
+      "text": "GRIDOFF"
+    },
+    {
+      "index": 1052,
+      "style": "Heading 2",
+      "text": "PICTURE"
+    },
+    {
+      "index": 1063,
+      "style": "Heading 2",
+      "text": "SETHOOK"
+    },
+    {
+      "index": 1076,
+      "style": "Heading 2",
+      "text": "REMOVEHOOK"
+    },
+    {
+      "index": 1087,
+      "style": "Heading 2",
+      "text": "HOOKS"
+    },
+    {
+      "index": 1098,
+      "style": "Heading 2",
+      "text": "HOOKSHELP"
+    },
+    {
+      "index": 1109,
+      "style": "Heading 2",
+      "text": "CMOVEPARAMS"
+    },
+    {
+      "index": 1120,
+      "style": "Heading 1",
+      "text": "3.2 Inherited Commodore Commands"
+    },
+    {
+      "index": 1121,
+      "style": "Heading 2",
+      "text": "VICII"
+    },
+    {
+      "index": 1132,
+      "style": "Heading 2",
+      "text": "VICIIEVENTS"
+    },
+    {
+      "index": 1144,
+      "style": "Heading 2",
+      "text": "SID"
+    },
+    {
+      "index": 1155,
+      "style": "Heading 2",
+      "text": "SIDW"
+    },
+    {
+      "index": 1168,
+      "style": "Heading 2",
+      "text": "VICI"
+    },
+    {
+      "index": 1179,
+      "style": "Heading 2",
+      "text": "TED"
+    },
+    {
+      "index": 1190,
+      "style": "Heading 2",
+      "text": "TEDEVENTS"
+    },
+    {
+      "index": 1201,
+      "style": "Heading 2",
+      "text": "VIA"
+    },
+    {
+      "index": 1212,
+      "style": "Heading 2",
+      "text": "CIA"
+    },
+    {
+      "index": 1223,
+      "style": "Heading 1",
+      "text": "3.3 VIC20-Specific Commands"
+    },
+    {
+      "index": 1224,
+      "style": "Heading 2",
+      "text": "VIA1"
+    },
+    {
+      "index": 1235,
+      "style": "Heading 2",
+      "text": "VIA2"
+    },
+    {
+      "index": 1246,
+      "style": "Heading 2",
+      "text": "SCREENDUMP"
+    },
+    {
+      "index": 1257,
+      "style": "Heading 2",
+      "text": "COLORDUMP"
+    },
+    {
+      "index": 1268,
+      "style": "Heading 2",
+      "text": "CHARSDRAW"
+    },
+    {
+      "index": 1280,
+      "style": "Heading 2",
+      "text": "LIGHTPEN"
+    },
+    {
+      "index": 1293,
+      "style": "Heading 1",
+      "text": "3.4 Local-Console-Only Commands"
+    },
+    {
+      "index": 1294,
+      "style": "Heading 2",
+      "text": "LOADPRG"
+    },
+    {
+      "index": 1305,
+      "style": "Heading 2",
+      "text": "LOADBINARY"
+    },
+    {
+      "index": 1316,
+      "style": "Heading 2",
+      "text": "LOADBLOCKS"
+    },
+    {
+      "index": 1327,
+      "style": "Heading 2",
+      "text": "DECOMPILE"
+    },
+    {
+      "index": 1339,
+      "style": "Heading 2",
+      "text": "POSSIBLEPERS"
+    },
+    {
+      "index": 1350,
+      "style": "Heading 2",
+      "text": "CONNECTPER"
+    },
+    {
+      "index": 1363,
+      "style": "Heading 2",
+      "text": "DISCONNECTPERS"
+    },
+    {
+      "index": 1374,
+      "style": "Heading 2",
+      "text": "LOADPERDATA"
+    },
+    {
+      "index": 1387,
+      "style": "Heading 2",
+      "text": "EMPTYPERDATA"
+    },
+    {
+      "index": 1399,
+      "style": "Heading 2",
+      "text": "SAVEPERDATA"
+    },
+    {
+      "index": 1412,
+      "style": "Heading 2",
+      "text": "CLEARPERDATA"
+    },
+    {
+      "index": 1424,
+      "style": "Title",
+      "text": "Appendices"
+    },
+    {
+      "index": 1425,
+      "style": "Heading 1",
+      "text": "Appendix A. Command Availability Summary"
+    },
+    {
+      "index": 1427,
+      "style": "Heading 1",
+      "text": "Appendix B. Source-of-Truth Maintenance Rule"
+    },
+    {
+      "index": 1431,
+      "style": "Heading 1",
+      "text": "Illustrations"
+    },
+    {
+      "index": 1434,
+      "style": "Heading 1",
+      "text": "Equations"
+    }
+  ],
+  "heading2_count": 82,
+  "contains_foreword": true,
+  "contains_c64": false,
+  "contains_spanish_language": false,
+  "contains_old_specific": false,
+  "update_fields": "true",
+  "styles": {
+    "Title": {
+      "keep_with_next": true,
+      "space_before": null
+    },
+    "Heading 1": {
+      "keep_with_next": true,
+      "space_before": 12.0
+    },
+    "Heading 2": {
+      "keep_with_next": true,
+      "space_before": 14.0
+    },
+    "Heading 3": {
+      "keep_with_next": true,
+      "space_before": 2.0
+    }
+  }
+}

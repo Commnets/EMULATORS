@@ -30,6 +30,7 @@ Source: "bios/kernal.325017-02-SWE.bin"; DestDir: "{app}/bios"; Flags: ignorever
 Source: "bios/kernal.901227-03-DKA.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.906145-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "C64.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C64Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion

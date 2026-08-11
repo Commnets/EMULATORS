@@ -166,10 +166,7 @@ namespace COMMODORE
 			The content of the register 0x12 (and the 0x11 bacause it contains high bit) is "real time".
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
-		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
-							{ _VICIIRegisters -> setNumberPositionsNextInstruction 
-								(inst -> clockCycles
-									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ())); }
+		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override;
 
 		/** Simulates cycles in the VICII. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
@@ -540,6 +537,10 @@ namespace COMMODORE
 			It is updated by matrix, graphics, sprite and invalid DMA-delay/FLI
 			accesses. It is not yet connected to CPU open-bus reads. */
 		MCHEmul::UByte _lastVICDataRead;
+		/** Low nibble of the opcode most recently notified by the CPU. \n
+			In full-instruction mode it represents the CPU data bits D0-D3
+			available when the following opcode fetch is stopped by BA. */
+		MCHEmul::UByte _cpuOpcodeLowNibble;
 		/** True when DEN has been active at least once during raster line $30. */
 		bool _DENSeenAtLine30;
 		/** True when a bad line has already been accepted in the current raster line. \n
@@ -575,6 +576,10 @@ namespace COMMODORE
 			Video Matrix data. \n
 			This models the AEC/BA delay effect used by FLI / DMA delay / VSP. */
 		unsigned short _badLineInvalidCAccessCycles;
+		/** Color-data nibble latched when a DMA-delay/FLI c-access sequence starts. \n
+			While AEC is still high, the VIC-II receives CPU D0-D3 through U16
+			instead of valid Color RAM data. */
+		MCHEmul::UByte _badLineInvalidColorData;
 		/** Raster cycle where the current bad-line c-access sequence started.
 			0 means that no c-access sequence is active in the current line. */
 		unsigned short _badLineCAccessStartCycle;
@@ -793,6 +798,20 @@ namespace COMMODORE
 	};
 
 	// ---
+	inline void VICII::CPUAboutToExecute
+		(MCHEmul::CPU* cpu, MCHEmul::Instruction* inst)
+	{
+		_VICIIRegisters -> setNumberPositionsNextInstruction
+			(inst -> clockCycles
+				(cpu -> memoryRef (), cpu -> programCounter ().asAddress ()) - 1);
+
+		// Keep the CPU nibble that U16 presents to the VIC-II while AEC is high.
+		_cpuOpcodeLowNibble =
+			MCHEmul::UByte ((unsigned char)
+				(inst -> code () & MCHEmul::UByte::_0F));
+	}
+
+	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()
 	{
 		updateDENSeenAtLine30 ();
@@ -848,6 +867,10 @@ namespace COMMODORE
 			{
 				_badLineCAccessAllowedThisLine = true;
 				_badLineInvalidCAccessCycles = 3;
+
+				// During the AEC delay U16 supplies the CPU data nibble
+				// instead of valid Color RAM data.
+				_badLineInvalidColorData = _cpuOpcodeLowNibble;
 			}
 		}
 	}
@@ -863,6 +886,7 @@ namespace COMMODORE
 		_badLineCAccessActive = false;
 		_badLineCAccessAllowedThisLine = false;
 		_badLineInvalidCAccessCycles = 0;
+		_badLineInvalidColorData = MCHEmul::UByte::_0;
 		_badLineCAccessStartCycle = 0;
 	}
 
@@ -976,7 +1000,10 @@ namespace COMMODORE
 			// read $ff on D0-D7.
 			if (_badLineCAccessActive &&
 				_badLineCAccessStartCycle == 14)
+			{
 				_badLineInvalidCAccessCycles = 3;
+				_badLineInvalidColorData = _cpuOpcodeLowNibble;
+			}
 
 			_vicGraphicInfo._RC = 0;
 		}
@@ -1166,11 +1193,11 @@ namespace COMMODORE
 				_lastVICDataRead =
 				_vicGraphicInfo._screenCodeData [gAI] = MCHEmul::UByte::_FF;
 
-			// Accurate Color RAM data during these invalid cycles depends on CPU
-			// bus data. Until that bus latch is modelled, use $0f as a deterministic
-			// approximation.
+			// While AEC is still high, U16 connects CPU D0-D3 to the VIC-II
+			// color-data inputs instead of selecting Color RAM.
 			_vicGraphicInfo._lastColorDataRead =
-				_vicGraphicInfo._colorData [gAI] = MCHEmul::UByte::_0F;
+				_vicGraphicInfo._colorData [gAI] =
+					_badLineInvalidColorData;
 
 			_IFDEBUG debugReadingVideoMatrix ();
 

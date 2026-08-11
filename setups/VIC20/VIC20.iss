@@ -28,6 +28,7 @@ Source: "bios/kernal.901486-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignorever
 Source: "bios/kernal.901486-07-DKK.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.901486-07-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.NecP22081-206-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "VIC20Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VIC20.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

@@ -1,0 +1,160 @@
+0	Heading 1	Contents
+130	Title	Foreword
+135	Title	1. Startup Parameters: Version Without a Local Console
+137	Heading 1	/o
+148	Heading 1	/p
+158	Heading 1	/h
+166	Heading 1	/f
+175	Heading 1	/k
+183	Heading 1	/c
+191	Heading 1	/l
+205	Heading 1	/a
+214	Heading 1	/d
+223	Heading 1	/s
+234	Heading 1	/i
+247	Heading 1	/r
+258	Heading 1	/g
+269	Heading 1	/n
+277	Heading 1	/w
+288	Heading 1	/b
+298	Title	2. Startup Parameters: Version With a Local Console
+300	Heading 1	/h
+308	Heading 1	/f
+317	Heading 1	/k
+325	Heading 1	/c
+333	Heading 1	/l
+347	Heading 1	/a
+356	Heading 1	/d
+365	Heading 1	/s
+376	Heading 1	/i
+389	Heading 1	/r
+400	Heading 1	/p
+415	Heading 1	/g
+426	Heading 1	/n
+434	Heading 1	/w
+445	Heading 1	/b
+455	Title	3. Command Console Reference
+457	Heading 1	3.1 Standard Framework Commands
+458	Heading 2	HELP
+469	Heading 2	AUTHOR
+480	Heading 2	STATUS
+491	Heading 2	PC
+502	Heading 2	REGISTERS
+513	Heading 2	CHANGEREG
+525	Heading 2	STACK
+537	Heading 2	CPUSTATUS
+548	Heading 2	CPUSSTATUS
+559	Heading 2	CPUSTATE
+570	Heading 2	CPUINFO
+581	Heading 2	MEMORY
+594	Heading 2	MEMORYDUMP
+606	Heading 2	MEMORYSTR
+618	Heading 2	SETMEMORY
+632	Heading 2	MEMORYANALYSIS
+643	Heading 2	STOP
+654	Heading 2	RUN
+666	Heading 2	SETPC
+677	Heading 2	NEXT
+689	Heading 2	NEXTSTACK
+700	Heading 2	SHOWNEXT
+712	Heading 2	INST
+723	Heading 2	BREAKS
+734	Heading 2	SETBREAK
+745	Heading 2	REMOVEBREAK
+756	Heading 2	REMOVEBREAKS
+767	Heading 2	SPEED
+778	Heading 2	LOADBIN
+790	Heading 2	SAVEBIN
+803	Heading 2	DEBUGON
+820	Heading 2	DEBUGOFF
+831	Heading 2	IDEBUGON
+843	Heading 2	IDEBUGOFF
+854	Heading 2	RESTART
+867	Heading 2	DEVICES
+879	Heading 2	PERIPHERALS
+891	Heading 2	PERCOMMAND
+904	Heading 2	ASSIGNJOY
+916	Heading 2	CLOCKFACTOR
+927	Heading 2	SOUNDON
+938	Heading 2	SOUNDOFF
+949	Heading 2	INTERRUPTS
+960	Heading 2	INTSET
+972	Heading 2	CHIPS
+983	Heading 2	CRTON
+994	Heading 2	CRTOFF
+1005	Heading 2	DATASETTE
+1016	Heading 2	GRIDON
+1029	Heading 2	GRIDOFF
+1040	Heading 2	PICTURE
+1051	Heading 2	SETHOOK
+1064	Heading 2	REMOVEHOOK
+1075	Heading 2	HOOKS
+1086	Heading 2	HOOKSHELP
+1097	Heading 2	CMOVEPARAMS
+1108	Heading 1	3.2 Inherited Commodore Commands
+1109	Heading 2	VICII
+1120	Heading 2	VICIIEVENTS
+1132	Heading 2	SID
+1143	Heading 2	SIDW
+1156	Heading 2	VICI
+1167	Heading 2	TED
+1178	Heading 2	TEDEVENTS
+1189	Heading 2	VIA
+1200	Heading 2	CIA
+1211	Heading 1	3.3 C64-Specific Commands
+1212	Heading 2	CIA1
+1223	Heading 2	CIA2
+1234	Heading 2	PLA
+1245	Heading 2	SCREENDUMP
+1256	Heading 2	COLORDUMP
+1267	Heading 2	BITMAPDUMP
+1278	Heading 2	SPRITESDUMP
+1290	Heading 2	SPRITESDRAW
+1301	Heading 2	CHARSDRAW
+1312	Heading 2	PADDLE
+1325	Heading 2	LIGHTPEN
+1337	Heading 1	3.4 Local-Console-Only Commands
+1338	Heading 2	LOADPRG
+1349	Heading 2	LOADBINARY
+1360	Heading 2	LOADBLOCKS
+1371	Heading 2	DECOMPILE
+1383	Heading 2	POSSIBLEPERS
+1394	Heading 2	CONNECTPER
+1407	Heading 2	DISCONNECTPERS
+1418	Heading 2	LOADPERDATA
+1431	Heading 2	EMPTYPERDATA
+1443	Heading 2	SAVEPERDATA
+1456	Heading 2	CLEARPERDATA
+1468	Title	Appendices
+1469	Heading 1	Appendix A. Command Availability Summary
+1471	Heading 1	Appendix B. Source-of-Truth Maintenance Rule
+1475	Heading 1	Illustrations
+1478	Heading 1	Equations
+
+W BLOCKS
+Heading 1	/w
+Normal	Meaning: Selects the SID audio implementation.
+Normal	General form: 
+Code	/w[OWN|SID]
+List Paragraph	• OWN or an empty value: the framework's ICF/simple SID wrapper (default).
+List Paragraph	• SID: the reSID-based wrapper.
+List Paragraph	• Any other text is unsupported and may leave the requested wrapper undefined.
+Normal	Examples: 
+Code	C64Emulator.exe /wOWN
+Code	C64Emulator.exe /wSID
+Normal	Consequence: The selected wrapper is used when the SID chip is created; it changes sound fidelity and processing cost.
+Heading 1	/b
+---
+Heading 1	/w
+Normal	Meaning: Selects the SID audio implementation.
+Normal	General form: 
+Code	/w[OWN|SID]
+List Paragraph	• OWN or an empty value: the framework's ICF/simple SID wrapper (default).
+List Paragraph	• SID: the reSID-based wrapper.
+List Paragraph	• Any other text is unsupported and may leave the requested wrapper undefined.
+Normal	Examples: 
+Code	C64Emulator.exe /wOWN
+Code	C64Emulator.exe /wSID
+Normal	Consequence: The selected wrapper is used when the SID chip is created; it changes sound fidelity and processing cost.
+Heading 1	/b
+---
