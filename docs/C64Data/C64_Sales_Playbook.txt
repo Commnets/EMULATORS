@@ -1,0 +1,497 @@
+SALES PLAYBOOK
+COMMODORE 64 EMULATOR BUILT WITH EMULATORS
+Working version 0.1 - August 12, 2026
+Language: English
+Twin document: Argumentario_venta_C64.txt
+
+MAINTENANCE NOTE
+This document and its Spanish version are a single bilingual content asset.
+Every change to capabilities, limitations, positioning, or traceability must be
+applied to both files in the same code revision.
+
+===============================================================================
+1. CORE IDEA
+===============================================================================
+
+The EMULATORS Commodore 64 emulator reproduces the machine from its internal
+architecture while making it possible to observe, query, and control it as it
+runs.
+
+It is not merely an environment for running classic games and programs again.
+It is also an engineering, learning, preservation, and development tool capable
+of showing what the processor, memory, VIC-II, both CIAs, SID, and peripherals
+are doing at any given moment.
+
+The value proposition in one sentence:
+
+    The Commodore 64 experience, with the precision classic software demands
+    and the internal visibility required by anyone who wants to understand it.
+
+
+===============================================================================
+2. EXECUTIVE SALES SUMMARY
+===============================================================================
+
+The EMULATORS C64 brings together the capabilities expected from a reference
+emulator: a 6510 CPU, PAL and NTSC versions, cycle-sensitive VIC-II video, SID
+sound with reSID, two 6526 CIAs, realistic memory switching, keyboard, joysticks,
+paddles, light pen, tape, disk, cartridges, and printers. It supports the usual
+C64 ecosystem formats and can run both original ROMs and software loaded from
+files or compiled with the tools included in the framework.
+
+Its main differentiator is the integration of all that emulation with a common
+diagnostic system. From local and remote consoles, the machine can be stopped
+and resumed, stepped one instruction at a time, and its registers or memory can
+be inspected and changed. Users can set breakpoints and hooks, analyse the memory
+map, query every chip, and produce correlated traces of CPU, video, sound,
+interrupts, memory, and peripherals.
+
+The result serves several audiences without becoming several separate products:
+it gives enthusiasts their C64 back; it gives developers a test bench; it gives
+teachers a transparent machine; and it enables researchers to document and
+reproduce observed behaviour.
+
+
+===============================================================================
+3. CAPABILITIES THAT PLACE IT ALONGSIDE REFERENCE EMULATORS
+===============================================================================
+
+3.1. A COMPLETE MACHINE MODEL
+
+- MOS 6510 CPU integrated with the clock and the other system components.
+- Different frequencies and configurations for PAL and NTSC.
+- Original BASIC ROM, KERNAL, and character generator.
+- English, Spanish, Japanese, Swedish, and Danish ROM/character variants.
+- Startup, reset, IRQ and NMI interrupts, and the RESTORE key connected to the
+  hardware model.
+
+Value to the user:
+Software does not run on a generic approximation, but on an explicit composition
+of the components that made up the original computer.
+
+
+3.2. A VIC-II DESIGNED AROUND TIMING ACCURACY
+
+- PAL and NTSC implementations with their own raster and clock parameters.
+- VIC-II evolution by cycles rather than simple end-of-frame rendering.
+- Badline handling and internal VC, VCBASE, RC, and VMLI states.
+- BA/AEC bus arbitration and CPU stalling when the VIC-II requires memory.
+- Separate matrix, colour, graphics, refresh, and sprite memory accesses.
+- Text, multicolour text, bitmap, multicolour bitmap, and extended background
+  colour modes, including the non-standard video states represented by the chip.
+- Eight sprites with DMA, horizontal and vertical expansion, multicolour,
+  priority, reuse, sprite-sprite collisions, and sprite-data collisions.
+- Raster, collision, and light-pen interrupts.
+- Border handling and register changes that depend on the current raster time.
+
+Value to the user:
+This foundation supports software that depends on the raster, sprites, and the
+competition between CPU and video, including techniques used by games and demos.
+
+
+3.3. MEMORY, PLA, AND CARTRIDGES MODELLED AFTER THE HARDWARE
+
+- 64 KiB of RAM with BASIC ROM, KERNAL ROM, character ROM, and I/O overlays.
+- The internal 6510 port at $0000/$0001 and its LORAM, HIRAM, and CHAREN signals.
+- An explicit PLA that determines what the processor sees in each configuration.
+- Separate CPU and VIC-II memory views.
+- Four video banks selected by CIA2, with VIC-II-specific character ROM access.
+- 1 KiB, 4-bit colour RAM.
+- VIC-II, SID, CIA1, and CIA2 registers and mirrors in the original memory map.
+- IO1 and IO2 expansion areas.
+- Generic 8/16 KiB CRT cartridges, Ultimax mode, and bank-switched Ocean Type 1
+  cartridges.
+
+Value to the user:
+Programs that hide ROM, write to underlying RAM, change the video bank, or use
+cartridges find a memory organisation consistent with the real machine.
+
+
+3.4. BOTH 6526 CIAs AND THEIR ACTUAL C64 CONNECTIONS
+
+- Ports A and B with their DDR direction registers and latches.
+- Keyboard matrix, two joysticks, and paddle selection.
+- CIA1 connected to IRQ and CIA2 connected to NMI.
+- Video bank selection through CIA2.
+- Timers A and B with latches, reload, continuous and one-shot modes, count
+  sources, and PB6/PB7 signalling.
+- TOD clock and alarm.
+- Interrupt register, FLAG line, and internal SP/CNT serial port.
+- CIA2 connected to IEC serial lines and the user port.
+
+Value to the user:
+Keyboard, controls, timing, interrupts, and communications rely on the same
+logical devices used by the original software.
+
+
+3.5. SID WITH TWO EMULATION ENGINES
+
+- Three voices, frequency, pulse width, waveforms, ADSR, filters, and volume.
+- Oscillator synchronisation, ring modulation, TEST bit, LFSR-based noise, and
+  combined waveforms.
+- reSID integration, providing a recognised and proven Commodore 64 sound engine.
+- EMULATORS' own SID engine as an inspectable and evolving alternative.
+- Engine selection at startup and switching from the console while running.
+- Structured queries of the SID, its voices, envelopes, and waveforms.
+
+Value to the user:
+Sound reproduction combines a high-compatibility option with an in-house
+implementation suited to experimentation, teaching, and result comparison.
+
+
+3.6. C64 MEDIA AND FILE-FORMAT SUPPORT
+
+- CRT for cartridges.
+- T64 and TAP for tape.
+- PRG for programs.
+- 35-, 40-, and 42-track D64 images.
+- Keystroke, binary, and raw data files.
+- Direct loading of assembly programs and memory-block files.
+- Creation, connection, extraction, and saving of peripheral data from the
+  console itself.
+
+Value to the user:
+The emulator supports everyday use of historical collections as well as modern
+software development and testing workflows.
+
+
+3.7. CONNECTABLE PERIPHERALS
+
+- Commodore 1530/1531 Datasette through TAP pulses, with different PAL and NTSC
+  parameters.
+- An alternative fast-injection mode through KERNAL routines for T64 and other
+  loading workflows.
+- Up to four disk units using device numbers 8, 9, 10, and 11.
+- Writable D64 images: directories and file reads, SAVE/write, secondary
+  channels, status channel 15, and NEW, COPY, RENAME, SCRATCH, INITIALIZE, and
+  VALIDATE DOS commands.
+- Creation of empty D64 disks and later persistence of their changes.
+- Up to two serial printers using Commodore device numbers.
+- Dedicated MPS-801 and MPS-802 simulation, with text or PostScript output and
+  dot-matrix reproduction of their character sets and print modes.
+- Expansion, serial, cassette, and user ports represented as distinct devices in
+  the architecture.
+- Dynamic connection and disconnection of peripherals through commands.
+
+Value to the user:
+The experience does not stop at the screen: it can recreate a C64 workstation
+with configurable storage, printing, and devices.
+
+
+3.8. A MODERN USER EXPERIENCE WITHOUT HIDING THE ORIGINAL MACHINE
+
+- PC keyboard mapping to the C64 keyboard matrix and functional key positions.
+- Joysticks, paddles, and a mouse-driven light pen.
+- Sound on/off control.
+- Optional CRT visual effect.
+- PNG, JPG, or BMP screenshots.
+- Configurable speed factor and measurement of actual CPU and I/O speed.
+- Running or stopped startup and selectable initial execution address.
+
+
+===============================================================================
+4. THE COMBINATION THAT MAKES IT DISTINCTIVE
+===============================================================================
+
+It would not be defensible to claim that debugging, reSID, cycle accuracy, or a
+remote console are individually exclusive capabilities: other reference
+emulators also provide some of them. EMULATORS is differentiated by combining
+those capabilities with an inspectable object model and the same cross-cutting
+tooling used throughout the framework.
+
+4.1. THE C64 AS AN OBSERVABLE SYSTEM
+
+The live state of the CPU, VIC-II, SID, CIA1, CIA2, and PLA can be queried, along
+with memory, interrupts, devices, and peripherals. Information is not limited to
+a register screen: every component publishes a state structure that consoles and
+formatters can present in a uniform way.
+
+Sales message:
+
+    Other emulators let you look at the program. EMULATORS lets you look at the
+    machine.
+
+
+4.2. VIC-II-SPECIFIC DIAGNOSTICS
+
+- Screen, colour, and bitmap memory dumps.
+- Individual or combined dumps of all eight sprites.
+- Text rendering of monochrome and multicolour sprites.
+- Rendering of characters defined in memory.
+- A screen grid with raster interrupt positions highlighted.
+- Display of internal VIC-II events.
+
+These functions shorten the path from a visual defect to its cause in memory,
+registers, or timing.
+
+
+4.3. CORRELATED WHOLE-MACHINE DEBUGGING
+
+- Run, pause, next instruction, and advance until routine return.
+- Disassembly and examination or modification of registers and memory.
+- Multiple breakpoints.
+- Hooks on memory-access ranges.
+- Deep traces filtered by address range, chips, devices, and memory units.
+- Dedicated interrupt traces.
+- Time-correlated recording of CPU, VIC-II, CIA, SID, memory access, and
+  peripherals through one diagnostic infrastructure.
+
+Sales message:
+
+    When an effect depends on several chips and only a few cycles, EMULATORS can
+    follow the complete chain instead of forcing each part to be studied alone.
+
+
+4.4. LOCAL CONSOLE AND REMOTE CONTROL
+
+The same command vocabulary can be used beside the emulation or from a remote
+console. This makes it possible to separate the C64 screen from the analysis
+station, automate sessions, and control execution without intruding on the main
+interface.
+
+
+4.5. ASSEMBLER, COMPILER, AND EMULATOR IN ONE ENVIRONMENT
+
+EMULATORS includes program loading, assembly, compilation, disassembly, and
+execution. The edit-compile-load-observe cycle can be completed without building
+a toolchain disconnected from the machine model.
+
+
+4.6. NOT AN ISOLATED CORE, BUT A FRAMEWORK IMPLEMENTATION
+
+- C++20 code organised into processor, memory, chips, devices, ports,
+  peripherals, formats, commands, and presentations.
+- Commodore components explicitly reused by other machines.
+- Common information, debugging, event, and peripheral interfaces.
+- Open-source code under the GPL licence.
+
+Strategic value:
+Every cross-cutting framework improvement can benefit the C64 and other
+emulators; every improvement to a Commodore component can be reused wherever the
+hardware is shared. The product does not rely on a monolithic accumulation of
+exceptions, but on an architecture designed to grow.
+
+
+===============================================================================
+5. BENEFITS BY USER TYPE
+===============================================================================
+
+ENTHUSIASTS AND CLASSIC-SOFTWARE USERS
+- Recover games, demos, and programs in the usual formats.
+- Choose PAL or NTSC, localised ROMs, reSID sound, and a CRT effect.
+- Connect tape, disk, cartridge, joysticks, and printers in one environment.
+
+SOFTWARE AND DEMOSCENE DEVELOPERS
+- Use an assembler, compiler, disassembler, and direct loading.
+- Stop, step, inspect, alter, and trace execution.
+- Observe raster, sprites, memory banks, and interrupts instead of working blind.
+
+TEACHERS AND STUDENTS
+- See how CPU, memory, video, sound, timers, and interrupts work together.
+- Compare a real historical architecture with current systems concepts.
+- Turn invisible phenomena, such as a badline or PLA change, into queryable data.
+
+RESEARCHERS, PRESERVATIONISTS, AND TECHNICAL AUTHORS
+- Reproduce sessions with known configurations.
+- Produce traces and dumps that document observed behaviour.
+- Keep historical software, its execution platform, and its analysis tools
+  together.
+
+FRAMEWORK DEVELOPERS
+- Test reusable components inside a demanding and well-known machine.
+- Extend peripherals, commands, formats, or chips without rebuilding the entire
+  emulator.
+- Reuse the same observation capabilities throughout EMULATORS.
+
+
+===============================================================================
+6. READY-TO-USE MESSAGES
+===============================================================================
+
+SHORT HEADLINE
+
+    Commodore 64 emulated from the inside, fully visible from the outside.
+
+SUBHEADING
+
+    Classic-ecosystem compatibility, cycle-sensitive video, reSID sound, and a
+    diagnostic environment that lets users observe the machine while it works.
+
+30-SECOND PITCH
+
+    The EMULATORS C64 reproduces the original machine's essential components—
+    6510, VIC-II, SID, two CIAs, PLA, memory, and peripherals—with PAL and NTSC
+    models and support for the usual formats. Its difference is that it does not
+    merely run software: users can query each chip, analyse memory, follow the
+    raster, render sprites, set hooks and breakpoints, and produce whole-machine
+    traces locally or from a remote console. It is an emulator for enjoying the
+    C64 and a platform for understanding it.
+
+TECHNICAL PITCH
+
+    Built on a modular C++20 framework, the emulator synchronises the MOS 6510
+    with a cycle-oriented PAL/NTSC VIC-II, two 6526 CIAs, a PLA with separate CPU
+    and video views, and a SID switchable between reSID and the in-house engine.
+    It adds TAP tape, writable D64 disk, CRT cartridges, MPS-801/MPS-802 printers,
+    assembly tools, and a common per-component inspection and tracing system.
+
+EDUCATIONAL PITCH
+
+    A Commodore 64 normally shows the result. EMULATORS also shows the process:
+    which instruction is running, which memory bank is active, what the VIC-II is
+    doing in the raster, why an interrupt fires, and how each chip changes state.
+
+
+===============================================================================
+7. LIMITATIONS THAT MUST BE COMMUNICATED PRECISELY
+===============================================================================
+
+Product credibility requires claims to remain within what is currently
+implemented.
+
+- The 1541 unit is a functional simulation based on KERNAL routine traps and the
+  D64 file system. It provides loads, writes, channels, status, and several CBM
+  DOS commands, but it does not yet emulate a complete physical drive with its
+  own 6502, ROM, two 6522 VIAs, GCR stream, motor, and head mechanics. It must not
+  promise compatibility with fast loaders, drive-resident code, or protection
+  schemes that depend on the physical disk stream.
+
+- The current D64 reader handles flat 35-, 40-, and 42-track images without
+  appended error blocks. This is not equivalent to G64/NIB image support or the
+  preservation of physical media phenomena.
+
+- The CRT catalogue recognises many type identifiers, but functional cartridge
+  support should currently be advertised only for verified types: generic 8/16
+  KiB, Ultimax, and Ocean Type 1. The full enumeration must not be presented as a
+  list of fully supported cartridges.
+
+- reSID contains 6581/8580 models, but the current EMULATORS integration does not
+  expose an explicit model selector to the user. It should be sold as reSID
+  integration, not as complete SID-revision selection.
+
+- The MPS-801 and MPS-802 are simulated at the serial-peripheral and text/
+  PostScript output level. They model character sets and a broad set of printing
+  functions, but they do not execute real printer firmware or reproduce internal
+  CPUs, electronics, buffers, or mechanical timing. Some advanced controls also
+  remain incomplete; they must not be presented as comprehensive physical
+  printer emulation.
+
+- The implemented timing accuracy is a real strength, but “cycle-exact” or
+  “complete compatibility” are claims that require a public validation campaign
+  and reproducible comparative results. Until those exist, cycle-oriented
+  emulation, timing fidelity, and bus-sensitive design are the preferred terms.
+
+
+===============================================================================
+8. RECOMMENDED POSITIONING
+===============================================================================
+
+The market already has very mature C64 emulators offering high compatibility,
+cycle accuracy, monitors, and remote control. EMULATORS should not compete with a
+generic promise of “another, more accurate emulator.”
+
+Its own defensible territory is:
+
+    EXPLAINABLE EMULATION
+
+This means enough fidelity to respect the architecture and techniques used by
+classic software, combined with structured visibility across the whole machine
+and a shared architecture for building, comparing, and teaching multiple
+historical computers.
+
+Three brand pillars:
+
+    FIDELITY      The machine is modelled by component and by time.
+    VISIBILITY    Internal state can be queried and correlated.
+    EXTENSIBILITY The C64 is part of a framework, not a closed solution.
+
+
+===============================================================================
+9. INTERNAL TRACEABILITY OF CLAIMS
+===============================================================================
+
+Main areas verified in the repository:
+
+- Machine, PAL/NTSC, and composition:
+  include/C64/C64.hpp
+  src/C64/C64.cpp
+
+- Memory and PLA:
+  include/C64/Memory.hpp
+  src/C64/Memory.cpp
+  include/C64/PLA.hpp
+  src/C64/PLA.cpp
+
+- VIC-II:
+  include/COMMODORE/VICII/VICII.hpp
+  src/COMMODORE/VICII/VICII.cpp
+  include/COMMODORE/VICII/VICIIRegisters.hpp
+  src/COMMODORE/VICII/VICIIRegisters.cpp
+
+- CIA:
+  include/COMMODORE/CIA/
+  src/COMMODORE/CIA/
+  include/C64/CIA1.hpp, CIA1Registers.hpp, CIA2.hpp, CIA2Registers.hpp
+  src/C64/CIA1.cpp, CIA1Registers.cpp, CIA2.cpp, CIA2Registers.cpp
+
+- SID and reSID:
+  include/COMMODORE/SID/
+  src/COMMODORE/SID/
+  thirdparties/resid/
+
+- Formats and peripherals:
+  include/COMMODORE/FileIO.hpp
+  src/COMMODORE/FileIO.cpp
+  include/COMMODORE/1540SeriesDisk.hpp
+  src/COMMODORE/1540SeriesDisk.cpp
+  include/COMMODORE/1530Datasette.hpp
+  src/COMMODORE/1530Datasette.cpp
+  include/COMMODORE/SerialPrinterMPS801.hpp
+  include/COMMODORE/SerialPrinterMPS802.hpp
+  src/COMMODORE/SerialPrinterMPS801.cpp
+  src/COMMODORE/SerialPrinterMPS802.cpp
+
+- Cartridges:
+  include/C64/Cartridge.hpp
+  src/C64/Cartridge.cpp
+
+- Commands and diagnostics:
+  setups/C64/Standard.hlp
+  setups/C64/Commodore.hlp
+  setups/C64/C64.hlp
+  setups/C64/LocalConsole.hlp
+  monitors/R64Console/
+
+- Local test programs:
+  emulators/C64Programs/Code/Tests/
+
+
+===============================================================================
+10. CRITERIA FOR FUTURE ITERATIONS
+===============================================================================
+
+This document deliberately distinguishes three levels of claim:
+
+1. IMPLEMENTED: a concrete code path supports the capability.
+2. DIFFERENTIATING: the combination and presentation distinguish EMULATORS.
+3. PENDING VALIDATION: comparative tests are required before it can become an
+   absolute public promise.
+
+Future iterations should add demonstrable metrics: test pass rates, public test
+suites used, a real catalogue of verified software, measured raster and timer
+accuracy, verified formats, and reproducible comparisons with real machines and
+reference emulators.
+
+
+===============================================================================
+11. BILINGUAL SYNCHRONISATION RULE
+===============================================================================
+
+Mandatory document pair:
+
+    Spanish: docs/C64Data/Argumentario_venta_C64.txt
+    English: docs/C64Data/C64_Sales_Playbook.txt
+
+Both files must share the same version number, date, structure, capabilities,
+technical limitations, and traceability paths. A change is not complete if only
+one language has been updated.

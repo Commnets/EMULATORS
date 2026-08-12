@@ -1,0 +1,64 @@
+EMULATORS - ARGUMENTARIO DE VENTA DEL EMULADOR COMMODORE SERIE C264
+Versión: 0.1 | Revisión: 12 de agosto de 2026 | Idioma: español
+Documento gemelo: C264_Sales_Playbook.txt
+
+Documento vivo basado en capacidades verificables. Debe actualizarse junto con su gemelo inglés cuando cambien C264, TED, memoria, archivos, periféricos o herramientas comunes.
+
+1. IDEA FUERZA
+
+Un solo emulador reproduce la personalidad del C16, C116 y Plus/4 alrededor de su pieza central, el TED, y permite observar la relación entre CPU, vídeo, sonido, temporizadores y memoria con las herramientas de EMULATORS.
+
+2. CAPACIDADES DE REFERENCIA
+
+- Selección explícita de C16, C116 o Commodore Plus/4, en PAL o NTSC.
+- CPU 7501 con velocidad lenta/rápida gobernada por la actividad del TED.
+- C16/C116 con 16, 32 o 64 KiB; Plus/4 con 64 KiB y ROM 3-Plus-1 integrada.
+- Mapa de memoria con conmutación ROM/RAM y bancos KERNAL, BASIC, 3-Plus-1 y cartucho; diferencias de hardware entre C16/C116 y Plus/4, incluidos ACIA y segundo 6529B cuando corresponden.
+- TED 7360/8360 con raster PAL/NTSC, IRQ de raster, tres temporizadores, modos de texto estándar, multicolor y color extendido, bitmap de alta resolución y multicolor, borde, scroll y paleta/luminancia propias de la serie.
+- Sonido TED de dos voces, con tono y ruido según registros.
+- Matriz de teclado, dos joysticks, cassette 1531 y bus serie.
+- ROM e interfaz en inglés, francés, sueco y húngaro.
+- Archivos CRT, TAP, PRG, D64, secuencias de teclas y binarios; cassette por pulsos o inyección rápida.
+- Cartuchos, hasta cuatro 1541 lógicas y dos impresoras serie con salida de texto o PostScript.
+- Consola de diagnóstico común más comandos específicos para TED, volcados de pantalla, atributos, bitmap, caracteres y visualización de posiciones de IRQ/raster.
+
+3. QUÉ LO HACE ÚNICO
+
+La serie C264 suele quedar reducida a “otro Commodore”. Aquí es una familia explícita: se conservan las diferencias de máquina y se expone al TED como sistema integrado, incluido el cambio de velocidad de CPU y sus tres temporizadores. La posibilidad de comparar C16/C116/Plus/4 con la misma consola convierte el producto en una herramienta especialmente valiosa para preservación y análisis.
+
+4. BENEFICIOS
+
+- Retro: una puerta única al catálogo C16, C116 y Plus/4 con cinta, disco, PRG y cartucho.
+- Desarrollo: estados de TED, CPU y memoria visibles y escenarios PAL/NTSC o 16/32/64 KiB reproducibles.
+- Docencia: muestra con claridad cómo un chip integrado puede arbitrar vídeo, sonido, temporización y acceso a memoria.
+- Framework: comparte depurador y periféricos con C64/VIC-20, pero mantiene la arquitectura propia de C264.
+
+5. MENSAJES LISTOS
+
+Frase corta: “C16, C116 y Plus/4 en un mismo laboratorio TED, con modelos PAL/NTSC y memoria configurable.”
+
+Presentación: “El C264 de EMULATORS no trata la familia como una variante superficial: modela sus máquinas, mapas de memoria y diferencias de E/S, y hace observable el TED que coordina vídeo, sonido, temporizadores y velocidad de CPU.”
+
+6. LÍMITES HONESTOS
+
+- No afirmar compatibilidad total ni precisión ciclo a ciclo sin resultados publicados.
+- Las unidades 1541 son simulaciones lógicas por traps sobre D64, no emulación completa de electrónica, firmware, GCR y mecánica.
+- Las impresoras producen texto/PostScript a nivel lógico; no reproducen todo el hardware físico.
+- Validar cartuchos y software muy sensible a temporización por caso.
+- C16 y C116 comparten actualmente la misma clase funcional; la selección no implica una recreación física diferenciada del teclado o carcasa.
+
+7. POSICIONAMIENTO
+
+“Una implementación amplia y transparente de la familia C264, comparable en funciones esenciales a los emuladores de referencia y diferenciada por su instrumentación y arquitectura reutilizable.” Evitar “el más compatible” hasta disponer de una matriz comparativa.
+
+8. TRAZABILIDAD
+
+Revisar include/src/C264; include/src/COMMODORE/TED, C6529B y ACIA; componentes COMMODORE de cassette, serie, D64 e impresión; setups/C264; y consola CORE/EMULATORS.
+
+9. MANTENIMIENTO
+
+Toda afirmación nueva requiere código activo y, si afecta a timing, formato o periférico, una prueba reproducible. Registrar máquina, región, RAM y ruta de E/S afectadas.
+
+10. SINCRONIZACIÓN BILINGÜE
+
+Argumentario_venta_C264.txt y C264_Sales_Playbook.txt forman un único activo. Se modificarán siempre en la misma revisión, con alcance, matices y límites equivalentes.

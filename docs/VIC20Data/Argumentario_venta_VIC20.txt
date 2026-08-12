@@ -1,0 +1,65 @@
+EMULATORS - ARGUMENTARIO DE VENTA DEL EMULADOR COMMODORE VIC-20
+Versión: 0.1
+Fecha de revisión: 12 de agosto de 2026
+Idioma: español
+Documento gemelo: VIC20_Sales_Playbook.txt
+
+Este documento describe únicamente capacidades verificables en el código. Debe revisarse junto con su versión inglesa cada vez que cambien VIC-20, VICI, VIA, memoria, archivos, periféricos o herramientas comunes del framework.
+
+1. IDEA FUERZA
+
+El VIC-20 de EMULATORS combina una recreación estructurada de la máquina —6502, VIC-I, dos VIA, mapa de memoria y buses— con un laboratorio de observación y depuración que permite entenderla mientras funciona.
+
+2. A LA ALTURA DE LOS MEJORES
+
+- Modelos PAL y NTSC con reloj, raster y dimensiones de pantalla propios.
+- CPU MOS 6502 integrada con VIC-I y dos VIA 6522 diferenciadas, incluidas sus líneas IRQ/NMI, temporizadores, puertos y conexiones de teclado, joystick, cassette y bus serie.
+- Vídeo VIC-I con texto en alta resolución, multicolor, inversión, borde, color auxiliar y light pen mediante ratón.
+- Sonido VIC-I de cuatro voces: tres tonos y una fuente de ruido, con frecuencia, activación y volumen gobernados por registros.
+- Diez configuraciones reales de memoria: sin expansión y ampliaciones de +3, +8, +11, +16, +19, +24, +27, +32 y +35 KiB.
+- ROM e interfaz de teclado en inglés, japonés, sueco y danés.
+- Carga de CRT, TAP, PRG, D64, secuencias de teclas y datos binarios; cassette físico por pulsos o carga rápida por inyección KERNAL.
+- Cartuchos, hasta cuatro unidades 1541 lógicas y dos impresoras serie con salida de texto o PostScript.
+- Consola común de EMULATORS: ejecución y paso a paso, breakpoints, hooks, inspección de CPU/memoria/chips, depuración profunda, captura de pantalla, control de velocidad y acceso local o remoto.
+
+3. QUÉ LO HACE DIFERENTE
+
+La diferencia no es una lista más larga de juegos compatibles. Es la combinación de fidelidad arquitectónica, variantes de RAM poco habituales y visibilidad interna. El usuario puede cambiar la máquina que estudia, observar por separado VIA1 y VIA2 y relacionar una instrucción con el raster, el sonido o una operación de E/S. Esa misma infraestructura se comparte con el resto de EMULATORS, lo que reduce el aprendizaje al pasar del VIC-20 al C64 o a la serie C264.
+
+4. BENEFICIO POR PERFIL
+
+- Usuario retro: una experiencia VIC-20 completa, con software en cinta, disco, PRG y cartucho y varias ROM regionales.
+- Desarrollador: reproducción controlada de configuraciones de memoria y diagnóstico del 6502, VIC-I y VIA desde una sola consola.
+- Docencia y preservación: la arquitectura se presenta como componentes conectados y observables, no como una caja negra.
+- Proyecto EMULATORS: demuestra que el framework reutiliza CPU, periféricos y herramientas sin borrar las particularidades de cada equipo.
+
+5. MENSAJES LISTOS PARA USAR
+
+Frase corta: “VIC-20 con identidad propia: PAL/NTSC, diez mapas de RAM, VIC-I y doble VIA, completamente observable.”
+
+Presentación: “El emulador VIC-20 de EMULATORS reúne las prestaciones esperables de una solución moderna —vídeo, sonido, teclado, joystick, cinta, disco, cartucho e impresión— y añade una ventaja decisiva: permite inspeccionar la máquina por dentro, desde el 6502 y las dos VIA hasta el raster y las voces del VIC-I.”
+
+Diferencial: “No sólo ejecuta software: convierte el VIC-20 en un banco de pruebas reproducible.”
+
+6. LÍMITES QUE DEBEN EXPLICARSE
+
+- No presentar la compatibilidad como total ni usar “cycle exact” sin una campaña de pruebas que lo demuestre; el propio código documenta aproximaciones en algunas lecturas de raster.
+- La 1541 disponible es una simulación lógica basada en traps y D64, no una unidad completa con CPU, ROM, VIA, GCR y mecánica emuladas.
+- La impresión representa el flujo lógico y genera texto/PostScript; no emula firmware ni mecánica completa de cada impresora.
+- Validar cada tipo concreto de cartucho y cada demo sensible al raster antes de prometer compatibilidad.
+
+7. POSICIONAMIENTO RECOMENDADO
+
+Competir por transparencia, arquitectura y utilidad técnica, además de por uso retro. Evitar comparativas absolutas con VICE u otros productos hasta disponer de una matriz pública de pruebas. La formulación segura es: “ofrece las capacidades esenciales de los emuladores de referencia y una instrumentación especialmente profunda”.
+
+8. TRAZABILIDAD INTERNA
+
+Revisar principalmente: include/src/VIC20; include/src/COMMODORE/VICI; componentes VIA de COMMODORE; include/src/COMMODORE para cassette, serie, D64 e impresión; setups/VIC20; y la consola común de CORE/EMULATORS.
+
+9. CRITERIO DE ACTUALIZACIÓN
+
+Una nueva afirmación comercial sólo entra si existe implementación activa y, para funciones sensibles a temporización o formatos, una prueba reproducible. Cada cambio debe indicar modelo, región, configuración de RAM y vía de E/S afectada.
+
+10. REGLA DE SINCRONIZACIÓN BILINGÜE
+
+Argumentario_venta_VIC20.txt y VIC20_Sales_Playbook.txt son un único activo editorial. Toda modificación funcional o comercial debe aplicarse en la misma revisión a ambos documentos, conservando alcance, matices y límites equivalentes.

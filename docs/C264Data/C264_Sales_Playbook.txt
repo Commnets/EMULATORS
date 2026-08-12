@@ -1,0 +1,64 @@
+EMULATORS - COMMODORE C264 SERIES EMULATOR SALES PLAYBOOK
+Version: 0.1 | Review: 12 August 2026 | Language: English
+Twin document: Argumentario_venta_C264.txt
+
+Living document based on verifiable capabilities. It must be updated with its Spanish twin whenever C264, TED, memory, files, peripherals, or shared tools change.
+
+1. CORE IDEA
+
+One emulator recreates the character of the C16, C116, and Plus/4 around their central component, TED, while EMULATORS tools expose the relationship among CPU, video, sound, timers, and memory.
+
+2. REFERENCE-LEVEL CAPABILITIES
+
+- Explicit C16, C116, or Commodore Plus/4 selection, in PAL or NTSC.
+- 7501 CPU with slow/fast operation governed by TED activity.
+- C16/C116 with 16, 32, or 64 KiB; Plus/4 with 64 KiB and integrated 3-Plus-1 ROM.
+- ROM/RAM switching and KERNAL, BASIC, 3-Plus-1, and cartridge banks; hardware distinctions between C16/C116 and Plus/4, including ACIA and the second 6529B where applicable.
+- 7360/8360 TED with PAL/NTSC raster, raster IRQ, three timers, standard, multicolor, and extended-color text, high-resolution and multicolor bitmap, border, scrolling, and the family's own palette/luminance model.
+- Two-voice TED sound, with register-controlled tone and noise.
+- Keyboard matrix, two joysticks, 1531 cassette, and serial bus.
+- English, French, Swedish, and Hungarian ROM/interface variants.
+- CRT, TAP, PRG, D64, keystroke, and raw files; pulse-level cassette or fast injection.
+- Cartridges, up to four logical 1541 drives, and two serial printers with text or PostScript output.
+- Shared diagnostic console plus TED-specific status, screen, attribute, bitmap, character, and IRQ/raster visualization commands.
+
+3. WHAT MAKES IT UNIQUE
+
+The C264 series is often reduced to “another Commodore.” Here it is an explicit family: machine differences remain visible and TED is exposed as an integrated system, including CPU speed changes and all three timers. Comparing C16/C116/Plus/4 through one console makes this especially valuable for preservation and analysis.
+
+4. BENEFITS
+
+- Retro: one gateway to C16, C116, and Plus/4 software on tape, disk, PRG, and cartridge.
+- Development: visible TED, CPU, and memory state with reproducible PAL/NTSC and 16/32/64 KiB scenarios.
+- Education: a clear demonstration of one integrated chip arbitrating video, sound, timing, and memory access.
+- Framework: the debugger and peripherals are shared with C64/VIC-20 while C264's architecture remains distinct.
+
+5. READY-TO-USE MESSAGES
+
+Short line: “C16, C116, and Plus/4 in one observable TED lab, with PAL/NTSC models and configurable memory.”
+
+Pitch: “EMULATORS does not treat C264 as a superficial variant: it models its machines, memory maps, and I/O distinctions, and exposes the TED coordinating video, sound, timers, and CPU speed.”
+
+6. HONEST LIMITS
+
+- Do not claim complete compatibility or cycle accuracy without published results.
+- 1541 units are trap-based logical D64 simulations, not complete electronics, firmware, GCR, and mechanics emulations.
+- Printers generate logical text/PostScript output; they do not reproduce all physical hardware.
+- Validate cartridges and highly timing-sensitive software case by case.
+- C16 and C116 currently share the same functional class; selection does not imply a physically distinct keyboard or case recreation.
+
+7. POSITIONING
+
+“A broad, transparent C264-family implementation, comparable with reference emulators in essential functions and differentiated by its instrumentation and reusable architecture.” Avoid “most compatible” until a comparative matrix exists.
+
+8. TRACEABILITY
+
+Review include/src/C264; include/src/COMMODORE/TED, C6529B, and ACIA; COMMODORE cassette, serial, D64, and printing components; setups/C264; and the CORE/EMULATORS console.
+
+9. MAINTENANCE
+
+Every new claim requires active code and, for timing, format, or peripheral behavior, a reproducible test. Record the affected machine, region, RAM, and I/O path.
+
+10. BILINGUAL SYNCHRONIZATION
+
+Argumentario_venta_C264.txt and C264_Sales_Playbook.txt are one asset. Always change both in the same revision with equivalent scope, nuance, and limitations.

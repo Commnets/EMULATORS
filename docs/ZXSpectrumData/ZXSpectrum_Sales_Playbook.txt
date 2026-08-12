@@ -1,0 +1,62 @@
+EMULATORS - ZX SPECTRUM EMULATOR SALES PLAYBOOK
+Version: 0.1 | Review: 12 August 2026 | Language: English
+Twin document: Argumentario_venta_ZXSpectrum.txt
+
+Living document supported by the code. Both languages must be updated whenever ULA, ROM, memory, tape, printing, formats, or tools change.
+
+1. CORE IDEA
+
+EMULATORS recreates the classic 16K/48K ZX Spectrum with a ULA that does far more than draw: it governs raster, interrupts, memory and I/O contention, floating bus, keyboard, tape, and beeper, all observable through the framework.
+
+2. REFERENCE-LEVEL CAPABILITIES
+
+- Standard ZX Spectrum with 16 and 48 KiB configurations, plus English, Spanish, Nordic, and Arabic ROM/interface variants.
+- 3.5 MHz Z80 and 7 MHz ULA, with PAL and NTSC models and their own raster timing.
+- Classic 256 x 192 screen, authentic bitmap/attribute organization, INK, PAPER, BRIGHT, FLASH, and border.
+- Raster-linked video fetches and interrupt generation; lower-RAM and I/O contention with wait patterns; floating-bus values projected from ULA fetches.
+- Matrix keyboard, joystick, EAR/MIC input/output, and one-bit beeper through ULA/port-FE logic.
+- Tape through pulse signals or fast loading guarded by the active ROM-routine context.
+- TZX, TAP, keystroke, and raw files.
+- Thermal printer through implemented ROM paths, with text or PostScript output.
+- Shared console for run/step, breakpoints, hooks, CPU/memory, deep debug, screenshots, and local/remote control; specific ULA status and event commands.
+
+3. WHAT MAKES IT DIFFERENT
+
+Its proposition goes beyond rendering pixels and BASIC. The ULA owns timing: Z80 accesses, wait states, the value visible on an undecoded port, the INT pulse, and raster form one inspectable behavior. Border effects, loaders, and timing-sensitive code can therefore be studied rather than merely run.
+
+4. BENEFITS
+
+- Retro: a 16K/48K experience with keyboard, joystick, sound, tape, and printing.
+- Development: direct ULA, event, contended-RAM, and floating-bus visibility for timing diagnosis.
+- Education: a clear link among screen map, attributes, raster, interrupts, and Z80 cycles.
+- Preservation: regional ROM, tape format, and hardware behavior remain separate, verifiable layers.
+
+5. READY-TO-USE MESSAGES
+
+Short line: “The 16K/48K Spectrum that exposes its ULA: raster, contention, floating bus, tape, and beeper.”
+
+Pitch: “EMULATORS recreates the classic Spectrum from screen organization to Z80-ULA timing. It adds tape formats, regional ROMs, printing, and a deep console that can turn a raster effect or contended access into diagnostic evidence.”
+
+6. HONEST LIMITS
+
+- Current scope is the standard 16K/48K ZX Spectrum; do not sell it as a 128K, +2, +2A, or +3 emulator.
+- Do not claim total compatibility, universal cycle accuracy, or one specific physical ULA revision without targeted tests.
+- NTSC support exists in the implementation, but historical catalog and tests should be segmented by region.
+- Fast loading and printing use verified traps/ROM paths; they do not imply support for every modified ROM or physical peripheral.
+- Titles relying on snow, floating bus, contention, or non-standard loaders belong in a regression matrix before they are cited.
+
+7. POSITIONING
+
+“A technically transparent 16K/48K Spectrum with the essential functions of a modern emulator and exceptional ULA/diagnostic depth.” Avoid “most compatible” until measured against public suites.
+
+8. TRACEABILITY
+
+Review include/src/ZXSpectrum (ULA, ULARegisters, Memory, PortManager, Datasette, FileIO, and StdPrinter); Z80 CPU; include/src/SINCLAIR; ROM and setups/ZXSpectrum; CORE/EMULATORS console.
+
+9. MAINTENANCE
+
+Tie each new promise to 16K/48K, PAL/NTSC, ROM variant, and normal/trap path. Timing changes require a reproducible test and preferably automated regression coverage.
+
+10. BILINGUAL SYNCHRONIZATION
+
+Argumentario_venta_ZXSpectrum.txt and ZXSpectrum_Sales_Playbook.txt are one asset; always revise them together with equivalent claims and qualifications.

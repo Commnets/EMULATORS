@@ -1,0 +1,64 @@
+EMULATORS - ARGUMENTARIO DE VENTA DEL EMULADOR MSX
+Versión: 0.1 | Revisión: 12 de agosto de 2026 | Idioma: español
+Documento gemelo: MSX_Sales_Playbook.txt
+
+Documento vivo basado en capacidades comprobables. Debe actualizarse en ambos idiomas cuando cambien modelos, slots, VDP, PSG, PPI, cassette o herramientas.
+
+1. IDEA FUERZA
+
+El MSX de EMULATORS no es una máquina genérica con una ROM intercambiada: es una arquitectura por modelos en la que Z80, slots de memoria, VDP, PSG, PPI, teclado y cassette pueden inspeccionarse como un sistema completo.
+
+2. CAPACIDADES DE REFERENCIA
+
+- Núcleo MSX1 a 3,58 MHz con modelos Standard, Spectravideo SVI-728, Sony HB-10P, Philips VG-8010, Canon V-20 y SVI-738 dentro de la implementación actual.
+- Variantes PAL y NTSC seleccionables por modelo.
+- RAM específica: 16 KiB en SVI-728, HB-10P y SVI-738; 32 KiB en VG-8010; 64 KiB en Canon V-20.
+- Mapa MSX por cuatro páginas de 16 KiB, cuatro slots primarios, subslots expandidos cuando el modelo los define, selección primaria por PPI y registro invertido de subslot en FFFFh.
+- VDP de familia TMS9918A con 16 KiB de VRAM, acceso por puertos 98h/99h, modos Text 40, Graphics I, Graphics II y Multicolor.
+- Hasta 32 sprites, límite de cuatro por línea, magnificación/tamaño, colisión y overflow en estado VDP.
+- PSG AY-3-8910 con tres canales de tono, ruido y envolvente compartidos, además de puertos para joystick, cassette y señales propias del modelo.
+- PPI 8255 para slots, matriz de teclado y funciones de sistema; puertos estándar VDP, PSG y PPI.
+- ROM/teclado por modelo: inglés y español (SVI-728), inglés (Sony/Canon), inglés y francés (Philips), e inglés, alemán y sueco (SVI-738).
+- Lectura y escritura CAS por bloques y entrada automatizada de teclado.
+- Consola común más comandos para estado VDP/PSG, nombres y patrones, sprites, memoria VRAM editable y eventos VDP.
+
+3. QUÉ LO HACE DIFERENTE
+
+MSX fue un estándar de máquinas diversas. El diseño de EMULATORS refleja esa realidad: el modelo decide ROM, idioma, RAM, vídeo, sonido, teclado y distribución de slots. La arquitectura de memoria no se aplana; páginas, slots y subslots siguen siendo visibles y manipulables. Esa combinación de diversidad y observabilidad es el argumento diferencial.
+
+4. BENEFICIOS
+
+- Retro: varios fabricantes y regiones dentro de una misma experiencia coherente.
+- Desarrollo: inspección conjunta de Z80, VDP, PSG, PPI, puertos, VRAM y slots.
+- Docencia: ejemplo directo de cómo un estándar común admite implementaciones de fabricantes distintos.
+- Preservación: configuración por modelo y ROM regional explícitas, sin ocultar diferencias tras un perfil único.
+
+5. MENSAJES LISTOS
+
+Frase corta: “MSX por dentro: múltiples modelos, slots reales, TMS9918A, AY-3-8910 y PPI completamente observables.”
+
+Presentación: “EMULATORS modela MSX como plataforma, no como una sola ROM. Cada equipo aporta memoria, idioma y configuración propios sobre un núcleo verificable de Z80, VDP, PSG, PPI y slots; la consola permite observar desde un sprite o canal de sonido hasta qué slot atiende cada página.”
+
+6. LÍMITES HONESTOS
+
+- El núcleo gráfico y de sistema implementado es MSX1/TMS9918A. No prometer V9938/V9958, modos MSX2, memory mapper, disco o cartuchos hasta que existan y se validen.
+- Aunque la interfaz histórica etiqueta SVI-738 como MSX2, la clase actual hereda del modelo MSX1 y usa su núcleo; comercialmente debe describirse dentro del alcance MSX1 implementado hasta corregir o ampliar esa arquitectura.
+- Los formatos de usuario soportados actualmente son CAS y secuencias de teclado; no presentar ROM/cartucho o imagen de disco como flujo disponible.
+- No afirmar compatibilidad total ni precisión ciclo a ciclo sin una matriz de pruebas.
+- Validar por modelo las particularidades de teclado, joystick, cassette, slots y ROM antes de citar software concreto.
+
+7. POSICIONAMIENTO
+
+“Una plataforma MSX1 multimodelo y transparente, con arquitectura de slots y subsistemas observables.” La ventaja comercial es comprender y comparar implementaciones, no adjudicarse cobertura de todas las generaciones MSX.
+
+8. TRAZABILIDAD
+
+Revisar include/src/MSX: Model, Memory, PPI8255, PortManager, VDP/TMS9918A, PSG/AY38910, OSIO, FileIO y Datasette; setups/MSX; CPU Z80; y consola CORE/EMULATORS.
+
+9. MANTENIMIENTO
+
+Toda afirmación debe indicar modelo, generación efectiva, región, RAM y chip. Cambios en slots, puertos, VDP, sonido o CAS requieren pruebas reproducibles por modelo.
+
+10. SINCRONIZACIÓN BILINGÜE
+
+Argumentario_venta_MSX.txt y MSX_Sales_Playbook.txt son un único activo editorial y se actualizarán siempre juntos, con idéntico alcance y cautelas.

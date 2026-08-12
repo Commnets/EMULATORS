@@ -35,7 +35,7 @@ No escribir sobre el asset ni sobre `docs/UserGuide.docx`. Trabajar siempre en l
 1. Sustituir los marcadores del prólogo, del primer bloque de contenido y de los anexos. Eliminar todo marcador no utilizado.
 2. Crear tantos bloques de contenido como requiera el tema, entre Prólogo y Anexos.
 3. Aplicar estilos Word reales: `Title` para capítulos principales y `Heading 1` a `Heading 3` para su jerarquía interna. No simular títulos con formato directo.
-4. Mantener A4, márgenes, tipografía, colores, portada, marca de agua y pie del asset. No reconstruir la portada ni los encabezados.
+4. Mantener A4, márgenes, tipografía, colores, portada, marca de agua y pie del asset. Conservar el símbolo ARGOS de la portada y del lado izquierdo del pie; no reconstruir la portada ni los encabezados.
 5. Añadir ilustraciones y ecuaciones cerca de su primera explicación. Usar leyendas Word con las etiquetas exactas `Ilustración` y `Ecuación`, campos `SEQ` y referencias `REF` cuando proceda.
 6. Mantener Anexos, Ilustraciones y Ecuaciones al final y en ese orden. Conservar sus campos de lista aunque una lista quede vacía.
 7. Evitar afirmaciones no verificadas. Distinguir claramente comportamiento implementado, comportamiento previsto, limitaciones y aproximaciones de emulación.

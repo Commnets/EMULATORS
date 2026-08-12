@@ -14,6 +14,8 @@ from lxml import etree
 W = "http://schemas.openxmlformats.org/wordprocessingml/2006/main"
 V = "urn:schemas-microsoft-com:vml"
 NS = {"w": W, "v": V}
+WP = "http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"
+NS["wp"] = WP
 
 
 def xml(zip_file: zipfile.ZipFile, name: str) -> etree._Element:
@@ -83,6 +85,21 @@ def validate(path: Path, allow_placeholders: bool) -> list[str]:
             watermark_count += len(header.xpath(".//v:textpath[@string]", namespaces=NS))
         if watermark_count == 0:
             errors.append("author watermark was not found in headers")
+
+        argos_in_header = 0
+        argos_in_footer = 0
+        for name in sorted(n for n in names if re.fullmatch(r"word/header\d+\.xml", n)):
+            header = xml(package, name)
+            argos_in_header += len(header.xpath(
+                './/wp:docPr[@descr="ARGOS framework mark"]', namespaces=NS))
+        for name in sorted(n for n in names if re.fullmatch(r"word/footer\d+\.xml", n)):
+            footer = xml(package, name)
+            argos_in_footer += len(footer.xpath(
+                './/wp:docPr[@descr="ARGOS framework mark"]', namespaces=NS))
+        if argos_in_header == 0:
+            errors.append("ARGOS mark was not found on the cover")
+        if argos_in_footer == 0:
+            errors.append("ARGOS mark was not found in the interior-page footer")
 
         settings = xml(package, "word/settings.xml")
         if not settings.xpath('.//w:updateFields[@w:val="true" or @w:val="1"]', namespaces=NS):

@@ -1,0 +1,62 @@
+EMULATORS - ARGUMENTARIO DE VENTA DEL EMULADOR ZX SPECTRUM
+Versión: 0.1 | Revisión: 12 de agosto de 2026 | Idioma: español
+Documento gemelo: ZXSpectrum_Sales_Playbook.txt
+
+Documento vivo sustentado por el código. Debe actualizarse en ambos idiomas cuando cambien ULA, ROM, memoria, cinta, impresión, formatos o herramientas.
+
+1. IDEA FUERZA
+
+El ZX Spectrum de EMULATORS recrea el modelo clásico 16K/48K con una ULA que no sólo dibuja: gobierna raster, interrupción, contención de memoria y E/S, bus flotante, teclado, cinta y beeper, todo ello observable desde el framework.
+
+2. CAPACIDADES DE REFERENCIA
+
+- ZX Spectrum estándar con configuraciones de 16 y 48 KiB, y ROM/interfaz en inglés, español, nórdico y árabe.
+- Z80 a 3,5 MHz y ULA a 7 MHz, con modelos PAL y NTSC y temporización de raster propia.
+- Pantalla clásica de 256 x 192, organización real de bitmap y atributos, INK, PAPER, BRIGHT, FLASH y borde.
+- Fetches de vídeo y generación de interrupción ligados al raster; contención de RAM baja y de E/S con patrón de esperas; valor de bus flotante proyectado desde los fetches de la ULA.
+- Teclado matricial, joystick, entrada/salida EAR/MIC y beeper de un bit a través de la lógica ULA/puerto FE.
+- Cinta mediante señal por pulsos o carga rápida condicionada al contexto de la rutina ROM.
+- Archivos TZX, TAP, secuencias de teclas y datos binarios.
+- Impresora térmica compatible con las rutas ROM implementadas y salida de texto o PostScript.
+- Consola compartida con ejecución, paso, breakpoints, hooks, CPU/memoria, depuración profunda, capturas y control local/remoto; comandos específicos de estado y eventos ULA.
+
+3. QUÉ LO HACE DIFERENTE
+
+Su propuesta no termina en reproducir píxeles y BASIC. La ULA es dueña de la temporización: los accesos del Z80, las esperas, el dato visible en un puerto no decodificado, el pulso INT y el raster forman un único comportamiento inspeccionable. Esto convierte efectos de borde, loaders y código sensible al tiempo en fenómenos que pueden estudiarse, no sólo ejecutarse.
+
+4. BENEFICIOS
+
+- Retro: experiencia 16K/48K con teclado, joystick, sonido, cinta e impresión.
+- Desarrollo: observación directa de ULA, eventos, RAM contendida y bus flotante para localizar fallos de timing.
+- Docencia: vínculo claro entre mapa de pantalla, atributos, raster, interrupciones y ciclos Z80.
+- Preservación: ROM regional, formato de cinta y comportamiento hardware se mantienen como capas separadas y verificables.
+
+5. MENSAJES LISTOS
+
+Frase corta: “El Spectrum 16K/48K que deja ver su ULA: raster, contención, bus flotante, cinta y beeper.”
+
+Presentación: “EMULATORS reproduce el Spectrum clásico desde su organización de pantalla hasta la interacción temporal Z80-ULA. Añade formatos de cinta, ROM regional, impresión y una consola profunda que permite convertir cualquier efecto de raster o acceso contendiente en evidencia diagnóstica.”
+
+6. LÍMITES HONESTOS
+
+- El alcance actual es ZX Spectrum estándar 16K/48K; no venderlo como emulador de 128K, +2, +2A o +3.
+- No afirmar compatibilidad total, precisión ciclo a ciclo universal ni una revisión ULA física concreta sin pruebas específicas.
+- El soporte NTSC existe en la implementación, pero el catálogo histórico y las pruebas deben segmentarse por región.
+- La carga rápida y la impresión usan traps/rutas ROM verificadas; no equivalen por sí mismas a toda posible ROM modificada o periférico físico.
+- Títulos que dependan de snow, bus flotante, contención o loaders no estándar deben constar en una matriz de regresión antes de citarse.
+
+7. POSICIONAMIENTO
+
+“Un Spectrum 16K/48K técnicamente transparente, con las funciones esenciales de una emulación moderna y especial profundidad en ULA y diagnóstico.” No usar “el más compatible” hasta medirlo frente a suites públicas.
+
+8. TRAZABILIDAD
+
+Revisar include/src/ZXSpectrum (ULA, ULARegisters, Memory, PortManager, Datasette, FileIO y StdPrinter); CPU Z80; include/src/SINCLAIR; ROM y setups/ZXSpectrum; consola CORE/EMULATORS.
+
+9. MANTENIMIENTO
+
+Vincular toda nueva promesa a 16K/48K, PAL/NTSC, variante de ROM y ruta normal/trap. Los cambios de timing requieren una prueba reproducible y, preferentemente, una regresión automatizada.
+
+10. SINCRONIZACIÓN BILINGÜE
+
+Argumentario_venta_ZXSpectrum.txt y ZXSpectrum_Sales_Playbook.txt constituyen un único activo; se revisarán siempre juntos con afirmaciones y reservas equivalentes.

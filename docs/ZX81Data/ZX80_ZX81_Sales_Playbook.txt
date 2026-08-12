@@ -1,0 +1,63 @@
+EMULATORS - ZX80/ZX81 EMULATOR SALES PLAYBOOK
+Version: 0.1 | Review: 12 August 2026 | Language: English
+Twin document: Argumentario_venta_ZX80_ZX81.txt
+
+Living, code-based document. Both languages must be updated whenever ULA, CPU, ROM, memory, tape, printing, or shared tools change.
+
+1. CORE IDEA
+
+EMULATORS preserves the hardest and most distinctive feature of the ZX80/ZX81: the screen is not an independent framebuffer but the cycle-by-cycle result of cooperation among Z80, ULA, memory, and the display program.
+
+2. REFERENCE-LEVEL CAPABILITIES
+
+- Four selections: ZX80 and three ZX81 ROM revisions (old, intermediate, and recent).
+- Z80 and ULA coupled through M1, refresh, HALT, INT and, on ZX81, NMI/WAIT cycles for SLOW mode.
+- CPU-driven video generation: display-file execution, character capture, forced NOP where required, glyph access, inverse video, HALT line termination, and horizontal/vertical synchronization.
+- ZX80-specific behavior, including the effect of code execution or keyboard reading on a display the CPU must maintain.
+- ZX81 SLOW and FAST modes, expanded or collapsed rows, and the standard 32 x 24 character display.
+- Base 1 KiB or 16 KiB expansion, with ROM/RAM mirrors and distinct CPU/video views.
+- Currently supported operation is PAL; NTSC structures exist, but startup reports that they are not yet ready for supported use.
+- O, 80, P, 81, P81, TZX, keystroke, and raw files; pulse-level cassette or fast injection.
+- ZX81 thermal printer with text or PostScript output; unavailable on ZX80 as implemented.
+- EMULATORS console with stepping, breakpoints, hooks, memory/CPU/chip inspection, deep debug, screenshots, and local/remote control.
+
+3. WHAT MAKES IT UNIQUE
+
+Many products can draw a monochrome screen; this one exposes why the screen exists. The display file runs inside the Z80 flow, and FAST/SLOW stop being cosmetic options and become observable architectural consequences. Four ROM/model choices and two RAM maps can also be compared under the same instrumentation.
+
+4. BENEFITS
+
+- Retro: common file formats, keyboard, tape, and printing in a coherent experience.
+- Development: reproducible collapsed display files, 1/16 KiB systems, and ROM revisions with Z80/ULA inspection.
+- Education: an exceptional example of video, CPU, and software forming one state machine.
+- Preservation: flicker, FAST/SLOW, and other defining constraints are retained instead of hidden behind a synthetic screen.
+
+5. READY-TO-USE MESSAGES
+
+Short line: “ZX80 and ZX81 from the inside: the Z80 executes the screen, and EMULATORS lets you watch it happen.”
+
+Pitch: “This emulator recreates the mechanism that makes ZX80 and ZX81 unique: display file, M1/refresh cycles, HALT, interrupts, and synchronization cooperate to build each line. Multiple models, RAM, tape, and printing are included, but the decisive benefit is an inspectable architecture.”
+
+6. HONEST LIMITS
+
+- Current commercial support must be described as PAL; NTSC is structured in code but the emulator itself marks it as not ready.
+- Do not claim complete cycle accuracy or universal compatibility without a test matrix.
+- ZX811/ZX812/ZX813 identify ROM revisions, not independently modeled physical ULA revisions.
+- Non-standard high-resolution techniques and expansions other than 16 KiB require validation before any promise.
+- The printer is simulated at logical/output level, not as complete thermal mechanics.
+
+7. POSITIONING
+
+“An architectural, observable ZX80/ZX81 emulation that treats CPU-generated video as the central feature.” Compare on transparency and technical value, not unmeasured compatibility superlatives.
+
+8. TRACEABILITY
+
+Review include/src/ZX81 (ULA, ULARegisters, MemoryVideoCode, Memory, PortManager, CPU wiring, FileIO, Datasette, and StdPrinter); include/src/SINCLAIR; setups/ZX81; and CORE/EMULATORS.
+
+9. MAINTENANCE
+
+Tie each new claim to a model/ROM, PAL or NTSC, RAM, and FAST/SLOW mode, with a reproducible test whenever timing matters.
+
+10. BILINGUAL SYNCHRONIZATION
+
+Argumentario_venta_ZX80_ZX81.txt and ZX80_ZX81_Sales_Playbook.txt are one asset and must always be revised together with equivalent scope and limits.

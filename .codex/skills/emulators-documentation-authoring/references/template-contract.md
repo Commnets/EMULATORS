@@ -18,6 +18,9 @@ Permitir cualquier número de capítulos y subcapítulos dentro del bloque de co
 
 ## Portada
 
+- Mostrar el símbolo oficial de ARGOS en la esquina superior izquierda, equilibrado
+  visualmente con el bloque del año situado a la derecha. Usar el asset oficial de
+  `docs/branding/argos/argos-mark.svg` o una exportación fiel con transparencia.
 - Mostrar el año en la esquina superior derecha.
 - Mostrar título, subtítulo y autor en la zona inferior izquierda del bloque central.
 - Conservar los colores, tamaños, posiciones y formas originales.
@@ -29,6 +32,8 @@ Permitir cualquier número de capítulos y subcapítulos dentro del bloque de co
 - Mantener tamaño A4 vertical y márgenes aproximados de 3 cm a izquierda/derecha y 2,5 cm arriba/abajo.
 - Mostrar el nombre del autor en mayúsculas como marca de agua diagonal gris y semitransparente.
 - Mostrar en la esquina inferior derecha `Página X | Y` mediante campos `PAGE` y `NUMPAGES`.
+- Mostrar el símbolo oficial de ARGOS en la esquina inferior izquierda, alineado
+  ópticamente con la paginación y sin desplazar los campos `PAGE` y `NUMPAGES`.
 - No sustituir campos por números escritos a mano.
 - Traducir únicamente el rótulo textual del pie al idioma del documento cuando proceda (`Page X | Y` en inglés), sin alterar los campos `PAGE` y `NUMPAGES` ni su posición.
 
@@ -61,10 +66,13 @@ Permitir cualquier número de capítulos y subcapítulos dentro del bloque de co
 ## Criterios de aceptación
 
 - Portada completa y legible.
+- Símbolo ARGOS presente y nítido en la esquina superior izquierda de la portada.
 - Orden de bloques correcto.
 - Índice, listas, referencias y paginación actualizados.
 - Marca de agua igual al autor de portada.
 - Pie correcto en todas las páginas interiores y ausente en portada.
+- Símbolo ARGOS presente en la parte izquierda del pie de todas las páginas
+  interiores, con la paginación conservada a la derecha.
 - Sin marcadores entre corchetes, errores de campo, texto recortado, solapamientos o saltos de página accidentales.
 - Ningún título queda huérfano al final de una página: siempre aparece con al menos el primer párrafo que le sigue.
 - Los encabezados de comandos, parámetros y demás entradas repetitivas tienen al menos 14 pt de separación anterior y se distinguen claramente entre sí.

@@ -1,0 +1,63 @@
+EMULATORS - ARGUMENTARIO DE VENTA DEL EMULADOR ZX80/ZX81
+Versión: 0.1 | Revisión: 12 de agosto de 2026 | Idioma: español
+Documento gemelo: ZX80_ZX81_Sales_Playbook.txt
+
+Documento vivo basado en el código. Debe actualizarse en ambos idiomas cuando cambien ULA, CPU, ROM, memoria, cinta, impresión o herramientas comunes.
+
+1. IDEA FUERZA
+
+El ZX80/ZX81 de EMULATORS preserva lo más difícil y característico de estas máquinas: la pantalla no es un framebuffer independiente, sino el resultado de la cooperación, ciclo a ciclo, entre Z80, ULA, memoria y programa de visualización.
+
+2. CAPACIDADES DE REFERENCIA
+
+- Cuatro selecciones: ZX80 y tres revisiones de ROM ZX81 (antigua, intermedia y reciente).
+- Z80 y ULA conectados mediante ciclos M1, refresh, HALT, INT y, en ZX81, NMI/WAIT para el modo SLOW.
+- Generación de vídeo dirigida por CPU: ejecución del display file, captura de caracteres, NOP forzado cuando corresponde, acceso a glifos, inversión de vídeo, terminación de línea con HALT y sincronismos horizontal/vertical.
+- Comportamiento propio del ZX80, incluido el efecto de ejecutar código o leer teclado sobre una pantalla que la CPU debe mantener.
+- ZX81 en modos SLOW y FAST, filas expandidas o colapsadas y pantalla estándar de 32 x 24 caracteres.
+- Configuración base de 1 KiB o expansión de 16 KiB, con espejos de ROM/RAM y vistas diferenciadas para CPU y vídeo.
+- Emulación actualmente operativa en PAL; las estructuras NTSC existen, pero el arranque avisa que todavía no están listas para uso soportado.
+- Archivos O, 80, P, 81 y P81, TZX, secuencias de teclas y datos binarios; cassette físico por pulsos o inyección rápida.
+- Impresora térmica ZX81 con salida de texto o PostScript; no disponible para ZX80, como en el diseño implementado.
+- Consola EMULATORS con paso a paso, breakpoints, hooks, memoria/CPU/chips, depuración profunda, capturas y control local/remoto.
+
+3. QUÉ LO HACE ÚNICO
+
+Muchos productos pueden mostrar una pantalla monocroma; éste hace visible por qué existe. El display file se ejecuta dentro del flujo del Z80 y los modos FAST/SLOW dejan de ser opciones cosméticas para convertirse en consecuencias observables de la arquitectura. Además, cuatro ROM/modelos y dos mapas de RAM pueden compararse bajo el mismo instrumental.
+
+4. BENEFICIOS
+
+- Retro: carga de formatos habituales, teclado, cinta y salida de impresión dentro de una experiencia coherente.
+- Desarrollo: reproducción de display files colapsados, 1/16 KiB y revisiones de ROM con inspección de Z80/ULA.
+- Docencia: caso excepcional para explicar que vídeo, CPU y software pueden formar una sola máquina de estados.
+- Preservación: conserva también el flicker, FAST/SLOW y otras restricciones que definen al hardware, en vez de ocultarlas con una pantalla sintética.
+
+5. MENSAJES LISTOS
+
+Frase corta: “ZX80 y ZX81 desde dentro: el Z80 ejecuta la pantalla y EMULATORS permite observarlo.”
+
+Presentación: “Este emulador reproduce el mecanismo que hace únicos al ZX80 y ZX81: display file, ciclos M1/refresh, HALT, interrupciones y sincronismo cooperan para crear cada línea. No sólo ofrece varios modelos, RAM, cinta e impresión; convierte esa arquitectura en algo inspeccionable.”
+
+6. LÍMITES HONESTOS
+
+- El soporte comercial actual debe presentarse como PAL; NTSC está estructurado en código, pero el propio emulador lo marca como no listo.
+- No afirmar precisión ciclo a ciclo total ni compatibilidad universal sin una matriz de pruebas.
+- La selección ZX811/ZX812/ZX813 representa revisiones de ROM, no revisiones ULA físicamente independientes.
+- Técnicas de alta resolución no estándar y expansiones distintas de 16 KiB deben verificarse antes de prometerse.
+- La impresora se simula a nivel lógico y de salida; no reproduce toda la mecánica térmica.
+
+7. POSICIONAMIENTO
+
+“Una emulación arquitectónica y observable de ZX80/ZX81 que trata la generación de vídeo por CPU como función central.” Comparar por transparencia y valor técnico, no con superlativos de compatibilidad todavía no medidos.
+
+8. TRAZABILIDAD
+
+Revisar include/src/ZX81 (ULA, ULARegisters, MemoryVideoCode, Memory, PortManager, CPU wiring, FileIO, Datasette y StdPrinter); include/src/SINCLAIR; setups/ZX81; y CORE/EMULATORS.
+
+9. MANTENIMIENTO
+
+Cada afirmación nueva debe asociarse a modelo/ROM, PAL o NTSC, RAM y modo FAST/SLOW, con prueba reproducible cuando dependa de temporización.
+
+10. SINCRONIZACIÓN BILINGÜE
+
+Argumentario_venta_ZX80_ZX81.txt y ZX80_ZX81_Sales_Playbook.txt son un único activo y se revisarán siempre juntos, con alcance y límites equivalentes.
