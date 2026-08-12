@@ -66,7 +66,7 @@ namespace COMMODORE
 		/** Window where a Bad Line Condition can switch the graphics
 			sequencer from idle to screen/display state. */
 		static const unsigned short _BADLINE_DISPLAY_FIRST_CYCLE			= 12;
-		static const unsigned short _BADLINE_DISPLAY_LAST_CYCLE			= 57;
+		static const unsigned short _BADLINE_DISPLAY_LAST_CYCLE				= 57;
 		/** Late Bad Line Condition window that can prevent idle entry at cycle 58. */
 		static const unsigned short _BADLINE_IDLE_PREVENT_FIRST_CYCLE		= 54;
 		static const unsigned short _BADLINE_IDLE_PREVENT_LAST_CYCLE		= 57;
@@ -82,23 +82,23 @@ namespace COMMODORE
 		static const unsigned short _GRAPHIC_ACCESS_LAST_CYCLE				= 55;
 
 		/** VC and VCBASE are 10-bit video matrix counters. */
-		static const unsigned short _VCMASK = 0x03ff;
+		static const unsigned short _VCMASK									= 0x03ff;
 
 		/** Data about the size of the screen */
-		static const unsigned short _GRAPHMAXCHARLINES		= 25;	// Not taking into account reductions in the size!
-		static const unsigned short _GRAPHMAXCHARCOLUMNS	= 40;
-		static const unsigned short _GRAPHMAXBITMAPCOLUMNS	= 320;	// Not taking into account double coulors!
-		static const unsigned short _GRAPHMAXBITMAPROWS		= 200;
+		static const unsigned short _GRAPHMAXCHARLINES						= 25;	// Not taking into account reductions in the size!
+		static const unsigned short _GRAPHMAXCHARCOLUMNS					= 40;
+		static const unsigned short _GRAPHMAXBITMAPCOLUMNS					= 320;	// Not taking into account double coulors!
+		static const unsigned short _GRAPHMAXBITMAPROWS						= 200;
 
 		// Some events.
 		/** As the VICII only addresses 16k and some computers where it might be connected to, admits up to 64k,
 			there is the possibility to change the bank. \n
 			The unsigned ints associated to each must be consecutive for everything to work properly. \n
 			NOTE: Don't tounch these values! */
-		static const unsigned int _BANK0SET = 200;
-		static const unsigned int _BANK1SET = 201;
-		static const unsigned int _BANK2SET = 202;
-		static const unsigned int _BANK3SET = 203;
+		static const unsigned int _BANK0SET									= 200;
+		static const unsigned int _BANK1SET									= 201;
+		static const unsigned int _BANK2SET									= 202;
+		static const unsigned int _BANK3SET									= 203;
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The VICII constructor receives a refeence to the the Color RAM, to simulate the access to the 

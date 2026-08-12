@@ -459,6 +459,7 @@ COPY .\projects\CORE\*.fmt .\setups\C264\ /Y
 COPY .\projects\CORE\*.hlp .\setups\C264\ /Y
 COPY .\projects\CORE\*.ps .\setups\C264\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C264\ /Y
+COPY .\docs\C264Data\C264Emulator_UserGuide.docx .\setups\C264\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264.iss"
 Echo ********************************************************************
 Echo ********************************************************************
@@ -485,6 +486,7 @@ COPY .\projects\CORE\*.ps .\setups\ZX81\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX80SysVars.txt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX81SysVars.txt .\setups\ZX81\ /Y
+COPY .\docs\ZX81Data\ZX81Emulator_UserGuide.docx .\setups\ZX81\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81.iss"
 Echo ********************************************************************
 Echo ********************************************************************
@@ -510,6 +512,7 @@ COPY .\projects\CORE\*.hlp .\setups\ZXSpectrum\ /Y
 COPY .\projects\CORE\*.ps .\setups\ZXSpectrum\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\setups\ZXSpectrum\ /Y
+COPY .\docs\ZXSpectrumData\ZXSpectrumEmulator_UserGuide.docx .\setups\ZXSpectrum\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
 Echo ********************************************************************
 Echo ********************************************************************
@@ -536,6 +539,7 @@ COPY .\projects\CORE\*.hlp .\setups\MSX\ /Y
 COPY .\projects\CORE\*.ps .\setups\MSX\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\MSX\ /Y
 COPY .\projects\MSX\MSXSysVars.txt .\setups\MSX\ /Y
+COPY .\docs\MSXData\MSXEmulator_UserGuide.docx .\setups\MSX\ /Y
 "C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSX.iss"
 Echo ********************************************************************
 Echo

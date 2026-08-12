@@ -1,0 +1,67 @@
+{
+  "input": "C:\\Workspaces\\EMULATORS\\docs\\VIC20Data\\VIC20Emulator_UserGuide.docx",
+  "fonts_by_char_count": {},
+  "direct_run_formatting_runs": 707,
+  "direct_paragraph_formatting_paragraphs": 32,
+  "heading_like_paragraphs_not_heading_style": [],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 133,
+        "text": "/o",
+        "style": "Heading 1"
+      },
+      {
+        "para_index": 144,
+        "text": "/p",
+        "style": "Heading 1"
+      },
+      {
+        "para_index": 154,
+        "text": "/h",
+        "style": "Heading 1"
+      },
+      {
+        "para_index": 162,
+        "text": "/f",
+        "style": "Heading 1"
+      },
+      {
+        "para_index": 171,
+        "text": "/k",
+        "style": "Heading 1"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 134,
+        "run_text": "Meaning: ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 135,
+        "run_text": "General form: ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 140,
+        "run_text": "Examples: ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 143,
+        "run_text": "Consequence: ",
+        "style": "Normal"
+      },
+      {
+        "para_index": 145,
+        "run_text": "Meaning: ",
+        "style": "Normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

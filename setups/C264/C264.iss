@@ -26,6 +26,7 @@ Source: "bios/kernal.318030-02-HUN.bin"; DestDir: "{app}/bios"; Flags: ignorever
 Source: "bios/kernel.325155-03-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/CP4/3-plus-1.317053-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
 Source: "bios/CP4/3-plus-1.317054-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
+Source: "C264Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "C264.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

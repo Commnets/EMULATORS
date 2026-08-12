@@ -23,6 +23,7 @@ Source: "bios/zx80.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/zx81_1.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/zx81_2.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/zx81_3.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "ZX81Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ZX81.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "SINCLAIR.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

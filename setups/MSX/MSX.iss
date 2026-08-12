@@ -19,6 +19,7 @@ Source: "MSXEmulator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RMSXConsole.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSXEmulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "MSX.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TexasInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "GeneralInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion

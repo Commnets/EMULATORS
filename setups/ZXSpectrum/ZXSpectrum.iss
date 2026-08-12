@@ -19,6 +19,7 @@ Source: "ZXSpectrumEmulator.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "RZXSpectrumConsole.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrumEmulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "ZXSpectrum.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "SINCLAIR.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion

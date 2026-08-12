@@ -1416,11 +1416,20 @@ void COMMODORE::VICII::drawResultToScreen (const COMMODORE::VICII::DrawResult& c
 	{
 		size_t pos = (size_t) dC._RCA + i;
 
-		// If the graphic mode was invalid...
+		// Invalid graphic modes generate black graphics, but sprites still pass
+		// through the priority multiplexer using the underlying foreground mask.
 		if (cT._invalid)
 		{
-			// the pixel will be always black by default...
+			// The graphic sequencer output is black by default...
 			screenMemory () -> setPixel (pos, (size_t) dC._RR, 0x00 /** black. */);
+
+			const size_t spriteOwner = cT._spriteColorOwner [i];
+			if (spriteOwner != MCHEmul::_S0 &&
+				(!_VICIIRegisters -> spriteToForegroundPriority (spriteOwner) ||
+				 !cT._collisionGraphicData.bit (7 - i)))
+				// ...but a sprite remains visible when it has priority or the
+				// underlying graphic pixel is background.
+				screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._spriteColor [i]);
 
 			continue;
 		}

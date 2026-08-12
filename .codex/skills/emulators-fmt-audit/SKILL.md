@@ -25,7 +25,7 @@ Read [references/fmt-language.md](references/fmt-language.md) completely before 
 8. Check all source machine variants under `projects` that include the shared formatter, especially normal and remote consoles.
 9. Propose or apply the smallest synchronized change across C++, `.hpp` documentation, and `.fmt`.
 10. Validate the formatter parse and, when possible, format a real `InfoStructure` through the formatter used by the command.
-11. When the formatter belongs to a C64 or VIC-20 command or changes its documented visible output, review and update the corresponding maintained guide: `docs/C64Emulator_UserGuide.docx` or `docs/VIC20Data/VIC20Emulator_UserGuide.docx`. Verify local-console and remote-channel availability through the full machine-specific -> `COMMODORE::CommandBuilder` -> `MCHEmul::StandardCommandBuilder` chain.
+11. When the formatter belongs to a C64, VIC-20, C264, ZX80, ZX81, ZX Spectrum, or MSX command or changes its documented visible output, review and update the corresponding maintained guide: `docs/C64Emulator_UserGuide.docx`, `docs/VIC20Data/VIC20Emulator_UserGuide.docx`, `docs/C264Data/C264Emulator_UserGuide.docx`, `docs/ZX81Data/ZX81Emulator_UserGuide.docx`, `docs/ZXSpectrumData/ZXSpectrumEmulator_UserGuide.docx`, or `docs/MSXData/MSXEmulator_UserGuide.docx`. Verify local-console and remote-channel availability through the full effective command-builder chain, including the currently duplicated `MCHEmul::StandardCommandBuilder` link constructed by the MSX entry points.
 
 ## Contract rules
 
