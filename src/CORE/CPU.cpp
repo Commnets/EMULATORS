@@ -556,6 +556,12 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			// For now, only the nominal cycles are scheduled here.
 			_cyclesPendingExecution = 
 				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
+
+			// Notify the instruction context before its first intrinsic cycle is consumed.
+			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
+				std::shared_ptr <MCHEmul::Event::Data> (
+					new MCHEmul::InstructionContextEventData (
+						_currentInstruction, programCounter ().asAddress (), this, _memory))));
 		}
 		else
 		{
@@ -577,11 +583,6 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		_IFDEBUG {
 			sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 				+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
-
-		// The execution of the instruction is notified
-		// just in case any other part of the computer needed to prepare something...
-		notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
-			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
 
 		// Finally executed the instruction...
 		// This method returns true when everything ok and false if not...
@@ -656,7 +657,9 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...
 	notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
-		std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (inst))));
+		std::shared_ptr <MCHEmul::Event::Data> (
+			new MCHEmul::InstructionContextEventData (
+				inst, programCounter ().asAddress (), this, _memory))));
 
 	// Finally executed the instruction...
 	// This method returns true when everything ok and false if not...

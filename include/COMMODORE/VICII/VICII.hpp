@@ -166,7 +166,7 @@ namespace COMMODORE
 			The content of the register 0x12 (and the 0x11 bacause it contains high bit) is "real time".
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
-		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override;
+		virtual void CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt) override;
 
 		/** Simulates cycles in the VICII. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
@@ -796,20 +796,6 @@ namespace COMMODORE
 		private:
 		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
 	};
-
-	// ---
-	inline void VICII::CPUAboutToExecute
-		(MCHEmul::CPU* cpu, MCHEmul::Instruction* inst)
-	{
-		_VICIIRegisters -> setNumberPositionsNextInstruction
-			(inst -> clockCycles
-				(cpu -> memoryRef (), cpu -> programCounter ().asAddress ()) - 1);
-
-		// Keep the CPU nibble that U16 presents to the VIC-II while AEC is high.
-		_cpuOpcodeLowNibble =
-			MCHEmul::UByte ((unsigned char)
-				(inst -> code () & MCHEmul::UByte::_0F));
-	}
 
 	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()

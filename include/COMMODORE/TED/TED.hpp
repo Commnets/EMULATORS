@@ -140,10 +140,11 @@ namespace COMMODORE
 			The content of several registers (0x1c, 0x1d,...) are "real time".
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
-		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
-							{ _TEDRegisters -> setNumberPositionsNextInstruction 
-								(inst -> clockCycles
-									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ()) >> 
+		virtual void CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt) override
+							{ assert (dt != nullptr);
+							  _TEDRegisters -> setNumberPositionsNextInstruction
+								(dt -> _instruction -> clockCyclesToExecute
+									(dt -> _cpu, dt -> _memory, dt -> _address) >>
 										(inSingleClockMode () ? 0 : 1)); } // The number of cycles in TED will vary depending on the mode...
 
 		/** Simulates cycles in the TED. \n

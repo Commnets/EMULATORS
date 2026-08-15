@@ -138,10 +138,11 @@ namespace COMMODORE
 			Register 0x03 contains raster bit 0 in bit 7, and register 0x04 contains raster bits 8..1. \n
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
-		virtual void CPUAboutToExecute (MCHEmul::CPU* cpu, MCHEmul::Instruction* inst) override
-							{ _VICIRegisters -> setNumberPositionsNextInstruction 
-								(inst -> clockCycles
-									(cpu -> memoryRef (), cpu -> programCounter ().asAddress ())); }
+		virtual void CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt) override
+							{ assert (dt != nullptr);
+							  _VICIRegisters -> setNumberPositionsNextInstruction
+								(dt -> _instruction -> clockCyclesToExecute
+									(dt -> _cpu, dt -> _memory, dt -> _address)); }
 
 		/** Simulates cycles in the VICI. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;

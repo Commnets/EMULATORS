@@ -16,6 +16,7 @@
 #define __MCHEMUL_INSTRUCTION__
 
 #include <CORE/global.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/CPUTransaction.hpp>
 #include <CORE/UBytes.hpp>
 #include <CORE/Address.hpp>
@@ -27,7 +28,34 @@ namespace MCHEmul
 	class Memory;
 	class Stack;
 	class ProgramCounter;
+	class Instruction;
 	class InstructionDefined;
+
+	/** Context notified immediately before a CPU instruction starts. \n
+		The instruction, CPU and memory pointers are not owned by this structure
+		and remain valid while the synchronous event is being processed. \n
+		The instruction address is copied because the Program Counter can change
+		as soon as instruction execution starts. \n
+		No instruction side effect has taken place when this context is created. */
+	struct InstructionContextEventData final : public Event::Data
+	{
+		InstructionContextEventData (Instruction* i, const Address& a, CPU* c, Memory* m)
+			: _instruction (i), _address (a), _cpu (c), _memory (m)
+		{
+			assert (_instruction != nullptr);
+			assert (_cpu != nullptr);
+			assert (_memory != nullptr);
+		}
+
+		/** Instruction about to be executed. It is not owned. */
+		Instruction* _instruction;
+		/** Copy of the Program Counter address where the instruction starts. */
+		Address _address;
+		/** CPU that will execute the instruction. It is not owned. */
+		CPU* _cpu;
+		/** Memory context used by the instruction. It is not owned. */
+		Memory* _memory;
+	};
 
 	/** Represents a instruction executed by a CPU. \n
 		To define an instruction a "code" is needed. \n

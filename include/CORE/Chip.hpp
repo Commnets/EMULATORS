@@ -23,6 +23,7 @@ namespace MCHEmul
 {
 	class CPU;
 	class Instruction;
+	struct InstructionContextEventData;
 
 	/** A chip is a specialized element within the computer (different that the CPU). \n
 		All chips are set with the full memory accesible when the computer is initialized,
@@ -59,10 +60,12 @@ namespace MCHEmul
 							{ return (_memory); }
 
 		// Related with the simulation
-		/** The CPU is emulated either by instruction or by cycle. \n
-			The simulation of the chip, whenever it is executed, can be affected by the instruction that is 
-			about to be executed. This method is to inform the chip about that possibility. */
-		virtual void CPUAboutToExecute (CPU*, Instruction*)
+		/** Notifies the chip that an instruction has been selected but has not yet
+			produced any side effect. \n
+			The context contains non-owning pointers to the instruction, CPU and memory,
+			and a copy of the instruction starting address. \n
+			The event is processed synchronously and the context pointer must not be retained. */
+		virtual void CPUAboutToExecute (const InstructionContextEventData*)
 							{ /** Nothing is done by default. */ }
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 

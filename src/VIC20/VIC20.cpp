@@ -79,7 +79,7 @@ void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::N
 	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
 	{
 		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) -> CPUAboutToExecute
-			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
+			(static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ()));
 	}
 }
 

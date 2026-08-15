@@ -110,7 +110,7 @@ void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
 	{
 		static_cast <COMMODORE::TED*> (graphicalChip ()) -> CPUAboutToExecute
-			(_cpu, (MCHEmul::Instruction*) (static_cast <MCHEmul::CPU::EventData*> (evnt.data ().get ()) -> _data));
+			(static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ()));
 	}
 }
 

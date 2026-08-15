@@ -138,6 +138,22 @@ bool COMMODORE::VICII::initialize ()
 
 	return (true);
 }
+
+// ---
+void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt)
+{
+	assert (dt != nullptr);
+
+	_VICIIRegisters -> setNumberPositionsNextInstruction
+		(dt -> _instruction -> clockCyclesToExecute
+			(dt -> _cpu, dt -> _memory, dt -> _address) - 1);
+
+	// Keep the CPU nibble that U16 presents to the VIC-II while AEC is high.
+	_cpuOpcodeLowNibble =
+		MCHEmul::UByte ((unsigned char)
+			(dt -> _instruction -> code () & MCHEmul::UByte::_0F));
+}
+
 // ---
 bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 {

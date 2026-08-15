@@ -59,9 +59,9 @@ namespace MCHEmul
 	class CPU : public MotherboardElement, public Notifier, public DebugableClass
 	{
 		public:
-		/** Structure for notification.
-			There are many things that can be notified, so the data is very generic. 
-			One thing is when it is about to execute an instruction. */
+		/** Generic structure for CPU notifications that only need one pointer. \n
+			The context sent before an instruction starts is represented by
+			InstructionContextEventData instead. */
 		struct EventData final : public Event::Data
 		{
 			EventData (void* d)
@@ -72,9 +72,9 @@ namespace MCHEmul
 			void* _data;
 		};
 
-		/** An event when the system is about to execute a instruction.
-			Sometimes the executiom of a specific instruction could affect other parts of the computer,
-			like chips (specifically or devices. */
+		/** An event when the system is about to execute an instruction. \n
+			Its data is an InstructionContextEventData created before the instruction
+			produces any side effect. */
 		static const unsigned int _CPUTOEXECUTEINSTRUCTION = 130;
 		static const unsigned int _CPUINSTRUCTIONEXECUTED  = 131;
 
