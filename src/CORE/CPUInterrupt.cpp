@@ -13,6 +13,61 @@ const MCHEmul::CPUInterruptRequest MCHEmul::CPUInterruptRequest::_NOINTREQUEST =
 	{ -1 /** not use this id ever for a real transaction type */, 0, nullptr, -1 }; 
 
 // ---
+MCHEmul::CPUInterrupt::CPUInterrupt (int id, unsigned int cL, int pr,
+		const MCHEmul::CycleStructure& cS)
+	: MCHEmul::CPUInterrupt (id, cL, pr,
+		cS.empty ()
+			? MCHEmul::CycleStructures ()
+			: MCHEmul::CycleStructures ({ cS }))
+{
+	// The plural constructor owns normalization and metadata generation.
+}
+
+// ---
+MCHEmul::CPUInterrupt::CPUInterrupt (int id, unsigned int cL, int pr,
+		const MCHEmul::CycleStructures& cSs)
+	: MCHEmul::InfoClass ("Interrupt"),
+	  _id (id),
+	  _priority (pr),
+	  _cyclesToLaunch (cL),
+	  _cycleStructures (MCHEmul::BusCycleData::normalizedCycleStructures (cL, cSs)),
+	  _busCycleDatas (),
+	  _cyclesAfterLaunch (0),
+	  _active (true),
+	  _inExecution (false),
+	  _lastClockCyclesExecuted (0)
+{
+	_busCycleDatas.reserve (_cycleStructures.size ());
+	for (const auto& i : _cycleStructures)
+		_busCycleDatas.emplace_back (i);
+
+	assert (!_cycleStructures.empty ());
+	assert (_cycleStructures [0].size () == _cyclesToLaunch);
+	assert (_busCycleDatas.size () == _cycleStructures.size ());
+}
+
+// ---
+void MCHEmul::CPUInterrupt::setCyclesToLaunch (unsigned int cL,
+		const MCHEmul::CycleStructure& cS)
+{
+	setCyclesToLaunch (cL, cS.empty ()
+		? MCHEmul::CycleStructures ()
+		: MCHEmul::CycleStructures ({ cS }));
+}
+
+// ---
+void MCHEmul::CPUInterrupt::setCyclesToLaunch (unsigned int cL,
+		const MCHEmul::CycleStructures& cSs)
+{
+	_cyclesToLaunch = cL;
+	_cycleStructures = MCHEmul::BusCycleData::normalizedCycleStructures (cL, cSs);
+	_busCycleDatas.clear ();
+	_busCycleDatas.reserve (_cycleStructures.size ());
+	for (const auto& i : _cycleStructures)
+		_busCycleDatas.emplace_back (i);
+}
+
+// ---
 void MCHEmul::CPUInterrupt::setInExecution (bool i)
 {
 	if (i == _inExecution)

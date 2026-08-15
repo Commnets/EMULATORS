@@ -457,25 +457,29 @@ namespace MCHEmul
 
 		// Invoked from executeNextInstruction
 		/** 
-		  * When the state is: _EXECUTINGINSTRUCTION.
+		  * When the state is _EXECUTINGINSTRUCTION. \n
 		  * The method can be overloaded. \n
-		  *	Execute the next either instruction or interrupt. \n
-		  *	The execution can be done either by cycle or by full instruction/instruct. \n
+		  * It executes either the next instruction or an interrupt. \n
+		  * Execution can be performed by cycle or as a complete transaction. \n
 		  * Per cycle: \n
-		  *	If a instruction takes e.g. 2 cycles, 
-		  *	only when the CPU has passed cycle 2 after loading the instruction this is executed. \n
-		  *	The computer's clock is incremented in one cycle only each loop (@see MCHEmul::Computer::runComputerCycle method). \n
-		  * In this case invokes the methods @see executeNextInterruptRequest_PerCycle 
-		  *	and @executeNextInstruction_PerCycle. \n
+		  *	When a new instruction is selected or an interrupt is accepted,
+		  *	the current CPU iteration consumes its first transaction cycle. \n
+		  *	Every following invocation consumes exactly one additional pending cycle. \n
+		  *	The instruction semantics or interrupt launch is completed when the
+		  *	last pending cycle is consumed. \n
+		  *	The computer clock is incremented by one cycle per iteration. \n
+		  *	This mode invokes @see executeNextInterruptRequest_PerCycle and
+		  *	@see executeNextInstruction_PerCycle. \n
 		  * Full: \n
-		  *	Execute the full instruction/interrupt launch. \n
-		  *	The computer's clock is incremented in the number of cycles the instruction took. \n
-		  * In this case invokes the methods @see executeNextInterruptRequest_Full and @executeNextInstruction_Full. \n
-		  * \n
-		  * By default, the interrupt has preference over the instruction.
-		  * but the instruction under execution has to finish before launching the execution of a interrupt
-		  * and it is only executed when it is possible (@see MCHEmul::CPUInterrupt::canBeExecuted method).
-		  * NOTE: The method returns true if everything was ok, and false when wasn't.
+		  *	The complete instruction or interrupt launch is executed at once. \n
+		  *	The computer clock is incremented by the number of cycles consumed by
+		  *	the complete transaction. \n
+		  *	This mode invokes @see executeNextInterruptRequest_Full and
+		  *	@see executeNextInstruction_Full. \n
+		  * By default, an interrupt has priority over a new instruction, but an
+		  * instruction already in progress has to finish before an interrupt can
+		  * be launched. \n
+		  * NOTE: The method returns true if everything was ok, and false otherwise.
 		  */
 		virtual bool when_ExecutingInstruction ();
 		/** When the state is: _STOPPED. \n
@@ -574,8 +578,10 @@ namespace MCHEmul
 		CPUInterrupt* _currentInterrupt;
 		/** The instruction under execution. nullptr when nothing. */
 		Instruction* _currentInstruction;
-		/** Cycles pending to be executed from either 
-			the current instruction or the current interruption. */
+		/** Number of intrinsic transaction cycles not consumed yet. \n
+			When an instruction is selected or an interrupt is accepted,
+			the current CPU iteration immediately consumes its first cycle. \n
+			The value does not include external stop cycles. */
 		unsigned int _cyclesPendingExecution; 
 
 		// Parameters related with the differet states of the CPU...

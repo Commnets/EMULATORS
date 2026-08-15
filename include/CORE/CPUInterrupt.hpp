@@ -9,6 +9,7 @@
  *	Creation Date: 11/04/2021 \n
  *	Description: Defines a generic way to manage interrupts in a CPU.
  *	Versions: 1.0 Initial
+ *			  1.1 Added nominal cycle structure and bus-cycle metadata.
  */
 
 #ifndef __MCHEMUL_CPUINTERRUPT__
@@ -16,6 +17,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/CPUTransaction.hpp>
 
 namespace MCHEmul
 {
@@ -37,16 +39,18 @@ namespace MCHEmul
 
 		CPUInterrupt () = delete;
 
-		CPUInterrupt (int id, unsigned int cL, int pr = 0)
-			: InfoClass ("Interrupt"),
-			  _id (id),
-			  _cyclesToLaunch (cL),
-			  _priority (pr),
-			  _cyclesAfterLaunch (0), // Usually set when executed, if needed!
-			  _active (true /** by default. */),
-			  _inExecution (false),
-			  _lastClockCyclesExecuted (0)
-							{ }
+		/** Constructor. \n
+		  * @param id	Interrupt identifier. \n
+		  * @param cL	Number of nominal cycles needed to launch it. \n
+		  * @param pr	Interrupt priority. \n
+		  * @param cS	Nominal bus-cycle structure. An empty structure means that
+		  *				every launch cycle is _NOTDEFINED. */
+		CPUInterrupt (int id, unsigned int cL, int pr = 0,
+			const MCHEmul::CycleStructure& cS = MCHEmul::CycleStructure ());
+		/** Constructor for an interrupt with alternative launch structures. \n
+			Structure zero describes the nominal cL cycles. */
+		CPUInterrupt (int id, unsigned int cL, int pr,
+			const MCHEmul::CycleStructures& cSs);
 
 		CPUInterrupt (const CPUInterrupt&) = delete;
 
@@ -113,6 +117,22 @@ namespace MCHEmul
 							{ return (_cyclesToLaunch); }
 		unsigned int cycledAfterLaunch () const
 							{ return (_cyclesAfterLaunch); }
+		const MCHEmul::CycleStructures& cycleStructures () const
+							{ return (_cycleStructures); }
+		/** Returns launch structure n. Structure zero is nominal. \n
+			No boundary check is made; n must be a valid index. */
+		const MCHEmul::CycleStructure& cycleStructure (size_t n = 0) const
+							{ return (_cycleStructures [n]); }
+		/** Returns cycle c from launch structure n. \n
+			No boundary check is made for either index. */
+		unsigned int typeOfCycle (size_t c, size_t n = 0) const
+							{ return (_cycleStructures [n][c]); }
+		const MCHEmul::BusCycleDatas& busCycleDatas () const
+							{ return (_busCycleDatas); }
+		/** Returns the information precalculated for launch structure n. \n
+			No boundary check is made; n must be a valid index. */
+		const MCHEmul::BusCycleData& busCycleData (size_t n = 0) const
+							{ return (_busCycleDatas [n]); }
 
 		/**
 		  *	The name of the fields are: \n
@@ -135,6 +155,14 @@ namespace MCHEmul
 		static bool desactivateDebug (Computer* c);
 
 		protected:
+		/** Changes the nominal duration and cycle structure together. \n
+			This method is intended for interrupts whose launch sequence depends on
+			a processor mode and therefore cannot be fixed in the constructor. */
+		void setCyclesToLaunch (unsigned int cL,
+			const MCHEmul::CycleStructure& cS = MCHEmul::CycleStructure ());
+		void setCyclesToLaunch (unsigned int cL,
+			const MCHEmul::CycleStructures& cSs);
+
 		// These methods are invoked by canBeExecutedOver and executeOver (both defined above);
 		/** To determine whether it is the time to execute the interruption. \n
 			The method returns a possibility. See the reasons above although more can be defined. */
@@ -158,6 +186,8 @@ namespace MCHEmul
 		int _id;
 		int _priority;
 		unsigned int _cyclesToLaunch;
+		MCHEmul::CycleStructures _cycleStructures;
+		MCHEmul::BusCycleDatas _busCycleDatas;
 		unsigned int _cyclesAfterLaunch; // Rare but, used in some cases...
 		bool _active;
 		bool _inExecution;

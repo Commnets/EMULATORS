@@ -29,7 +29,7 @@ namespace FZ80
 			: Interrupt (_ID, 0 /** It will decided any time the INTMode is fixed. (@see below) */, 0 /** The lowest priority. */),
 			  _INTMode (0), // The basic one by default...
 			  _dataBusValue (MCHEmul::UByte::_FF)
-							{ _cyclesToLaunch = 2; // By default...
+							{ setCyclesToLaunch (2); // By default...
 							  setClassName ("INTInterrupt"); }
 
 		/** To manage the mode of the interruption. */
@@ -71,14 +71,14 @@ namespace FZ80
 	{
 		_INTMode = iM;
 		if (_INTMode == 0)
-			_cyclesToLaunch = 2; // + the ones that the instruction will take...
+			setCyclesToLaunch (2); // + the ones that the instruction will take...
 								 // This mode is very dynamic! (@see _cyclesAfterLaunch)
 		else
 		if (_INTMode == 1)
-			_cyclesToLaunch = 13; // like restart (11) + 2
+			setCyclesToLaunch (13); // like restart (11) + 2
 		else
 		if (_INTMode == 2)
-			_cyclesToLaunch = 19; // 7 to fetch the lower address + 6 to save the program counter + 6 to make the jump
+			setCyclesToLaunch (19); // 7 to fetch the lower address + 6 to save the program counter + 6 to make the jump
 		else
 			assert (false); // If should be here...
 	}

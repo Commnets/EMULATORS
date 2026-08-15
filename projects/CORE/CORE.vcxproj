@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="..\..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\packages\Microsoft.Windows.CppWinRT.2.0.220531.1\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
@@ -40,6 +40,7 @@
     <ClCompile Include="..\..\src\CORE\CPU.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUArchitecture.cpp" />
     <ClCompile Include="..\..\src\CORE\CPUInterrupt.cpp" />
+    <ClCompile Include="..\..\src\CORE\CPUTransaction.cpp" />
     <ClCompile Include="..\..\src\CORE\DebugFile.cpp" />
     <ClCompile Include="..\..\src\CORE\DtMemoryBlock.cpp" />
     <ClCompile Include="..\..\src\CORE\FileIO.cpp" />
@@ -107,6 +108,7 @@
     <ClInclude Include="..\..\include\CORE\CPU.hpp" />
     <ClInclude Include="..\..\include\CORE\CPUArchitecture.hpp" />
     <ClInclude Include="..\..\include\CORE\CPUInterrupt.hpp" />
+    <ClInclude Include="..\..\include\CORE\CPUTransaction.hpp" />
     <ClInclude Include="..\..\include\CORE\FileIO.hpp" />
     <ClInclude Include="..\..\include\CORE\FmterBuilder.hpp" />
     <ClInclude Include="..\..\include\CORE\Formatter.hpp" />

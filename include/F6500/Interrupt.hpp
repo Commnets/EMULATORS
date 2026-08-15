@@ -9,6 +9,7 @@
  *	Creation Date: 14/05/2021 \n
  *	Description: The generical definition of a interrupt in a 6500 processor.
  *	Versions: 1.0 Initial
+ *			  1.1 Added the shared IRQ/NMI bus-cycle structure.
  */
 
 #ifndef __F6500_C6500INTERRUPT__
@@ -22,15 +23,10 @@ namespace F6500
 	class Interrupt : public MCHEmul::CPUInterrupt
 	{
 		public:
-		Interrupt (int id, int pr)
-			: MCHEmul::CPUInterrupt (id, 7, pr),
-			  _instChecked (false),
-			  _exeAddress (),
-			  _requestClock (0), _execClock (0)
-							{ }
+		Interrupt (int id, int pr);
 
 		unsigned int readingCyclesTolaunch () const
-							{ return (4); }
+							{ return ((unsigned int) busCycleData ()._numberReadCycles); }
 
 		virtual void initialize () override;
 
@@ -63,6 +59,8 @@ namespace F6500
 
 		private:
 		// Implementation
+		/** IRQ and NMI share two initial reads, three stack writes and two vector reads. */
+		static const MCHEmul::CycleStructure _CYCLESTRUCTURE;
 		mutable bool _instChecked;
 	};
 }

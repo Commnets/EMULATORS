@@ -43,6 +43,7 @@
 #include <CORE/Computer.hpp>
 #include <CORE/CPU.hpp>
 #include <CORE/CPUArchitecture.hpp>
+#include <CORE/CPUTransaction.hpp>
 #include <CORE/CPUInterrupt.hpp>
 #include <CORE/TestCPUSpeed.hpp>
 #include <CORE/Memory.hpp>

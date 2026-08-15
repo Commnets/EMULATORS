@@ -1,5 +1,29 @@
 #include <F6500/Interrupt.hpp>
 
+const MCHEmul::CycleStructure F6500::Interrupt::_CYCLESTRUCTURE =
+{
+	MCHEmul::CPUCycle::_READ,
+	MCHEmul::CPUCycle::_READ,
+	MCHEmul::CPUCycle::_WRITE,
+	MCHEmul::CPUCycle::_WRITE,
+	MCHEmul::CPUCycle::_WRITE,
+	MCHEmul::CPUCycle::_READ,
+	MCHEmul::CPUCycle::_READ
+};
+
+// ---
+F6500::Interrupt::Interrupt (int id, int pr)
+	: MCHEmul::CPUInterrupt (id, 7, pr, _CYCLESTRUCTURE),
+	  _exeAddress (),
+	  _requestClock (0),
+	  _execClock (0),
+	  _instChecked (false)
+{
+	assert (busCycleData ()._numberReadCycles == 4);
+	assert (busCycleData ()._numberWriteCycles == 3);
+	assert (busCycleData ()._maximumConsecutiveWriteCycles == 3);
+}
+
 // ---
 void F6500::Interrupt::initialize ()
 { 

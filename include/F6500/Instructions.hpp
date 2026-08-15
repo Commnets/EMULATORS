@@ -26,7 +26,7 @@ namespace F6500
 	  *	@param _C  : Code.
 	  *	@param _M  : MemoryPositions occupied.
 	  *	@param _CC : Clock cycles used. 
-	  * @param _RCC: Structure of the internal cycles.
+	  * @param _RCC: One structure or a collection of alternative internal cycle structures.
 	  *				 Maintained empty to declare that they are not defined.
 	  * @param _T  : The template to print the instruction.
 	  *	@param _I  : Name of the intruction.
@@ -49,22 +49,22 @@ namespace F6500
 		X will be the total cycles, and Y the first _READ ones. */
 	inline static MCHEmul::InstructionDefined::CycleStructure _6500RW (size_t X, size_t Y);
 	/** Just for BRK. It is the only instruction with 3 consecutive _WRITE cycles .*/
-	#define _6500BRK { \
+	#define _6500BRK MCHEmul::InstructionDefined::CycleStructure ({ \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
-		MCHEmul::InstructionDefined::_CYCLEREAD }
+		MCHEmul::InstructionDefined::_CYCLEREAD })
 	/** Just for JSR. */
-	#define _6500JSR { \
+	#define _6500JSR MCHEmul::InstructionDefined::CycleStructure ({ \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEREAD, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
 		MCHEmul::InstructionDefined::_CYCLEWRITE, \
-		MCHEmul::InstructionDefined::_CYCLEREAD }
+		MCHEmul::InstructionDefined::_CYCLEREAD })
 
 	/** Most of 6500 instruction inherits from this class
 		because it includes diffrent access for any addrss mode. \n
@@ -78,9 +78,15 @@ namespace F6500
 	class Instruction : public MCHEmul::InstructionDefined
 	{
 		public:
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, const MCHEmul::InstructionDefined::CycleStructure& cS, 
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructure& cS,
 				const std::string& t)
 			: MCHEmul::InstructionDefined (c, mp, cc, cS, t, false)
+							{ /** Nothing else. */ }
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: MCHEmul::InstructionDefined (c, mp, cc, cSs, t, false)
 							{ /** Nothing else. */ }
 	
 		protected:
@@ -456,6 +462,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		ADC_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -473,10 +484,16 @@ namespace F6500
 	_INST6500_FROM (0x6d, 3, 4, _6500R(4),		"ADC[$2]",				ADC_Absolute, ADC_General);
 	_INST6500_FROM (0x65, 2, 3, _6500R(3),		"ADC[$1]",				ADC_ZeroPage, ADC_General);
 	_INST6500_FROM (0x61, 2, 6, _6500R(6),		"ADC([$1],X)",			ADC_ZeroPageIndirectX, ADC_General);
-	_INST6500_FROM (0x71, 2, 5, _6500R(5),		"ADC([$1]),Y",			ADC_ZeroPageIndirectY, ADC_General);
+	_INST6500_FROM (0x71, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"ADC([$1]),Y",			ADC_ZeroPageIndirectY, ADC_General);
 	_INST6500_FROM (0x75, 2, 4, _6500R(4),		"ADC[$1],X",			ADC_ZeroPageX, ADC_General);
-	_INST6500_FROM (0x7d, 3, 4, _6500R(4),		"ADC[$2],X",			ADC_AbsoluteX, ADC_General);
-	_INST6500_FROM (0x79, 3, 4, _6500R(4),		"ADC[$2],Y",			ADC_AbsoluteY, ADC_General);
+	_INST6500_FROM (0x7d, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"ADC[$2],X",			ADC_AbsoluteX, ADC_General);
+	_INST6500_FROM (0x79, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"ADC[$2],Y",			ADC_AbsoluteY, ADC_General);
 
 	// Non documented
 	// ALR: AND + LSR
@@ -613,6 +630,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		AND_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -640,10 +662,16 @@ namespace F6500
 	_INST6500_FROM (0x2d, 3, 4, _6500R(4),		"AND[$2]",				AND_Absolute, AND_General);
 	_INST6500_FROM (0x25, 2, 3, _6500R(3),		"AND[$1]",				AND_ZeroPage, AND_General);
 	_INST6500_FROM (0x21, 2, 6, _6500R(6),		"AND([$1],X)",			AND_ZeroPageIndirectX, AND_General);
-	_INST6500_FROM (0x31, 2, 5, _6500R(5),		"AND([$1]),Y",			AND_ZeroPageIndirectY, AND_General);
+	_INST6500_FROM (0x31, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),			
+												"AND([$1]),Y",			AND_ZeroPageIndirectY, AND_General);
 	_INST6500_FROM (0x35, 2, 4, _6500R(4),		"AND[$1],X",			AND_ZeroPageX, AND_General);
-	_INST6500_FROM (0x3d, 3, 4, _6500R(4),		"AND[$2],X",			AND_AbsoluteX, AND_General);
-	_INST6500_FROM (0x39, 3, 4, _6500R(4),		"AND[$2],Y",			AND_AbsoluteY, AND_General);
+	_INST6500_FROM (0x3d, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"AND[$2],X",			AND_AbsoluteX, AND_General);
+	_INST6500_FROM (0x39, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"AND[$2],Y",			AND_AbsoluteY, AND_General);
 
 	// Non documented
 	// ARR: AND + ROR
@@ -754,6 +782,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		BXX_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline void executeBranch ();
@@ -781,35 +814,51 @@ namespace F6500
 	}
 
 	// BCC 
-	_INST6500_FROM (0x90, 2, 2, _6500R(2),		"BCC[&1]",				BCC, BXX_General);
+	_INST6500_FROM (0x90, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BCC[&1]",				BCC, BXX_General);
 
 	// BCS 
-	_INST6500_FROM (0xb0, 2, 2, _6500R(2),		"BCS[&1]",				BCS, BXX_General);
+	_INST6500_FROM (0xb0, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BCS[&1]",				BCS, BXX_General);
 
 	// BEQ
-	_INST6500_FROM (0xf0, 2, 2, _6500R(2),		"BEQ[&1]",				BEQ, BXX_General);
+	_INST6500_FROM (0xf0, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BEQ[&1]",				BEQ, BXX_General);
 
 	// BIT
 	_INST6500_FROM (0x2c, 3, 4, _6500R(4),		"BIT[$2]",				BIT_Absolute, Instruction);
 	_INST6500_FROM (0x24, 2, 3, _6500R(3),		"BIT[$1]",				BIT_ZeroPage, Instruction);
 
 	// BMI
-	_INST6500_FROM (0x30, 2, 2, _6500R(2),		"BMI[&1]",				BMI, BXX_General);
+	_INST6500_FROM (0x30, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BMI[&1]",				BMI, BXX_General);
 
 	// BNE
-	_INST6500_FROM (0xd0, 2, 2, _6500R(2),		"BNE[&1]",				BNE, BXX_General);
+	_INST6500_FROM (0xd0, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BNE[&1]",				BNE, BXX_General);
 
 	// BPL
-	_INST6500_FROM (0x10, 2, 2, _6500R(2),		"BPL[&1]",				BPL, BXX_General);
+	_INST6500_FROM (0x10, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BPL[&1]",				BPL, BXX_General);
 
 	// BRK
 	_INST6500_FROM (0x00, 1, 7, _6500BRK,		"BRK",					BRK, Instruction);
 
 	// BVC
-	_INST6500_FROM (0x50, 2, 2, _6500R(2),		"BVC[&1]",				BVC, BXX_General);
+	_INST6500_FROM (0x50, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BVC[&1]",				BVC, BXX_General);
 
 	// BVS
-	_INST6500_FROM (0x70, 2, 2, _6500R(2),		"BVS[&1]",				BVS, BXX_General);
+	_INST6500_FROM (0x70, 2, 2,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
+												"BVS[&1]",				BVS, BXX_General);
 
 	// CLC
 	_INST6500_FROM (0x18, 1, 2, _6500R(2),		"CLC",					CLC, Instruction);
@@ -832,6 +881,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		CMP_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -859,10 +913,16 @@ namespace F6500
 	_INST6500_FROM (0xcd, 3, 4, _6500R(4),		"CMP[$2]",				CMP_Absolute, CMP_General);
 	_INST6500_FROM (0xc5, 2, 3, _6500R(3),		"CMP[$1]",				CMP_ZeroPage, CMP_General);
 	_INST6500_FROM (0xc1, 2, 6, _6500R(6),		"CMP([$1],X)",			CMP_ZeroPageIndirectX, CMP_General);
-	_INST6500_FROM (0xd1, 2, 5, _6500R(5),		"CMP([$1]),Y",			CMP_ZeroPageIndirectY, CMP_General);
+	_INST6500_FROM (0xd1, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"CMP([$1]),Y",			CMP_ZeroPageIndirectY, CMP_General);
 	_INST6500_FROM (0xd5, 2, 4, _6500R(4),		"CMP[$1],X",			CMP_ZeroPageX, CMP_General);
-	_INST6500_FROM (0xdd, 3, 4, _6500R(4),		"CMP[$2],X",			CMP_AbsoluteX, CMP_General);
-	_INST6500_FROM (0xd9, 3, 4, _6500R(4),		"CMP[$2],Y",			CMP_AbsoluteY, CMP_General);
+	_INST6500_FROM (0xdd, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"CMP[$2],X",			CMP_AbsoluteX, CMP_General);
+	_INST6500_FROM (0xd9, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"CMP[$2],Y",			CMP_AbsoluteY, CMP_General);
 
 	// CPX
 	/** CPX_General: To aggregate common steps in every CPX instruction. */
@@ -1040,6 +1100,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		EOR_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -1066,10 +1131,16 @@ namespace F6500
 	_INST6500_FROM (0x4d, 3, 4, _6500R(4),		"EOR[$2]",				EOR_Absolute, EOR_General);
 	_INST6500_FROM (0x45, 2, 3, _6500R(3),		"EOR[$1]",				EOR_ZeroPage, EOR_General);
 	_INST6500_FROM (0x41, 2, 6, _6500R(6),		"EOR([$1],X)",			EOR_ZeroPageIndirectX, EOR_General);
-	_INST6500_FROM (0x51, 2, 5, _6500R(5),		"EOR([$1]),Y",			EOR_ZeroPageIndirectY, EOR_General);
+	_INST6500_FROM (0x51, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"EOR([$1]),Y",			EOR_ZeroPageIndirectY, EOR_General);
 	_INST6500_FROM (0x55, 2, 4, _6500R(4),		"EOR[$1],X",			EOR_ZeroPageX, EOR_General);
-	_INST6500_FROM (0x5d, 3, 4, _6500R(4),		"EOR[$2],X",			EOR_AbsoluteX, EOR_General);
-	_INST6500_FROM (0x59, 3, 4, _6500R(4),		"EOR[$2],Y",			EOR_AbsoluteY, EOR_General);
+	_INST6500_FROM (0x5d, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"EOR[$2],X",			EOR_AbsoluteX, EOR_General);
+	_INST6500_FROM (0x59, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"EOR[$2],Y",			EOR_AbsoluteY, EOR_General);
 
 	// INC
 	/** INC_General: To aggregate common steps in every INC instruction. */
@@ -1164,7 +1235,9 @@ namespace F6500
 	// JAM
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
 	// Restart the cpu...
-	_INST6500_FROM (0x02 /** 0x02, 0x12, 0x22, 0x32, 0x42, 0x52, 0x62, 0x72, 0x92, 0xb2, 0xd2, 0xf2 */, 1, 1, { }, "JAM", JAM, Instruction);
+	_INST6500_FROM (0x02 /** 0x02, 0x12, 0x22, 0x32, 0x42, 0x52, 0x62, 0x72, 0x92, 0xb2, 0xd2, 0xf2 */, 1, 1, 
+		MCHEmul::InstructionDefined::CycleStructure (), 
+												"JAM", JAM, Instruction);
 
 	// JMP
 	_INST6500_FROM (0x4c, 3, 3, _6500R(3),		"JMP[%2]",				JMP_Absolute, Instruction);
@@ -1187,6 +1260,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		LDA_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -1211,10 +1289,16 @@ namespace F6500
 	_INST6500_FROM (0xad, 3, 4, _6500R(4),		"LDA[$2]",				LDA_Absolute, LDA_General);
 	_INST6500_FROM (0xa5, 2, 3, _6500R(3),		"LDA[$1]",				LDA_ZeroPage, LDA_General);
 	_INST6500_FROM (0xa1, 2, 6, _6500R(6),		"LDA([$1],X)",			LDA_ZeroPageIndirectX, LDA_General);
-	_INST6500_FROM (0xb1, 2, 5, _6500R(5),		"LDA([$1]),Y",			LDA_ZeroPageIndirectY, LDA_General);
+	_INST6500_FROM (0xb1, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"LDA([$1]),Y",			LDA_ZeroPageIndirectY, LDA_General);
 	_INST6500_FROM (0xb5, 2, 4, _6500R(4),		"LDA[$1],X",			LDA_ZeroPageX, LDA_General);
-	_INST6500_FROM (0xbd, 3, 4, _6500R(4),		"LDA[$2],X",			LDA_AbsoluteX, LDA_General);
-	_INST6500_FROM (0xb9, 3, 4, _6500R(4),		"LDA[$2],Y",			LDA_AbsoluteY, LDA_General);
+	_INST6500_FROM (0xbd, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LDA[$2],X",			LDA_AbsoluteX, LDA_General);
+	_INST6500_FROM (0xb9, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LDA[$2],Y",			LDA_AbsoluteY, LDA_General);
 
 	// Non documented
 	// LAS / LAE: Memory AND stack pointer copied into A, X and SP.
@@ -1226,6 +1310,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS,
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		LAS_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -1251,7 +1340,9 @@ namespace F6500
 		return (true);
 	}
 
-	_INST6500_FROM (0xbb, 3, 4, _6500R(4),		"LAS[$2],Y",				LAS_AbsoluteY, LAS_General);
+	_INST6500_FROM (0xbb, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LAS[$2],Y",			LAS_AbsoluteY, LAS_General);
 
 	// Non documented
 	// LAX: LDA + TAX
@@ -1264,6 +1355,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		LAX_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -1290,9 +1386,13 @@ namespace F6500
 	_INST6500_FROM (0xaf, 3, 4, _6500R(4),		"LAX[$2]",				LAX_Absolute, LAX_General);
 	_INST6500_FROM (0xa7, 2, 3, _6500R(3),		"LAX[$1]",				LAX_ZeroPage, LAX_General);
 	_INST6500_FROM (0xa3, 2, 6, _6500R(6),		"LAX([$1],X)",			LAX_ZeroPageIndirectX, LAX_General);
-	_INST6500_FROM (0xb3, 2, 5, _6500R(5),		"LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
+	_INST6500_FROM (0xb3, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
 	_INST6500_FROM (0xb7, 2, 4, _6500R(4),		"LAX[$1],Y",			LAX_ZeroPageY, LAX_General);
-	_INST6500_FROM (0xbf, 3, 4, _6500R(4),		"LAX[$2],Y",			LAX_AbsoluteY, LAX_General);
+	_INST6500_FROM (0xbf, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LAX[$2],Y",			LAX_AbsoluteY, LAX_General);
 
 	// Non documented
 	// LXA / OAL: (A OR magic value) AND immediate value copied into A and X.
@@ -1339,6 +1439,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		LDX_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -1361,7 +1466,9 @@ namespace F6500
 	_INST6500_FROM (0xa2, 2, 2, _6500R(2),		"LDX#[#1]",				LDX_Inmediate, LDX_General);
 	_INST6500_FROM (0xae, 3, 4, _6500R(4),		"LDX[$2]",				LDX_Absolute, LDX_General);
 	_INST6500_FROM (0xa6, 2, 3, _6500R(3),		"LDX[$1]",				LDX_ZeroPage, LDX_General);
-	_INST6500_FROM (0xbe, 3, 4, _6500R(4),		"LDX[$2],Y",			LDX_AbsoluteY, LDX_General);
+	_INST6500_FROM (0xbe, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LDX[$2],Y",			LDX_AbsoluteY, LDX_General);
 	_INST6500_FROM (0xb6, 2, 4, _6500R(4),		"LDX[$1],Y",			LDX_ZeroPageY, LDX_General);
 
 	// LDY
@@ -1373,6 +1480,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		LDY_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -1397,7 +1509,9 @@ namespace F6500
 	_INST6500_FROM (0xac, 3, 4, _6500R(4),		"LDY[$2]",				LDY_Absolute, LDY_General);
 	_INST6500_FROM (0xa4, 2, 3, _6500R(3),		"LDY[$1]",				LDY_ZeroPage, LDY_General);
 	_INST6500_FROM (0xb4, 2, 4, _6500R(4),		"LDY[$1],X",			LDY_ZeroPageX, LDY_General);
-	_INST6500_FROM (0xbc, 3, 4, _6500R(4),		"LDY[$2],X",			LDY_AbsoluteX, LDY_General);
+	_INST6500_FROM (0xbc, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"LDY[$2],X",			LDY_AbsoluteX, LDY_General);
 
 	// LSR
 	/** LSR_General: To aggregate common steps in every LSR instruction. */
@@ -1452,6 +1566,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		NOP_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -1469,11 +1588,16 @@ namespace F6500
 	_INST6500_FROM (0xea, 1, 2, _6500R(2),		"NOP",					NOP, Instruction);
 	// The rest are undocumented...
 	// https://www.esocop.org/docs/MOS6510UnintendedOpcodes-20152412.pdf
-	_INST6500_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, _6500R(2), "NOP#[#1]", NOP_Inmediate, NOP_General);
+	_INST6500_FROM (0x80 /** 0x82 (inestable), 0xc2 (insestable), 0xe2 (inestable) */, 2, 2, _6500R(2), 
+												"NOP#[#1]", NOP_Inmediate, NOP_General);
 	_INST6500_FROM (0x0c, 3, 4, _6500R(4),		"NOP[$2]",				NOP_Absolute, NOP_General);
-	_INST6500_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 3, _6500R(3), "NOP[$1]", NOP_ZeroPage, NOP_General);
-	_INST6500_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 4, _6500R(4), "NOP[$1],X", NOP_ZeroPageX, NOP_General);
-	_INST6500_FROM (0x1c /** 0x3c, 0x5c, 0x7c, 0xdc, 0xfc */, 3, 4, _6500R(4), "NOP[$2],X", NOP_AbsoluteX, NOP_General);
+	_INST6500_FROM (0x04 /** 0x04, 0x44, 0x64 */, 2, 3, _6500R(3), 
+												"NOP[$1]", NOP_ZeroPage, NOP_General);
+	_INST6500_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 4, _6500R(4), 
+												"NOP[$1],X", NOP_ZeroPageX, NOP_General);
+	_INST6500_FROM (0x1c /** 0x3c, 0x5c, 0x7c, 0xdc, 0xfc */, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"NOP[$2],X",			NOP_AbsoluteX, NOP_General);
 
 	// ORA
 	/** ORA_General: To aggregate common steps in every ORA instruction. */
@@ -1484,6 +1608,11 @@ namespace F6500
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		ORA_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
 							{ }
 
 		protected:
@@ -1511,10 +1640,16 @@ namespace F6500
 	_INST6500_FROM (0x0d, 3, 4, _6500R(4),		"ORA[$2]",				ORA_Absolute, ORA_General);
 	_INST6500_FROM (0x05, 2, 3, _6500R(3),		"ORA[$1]",				ORA_ZeroPage, ORA_General);
 	_INST6500_FROM (0x01, 2, 6, _6500R(6),		"ORA([$1],X)",			ORA_ZeroPageIndirectX, ORA_General);
-	_INST6500_FROM (0x11, 2, 5, _6500R(5),		"ORA([$1]),Y",			ORA_ZeroPageIndirectY, ORA_General);
+	_INST6500_FROM (0x11, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"ORA([$1]),Y",			ORA_ZeroPageIndirectY, ORA_General);
 	_INST6500_FROM (0x15, 2, 4, _6500R(4),		"ORA[$1],X",			ORA_ZeroPageX, ORA_General);
-	_INST6500_FROM (0x1d, 3, 4, _6500R(4),		"ORA[$2],X",			ORA_AbsoluteX, ORA_General);
-	_INST6500_FROM (0x19, 3, 4, _6500R(4),		"ORA[$2],Y",			ORA_AbsoluteY, ORA_General);
+	_INST6500_FROM (0x1d, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"ORA[$2],X",			ORA_AbsoluteX, ORA_General);
+	_INST6500_FROM (0x19, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"ORA[$2],Y",			ORA_AbsoluteY, ORA_General);
 
 	// PHA
 	_INST6500_FROM (0x48, 1, 3, _6500RW(3,2),	"PHA",					PHA, Instruction);
@@ -1765,6 +1900,11 @@ namespace F6500
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		SBC_General (unsigned int c, unsigned int mp, unsigned int cc,
+				const MCHEmul::InstructionDefined::CycleStructures& cSs,
+				const std::string& t)
+			: Instruction (c, mp, cc, cSs, t)
+							{ }
 
 		protected:
 		inline bool executeWith (const MCHEmul::UByte& u);
@@ -1782,10 +1922,16 @@ namespace F6500
 	_INST6500_FROM (0xed, 3, 4, _6500R(4),		"SBC[$2]",				SBC_Absolute, SBC_General);
 	_INST6500_FROM (0xe5, 2, 3, _6500R(3),		"SBC[$1]",				SBC_ZeroPage, SBC_General);
 	_INST6500_FROM (0xe1, 2, 6, _6500R(6),		"SBC([$1],X)",			SBC_ZeroPageIndirectX, SBC_General);
-	_INST6500_FROM (0xf1, 2, 5, _6500R(5),		"SBC([$1]),Y",			SBC_ZeroPageIndirectY, SBC_General);
+	_INST6500_FROM (0xf1, 2, 5,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
+												"SBC([$1]),Y",			SBC_ZeroPageIndirectY, SBC_General);
 	_INST6500_FROM (0xf5, 2, 4, _6500R(4),		"SBC[$1],X",			SBC_ZeroPageX, SBC_General);
-	_INST6500_FROM (0xfd, 3, 4, _6500R(4),		"SBC[$2],X",			SBC_AbsoluteX, SBC_General);
-	_INST6500_FROM (0xf9, 3, 4, _6500R(4),		"SBC[$2],Y",			SBC_AbsoluteY, SBC_General);
+	_INST6500_FROM (0xfd, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"SBC[$2],X",			SBC_AbsoluteX, SBC_General);
+	_INST6500_FROM (0xf9, 3, 4,
+		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
+												"SBC[$2],Y",			SBC_AbsoluteY, SBC_General);
 
 	// Non documented
 	// SBX: STA + TXA + AND + CMP + PHP + SEC + CLD + SBC + TAX + LDA + PLP = (_ACCUMULATOR & _XREGISTER) - DATA

@@ -9,12 +9,14 @@
  *	Creation Date: 03/04/2021 \n
  *	Description: Defines the set of instructions.
  *	Versions: 1.0 Initial
+ *			  1.1 Uses shared precalculated CPU bus-cycle information.
  */
 
 #ifndef __MCHEMUL_INSTRUCTION__
 #define __MCHEMUL_INSTRUCTION__
 
 #include <CORE/global.hpp>
+#include <CORE/CPUTransaction.hpp>
 #include <CORE/UBytes.hpp>
 #include <CORE/Address.hpp>
 #include <CORE/ProgramCounter.hpp>
@@ -112,6 +114,10 @@ namespace MCHEmul
 		virtual unsigned int memoryPositions (Memory* m, const Address& a) const = 0;
 		/** Similar meaning with the clock cyles. */
 		virtual unsigned int clockCycles (Memory* m, const Address& a) const = 0;
+		/** Returns the cycles expected for a concrete execution context. \n
+			Unlike clockCycles, this method is intended to consider CPU and memory state. \n
+			It must not modify the CPU, memory or instruction state. */
+		virtual unsigned int clockCyclesToExecute (CPU* c, Memory* m, const Address& a) const = 0;
 
 		// Used in parsers!
 		/** 
@@ -263,24 +269,23 @@ namespace MCHEmul
 			std::vector <Parameter> _parameters;
 		};
 
-		// The different type of cycles than an instruction could be made of
-		// If more types of cycles were defined in classes inheriting from this, 
-		// be sure that its id is power of two different than the ones already used.
-		// _CYCLEALL will be still valid!
+		// Compatibility aliases for the generic CPU transaction cycle types.
+		// Existing instruction definitions can keep using the original names.
 		/** No type of cycle declared. */
-		static const unsigned int _CYCLENOTDEFINED = 0;
-		/** When a cycle is internal, that is the default value. 
-			Used in internal calculus, o movement between registers inside the processor. */
-		static const unsigned int _CYCLEINTERNAL = 1;
-		/** When a cycle read info from the memory. */
-		static const unsigned int _CYCLEREAD = 2;
-		/** When it used to write info to the memory. */
-		static const unsigned int _CYCLEWRITE = 4;
-		/** More types might be added... */
-		/** All at the same time. */
-		static const unsigned int _CYCLEALL = std::numeric_limits <unsigned int>::max ();
-		/** To simplify the definition of the structure of type of cycles of a instruction. */
-		using CycleStructure = std::vector <unsigned int>;
+		static const unsigned int _CYCLENOTDEFINED = MCHEmul::CPUCycle::_NOTDEFINED;
+		/** When a cycle is internal to the CPU. */
+		static const unsigned int _CYCLEINTERNAL = MCHEmul::CPUCycle::_INTERNAL;
+		/** When a cycle reads information from the bus. */
+		static const unsigned int _CYCLEREAD = MCHEmul::CPUCycle::_READ;
+		/** When a cycle writes information to the bus. */
+		static const unsigned int _CYCLEWRITE = MCHEmul::CPUCycle::_WRITE;
+		/** All the cycle types at the same time. */
+		static const unsigned int _CYCLEALL = MCHEmul::CPUCycle::_ALL;
+		/** To simplify the definition of the cycle structure of an instruction. */
+		using CycleStructure = MCHEmul::CycleStructure;
+		/** To define all the alternative cycle structures of an instruction. \n
+			Element zero always contains its nominal cycle structure. */
+		using CycleStructures = MCHEmul::CycleStructures;
 
 		/** 
 		  *	Constructor.
@@ -289,7 +294,9 @@ namespace MCHEmul
 		  * @param cc	:	The number of clock cyles the instruction uses to be executed (usually). \n
 		  *					Some ocassions, some instructions under certain circunstances can take longer than expected. \n
 		  *					@see for so: _additionalClockCycles (method and variable).
-		  * @param cS	:	The structure of cycles. Is empty, then all are declared as nor defined...
+		  * @param cS	:	One cycle structure. If empty, all nominal cycles are declared as not defined. \n
+		  * @param cSs	:	All alternative cycle structures. Element zero is nominal. If the collection is empty, \n
+		  *					a single nominal structure whose cycles are not defined is generated. \n
 		  *	@param t	:	The template of the instruction. \n
 		  *					The way it is defined is key for it to be read and understood by the parsers. \n
 		  *					The parameters should be within [] with two additional data: \n
@@ -298,6 +305,8 @@ namespace MCHEmul
 		  *	@param bE	:	Indicate whether the info contained is managed big or little endian.
 		  */
 		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, const CycleStructure& cS,
+			const std::string& t, bool bE = true);
+		InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, const CycleStructures& cSs,
 			const std::string& t, bool bE = true);
 
 		// The internal structure...
@@ -314,12 +323,25 @@ namespace MCHEmul
 							{ return (_clockCycles); }
 		virtual unsigned int clockCycles (Memory* m, const Address& a) const override
 							{ return (_clockCycles); } // The ones defined at construction time...
+		virtual unsigned int clockCyclesToExecute (CPU*, Memory* m, const Address& a) const override
+							{ return (clockCycles (m, a)); } // Nominal until the concrete CPU predicts its alternatives...
 
-		/** To get the type of the cycle. */
-		const CycleStructure& cycleStructure () const
-							{ return (_cycleStructure); }
-		unsigned int typeOfCycle (size_t c) const // Bear in mind that no boundary check is done!
-							{ return (_cycleStructure [c]); }
+		const CycleStructures& cycleStructures () const
+							{ return (_cycleStructures); }
+		/** Returns cycle structure n. Structure zero is nominal. \n
+			No boundary check is made; n must be a valid index. */
+		const CycleStructure& cycleStructure (size_t n = 0) const
+							{ return (_cycleStructures [n]); }
+		/** Returns cycle c from structure n. \n
+			No boundary check is made for either index. */
+		unsigned int typeOfCycle (size_t c, size_t n = 0) const
+							{ return (_cycleStructures [n][c]); }
+		const MCHEmul::BusCycleDatas& busCycleDatas () const
+							{ return (_busCycleDatas); }
+		/** Returns the information precalculated for structure n. \n
+			No boundary check is made; n must be a valid index. */
+		const MCHEmul::BusCycleData& busCycleData (size_t n = 0) const
+							{ return (_busCycleDatas [n]); }
 
 		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) override;
 
@@ -374,7 +396,8 @@ namespace MCHEmul
 		protected:
 		unsigned int _memoryPositions; 
 		unsigned int _clockCycles;
-		CycleStructure _cycleStructure;
+		CycleStructures _cycleStructures;
+		MCHEmul::BusCycleDatas _busCycleDatas;
 		std::string _iTemplate;
 
 		// Implementation
@@ -406,6 +429,8 @@ namespace MCHEmul
 							{ return (selectInstruction (m, a) -> memoryPositions (m, a)); }
 		virtual unsigned int clockCycles (Memory* m, const Address& a) const override
 							{ return (selectInstruction (m, a) -> clockCycles (m, a)); }
+		virtual unsigned int clockCyclesToExecute (CPU* c, Memory* m, const Address& a) const override
+							{ return (selectInstruction (m, a) -> clockCyclesToExecute (c, m, a)); }
 
 		virtual InstructionDefined* matchesWith (const std::string& i, Strings& prms) override;
 

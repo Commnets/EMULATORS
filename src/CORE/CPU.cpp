@@ -317,6 +317,10 @@ bool MCHEmul::CPU::when_Stopped ()
 {
 	assert (_state == MCHEmul::CPU::_STOPPED);
 
+	// A stopped CPU still consumes exactly one clock cycle per iteration.
+	// This value must not be inherited from the previous transaction.
+	_lastCPUClockCycles = 1;
+
 	// _stopStatusData.run () returns false when no more cycles valid...
 	// Important: This instruction actualize the number of cycles pending...
 	// This is the reason to do the code in this way: 
@@ -348,46 +352,16 @@ bool MCHEmul::CPU::when_Stopped ()
 bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 {
 	if (_currentInstruction != nullptr)
-		return (false); // It is the the turn of the instructions instead!
-						// Why is this here?...
+		return (false); // The instruction in progress has to finish first.
 
-	// ...processed if nothing against were indicated later...
-	bool result = true; 
-	// Is there any interrupt already being processed?
-	if (_currentInterrupt != nullptr)
-	{
-		_lastCPUClockCycles++;
-		if (--_cyclesPendingExecution == 0) // Time to launch it?
-		{
-			_IFDEBUG debugInterruptLaunched ();
+	bool result = true;
 
-			if (_currentInterrupt ->
-				executeOver (this, _currentInterruptRequest.cycles () /** at the moment if was requested. */))
-			{
-				_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch (); // Most of the times = 0
-
-				removeInterruptRequest (_currentInterruptRequest); // Done...
-				_currentInterruptRequest = MCHEmul::CPUInterruptRequest::_NOINTREQUEST; // ..no longer valid...
-
-				_currentInterrupt -> initialize (); // Get ready for the next interrupt...
-				_currentInterrupt = nullptr; // No longer valid...
-			}
-			else
-			{
-				e = MCHEmul::_INTERRUPT_ERROR; // ...error although it's been executed (result = true)...
-
-				_IFDEBUG debugInterruptFails ();
-			}
-		}
-	}
-	// There is no any interrupt being processed...
-	// so it is time to select a new one...
-	else
+	// Select a pending interrupt only when no interrupt is already in progress.
+	if (_currentInterrupt == nullptr)
 	{
 		const MCHEmul::CPUInterruptRequest& iR = getNextInterruptRequest ();
 		if (iR.type () == CPUInterruptRequest::_NOINTREQUEST.type ())
-			result = false; // not processed, 
-							// but with no errors, maybe time for the instructions...
+			result = false; // Maybe it is time for the instructions...
 		else
 		{
 			CPUInterrupt* interr = getInterruptForRequest (iR);
@@ -399,7 +373,7 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 
 						removeInterruptRequest (iR);
 
-						result = false; // not executed, but with no errors...
+						result = false; // Not executed, but with no errors...
 					}
 			
 					break;
@@ -408,18 +382,15 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 					{
 						_IFDEBUG debugInterruptRequestToWait (iR);
 
-						// It is not removed from the pending list...
-						// Because it is valid but not still the time to be executed!
-						// So in the next loop the request will be still there...
-
-						result = false; // not executed, but with no errors...
+						// The request remains pending and can be reconsidered
+						// during the next CPU iteration.
+						result = false;
 					}
 
 					break;
 
 				case CPUInterrupt::_EXECUTIONALLOWED:
 					{
-						// The acknowledge has to be issued!
 						aknowledgeInterrupt (iR);
 
 						_currentInterruptRequest = iR;
@@ -428,11 +399,9 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 						_IFDEBUG debugInterruptLaunched ();
 
 						_cyclesPendingExecution = _currentInterrupt -> cyclesToLaunch ();
-		
-						// The request will be deleted once the interrupt was executed (see above)...
 
-						//... to start the execution with no errors...
-						// ...they might come later!! (when the real execution happens)
+						// The current iteration will consume the first
+						// interrupt launch cycle below.
 					}
 
 					break;
@@ -446,6 +415,36 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 					}
 
 					break;
+			}
+		}
+	}
+
+	// An interrupt accepted during this iteration immediately consumes its
+	// first cycle, just like a newly selected instruction.
+	if (_currentInterrupt != nullptr)
+	{
+		assert (_cyclesPendingExecution > 0);
+
+		if (--_cyclesPendingExecution == 0)
+		{
+			_IFDEBUG debugInterruptLaunched ();
+
+			if (_currentInterrupt ->
+				executeOver (this, _currentInterruptRequest.cycles ()))
+			{
+				_lastCPUClockCycles += _currentInterrupt -> cycledAfterLaunch ();
+
+				removeInterruptRequest (_currentInterruptRequest);
+				_currentInterruptRequest = MCHEmul::CPUInterruptRequest::_NOINTREQUEST;
+
+				_currentInterrupt -> initialize ();
+				_currentInterrupt = nullptr;
+			}
+			else
+			{
+				e = MCHEmul::_INTERRUPT_ERROR;
+
+				_IFDEBUG debugInterruptFails ();
 			}
 		}
 	}
@@ -537,64 +536,14 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 {
 	if (_currentInterrupt != nullptr)
-		return (false); // I guess this is going to generate a big issue!! 
-						// (becuase this situation shouldn't happen)
+		return (false); // Interrupt execution has priority.
 
 	assert (_memory != nullptr);
 
-	// By default, 
-	// the instruction cycle should be processed always at this point!
-	// ...but with errors? (see below)
-
-	if (_currentInstruction != nullptr)
+	// Select the next instruction when there is no instruction in progress.
+	// The current CPU iteration will also consume its first cycle.
+	if (_currentInstruction == nullptr)
 	{
-		// ...but only when the cycles pending are 0!
-		if (--_cyclesPendingExecution == 0)
-		{ 
-			std::string sdd = "";
-			_IFDEBUG { 
-				sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
-					+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
-
-			// The execution of the instruction is notified
-			// just in case any other part of the computer needed to prepare something...
-			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
-				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
-
-			// Finally executed the instruction...
-			// This method returns true when everything ok and false if not...
-			if (!_currentInstruction -> 
-				execute (this, _memory, _memory -> stack (), &_programCounter))
-			{
-				_error = MCHEmul::_INSTRUCTION_ERROR; // ...error executing...(return = true)
-
-				_IFDEBUG debugInstructionFails ();
-			}
-			// when ther eis no errors executing the transaction
-			// ..the rest of the calculus are done...
-			else
-			{
-				_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted (); // Just in case...
-
-				_lastInstruction = _currentInstruction; // save the last instruction executed...
-
-				_currentInstruction = nullptr; // another one is needed...
-
-				_lastState = _state; // After one instruction executed, the last state was also running...
-
-				// Once the instruction's been executed, the total cycles dedicated is notified...
-				notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
-					std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
-
-				_IFDEBUG debugInstructionExecuted (sdd);
-			}
-		}
-		else
-			_IFDEBUG debugInstructionWaiting ();
-	}
-	else
-	{
-		// ...look for the next instruction to be executed...
 		unsigned int nInst = 
 			MCHEmul::UInt (
 				_memory -> values (
@@ -602,18 +551,70 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 				architecture ().bigEndian ()).asUnsignedInt ();
 		if (nInst < _rowInstructions.size () && 
 			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
-			// The initial ones, 
-			// but there might be some additional cycles after execution...
-			// The cycles are decided according with the right instruction...
+		{
+			// Additional cycles are still detected by execute ().
+			// For now, only the nominal cycles are scheduled here.
 			_cyclesPendingExecution = 
 				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
+		}
 		else
 		{
 			_error = MCHEmul::_INSTRUCTION_ERROR; // executed but with an error, the instruction is not found...
 
 			_IFDEBUG debugInstructionNoExists (nInst);
+
+			return (true);
 		}
 	}
+
+	assert (_currentInstruction != nullptr);
+	assert (_cyclesPendingExecution > 0);
+
+	// The selection iteration is also the first cycle of the instruction.
+	if (--_cyclesPendingExecution == 0)
+	{
+		std::string sdd = "";
+		_IFDEBUG {
+			sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
+				+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
+
+		// The execution of the instruction is notified
+		// just in case any other part of the computer needed to prepare something...
+		notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
+			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
+
+		// Finally executed the instruction...
+		// This method returns true when everything ok and false if not...
+		if (!_currentInstruction ->
+			execute (this, _memory, _memory -> stack (), &_programCounter))
+		{
+			_error = MCHEmul::_INSTRUCTION_ERROR; // ...error executing...(return = true)
+
+			_IFDEBUG debugInstructionFails ();
+		}
+		// When there are no errors executing the transaction,
+		// the rest of the calculations are done.
+		else
+		{
+			// The nominal cycles have already been consumed one by one.
+			// Only cycles discovered during execution are added here.
+			_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted ();
+
+			_lastInstruction = _currentInstruction; // save the last instruction executed...
+
+			_currentInstruction = nullptr; // another one is needed...
+
+			_lastState = _state; // After one instruction executed, the last state was also running...
+
+			// Once the instruction's been executed, the total cycles dedicated is notified...
+			notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
+				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
+
+			_IFDEBUG debugInstructionExecuted (sdd);
+		}
+	}
+	else
+		_IFDEBUG debugInstructionWaiting ();
 
 	return (true);
 }

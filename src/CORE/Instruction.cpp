@@ -48,10 +48,23 @@ MCHEmul::Instruction::Instruction (unsigned int c, bool bE)
 MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc, 
 		const MCHEmul::InstructionDefined::CycleStructure& cS,
 		const std::string& t, bool bE)
+	: MCHEmul::InstructionDefined (c, mp, cc,
+		cS.empty ()
+			? MCHEmul::InstructionDefined::CycleStructures ()
+			: MCHEmul::InstructionDefined::CycleStructures ({ cS }), t, bE)
+{
+	// The plural constructor owns normalization and metadata generation.
+}
+
+// ---
+MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp, unsigned int cc,
+		const MCHEmul::InstructionDefined::CycleStructures& cSs,
+		const std::string& t, bool bE)
 	: MCHEmul::Instruction (c, bE),
 	  _memoryPositions (mp), 
 	  _clockCycles (cc),
-	  _cycleStructure (cS),
+	  _cycleStructures (MCHEmul::BusCycleData::normalizedCycleStructures (cc, cSs)),
+	  _busCycleDatas (),
 	  _iTemplate (MCHEmul::noSpaces (MCHEmul::upper (t))), // The template if stored in uppercase and with no spaces...
 	  _iStructure (),
 	  _additionalCycles (0)
@@ -59,11 +72,13 @@ MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
 
-	if (_cycleStructure.empty ())
-		_cycleStructure = 
-			MCHEmul::InstructionDefined::CycleStructure (_clockCycles, _CYCLENOTDEFINED);
+	_busCycleDatas.reserve (_cycleStructures.size ());
+	for (const auto& i : _cycleStructures)
+		_busCycleDatas.emplace_back (i);
 
-	assert (_cycleStructure.size () == _clockCycles);
+	assert (!_cycleStructures.empty ());
+	assert (_cycleStructures [0].size () == _clockCycles);
+	assert (_busCycleDatas.size () == _cycleStructures.size ());
 
 	_iStructure = analyzeInstruction ();
 	if (_iStructure._error)
