@@ -491,6 +491,11 @@ namespace COMMODORE
 		inline void treatSpriteCounterCycle16 ();
 		/** To copy MCBASE to MC and enable sprite display at cycle 58 after DMA was decided earlier. */
 		inline void treatSpriteDisplayStartCycle ();
+		/** To latch the horizontal sprite position when the VIC-II X comparator
+			reaches it. The comparison is performed even outside the visible zone,
+			because border and blanking only mask the sprite output; they do not
+			stop its horizontal sequencer. */
+		inline void treatSpriteHorizontalStartAtCurrentCycle ();
 
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. */
 		const MCHEmul::UByte& lastVICDataRead () const
@@ -939,8 +944,9 @@ namespace COMMODORE
 		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
 		  *							If _MCBASE is 63 then _DMA is set to off. \n
 		  * In this simulation DMA and display are separated. \n
-		  * Sprite bytes are still kept as a 3-byte line buffer for the current
-		  * drawing path, so this is not yet a real pixel shift-register model.
+		  * Sprite bytes are kept as a 3-byte line buffer. Horizontal shift
+		  * position is derived from the circular distance to the X coordinate;
+		  * the implementation still does not model the two VIC-II clock phases.
 		  */
 		struct VICSpriteInfo
 		{
@@ -959,8 +965,11 @@ namespace COMMODORE
 			bool _expansionY;
 			mutable MCHEmul::Address _spriteBaseAddress;
 			mutable MCHEmul::UBytes _graphicsLineSprites;
-			/** Once the sprite reaches the coordinate x, the draw action continues until everyting is done. */
+			/** True once the horizontal sprite comparator has matched for the
+				current sprite data line. */
 			bool _drawing;
+			/** Internal sprite X coordinate latched when the comparator matched.
+				The internal horizontal coordinate system is shifted four pixels. */
 			unsigned short _xS;
 		};
 
@@ -1049,10 +1058,6 @@ namespace COMMODORE
 			{
 				_badLineCAccessAllowedThisLine = true;
 				_badLineInvalidCAccessCycles = 3;
-
-				// During the AEC delay U16 supplies the CPU data nibble
-				// instead of valid Color RAM data.
-				_badLineInvalidColorData = _cpuOpcodeLowNibble;
 			}
 		}
 
@@ -1128,10 +1133,7 @@ namespace COMMODORE
 			// read $ff on D0-D7.
 			if (_badLineCAccessActive &&
 				_badLineCAccessStartCycle == 14)
-			{
 				_badLineInvalidCAccessCycles = 3;
-				_badLineInvalidColorData = _cpuOpcodeLowNibble;
-			}
 
 			_vicGraphicInfo._RC = 0;
 		}
@@ -1276,6 +1278,29 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline void VICII::treatSpriteHorizontalStartAtCurrentCycle ()
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			if (!_vicSpriteInfo [i]._displayActive ||
+				_vicSpriteInfo [i]._drawing)
+				continue;
+
+			unsigned short x = _VICIIRegisters -> spriteXCoord (i) + 4;
+
+			if (x >= _raster.currentColumn () &&
+				x < (_raster.currentColumn () + _raster.step ()))
+			{
+				_vicSpriteInfo [i]._drawing = true;
+				_vicSpriteInfo [i]._xS = x;
+
+				_IFDEBUG debugDrawSpriteAt
+					(i, x, _vicGraphicInfo._ROW);
+			}
+		}
+	}
+
+	// ---
 	inline void VICII::treatGraphicAccessCycle ()
 	{
 		if (!isGraphicAccessCycle ())
@@ -1315,6 +1340,12 @@ namespace COMMODORE
 		if (invalidCAccess)
 		{
 			const size_t gAI = graphicAccessIndex ();
+
+			// Latch CPU D0-D3 immediately before the first invalid c-access.
+			// CPU notification has already advanced to the instruction reached
+			// during the BA/AEC delay.
+			if (_cycleInRasterLine == fCA)
+				_badLineInvalidColorData = _cpuOpcodeLowNibble;
 
 			// During the first invalid DMA-delay/FLI c-accesses, the VIC reads
 			// $ff on D0-D7 instead of valid Video Matrix data.
@@ -1556,55 +1587,107 @@ namespace COMMODORE
 		_vicGraphicInfo._ffMBorderPixels = (cav + 8) > _raster.visibleColumns () 
 			? (_raster.visibleColumns () - cav) : 8;
 
-		// Only if it is in the screen position...
-		// Looking at the right limit...
-		if (cav == (_raster.hData ().lastScreenPosition () + 1))
-			_vicGraphicInfo._ffMBorder = true;
-		if (cav < _raster.hData ().lastScreenPosition () && 
-				((cav + 8) >= _raster.hData ().lastScreenPosition ()))
+		// The real VIC-II evaluates the horizontal comparators pixel by pixel,
+		// while this simulation advances the raster by one eight-pixel VIC-II
+		// cycle. currentColumn() is the internal horizontal raster coordinate and
+		// the CSEL-dependent limits in VICIIRegisters use that same coordinate
+		// system. The circular distance therefore predicts whether the exact
+		// comparator value will be reached within the current cycle; it is not an
+		// interval comparison replacing the hardware comparator.
+		unsigned short pixelsPerRasterLine = _cyclesPerRasterLine << 3;
+		unsigned short rightComparator = _VICIIRegisters -> maxRasterH ();
+		unsigned short distanceToRightComparator =
+			(rightComparator + pixelsPerRasterLine - _raster.currentColumn ()) %
+			pixelsPerRasterLine;
+
+		// Bauer rule 1 sets the main border flip-flop at the right comparator.
+		// A transition has to be prepared only while the flip-flop is clear; if
+		// it is already set, reaching the comparator produces no visible change.
+		if (distanceToRightComparator < _raster.step () &&
+			!_vicGraphicInfo._ffMBorder)
 		{
+			// cav is deliberately used only from this point onwards. It is the
+			// aligned coordinate of the slice in ScreenMemory, whereas the border
+			// comparison above belongs to the internal raster coordinate system.
+			// Convert the comparator to the visible coordinate system and calculate
+			// how many pixels after it must be covered by the border.
+			unsigned short rightVisiblePosition =
+				_raster.columnInVisibleZone (rightComparator);
+			unsigned short sliceEnd = ((cav + _raster.step ()) >
+				_raster.visibleColumns ())
+				? _raster.visibleColumns ()
+				: (cav + _raster.step ());
+
+			// The complete eight-pixel slice is composed before the border layer is
+			// applied. _ffRBorder postpones the actual main flip-flop transition
+			// until drawVisibleZone() has drawn this partial slice. This preserves
+			// the pixels preceding the comparator as graphics or sprite output.
 			_vicGraphicInfo._ffRBorder = true;
-			// When out of the screen zone, the number of pixels to draw is complete...
-			if (!_vicGraphicInfo._ffVBorder)
+			_vicGraphicInfo._ffMBorderBegin =
+				(rightVisiblePosition < cav)
+					? cav
+					: ((rightVisiblePosition > sliceEnd)
+						? sliceEnd
+						: rightVisiblePosition);
+			_vicGraphicInfo._ffMBorderPixels =
+				sliceEnd - _vicGraphicInfo._ffMBorderBegin;
+		}
+		
+		// Detect the left comparator in the same internal coordinate system used
+		// for the right one. CSEL may move this comparator while a line is being
+		// generated, so the value currently stored in VICIIRegisters is sampled
+		// for this VIC-II cycle. The modular distance also handles the horizontal
+		// raster wrap without involving the visible, aligned cav coordinate.
+		unsigned short leftComparator = _VICIIRegisters -> minRasterH ();
+		unsigned short distanceToLeftComparator =
+			(leftComparator + pixelsPerRasterLine - _raster.currentColumn ()) %
+			pixelsPerRasterLine;
+		bool atLeft = distanceToLeftComparator < _raster.step ();
+
+		if (atLeft)
+		{
+			// Bauer rules 4 and 5 are evaluated at the left horizontal
+			// comparator. Their order matters because rule 6 immediately consumes
+			// the resulting vertical flip-flop state at this same raster position.
+			if (_raster.currentLine () == _VICIIRegisters -> maxRasterV ())
+				_vicGraphicInfo._ffVBorder = true; // Bauer rule 4.
+			if (_raster.currentLine () == _VICIIRegisters -> minRasterV () &&
+				!_VICIIRegisters -> blankEntireScreen ())
+				_vicGraphicInfo._ffVBorder = false; // Bauer rule 5.
+
+			// Bauer rule 6 resets the main border flip-flop only if the vertical
+			// one is clear. Test the flip-flop itself instead of inferring its value
+			// from the normal vertical display interval: timed RSEL changes can keep
+			// the vertical border open outside that geometrical interval. Likewise,
+			// no temporary transition is needed if the main flip-flop is already
+			// clear when the comparator is reached.
+			if (!_vicGraphicInfo._ffVBorder &&
+				_vicGraphicInfo._ffMBorder)
 			{
-				_vicGraphicInfo._ffMBorderBegin = _raster.hData ().lastScreenPosition () + 1;
-				_vicGraphicInfo._ffMBorderPixels = (cav + 8) - _vicGraphicInfo._ffMBorderBegin;
+				// Pixels before the left comparator still belong to the main border;
+				// pixels from the comparator onwards expose graphics and sprites. cav
+				// is used only for this rendering calculation after the hardware event
+				// has been detected with currentColumn().
+				unsigned short leftVisiblePosition =
+					_raster.columnInVisibleZone (leftComparator);
+				unsigned short sliceEnd = ((cav + _raster.step ()) >
+					_raster.visibleColumns ())
+					? _raster.visibleColumns ()
+					: (cav + _raster.step ());
+
+				// _ffLBorder postpones clearing the main flip-flop until the partial
+				// border has been drawn by drawVisibleZone(). The clamping keeps the
+				// pixel count valid at either end of the visible output slice.
+				_vicGraphicInfo._ffLBorder = true;
+				_vicGraphicInfo._ffMBorderBegin = cav;
+				_vicGraphicInfo._ffMBorderPixels =
+					(leftVisiblePosition < cav)
+						? 0
+						: ((leftVisiblePosition > sliceEnd)
+							? (sliceEnd - cav)
+							: (leftVisiblePosition - cav));
 			}
 		}
-		
-		// Only if it is at the left limit...
-		// ...atLeft variable will mark whether the raster getting the left side...
-		// and if it is, _vicGraphicInfo._ffMBorderPixels will hold the number of pixels to draw... 
-		// 8 by default (or the limit of the visible zone)!
-		bool atLeft = false;
-		// Treat the slice as [cav, cav + 8). This also detects a display limit
-		// moved by CSEL exactly onto cav after the preceding slice was drawn,
-		// without detecting an aligned limit one slice too early.
-		if (cav < _raster.hData ().firstScreenPosition () &&
-				((cav + 8) >= _raster.hData ().firstScreenPosition ()))
-		{
-			atLeft = true;
-			if (_raster.vData ().currentPosition () >= _VICIIRegisters -> minRasterV () &&
-				_raster.vData ().currentPosition () <= _VICIIRegisters -> maxRasterV ())
-				_vicGraphicInfo._ffMBorderPixels = 
-					_raster.hData ().firstScreenPosition () - cav;
-		}
-		
-		// When the raster is getting the left position...
-		// ...and it is also in the bottom visible limit...
-		if (atLeft &&
-				(_raster.vData ().currentPosition () == _VICIIRegisters -> maxRasterV ()))
-			_vicGraphicInfo._ffVBorder = true; // ... the vertical border should appear...
-		// ...but if it is in the top limit and the screen hasn't been declared as blank...
-		if (atLeft &&
-			(_raster.vData ().currentPosition () == _VICIIRegisters -> minRasterV () &&
-			 !_VICIIRegisters -> blankEntireScreen ()))
-			_vicGraphicInfo._ffVBorder = false; // ... the vertical border should disappear...
-	
-		// ...and if after all previous checks, the vertical flip flip is off...
-		if (atLeft && !_vicGraphicInfo._ffVBorder)
-			_vicGraphicInfo._ffLBorder = true; // ...this one is temporal, 
-												// ...and when it is used, the main one will become false...
 
 		// This is used later to draw events...if active!
 		_eventStatus._ffMBorderChange.set (_vicGraphicInfo._ffMBorder);

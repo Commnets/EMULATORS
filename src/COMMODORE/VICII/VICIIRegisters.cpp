@@ -126,7 +126,7 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 			{
 				_verticalScrollPosition = v.value () & 0x07; // 3 LSBits
 				if ((_textDisplay25RowsActive = v.bit (3))) { _minRasterV = 51; _maxRasterV = 251; }
-				else { _minRasterV = 55; _maxRasterV = 247; }
+				else { _minRasterV = 55; _maxRasterV = 247; } // Both in PAL and NTSC
 				_blankEntireScreen = !v.bit (4);
 				_graphicBitModeActive = v.bit (5);
 				_graphicExtendedColorTextModeActive = v.bit (6);
@@ -164,7 +164,8 @@ void COMMODORE::VICIIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x16:
 			{
 				_horizontalScrollPosition = v.value () & 0x07; // 3 LSBits
-				_textDisplay40ColumnsActive = v.bit (3);
+				if ((_textDisplay40ColumnsActive = v.bit (3))) { _minRasterH = 24; _maxRasterH = 344; }
+				else { _minRasterH = 31; _maxRasterH = 335; } // Both en PAL and NTSC
 				_graphicMulticolorTextModeActive = v.bit (4);
 				_videoResetActive = v.bit (5);
 				/** bites 6 - 7 are not used. */

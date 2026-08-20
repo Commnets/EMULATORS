@@ -338,14 +338,17 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// VC/VLMI advancement, RC handling and sprite activation/deactivation.
 		treatRasterCycle ();
 
-		// Phase 5: draw the current visible 8-pixel slice, if the raster is in
+		// Phase 5: latch sprite horizontal starts independently of video visibility.
+		treatSpriteHorizontalStartAtCurrentCycle ();
+
+		// Phase 6: draw the current visible 8-pixel slice, if the raster is in
 		// the visible zone. The drawing path uses the data already fetched by
 		// the raster-cycle phase and then applies sprites, priority, collisions
 		// and border overlay.
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
 
-		// Phase 6: advance the raster beam by one VIC-II cycle.
+		// Phase 7: advance the raster beam by one VIC-II cycle.
 		// This moves the horizontal raster position, advances the vertical raster
 		// when horizontal retrace is crossed, and performs new-line/new-frame
 		// housekeeping such as resetting per-line bad-line state, restoring VC
@@ -353,18 +356,18 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// of a new frame.
 		advanceRasterPosition ();
 
-		// Phase 7a: evaluate raster IRQ at the new raster position.
+		// Phase 8a: evaluate raster IRQ at the new raster position.
 		// The IRQ flag is only activated here; the actual CPU IRQ request is
 		// performed later together with all other VIC-II IRQ sources.
 		treatRasterIRQAtCurrentPosition ();
 
-		// Phase 7b: evaluate light-pen detection at the new raster position.
+		// Phase 8b: evaluate light-pen detection at the new raster position.
 		// The emulated light pen uses the mouse position and button state. The
 		// position is latched when the raster beam reaches the mouse/light-pen
 		// position, and at most once per frame.
 		treatLightPenAtCurrentRasterPosition ();
 
-		// Phase 8: final IRQ evaluation for this VIC-II cycle.
+		// Phase 9: final IRQ evaluation for this VIC-II cycle.
 		// At this point all per-cycle IRQ sources have had the opportunity to set
 		// their corresponding flags: raster IRQ, light pen, sprite/sprite
 		// collision and sprite/data collision.
@@ -1246,7 +1249,8 @@ void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
 	// The main border is the final and highest-priority video layer.
 	if (!borderCoversEntireSlice &&
 		(_vicGraphicInfo._ffMBorder ||
-		 _vicGraphicInfo._ffLBorder || _vicGraphicInfo._ffRBorder /** The temporal ones. */))
+		 _vicGraphicInfo._ffLBorder || 
+		 _vicGraphicInfo._ffRBorder /** The temporal ones. */))
 	{
 		screenMemory () -> setHorizontalLine ((size_t) _vicGraphicInfo._ffMBorderBegin, 
 			(size_t) rv, (size_t) _vicGraphicInfo._ffMBorderPixels, _VICIIRegisters -> foregroundColor ());
@@ -1725,11 +1729,14 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 // ---
 MCHEmul::UByte COMMODORE::VICII::drawSpriteOver (size_t spr, unsigned int* d, size_t* dO)
 {
-	return ((_vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
+	return ((!_vicSpriteInfo [spr]._drawing ||
+			 _vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
 		? MCHEmul::UByte::_0
 		: (_VICIIRegisters -> spriteMulticolorMode (spr)
-			? drawMultiColorSpriteOver (_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)
-			: drawMonoColorSpriteOver (_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)));
+			? drawMultiColorSpriteOver
+				(_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)
+			: drawMonoColorSpriteOver
+				(_raster.currentColumn (), _vicGraphicInfo._ROW, spr, d, dO)));
 }
 
 // ---
@@ -1740,8 +1747,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= (_vicSpriteInfo [spr]._drawing) 
-		? _vicSpriteInfo [spr]._xS : (_VICIIRegisters -> spriteXCoord (spr) + 4);
+	unsigned short x	= _vicSpriteInfo [spr]._xS;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= dW << 3; // 8 or 16
 	unsigned short wY	= _vicSpriteInfo [spr]._expansionY ? 42 : 21;
@@ -1750,30 +1756,20 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 	// Vertical eligibility has already been decided by the sprite DMA/display logic.
 	// Which means the bits have to be shifted from the composition register
 	// No need to check whether the y position is within or not the limits
-	if ((c + 8 /** pixels */) < x || c >= (x + wX))
-		return (result); // Not visible in the horizontal zone...
-
 	for (unsigned short i = 0; i < 8 /** always to draw 8 pixels */; i++)
 	{
-		unsigned short pp = (c + i); // The exact pixel to draw...
-		if (pp < x)
-			continue; // Not visible...
-		if (pp >= (x + wX))
-			break; // No more draws...
+		unsigned short pp = c + i;
+		unsigned short pS = (pp >= x)
+			? pp - x
+			: ((_cyclesPerRasterLine << 3) + pp - x);
 
-		// The sprite starts to be drawn...
-		// ...if it isn0't already before...
-		if (!_vicSpriteInfo [spr]._drawing)
-		{
-			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
-
-			_IFDEBUG debugDrawSpriteAt (spr, x, r);
-		}
+		if (pS >= wX)
+			continue;
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit moves from 7 to 0, and the byte increases...
-		size_t iBy = (size_t) ((pp - x) / dW8);
-		size_t iBt = (size_t) (7 - (((pp - x) % dW8) / dW));
+		size_t iBy = (size_t) (pS / dW8);
+		size_t iBt = (size_t) (7 - ((pS % dW8) / dW));
 
 		// Once the bit has been used, it is put back to false...
 		// ..simulating the behaviour of the shift register used by the VIC
@@ -1791,7 +1787,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMonoColorSpriteOver (unsigned short c, unsi
 		{
 			// Because the position 50 correspond at the raster line position 51...
 			unsigned short y = _VICIIRegisters -> spriteYCoord (spr) + 1;
-			if ((pp == x || pp == (x + wX - 1)) || 
+			if ((pS == 0 || pS == (wX - 1)) ||
 				(r == y || r == (y + wY - 1)))
 					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
 		}
@@ -1815,8 +1811,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 
 	// Horizontal info about the sprite
 	unsigned short dW	= _VICIIRegisters -> spriteDoubleWidth (spr) ? 2 : 1;
-	unsigned short x	= (_vicSpriteInfo [spr]._drawing) 
-		? _vicSpriteInfo [spr]._xS : _VICIIRegisters -> spriteXCoord (spr) + 4;
+	unsigned short x	= _vicSpriteInfo [spr]._xS;
 	unsigned short wX	= 24 /** normal width in pixels. */ * dW;
 	unsigned short dW8	= dW << 3; // 8 or 16
 	unsigned short dW2  = dW << 1; // 4 or 2
@@ -1826,30 +1821,20 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 	// Vertical eligibility has already been decided by the sprite DMA/display logic.
 	// Which means the bits have to be shifted from the composition register
 	// No need to check whether the y position is within or not the limits
-	if ((c + 8 /** pixels */) < x || c >= (x + wX))
-		return (result); // Not visible in the horizontal zone...
-
 	for (unsigned short i = 0; i < 8 /** always to draw 8 pixels. */; i++)
 	{
-		unsigned short pp = (c + i); // The exact pixels to draw...
-		if (pp < x)
-			continue; // Not visible...
-		if (pp >= (x + wX))
-			break; // No more draws...
+		unsigned short pp = c + i;
+		unsigned short pS = (pp >= x)
+			? pp - x
+			: ((_cyclesPerRasterLine << 3) + pp - x);
 
-		// The sprite starts to be drawn...
-		// ...if it isn0't already before...
-		if (!_vicSpriteInfo [spr]._drawing)
-		{ 
-			_vicSpriteInfo [spr]._drawing = true; _vicSpriteInfo [spr]._xS = x; 
-
-			_IFDEBUG debugDrawSpriteAt (spr, x, r);
-		}
+		if (pS >= wX)
+			continue;
 
 		// To determine the initial byte (iBy) and bit (iBt) with the info about the sprite...
 		// The bit to select moves from 0 to 3, represeting the pair of bits (0,1), (2,3), (4,5), (6,7)
-		size_t iBy = (size_t) ((pp - x) / dW8);
-		size_t iBt = (size_t) (3 - (((pp - x) % dW8) / dW2));
+		size_t iBy = (size_t) (pS / dW8);
+		size_t iBt = (size_t) (3 - ((pS % dW8) / dW2));
 
 		// Once the bits have been used, it is put back to false...
 		// ..simulating the behaviour of the shift register...
@@ -1871,7 +1856,7 @@ MCHEmul::UByte COMMODORE::VICII::drawMultiColorSpriteOver (unsigned short c, uns
 		{
 			// Because the position 50 correspond at the raster line position 51...
 			unsigned short y = _VICIIRegisters -> spriteYCoord (spr) + 1;
-			if ((pp == x || pp == (x + wX - 1)) ||
+			if ((pS == 0 || pS == (wX - 1)) ||
 				(r == y || r == (y + wY - 1)))
 					{ d [i] = 32 /** cyan. */; dO [i] = spr; }
 		}

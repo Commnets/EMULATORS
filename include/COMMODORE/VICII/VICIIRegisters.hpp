@@ -85,6 +85,10 @@ namespace COMMODORE
 							{ return (_minRasterV); }
 		unsigned short maxRasterV () const
 							{ return (_maxRasterV); }
+		unsigned short minRasterH () const
+							{ return (_minRasterH); }
+		unsigned short maxRasterH () const
+							{ return (_maxRasterH); }
 		bool textDisplay40ColumnsActive () const
 							{ return (_textDisplay40ColumnsActive); }
 		bool blankEntireScreen () const
@@ -362,8 +366,10 @@ namespace COMMODORE
 		MCHEmul::Address _screenMemoryPos;
 		MCHEmul::Address _bitmapMemoryPos;
 		MCHEmul::Address _spritePointerMemoryPos;
-		// To control where the limits of the raster are (as defined). Used for drawing the border...
+		// To control where the limits of the raster are in vertical (as defined). Used for drawing the border...
 		unsigned short _minRasterV, _maxRasterV; 
+		// To control where the limits of the raster as in horizontal (as defined). Used for drawing the border...
+		unsigned short _minRasterH, _maxRasterH;
 		/** Where the mouse is. -1 when it is out of the visible zone. */
 		int _mousePositionX, _mousePositionY;
 		/** The expansion flip flop in the Y axis.
