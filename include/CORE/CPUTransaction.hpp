@@ -68,6 +68,13 @@ namespace MCHEmul
 			_NOCYCLE is returned when no such read exists. */
 		size_t nextReadCycle (size_t c) const
 							{ assert (c <= _numberCycles); return (_nextReadCycles [c]); }
+		/** Returns all zero-based cycles that perform a write, in execution order. */
+		const std::vector <size_t>& writeCycles () const
+							{ return (_writeCycles); }
+		/** Returns the zero-based cycle of write n. \n
+			No boundary check is performed; n must be lower than _numberWriteCycles. */
+		size_t writeCycle (size_t n) const
+							{ return (_writeCycles [n]); }
 
 		size_t _numberCycles;
 		size_t _numberReadCycles;
@@ -86,6 +93,8 @@ namespace MCHEmul
 		/** Entry n contains the first read cycle whose index is greater than or equal to n. \n
 			The final entry, numberCycles, always contains _NOCYCLE. */
 		std::vector <size_t> _nextReadCycles;
+		/** Zero-based cycles containing the _WRITE characteristic, in execution order. */
+		std::vector <size_t> _writeCycles;
 	};
 
 	/** Precalculated bus information for every alternative cycle structure. \n

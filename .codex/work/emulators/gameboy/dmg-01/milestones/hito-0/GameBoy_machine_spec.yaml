@@ -1,0 +1,195 @@
+machine:
+  name: "Nintendo Game Boy"
+  manufacturer: "Nintendo"
+  model: "DMG-01"
+  reference_board: "DMG-CPU-04 family"
+  reference_soc: "DMG-CPU B"
+  release_year: 1989
+  regions:
+    - "Japan"
+    - "North America"
+    - "Europe"
+  region_policy: "No known hardware region lock; cartridge and boot-ROM evidence still recorded by hash."
+  accuracy_target: "cycle-aware; cycle-exact for named CPU, interrupt, timer, DMA and PPU interactions"
+  excluded_scope:
+    - "Game Boy Pocket (MGB)"
+    - "Game Boy Light (MGL)"
+    - "Super Game Boy and Super Game Boy 2"
+    - "Game Boy Color and double-speed mode"
+    - "Game Boy Advance compatibility modes"
+    - "Per-board analog audio reproduction in the initial implementation"
+    - "Rare or unlicensed cartridge controllers until individually specified"
+
+sources:
+  authoritative:
+    - id: "NIN-GBPM-1999"
+      title: "Game Boy Programming Manual, DMG-06-4216-001-A"
+      type: "Nintendo primary manual"
+      url: "https://files.nekoblog.org/uploads/pdf/39999184-GameBoy-Programming-Manual.pdf"
+    - id: "PAT-US5134391"
+      title: "System for preventing the use of an unauthorized external memory"
+      type: "Nintendo patent"
+      url: "https://patents.google.com/patent/US5134391A/en"
+    - id: "PAT-US5095798"
+      title: "Electronic gaming device with pseudo-stereophonic sound generating capabilities"
+      type: "Nintendo patent"
+      url: "https://patents.justia.com/patent/5095798"
+  diagnostics:
+    - id: "MOONEYE"
+      title: "Mooneye Test Suite"
+      url: "https://github.com/Gekkio/mooneye-test-suite"
+      role: "hardware-validated behavioral evidence"
+    - id: "BLARGG"
+      title: "Blargg Game Boy test ROMs"
+      url: "https://github.com/retrio/gb-test-roms"
+      role: "CPU, timing, interrupt and sound diagnostics"
+    - id: "DMG-ACID2"
+      title: "dmg-acid2"
+      url: "https://github.com/mattcurrie/dmg-acid2"
+      role: "PPU rendering diagnostic"
+  roms_and_media:
+    - "User-supplied 256-byte DMG boot ROM, identified by hash; never committed"
+    - "Open or redistributable diagnostic ROMs after license review"
+    - "User-supplied commercial Game Paks; never committed"
+  unknowns:
+    - "Exact power-on state for registers not covered by primary sources"
+    - "Sub-T-cycle ordering of simultaneous timer, PPU, DMA and register-write events"
+    - "Revision-specific digital differences outside the selected DMG-CPU B baseline"
+    - "Analog mixer and filter transfer function by board revision"
+
+clocks:
+  master_hz: 4194304
+  canonical_unit: "T-cycle"
+  domains:
+    - name: "SM83 T-cycle"
+      numerator: 1
+      denominator: 1
+      frequency_hz: 4194304
+    - name: "SM83 M-cycle"
+      numerator: 1
+      denominator: 4
+      frequency_hz: 1048576
+    - name: "PPU dot"
+      numerator: 1
+      denominator: 1
+      frequency_hz: 4194304
+    - name: "serial internal clock"
+      numerator: 1
+      denominator: 512
+      frequency_hz: 8192
+    - name: "APU frame sequencer"
+      numerator: 1
+      denominator: 8192
+      frequency_hz: 512
+  raster:
+    t_cycles_per_line: 456
+    lines_per_frame: 154
+    visible_lines: 144
+    t_cycles_per_frame: 70224
+    nominal_frame_hz: 59.7275005696
+  synchronization_owner: "GAMEBOY::GameBoyComputer advances one deterministic T-cycle and arbitrates CPU, PPU and DMA visibility"
+
+cpu:
+  family: "Sharp SM83 compatible core"
+  namespace: "FSM83"
+  class: "SM83"
+  variant: "DMG-CPU B core behavior"
+  decision: "new"
+  existing_candidate: "FZ80::CZ80 as structural reference only"
+  address_bits: 16
+  data_bits: 8
+  byte_order: "little-endian for 16-bit values"
+  interrupt_model: "IME plus IE/IF, five fixed-priority maskable sources, sampled at instruction boundaries with HALT/EI edge cases"
+  opcode_spaces:
+    base: 256
+    cb_prefixed: 256
+  compatibility_boundary: "Not a Z80 derivative in the C++ type hierarchy"
+
+memory:
+  address_bits: 16
+  data_bits: 8
+  views:
+    - "CPU"
+    - "PPU"
+    - "DMA"
+    - "physical/debug"
+  regions:
+    - { start: "0x0000", end: "0x3FFF", owner: "Game Pak fixed ROM bank" }
+    - { start: "0x4000", end: "0x7FFF", owner: "Game Pak switchable ROM bank" }
+    - { start: "0x8000", end: "0x9FFF", owner: "DMGCPUVideo / 8 KiB VRAM" }
+    - { start: "0xA000", end: "0xBFFF", owner: "Game Pak external RAM, RTC or controller-selected storage" }
+    - { start: "0xC000", end: "0xDFFF", owner: "8 KiB WRAM" }
+    - { start: "0xE000", end: "0xFDFF", owner: "WRAM echo of 0xC000-0xDDFF" }
+    - { start: "0xFE00", end: "0xFE9F", owner: "DMGCPUVideo / 160-byte OAM" }
+    - { start: "0xFEA0", end: "0xFEFF", owner: "unusable; read/write behavior revision-sensitive" }
+    - { start: "0xFF00", end: "0xFF7F", owner: "DMG-CPU logical chips and reserved gaps" }
+    - { start: "0xFF80", end: "0xFFFE", owner: "127-byte HRAM" }
+    - { start: "0xFFFF", end: "0xFFFF", owner: "DMGCPUInterrupts / IE" }
+  overlays:
+    - range: "0x0000-0x00FF"
+      source: "256-byte internal boot ROM"
+      active: "after power-on/reset until one-way disable through 0xFF50"
+  unmapped_behavior: "Never globally assume 0xFF; define per range and revision from evidence"
+
+io:
+  memory_mapped: true
+  register_range: "0xFF00-0xFF7F plus IE at 0xFFFF"
+  buses:
+    - name: "Game Pak bus"
+      width: 8
+      address_width: 16
+    - name: "serial link"
+      lines: ["SIN", "SOUT", "SCK"]
+    - name: "LCD interface"
+      role: "logical pixel/LCD drive output; external analog panel timing deferred"
+  host_adapters:
+    - "queued keyboard/gamepad events consumed by DMGCPUIO at emulated sampling boundaries"
+    - "deterministic serial peer or disconnected-line model"
+    - "bounded Game Pak file reader and persistent RAM store"
+    - "host audio sink fed by deterministic samples"
+
+components:
+  - { name: "SM83", role: "CPU core", decision: "new", namespace: "FSM83", validation: "opcode ledger, semantic tests and ordered bus traces" }
+  - { name: "GameBoyMemory", role: "map, views and arbitration", decision: "new", namespace: "GAMEBOY", validation: "map and access-restriction tests" }
+  - { name: "DMGCPUVideo", role: "LCD/PPU", decision: "new", namespace: "GAMEBOY", validation: "dot traces, STAT tests and golden frames" }
+  - { name: "DMGCPUSound", role: "digital APU", decision: "new", namespace: "GAMEBOY", validation: "register, sequencer and sample traces" }
+  - { name: "DMGCPUTimers", role: "DIV/TIMA/TMA/TAC", decision: "new", namespace: "GAMEBOY", validation: "edge and overflow tests" }
+  - { name: "DMGCPUDMA", role: "OAM DMA", decision: "new", namespace: "GAMEBOY", validation: "ordered transfer and bus-block tests" }
+  - { name: "DMGCPUInterrupts", role: "IE/IF source aggregation", decision: "new", namespace: "GAMEBOY", validation: "priority and acknowledgement traces" }
+  - { name: "DMGCPUIO", role: "joypad and serial", decision: "new", namespace: "GAMEBOY", validation: "matrix, edge and protocol tests" }
+  - { name: "GamePak", role: "cartridge interface and media", decision: "new", namespace: "GAMEBOY", validation: "header, banking, persistence and malformed-media tests" }
+  - { name: "MBC controllers", role: "banking and optional RTC", decision: "new", namespace: "GAMEBOY", validation: "per-controller boundary suites" }
+  - { name: "GameBoyScreen", role: "host presentation", decision: "adapt", existing_candidate: "MCHEmul::Screen", namespace: "GAMEBOY" }
+  - { name: "GameBoySoundSystem", role: "host audio output", decision: "adapt", existing_candidate: "MCHEmul::SoundSystem", namespace: "GAMEBOY" }
+  - { name: "GameBoyComputer", role: "ownership, clocks and board wiring", decision: "new", existing_candidate: "MCHEmul::Computer", namespace: "GAMEBOY" }
+  - { name: "GameBoyEmulator", role: "configuration and application assembly", decision: "new", existing_candidate: "MCHEmul::Emulator", namespace: "GAMEBOY" }
+
+interrupt_routes:
+  - { source: "VBlank", if_bit: 0, priority: 1, vector: "0x0040", destination: "SM83" }
+  - { source: "LCD STAT", if_bit: 1, priority: 2, vector: "0x0048", destination: "SM83" }
+  - { source: "Timer", if_bit: 2, priority: 3, vector: "0x0050", destination: "SM83" }
+  - { source: "Serial", if_bit: 3, priority: 4, vector: "0x0058", destination: "SM83" }
+  - { source: "Joypad", if_bit: 4, priority: 5, vector: "0x0060", destination: "SM83" }
+
+model_differences:
+  - "DMG-CPU revisions 0/A/B/C remain separately selectable evidence groups."
+  - "MGB, SGB and CGB behavior must never silently enter the DMG-CPU B path."
+  - "Board-level analog audio and LCD response are presentation variants, not CPU-core behavior."
+
+acceptance_tests:
+  - "H0: all components, clock domains, address regions and interrupt routes classified"
+  - "H1: every base and CB opcode classified before bulk implementation"
+  - "H2: deterministic double reset and documented boot-overlay access sequence"
+  - "H3: timer, interrupt and OAM-DMA traces pass named diagnostics"
+  - "H4: PPU modes and first boot-logo frame are independently observable"
+  - "H5: joypad and MBC1 permit deterministic interactive execution"
+  - "H6: all four digital audio channels produce verified sample traces"
+  - "H7: serial protocol and remaining principal MBC families pass component tests"
+  - "H8: compatibility evidence reports exact supported and deferred behaviors"
+
+known_limitations:
+  - "No implementation exists at Hito 0."
+  - "The selected boot ROM is an external user dependency."
+  - "Power-on randomness and analog characteristics are not yet modeled."
+  - "Undocumented register/open-bus values remain evidence-driven unknowns."
+

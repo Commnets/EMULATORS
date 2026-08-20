@@ -1,0 +1,19 @@
+{
+  "id": "zxspectrum",
+  "title": "ZX Spectrum DEBUG File",
+  "subtitle": "Structure, ULA, sound, and firmware simulations",
+  "output": "docs/ZXSpectrumData/ZXSpectrum_DEBUG_File_Format.docx",
+  "models": "ZX Spectrum 16K/48K and PAL/NTSC variants configured by the emulator.",
+  "cpu": "Zilog Z80.",
+  "components": [["210","Video ULA","Raster position"],["2100","ULA sound function","Buzzer, MIC, EAR output/input, and read value"],["100/101","Datasette","Port and ROM-routine simulation"],["102","Thermal printer","Printer-output simulation"],["Memory","Spectrum map","Applied Set for selected subsets"]],
+  "records": [
+    {"name":"ULA — Info Cyle","producer":"src/ZXSpectrum/ULA.cpp :: debugULACycle","fields":"Raster=zero-based column,zero-based line.","timing":"cpu.clockCycles()-(i >> 1). The implemented literal currently contains the Info Cyle typo.","events":"This snapshot currently emits no contention, floating-bus, or fetch fields."},
+    {"name":"ULA SoundFunction — Info Cyle","producer":"src/ZXSpectrum/ULA.cpp :: SoundFunction::debugULASoundCycle","fields":"Sound, MICOut, EAROut, EARIn, and EARRead; each value is UP or DOWN.","timing":"cpu.clockCycles()-i.","events":"The sound function has identifier 2100 and is selected when DEBUG is propagated from the ULA."},
+    {"name":"ZXSPECTRUMDN — tape simulation","producer":"src/ZXSpectrum/Datasette.cpp","fields":"Routine entry/exit state, PC, block, flag, LOAD/VERIFY mode, errors, and reason when the trap is not applied.","timing":"CPU cycle of the intercepted routine.","events":"Unsupported ROM load routine, partial/non-ROM block, mismatched flag or VERIFY, and No data to read."},
+    {"name":"SerialIO — printer","producer":"src/ZXSpectrum/StdPrinter.cpp","fields":"Printer-simulation state with CPU cycle and transition text.","timing":"Cycle of the trap or state change.","events":"May be preceded by a simple line identifying the transition location."}
+  ],
+  "example": ["CPU     32000       Info Cycle","                    Last 4 cycles","ULA     32000       Info Cyle","                    Raster              :128,96","SoundFu 32000       Info Cyle","                    Sound               :UP","                    EARRead             :DOWN","ZXSPECTRUMDN 32004  Entering Routine Simulation","+"],
+  "example_note": "Schematic example. DebugFile truncates long component names to eight characters when writeCompleteLine is used.",
+  "limitations": ["Info Cyle is the current literal in both video and sound output; analysis tools must accept that spelling.","The current ULA trace publishes only Raster; contention and floating bus are not existing fields.","Tape and printer simulations represent firmware shortcuts."],
+  "watched_sources": ["src/ZXSpectrum/ZXSpectrum.cpp","src/ZXSpectrum/ULA.cpp","src/ZXSpectrum/Datasette.cpp","src/ZXSpectrum/StdPrinter.cpp"]
+}

@@ -122,6 +122,12 @@ void C64::Commodore64::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 			(static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ()));
 	}
 	else
+	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINTERRUPT)
+	{
+		static_cast <COMMODORE::VICII*> (graphicalChip ()) -> CPUAboutToExecute
+			(static_cast <const MCHEmul::InterruptContextEventData*> (evnt.data ().get ()));
+	}
+	else
 	if (evnt.id () == MCHEmul::InputOSSystem::_KEYBOARDKEYPRESSED &&
 		(std::static_pointer_cast <MCHEmul::InputOSSystem::KeyboardEvent> (evnt.data ()) -> _key) == C64::InputOSSystem::_RESTOREKEY)
 			cpu () -> requestInterrupt (F6500::NMIInterrupt::_ID, cpu () -> clockCycles (), nullptr /** No chip */, 100);

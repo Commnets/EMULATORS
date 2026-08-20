@@ -1,4 +1,6 @@
 #include <COMMODORE/VICII/VICII.hpp>
+
+#include <algorithm>
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
@@ -45,6 +47,12 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _rasterIRQAlreadyTriggeredThisLine (false),
 	  _lastVICDataRead (MCHEmul::UByte::_0),
 	  _cpuOpcodeLowNibble (MCHEmul::UByte::_0),
+	  _cpuStopWindowSets (),
+	  _currentCPUStopWindows (nullptr), _nextCPUStopWindows (nullptr),
+	  _adjustedCurrentCPUStopWindows (),
+	  _currentSpriteDMAMask (0), _nextSpriteDMAMask (0),
+	  _pendingCPUTransaction (), _pendingCPUStopPrediction (),
+	  _pendingRegisterWrites (),
 	  _DENSeenAtLine30 (false),
 	  _badLineAlreadyDetectedThisLine (false), 
 	  _badLineConditionActive (false),
@@ -107,6 +115,13 @@ bool COMMODORE::VICII::initialize ()
 	_VICIIRegisters -> linkToRaster (&_raster);
 	_VICIIRegisters -> initialize (); // The raster is not reinitialized there...
 
+	// Establish the initial display limits from the register values restored by
+	// VICIIRegisters::initialize (). Later changes are applied at their exact
+	// buffered write cycles.
+	_raster.reduceDisplayZone
+		(!_VICIIRegisters -> textDisplay25RowsActive (),
+		 !_VICIIRegisters -> textDisplay40ColumnsActive ());
+
 	_lastCPUCycles = 0;
 	
 	_cycleInRasterLine = 1;
@@ -132,7 +147,19 @@ bool COMMODORE::VICII::initialize ()
 	_lightPenFrameLatched = false; _lightPenButtonPressed = false;
 
 	_vicGraphicInfo = VICGraphicInfo ();
+	// PAL starts at line 0 while the NTSC raster definition starts at line 27.
+	// Window selection always requires ROW to identify that physical line.
+	_vicGraphicInfo._ROW = _raster.currentLine ();
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
+
+	// Window construction is delayed until initialize () so the concrete PAL
+	// or NTSC sprite timing method is available through virtual dispatch.
+	initializeCPUStopWindowSets ();
+	_currentSpriteDMAMask = _nextSpriteDMAMask = spriteDMAMask ();
+	selectCPUStopWindowsForCurrentAndNextLine ();
+	_pendingCPUTransaction.reset ();
+	_pendingCPUStopPrediction = CPUStopPrediction ();
+	_pendingRegisterWrites.clear ();
 
 	_eventStatus = { false, false, false, false, false };
 
@@ -144,14 +171,41 @@ void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InstructionContextEvent
 {
 	assert (dt != nullptr);
 
-	_VICIIRegisters -> setNumberPositionsNextInstruction
-		(dt -> _instruction -> clockCyclesToExecute
-			(dt -> _cpu, dt -> _memory, dt -> _address) - 1);
+	const MCHEmul::InstructionDefined* instruction =
+		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
+
+	prepareCPUStopPrediction
+		(&instruction -> cycleStructure (),
+		 &instruction -> busCycleData (),
+		 instruction -> clockCyclesToExecute
+			(dt -> _cpu, dt -> _memory, dt -> _address),
+		 dt -> _cpu -> clockCycles ());
+
+	_IFDEBUG debugCPUStopPrediction (dt);
 
 	// Keep the CPU nibble that U16 presents to the VIC-II while AEC is high.
 	_cpuOpcodeLowNibble =
 		MCHEmul::UByte ((unsigned char)
 			(dt -> _instruction -> code () & MCHEmul::UByte::_0F));
+}
+
+// ---
+void COMMODORE::VICII::CPUAboutToExecute
+	(const MCHEmul::InterruptContextEventData* dt)
+{
+	assert (dt != nullptr);
+
+	prepareCPUStopPrediction
+		(&dt -> _interrupt -> cycleStructure (),
+		 &dt -> _interrupt -> busCycleData (),
+		 dt -> _interrupt -> cyclesToLaunch (),
+		 dt -> _cpu -> clockCycles ());
+
+	_IFDEBUG debugCPUStopPrediction (dt);
+
+	// _cpuOpcodeLowNibble is intentionally not changed here. During interrupt
+	// entry the real low data-bus nibble depends on the particular read or
+	// stack-write cycle; that requires cycle-specific bus values.
 }
 
 // ---
@@ -168,18 +222,19 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// This emulator does not schedule those half-cycles independently. Related
 	// phase work is grouped into one emulated VIC-II cycle. The important part
 	// is the order inside the group: c-accesses are handled before g-accesses,
-	// bus stealing is requested before the effective access, and graphics
+	// the predicted compensated stop is requested at the BA boundary, and graphics
 	// counters advance once per 8-pixel graphics access.
 	//
 	// The method below is intentionally organized as a per-cycle pipeline, not
 	// as hardware phi1/phi2 phases:
-	//   1. update internal bad-line state,
-	//   2. request preliminary CPU stop if DMA/bad-line access is approaching,
-	//   3. execute the current VIC-II raster-cycle activity,
-	//   4. draw the current visible slice,
-	//   5. advance the raster beam,
-	//   6. evaluate position-dependent events,
-	//   7. request IRQ if any VIC-II IRQ source is pending.
+	//   1. apply buffered register writes at their effective bus cycle,
+	//   2. update internal bad-line and sprite-DMA state,
+	//   3. apply the pending instruction stop prediction at the BA boundary,
+	//   4. execute the current VIC-II raster-cycle activity,
+	//   5. draw the current visible slice,
+	//   6. advance the raster beam,
+	//   7. evaluate position-dependent events,
+	//   8. request IRQ if any VIC-II IRQ source is pending.
 
 	// First invocation: synchronize the VIC-II with the CPU cycle counter.
 	// No VIC-II activity is simulated yet because there is no elapsed cycle
@@ -191,18 +246,15 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
+	// Extract once per VIC-II simulation batch. If a previous transaction is
+	// still physically completing, the method preserves its pending commands.
+	extractPendingRegisterWrites ();
+
 	// The VIC-II "video reset" bit is logged as a disconnected/video-reset
 	// situation. Raster timing is still advanced because the raster position is
 	// considered an external timing reference of the video system.
 	if (_VICIIRegisters -> videoResetActive ())
 		_IFDEBUG debugDisconnected (cpu);
-
-	// The visible display zone can be dynamically affected by the 24/25-row and
-	// 38/40-column display control bits. This has to be refreshed before drawing
-	// the current raster slice.
-	_raster.reduceDisplayZone
-		(!_VICIIRegisters -> textDisplay25RowsActive (),
-		 !_VICIIRegisters -> textDisplay40ColumnsActive ());
 
 	// If the interrupt-enable/status register has been written in a way that
 	// re-arms interrupt admission, propagate that condition to the CPU interrupt
@@ -216,12 +268,32 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0; i--)
 	{
 		// Absolute CPU cycle associated with the VIC-II cycle currently being
-		// processed. It is used when requesting CPU stops or IRQs.
+		// processed. It is used when applying register writes, requesting CPU
+		// stops or requesting IRQs.
 		const unsigned int cC = cpu -> clockCycles () - i;
 
-		_IFDEBUG debugVICIICycle (cpu, i);
+		// Phase 1: make a buffered VIC-II register write visible before any
+		// internal state transition belonging to this cycle observes it.
+		bool displayZoneChanged; // True when the display zone changed!
+		const bool registerWriteApplied = executePendingRegisterWriteAt
+			(cC, &displayZoneChanged);
+		// The $d016 write itself was already visible at its predicted CPU cycle.
+		// Only the CSEL-derived horizontal border limits wait until the video part
+		// of the current grouped cycle has finished.
+		if (displayZoneChanged)
+			_raster.hData ().reduceDisplayZone
+				(!_VICIIRegisters -> textDisplay40ColumnsActive ());
+		// $d019 can clear interrupt flags and re-arm VIC-II IRQ admission. OBool
+		// is consulted only after an actual write, avoiding a destructive check
+		// in every simulated cycle.
+		if (registerWriteApplied &&
+			_VICIIRegisters -> interruptsEnabledBack ())
+			cpu -> interrupt (_interruptId) ->
+				setNewInterruptRequestAdmitted (false);
 
-		// Phase 1: update bad-line state for this exact VIC-II cycle.
+		_IFDEBUG debugVICIICycle (cpu, i, registerWriteApplied);
+
+		// Phase 2: update bad-line state for this exact VIC-II cycle.
 		// This includes:
 		// - latching whether DEN has been seen at raster line $30,
 		// - evaluating the current bad-line condition,
@@ -238,29 +310,42 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// Sprite DMA is decided before BA/RDY arbitration. Sprite 0 data is
 		// fetched at cycle 58, so cycle 55 must already request the BA lead.
 		treatSpriteDMAStartAtCurrentCycle ();
+		const unsigned char spriteMask = spriteDMAMask ();
+		if (spriteMask != _currentSpriteDMAMask)
+		{
+			_currentSpriteDMAMask = _nextSpriteDMAMask = spriteMask;
+			selectCPUStopWindowsForCurrentAndNextLine ();
+			if (_badLineCAccessActive &&
+				_badLineCAccessStartCycle != _BADLINE_START_FIRST_CYCLE)
+				actualizeCPUStopWindowsAfterBadLineChange ();
+			else
+			{
+				recalculatePendingCPUStopPrediction ();
 
-		// Phase 2: preliminary bus arbitration.
-		// If the VIC-II is about to need the bus for sprite data or bad-line
-		// character/color accesses, a BA-like stop request is issued in advance.
-		// The CPU will only stop when it reaches a compatible read cycle; write
-		// cycles are allowed to complete, matching the intended BA behaviour.
-		requestCPUStopForDMAIfNeeded (cpu, cC);
+				_IFDEBUG debugCPUStopPredictionRecalculated ("SpriteDMAChange");
+			}
+		}
 
-		// Phase 3: execute the VIC-II activity associated with the current raster cycle.
+		// Phase 3: apply the prediction made before the atomic CPU instruction.
+		// Read/write arbitration and every merged VIC-II window have already been
+		// considered, so only one compensated stop request is issued.
+		requestPredictedCPUStopIfNeeded (cpu, cC);
+
+		// Phase 4: execute the VIC-II activity associated with the current raster cycle.
 		// This performs cycle-specific actions such as sprite data reads,
 		// normal or invalid bad-line c-access attempts, graphic-data reads,
 		// effective bad-line matrix/color accesses when allowed, graphic-data reads,
 		// VC/VLMI advancement, RC handling and sprite activation/deactivation.
-		treatRasterCycleAndRequestCPUStopIfNeeded (cpu, cC);
+		treatRasterCycle ();
 
-		// Phase 4: draw the current visible 8-pixel slice, if the raster is in
+		// Phase 5: draw the current visible 8-pixel slice, if the raster is in
 		// the visible zone. The drawing path uses the data already fetched by
 		// the raster-cycle phase and then applies sprites, priority, collisions
 		// and border overlay.
 		if (_raster.isInVisibleZone ())
 			drawVisibleZone (cpu);
 
-		// Phase 5: advance the raster beam by one VIC-II cycle.
+		// Phase 6: advance the raster beam by one VIC-II cycle.
 		// This moves the horizontal raster position, advances the vertical raster
 		// when horizontal retrace is crossed, and performs new-line/new-frame
 		// housekeeping such as resetting per-line bad-line state, restoring VC
@@ -268,18 +353,18 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// of a new frame.
 		advanceRasterPosition ();
 
-		// Phase 6a: evaluate raster IRQ at the new raster position.
+		// Phase 7a: evaluate raster IRQ at the new raster position.
 		// The IRQ flag is only activated here; the actual CPU IRQ request is
 		// performed later together with all other VIC-II IRQ sources.
 		treatRasterIRQAtCurrentPosition ();
 
-		// Phase 6b: evaluate light-pen detection at the new raster position.
+		// Phase 7b: evaluate light-pen detection at the new raster position.
 		// The emulated light pen uses the mouse position and button state. The
 		// position is latched when the raster beam reaches the mouse/light-pen
 		// position, and at most once per frame.
 		treatLightPenAtCurrentRasterPosition ();
 
-		// Phase 7: final IRQ evaluation for this VIC-II cycle.
+		// Phase 8: final IRQ evaluation for this VIC-II cycle.
 		// At this point all per-cycle IRQ sources have had the opportunity to set
 		// their corresponding flags: raster IRQ, light pen, sprite/sprite
 		// collision and sprite/data collision.
@@ -651,10 +736,401 @@ MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 }
 
 // ---
-unsigned int COMMODORE::VICII::treatRasterCycle ()
+void COMMODORE::VICII::initializeCPUStopWindowSets ()
 {
-	unsigned int result = 0;
+	for (size_t i = 0; i < _cpuStopWindowSets.size (); i++)
+		buildCPUStopWindowSet
+			((i & 0x0100) != 0, (unsigned char) (i & 0x00ff),
+			 _cpuStopWindowSets [i]);
+}
 
+// ---
+void COMMODORE::VICII::buildCPUStopWindowSet
+	(bool bL, unsigned char sM, COMMODORE::VICII::CPUStopWindows& result) const
+{
+	result.clear ();
+	result.reserve (9);
+
+	if (bL)
+		addBadLineCPUStopWindow (result);
+
+	for (size_t i = 0; i < 8; i++)
+		if ((sM & (1 << i)) != 0)
+			addSpriteCPUStopWindow (i, result);
+
+	mergeCPUStopWindows (result);
+}
+
+// ---
+void COMMODORE::VICII::addBadLineCPUStopWindow
+	(COMMODORE::VICII::CPUStopWindows& result) const
+{
+	result.emplace_back
+		(_BADLINE_START_FIRST_CYCLE,
+		 _BADLINE_START_FIRST_CYCLE + 3,
+		 _BADLINE_START_LAST_CYCLE);
+}
+
+// ---
+void COMMODORE::VICII::mergeCPUStopWindows
+	(COMMODORE::VICII::CPUStopWindows& result) const
+{
+	if (result.empty ())
+		return;
+
+	std::sort
+		(result.begin (), result.end (),
+		 [] (const CPUStopWindow& w1, const CPUStopWindow& w2) -> bool
+			{ return (w1._firstBACycle < w2._firstBACycle); });
+
+	size_t destination = 0;
+	for (size_t source = 1; source < result.size (); source++)
+	{
+		CPUStopWindow& current = result [destination];
+		const CPUStopWindow& next = result [source];
+
+		// BA remaining low across adjacent demands means that the 6510 cannot
+		// restart an opcode read between them, so they form one effective stop.
+		if (next._firstBACycle <= current._lastCycle + 1)
+		{
+			current._firstAECCycle =
+				std::min (current._firstAECCycle, next._firstAECCycle);
+			current._lastCycle = std::max (current._lastCycle, next._lastCycle);
+		}
+		else
+			result [++destination] = next;
+	}
+
+	result.resize (destination + 1);
+}
+
+// ---
+unsigned char COMMODORE::VICII::spriteDMAMask () const
+{
+	unsigned char result = 0;
+	for (size_t i = 0; i < 8; i++)
+		if (_vicSpriteInfo [i]._DMAActive)
+			result |= (1 << i);
+
+	return (result);
+}
+
+// ---
+bool COMMODORE::VICII::badLineConditionForRasterLine (unsigned short rL) const
+{
+	return (
+		_DENSeenAtLine30 &&
+		rL >= _FIRSTBADLINE && rL <= _LASTBADLINE &&
+		(unsigned char) (rL & 0x07) ==
+			_VICIIRegisters -> verticalScrollPosition ());
+}
+
+// ---
+void COMMODORE::VICII::selectCPUStopWindowsForCurrentAndNextLine ()
+{
+	// ROW must already represent the raster line whose current stop-window
+	// pointer is going to be selected. Using Raster directly prevents a stale
+	// graphics ROW from transferring a bad-line window to the following line.
+	assert (_vicGraphicInfo._ROW == _raster.currentLine ());
+
+	_currentCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
+		(badLineConditionForRasterLine (_raster.currentLine ()),
+		 _currentSpriteDMAMask)];
+	_nextCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
+		(badLineConditionForRasterLine (_raster.nextLine ()),
+		 _nextSpriteDMAMask)];
+}
+
+// ---
+void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
+{
+	_badLineBAAlreadyRequested = _badLineCAccessActive;
+	_badLineBARequestCycle = _badLineCAccessActive
+		? _badLineCAccessStartCycle : 0;
+	const CPUStopWindows* noBadLineWindows =
+		&_cpuStopWindowSets [cpuStopWindowSetIndex
+			(false, _currentSpriteDMAMask)];
+	if (!_badLineCAccessActive &&
+		_currentCPUStopWindows == noBadLineWindows)
+		return;
+
+	// The immutable set remains usable while the condition follows the normal
+	// cycle-12 start. Only a late or aborted sequence needs the reusable copy.
+	if ((_badLineConditionActive &&
+		 _cycleInRasterLine < _BADLINE_START_FIRST_CYCLE) ||
+		(_badLineCAccessActive &&
+		 _badLineCAccessStartCycle == _BADLINE_START_FIRST_CYCLE))
+	{
+		_currentCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
+			(true, _currentSpriteDMAMask)];
+	}
+	else
+	{
+		_adjustedCurrentCPUStopWindows = *noBadLineWindows;
+
+		// Once a c-access sequence has started, clearing the instantaneous Bad
+		// Line Condition does not retroactively release its already committed BA
+		// interval. An aborted cycle-12/13 sequence is cleared at cycle 14 by the
+		// existing graphics-fetch state machine and therefore adds no interval.
+		if (_badLineCAccessActive && _badLineCAccessStartCycle != 0 &&
+			_badLineCAccessStartCycle <= _BADLINE_START_LAST_CYCLE)
+		{
+			_adjustedCurrentCPUStopWindows.emplace_back
+				(_badLineCAccessStartCycle,
+				 _badLineCAccessStartCycle + 3,
+				 _BADLINE_START_LAST_CYCLE);
+			mergeCPUStopWindows (_adjustedCurrentCPUStopWindows);
+		}
+
+		_currentCPUStopWindows = &_adjustedCurrentCPUStopWindows;
+	}
+
+	recalculatePendingCPUStopPrediction ();
+
+	_IFDEBUG debugCPUStopPredictionRecalculated ("BadLineChange");
+}
+
+// ---
+bool COMMODORE::VICII::CPUStopWindowAt
+	(CPURasterCycle c, const CPUStopWindows& currentWindows,
+	 const CPUStopWindows& nextWindows, CPUStopWindow& result) const
+{
+	for (const auto& i : currentWindows)
+		if (i.BAActiveAt (c))
+		{
+			result = i;
+
+			return (true);
+		}
+
+	const CPURasterCycle nextCycle = c - _cyclesPerRasterLine;
+	for (const auto& i : nextWindows)
+		if (i.BAActiveAt (nextCycle))
+		{
+			result = CPUStopWindow
+				(i._firstBACycle + _cyclesPerRasterLine,
+				 i._firstAECCycle + _cyclesPerRasterLine,
+				 i._lastCycle + _cyclesPerRasterLine);
+
+			return (true);
+		}
+
+	return (false);
+}
+
+// ---
+COMMODORE::VICII::CPUStopPrediction COMMODORE::VICII::calculateCPUStopPrediction
+	(const MCHEmul::CycleStructure& cS, const MCHEmul::BusCycleData& bD,
+	 unsigned int nC, CPURasterCycle startCycle,
+	 const CPUStopWindows& currentWindows, const CPUStopWindows& nextWindows) const
+{
+	assert (cS.size () == nC && bD._numberCycles == nC);
+	assert (bD._numberWriteCycles <= _MAXCPUTRANSACTIONWRITES);
+
+	CPUStopPrediction result;
+	result._valid = true;
+
+	CPURasterCycle realCycle = startCycle;
+	size_t instructionCycle = 0;
+	size_t writeIndex = 0;
+	CPUStopWindow window;
+
+	while (instructionCycle < nC)
+	{
+		const bool readCycle =
+			bD.nextReadCycle (instructionCycle) == instructionCycle;
+		const bool writeCycle =
+			writeIndex < bD._numberWriteCycles &&
+			bD.writeCycle (writeIndex) == instructionCycle;
+
+		if (CPUStopWindowAt
+			(realCycle, currentWindows, nextWindows, window))
+		{
+			// BA immediately holds reads. Writes are allowed only during the lead
+			// interval before AEC removes the CPU address and data bus drivers.
+			if (readCycle || !writeCycle || !window.CPUOwnsBusAt (realCycle))
+			{
+				if (!result._stopRequired)
+				{
+					result._stopRequired = true;
+					result._firstStopCycle = realCycle;
+				}
+
+				realCycle = window._lastCycle + 1;
+				continue;
+			}
+		}
+
+		if (writeCycle)
+			result._positionsToWriteEffects [writeIndex++] =
+				(unsigned int) (realCycle - startCycle);
+
+		instructionCycle++;
+		realCycle++;
+	}
+
+	assert (writeIndex == bD._numberWriteCycles);
+
+	result._instructionEffectCycle = realCycle - 1;
+
+	// The next opcode fetch is an implicit read. It must be considered even
+	// when the instruction itself completed immediately before BA went low.
+	while (CPUStopWindowAt (realCycle, currentWindows, nextWindows, window))
+	{
+		if (!result._stopRequired)
+		{
+			result._stopRequired = true;
+			result._firstStopCycle = realCycle;
+		}
+
+		realCycle = window._lastCycle + 1;
+	}
+
+	result._firstNormalCycle = realCycle;
+	result._cyclesToStop = (unsigned int)
+		(result._firstNormalCycle - (startCycle + (CPURasterCycle) nC));
+	result._positionsToInstructionEffect = (unsigned int)
+		(result._instructionEffectCycle - startCycle);
+
+	return (result);
+}
+
+// ---
+void COMMODORE::VICII::prepareCPUStopPrediction
+	(const MCHEmul::CycleStructure* cS,
+	 const MCHEmul::BusCycleData* bD, unsigned int nC,
+	 unsigned int startCPUCycle)
+{
+	assert (cS != nullptr);
+	assert (bD != nullptr);
+	assert (cS -> size () == nC);
+	assert (bD -> _numberCycles == nC);
+	assert (bD -> _numberWriteCycles <= _MAXCPUTRANSACTIONWRITES);
+	assert (_pendingRegisterWrites.empty ());
+
+	_pendingCPUTransaction._cycleStructure = cS;
+	_pendingCPUTransaction._busCycleData = bD;
+	_pendingCPUTransaction._clockCycles = nC;
+	_pendingCPUTransaction._startCycle = _cycleInRasterLine;
+	_pendingCPUTransaction._startCPUCycle = startCPUCycle;
+
+	_pendingCPUStopPrediction = calculateCPUStopPrediction
+		(*cS, *bD, nC, _pendingCPUTransaction._startCycle,
+		 *_currentCPUStopWindows, *_nextCPUStopWindows);
+
+	_VICIIRegisters -> setNumberPositionsToInstructionEffect
+		(_pendingCPUStopPrediction._positionsToInstructionEffect);
+}
+
+// ---
+void COMMODORE::VICII::recalculatePendingCPUStopPrediction ()
+{
+	if (!_pendingCPUTransaction.valid () ||
+		_pendingCPUStopPrediction._stopRequested)
+		return;
+
+	_pendingCPUStopPrediction = calculateCPUStopPrediction
+		(*_pendingCPUTransaction._cycleStructure,
+		 *_pendingCPUTransaction._busCycleData,
+		 _pendingCPUTransaction._clockCycles,
+		 _pendingCPUTransaction._startCycle,
+		 *_currentCPUStopWindows, *_nextCPUStopWindows);
+
+	_VICIIRegisters -> setNumberPositionsToInstructionEffect
+		(_pendingCPUStopPrediction._positionsToInstructionEffect);
+}
+
+// ---
+void COMMODORE::VICII::requestPredictedCPUStopIfNeeded
+	(MCHEmul::CPU* cpu, unsigned int cC)
+{
+	if (!_pendingCPUTransaction.valid () ||
+		!_pendingCPUStopPrediction._stopRequired ||
+		_pendingCPUStopPrediction._stopRequested ||
+		_cycleInRasterLine != _pendingCPUStopPrediction._firstStopCycle)
+		return;
+
+	cpu -> setStop
+		(true, MCHEmul::InstructionDefined::_CYCLEALL, cC,
+		 (int) _pendingCPUStopPrediction._cyclesToStop);
+
+	_pendingCPUStopPrediction._stopRequested = true;
+
+	_IFDEBUG debugCPUStopRequested (cC);
+}
+
+// ---
+void COMMODORE::VICII::extractPendingRegisterWrites ()
+{
+	// A non-empty collection belongs to a transaction that is still physically
+	// completing while the CPU remains stopped.
+	if (!_pendingRegisterWrites.empty ())
+		return;
+
+	_pendingRegisterWrites =
+		MCHEmul::Memory::configuration ().
+			extractMemorySetCommandsBuffered (_VICIIRegisters);
+
+	if (_pendingRegisterWrites.empty ())
+		return;
+
+	assert (_pendingCPUTransaction.valid ());
+	assert (_pendingCPUTransaction._busCycleData != nullptr);
+
+	// This correspondence is valid for the 6500: an instruction writing VIC-II
+	// registers directs all its data-write cycles to the same effective address.
+	assert (_pendingRegisterWrites.size () ==
+		_pendingCPUTransaction._busCycleData -> _numberWriteCycles);
+}
+
+// ---
+bool COMMODORE::VICII::executePendingRegisterWriteAt (unsigned int cC, bool* hDZC)
+{
+	assert (hDZC != nullptr);
+	*hDZC = false;
+
+	if (_pendingRegisterWrites.empty ())
+		return (false);
+
+	assert (_pendingCPUTransaction.valid ());
+	assert (_pendingCPUTransaction._busCycleData != nullptr);
+	assert (_pendingRegisterWrites.size () <=
+		_pendingCPUTransaction._busCycleData -> _numberWriteCycles);
+
+	// The number of already consumed writes is derived from the commands that
+	// remain, avoiding a separate cursor synchronized with the vector.
+	const size_t writeIndex =
+		_pendingCPUTransaction._busCycleData -> _numberWriteCycles -
+		_pendingRegisterWrites.size ();
+
+	if (cC !=
+		_pendingCPUTransaction._startCPUCycle +
+		_pendingCPUStopPrediction._positionsToWriteEffects [writeIndex])
+		return (false);
+
+	MCHEmul::SetMemoryCommand& registerWrite = _pendingRegisterWrites [0];
+	const size_t registerPosition = registerWrite.position () % 0x40;
+
+	registerWrite.execute ();
+
+	// RSEL is visible to the vertical limits immediately. CSEL is written at
+	// the CPU phase of the cycle, after the current eight-pixel border comparison;
+	// its horizontal limits are therefore updated after drawing this slice.
+	// The vertical position has not the same level of "urgency", but both
+	// are treated in the same manner!...
+	*hDZC = (registerPosition == 0x11 || registerPosition == 0x16);
+
+	_IFDEBUG debugVICIIRegisterWriteApplied
+		(cC, &registerWrite, writeIndex, _pendingRegisterWrites.size () - 1);
+
+	_pendingRegisterWrites.erase (_pendingRegisterWrites.begin ());
+
+	return (true);
+}
+
+// ---
+void COMMODORE::VICII::treatRasterCycle ()
+{
 	// Read graphics zone?
 	switch (_cycleInRasterLine)
 	{
@@ -668,9 +1144,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 				// Is there sprite info avaliable?
 				unsigned short nSR = (((_cycleInRasterLine - 1) >> 1) + 3); // 3, 4, 5, 6 or 7
 				if (readSpriteData (nSR))
-				{ 
-					result = 2;	// VICII has to read three bytes, meaning 2 clock cycles stopped more... 
-
+				{
 					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 			}
@@ -718,9 +1192,7 @@ unsigned int COMMODORE::VICII::treatRasterCycle ()
 			break;
 	}
 
-	result += treatGraphicAccessCycle ();
-
-	return (result);
+	treatGraphicAccessCycle ();
 }
 
 // ---
@@ -1609,9 +2081,259 @@ void COMMODORE::VICII::debugDisconnected (MCHEmul::CPU* cpu)
 }
 
 // ---
-void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
+std::string COMMODORE::VICII::debugCPUStopWindowsAsString
+	(const COMMODORE::VICII::CPUStopWindows& windows) const
+{
+	std::string result;
+
+	for (const auto& i : windows)
+	{
+		if (!result.empty ())
+			result += "|";
+
+		result +=
+			std::to_string (i._firstBACycle) + "/" +
+			std::to_string (i._firstAECCycle) + "/" +
+			std::to_string (i._lastCycle);
+	}
+
+	return (result.empty () ? "-" : result);
+}
+
+// ---
+std::string COMMODORE::VICII::debugCPUWriteEffectPositionsAsString () const
+{
+	if (!_pendingCPUTransaction.valid () ||
+		_pendingCPUTransaction._busCycleData -> _numberWriteCycles == 0)
+		return ("-");
+
+	std::string result;
+
+	for (size_t i = 0;
+		i < _pendingCPUTransaction._busCycleData -> _numberWriteCycles; i++)
+	{
+		if (!result.empty ())
+			result += "|";
+
+		result += std::to_string
+			(_pendingCPUStopPrediction._positionsToWriteEffects [i]);
+	}
+
+	return (result);
+}
+
+// ---
+std::string COMMODORE::VICII::debugCPUStopPredictionAsString () const
+{
+	return (
+		"Valid=" +
+			std::to_string (_pendingCPUStopPrediction._valid) + "," +
+		"Required=" +
+			std::to_string (_pendingCPUStopPrediction._stopRequired) + "," +
+		"Requested=" +
+			std::to_string (_pendingCPUStopPrediction._stopRequested) + "," +
+		"FirstStopCycle=" +
+			std::to_string (_pendingCPUStopPrediction._firstStopCycle) + "," +
+		"EffectCycle=" +
+			std::to_string (_pendingCPUStopPrediction._instructionEffectCycle) + "," +
+		"FirstNormalCycle=" +
+			std::to_string (_pendingCPUStopPrediction._firstNormalCycle) + "," +
+		"StopCycles=" +
+			std::to_string (_pendingCPUStopPrediction._cyclesToStop) + "," +
+		"WriteEffectPositions=" +
+			debugCPUWriteEffectPositionsAsString () + "," +
+		"EffectPositions=" +
+			std::to_string
+				(_pendingCPUStopPrediction._positionsToInstructionEffect));
+}
+
+// ---
+void COMMODORE::VICII::debugCPUStopPrediction
+	(const MCHEmul::InstructionContextEventData* dt)
 {
 	assert (_deepDebugFile != nullptr);
+	assert (dt != nullptr);
+
+	const MCHEmul::InstructionDefined* instruction =
+		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
+	const MCHEmul::BusCycleData& busData = instruction -> busCycleData ();
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), dt -> _cpu -> clockCycles (),
+		 "CPU transaction prediction",
+		{ { "Transaction",
+			"Type=Instruction," +
+			std::string ("Address=$") +
+				MCHEmul::removeAll0 (dt -> _address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"Code=" + std::to_string (instruction -> code ()) + "," +
+			"Cycles=" +
+				std::to_string (_pendingCPUTransaction._clockCycles) + "," +
+			"Structure=0" },
+		  { "Bus cycle data",
+			"Cycles=" + std::to_string (busData._numberCycles) + "," +
+			"Reads=" + std::to_string (busData._numberReadCycles) + "," +
+			"Writes=" + std::to_string (busData._numberWriteCycles) + "," +
+			"TrailingWrites=" +
+				std::to_string (busData._trailingWriteCycles) + "," +
+			"MaxConsecutiveWrites=" +
+				std::to_string (busData._maximumConsecutiveWriteCycles) + "," +
+			"LastCycleType=" +
+				std::to_string (busData._lastCycleType) },
+		  { "Raster origin",
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Stop windows",
+			"Current=" +
+				debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
+			"Next=" +
+				debugCPUStopWindowsAsString (*_nextCPUStopWindows) + "," +
+			"CurrentSpriteMask=" +
+				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+			"NextSpriteMask=" +
+				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+		  { "Prediction",
+			debugCPUStopPredictionAsString () } });
+}
+
+// ---
+void COMMODORE::VICII::debugCPUStopPrediction
+	(const MCHEmul::InterruptContextEventData* dt)
+{
+	assert (_deepDebugFile != nullptr);
+	assert (dt != nullptr);
+
+	const MCHEmul::BusCycleData& busData =
+		dt -> _interrupt -> busCycleData ();
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), dt -> _cpu -> clockCycles (),
+		 "CPU transaction prediction",
+		{ { "Transaction",
+			"Type=Interrupt," +
+			std::string ("Id=") +
+				std::to_string (dt -> _interrupt -> id ()) + "," +
+			"Cycles=" +
+				std::to_string (_pendingCPUTransaction._clockCycles) + "," +
+			"Structure=0" },
+		  { "Bus cycle data",
+			"Cycles=" + std::to_string (busData._numberCycles) + "," +
+			"Reads=" + std::to_string (busData._numberReadCycles) + "," +
+			"Writes=" + std::to_string (busData._numberWriteCycles) + "," +
+			"TrailingWrites=" +
+				std::to_string (busData._trailingWriteCycles) + "," +
+			"MaxConsecutiveWrites=" +
+				std::to_string (busData._maximumConsecutiveWriteCycles) + "," +
+			"LastCycleType=" +
+				std::to_string (busData._lastCycleType) },
+		  { "Raster origin",
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Stop windows",
+			"Current=" +
+				debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
+			"Next=" +
+				debugCPUStopWindowsAsString (*_nextCPUStopWindows) + "," +
+			"CurrentSpriteMask=" +
+				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+			"NextSpriteMask=" +
+				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+		  { "Prediction",
+			debugCPUStopPredictionAsString () } });
+}
+
+// ---
+void COMMODORE::VICII::debugCPUStopPredictionRecalculated
+	(const std::string& reason)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeLineData
+		(MCHEmul::Attributes (
+			{ { "CPU stop recalculation",
+				"Reason=" + reason + "," +
+				"Row=" + std::to_string (_raster.currentLine ()) + "," +
+				"Cycle=" + std::to_string (_cycleInRasterLine) },
+			  { "Stop windows",
+				"Current=" +
+					debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
+				"Next=" +
+					debugCPUStopWindowsAsString (*_nextCPUStopWindows) },
+			  { "Prediction",
+				debugCPUStopPredictionAsString () } }));
+}
+
+// ---
+void COMMODORE::VICII::debugCPUStopRequested (unsigned int cC) const
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), cC, "CPU stop applied",
+		{ { "Raster position",
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Stop",
+			"Cycles=" +
+				std::to_string (_pendingCPUStopPrediction._cyclesToStop) + "," +
+			"FirstStopCycle=" +
+				std::to_string (_pendingCPUStopPrediction._firstStopCycle) },
+		  { "Prediction",
+			debugCPUStopPredictionAsString () } });
+}
+
+// ---
+void COMMODORE::VICII::debugVICIIRegisterWriteApplied
+	(unsigned int cC, const MCHEmul::SetMemoryCommand* command,
+	 size_t writeIndex, size_t pendingAfter)
+{
+	assert (_deepDebugFile != nullptr);
+	assert (command != nullptr);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), cC, "VIC-II register write",
+		{ { "Raster position",
+			"Column=" + std::to_string (_raster.currentColumn ()) + "," +
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Register write",
+			"Address=$" + MCHEmul::removeAll0
+				((command -> subset () -> initialAddress () + command -> position ()).
+					asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"Register=$" +
+				MCHEmul::UByte ((unsigned char) (command -> position () % 0x40)).
+					asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"Value=$" + command -> value ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"WriteIndex=" + std::to_string (writeIndex) + "," +
+			"PendingAfter=" + std::to_string (pendingAfter) },
+		  { "CPU stop prediction",
+			"StartCPUCycle=" +
+				std::to_string (_pendingCPUTransaction._startCPUCycle) + "," +
+			"WritePosition=" + std::to_string
+				(_pendingCPUStopPrediction._positionsToWriteEffects [writeIndex]) + "," +
+			debugCPUStopPredictionAsString () } });
+}
+
+// ---
+void COMMODORE::VICII::debugVICIICycle
+	(MCHEmul::CPU* cpu, unsigned int i, bool registerWriteApplied)
+{
+	assert (_deepDebugFile != nullptr);
+
+	CPUStopWindow activeWindow;
+	const bool baLow = CPUStopWindowAt
+		(_cycleInRasterLine,
+		 *_currentCPUStopWindows,
+		 *_nextCPUStopWindows,
+		 activeWindow);
+	const bool aecLow = baLow &&
+		!activeWindow.CPUOwnsBusAt (_cycleInRasterLine);
+	const std::string activeWindowData = baLow
+		? "FirstBA=" + std::to_string (activeWindow._firstBACycle) + "," +
+		  "FirstAEC=" + std::to_string (activeWindow._firstAECCycle) + "," +
+		  "LastCycle=" + std::to_string (activeWindow._lastCycle)
+		: "FirstBA=-,FirstAEC=-,LastCycle=-";
 
 	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
 		{ { "Raster position",
@@ -1641,10 +2363,41 @@ void COMMODORE::VICII::debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i)
 			"BadlineInvalidCAccessCycles=" + std::to_string (_badLineInvalidCAccessCycles) + "," +
 			"BadlineCAccessStartCycle=" + std::to_string (_badLineCAccessStartCycle) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "CPU bus ownership",
+			"BALow=" + std::to_string (baLow) + "," +
+			"AECLow=" + std::to_string (aecLow) + "," +
+			activeWindowData + "," +
+			"CurrentWindows=" +
+				std::to_string (_currentCPUStopWindows -> size ()) + "," +
+			"NextWindows=" +
+				std::to_string (_nextCPUStopWindows -> size ()) + "," +
+			"AdjustedCurrent=" +
+				std::to_string
+					(_currentCPUStopWindows == &_adjustedCurrentCPUStopWindows) + "," +
+			"CurrentSpriteMask=" +
+				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+			"NextSpriteMask=" +
+				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+		  { "CPU stop prediction",
+			"Pending=" +
+				std::to_string (_pendingCPUTransaction.valid ()) + "," +
+			"RegisterWriteApplied=" +
+				std::to_string (registerWriteApplied) + "," +
+			"RegisterWritesPending=" +
+				std::to_string (_pendingRegisterWrites.size ()) + "," +
+			"StartCycle=" +
+				std::to_string (_pendingCPUTransaction._startCycle) + "," +
+			"StartCPUCycle=" +
+				std::to_string (_pendingCPUTransaction._startCPUCycle) + "," +
+			"NominalCycles=" +
+				std::to_string (_pendingCPUTransaction._clockCycles) + "," +
+			debugCPUStopPredictionAsString () },
 		  { "Border", 
 			"Main=" + std::to_string (_vicGraphicInfo._ffMBorder) + "," +
 			"Vertical=" + std::to_string (_vicGraphicInfo._ffVBorder) + "," +
-			"Border=" + std::to_string (_vicGraphicInfo._ffMBorderBegin) + "," +
+			"Left" + std::to_string (_vicGraphicInfo._ffLBorder) + "," +
+			"Right" + std::to_string (_vicGraphicInfo._ffRBorder) + "," +
+			"DrawAt=" + std::to_string (_vicGraphicInfo._ffMBorderBegin) + "," +
 			"Pixels=" + std::to_string (_vicGraphicInfo._ffMBorderPixels) },
 		  { "Graphics mode",
 			std::to_string ((int) _VICIIRegisters -> graphicModeActive ()) },
@@ -1758,9 +2511,21 @@ COMMODORE::VICII_PAL::VICII_PAL (int intId, MCHEmul::PhysicalStorageSubset* cR,
 }
 
 // ---
-unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
+void COMMODORE::VICII_PAL::addSpriteCPUStopWindow
+	(size_t nS, COMMODORE::VICII::CPUStopWindows& result) const
 {
-	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
+	assert (nS < 8);
+
+	static const CPURasterCycle firstBA [8] = { 55, 57, 59, -2, 0, 2, 4, 6 };
+	static const CPURasterCycle firstAEC [8] = { 58, 60, 62, 1, 3, 5, 7, 9 };
+
+	result.emplace_back (firstBA [nS], firstAEC [nS], firstAEC [nS] + 1);
+}
+
+// ---
+void COMMODORE::VICII_PAL::treatRasterCycle ()
+{
+	COMMODORE::VICII::treatRasterCycle ();
 
 	switch (_cycleInRasterLine)
 	{
@@ -1774,8 +2539,6 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 				unsigned short nSR = ((_cycleInRasterLine - 58) >> 1); // 0, 1 or 2
 				if (readSpriteData (nSR))
 				{
-					result += 2; // VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
 					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 			}
@@ -1794,7 +2557,6 @@ unsigned int COMMODORE::VICII_PAL::treatRasterCycle ()
 			break;
 	}
 
-	return (result);
 }
 
 // ---
@@ -1810,9 +2572,23 @@ COMMODORE::VICII_NTSC::VICII_NTSC (int intId, MCHEmul::PhysicalStorageSubset* cR
 }
 
 // ---
-unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
+void COMMODORE::VICII_NTSC::addSpriteCPUStopWindow
+	(size_t nS, COMMODORE::VICII::CPUStopWindows& result) const
 {
-	unsigned int result = COMMODORE::VICII::treatRasterCycle ();
+	assert (nS < 8);
+
+	// The emulated NTSC model is the 64-cycle 6567R56A. Its extra idle slot
+	// moves the late sprite 0..2 accesses without shifting the early 3..7 slots.
+	static const CPURasterCycle firstBA [8] = { 56, 58, 60, -2, 0, 2, 4, 6 };
+	static const CPURasterCycle firstAEC [8] = { 60, 62, 64, 1, 3, 5, 7, 9 };
+
+	result.emplace_back (firstBA [nS], firstAEC [nS], firstAEC [nS] + 1);
+}
+
+// ---
+void COMMODORE::VICII_NTSC::treatRasterCycle ()
+{
+	COMMODORE::VICII::treatRasterCycle ();
 
 	switch (_cycleInRasterLine)
 	{
@@ -1826,8 +2602,6 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 				unsigned short nSR = ((_cycleInRasterLine - 60) >> 1); // 0, 1 or 2
 				if (readSpriteData (nSR))
 				{
-					result += 2;	// VICII has to read three bytes, Meaning 2 clock cycles stopped more... 
-
 					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 
@@ -1843,5 +2617,4 @@ unsigned int COMMODORE::VICII_NTSC::treatRasterCycle ()
 			break;
 	}
 
-	return (result);
 }

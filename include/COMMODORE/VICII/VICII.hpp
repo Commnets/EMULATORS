@@ -15,6 +15,7 @@
 #ifndef __COMMODORE_VICII__
 #define __COMMODORE_VICII__
 
+#include <array>
 #include <CORE/incs.hpp>
 #include <COMMODORE/VICII/VICIIRegisters.hpp>
 
@@ -167,6 +168,8 @@ namespace COMMODORE
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
 		virtual void CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt) override;
+		/** Prepares VIC-II timing for an accepted interrupt launch sequence. */
+		virtual void CPUAboutToExecute (const MCHEmul::InterruptContextEventData* dt) override;
 
 		/** Simulates cycles in the VICII. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
@@ -220,6 +223,100 @@ namespace COMMODORE
 
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
+
+		/** A position in the VIC-II raster-cycle sequence relative to the
+			beginning of the current raster line. \n
+			Cycle 1 of the current line is represented by 1 and cycle 1 of the
+			next line by cyclesPerRasterLine () + 1. Negative and zero values are
+			used by sprite windows whose BA lead started in the previous line. */
+		using CPURasterCycle = int;
+
+		/** Maximum number of write cycles in a 6500 CPU transaction. \n
+			Regular store instructions have one write, memory RMW instructions
+			have two and BRK/IRQ/NMI entry has three stack writes. */
+		static const size_t _MAXCPUTRANSACTIONWRITES = 3;
+
+		/** Effective interval in which VIC-II bus activity can stop the CPU. \n
+			BA is low from _firstBACycle through _lastCycle. A pending 6510 write
+			can still finish before _firstAECCycle; a read stops as soon as BA is
+			low. The interval uses inclusive cycle limits. */
+		struct CPUStopWindow final
+		{
+			CPUStopWindow ()
+				: _firstBACycle (0), _firstAECCycle (0), _lastCycle (0)
+								{ }
+
+			CPUStopWindow (CPURasterCycle fBA, CPURasterCycle fAEC, CPURasterCycle lC)
+				: _firstBACycle (fBA), _firstAECCycle (fAEC), _lastCycle (lC)
+								{ }
+
+			bool BAActiveAt (CPURasterCycle c) const
+								{ return (c >= _firstBACycle && c <= _lastCycle); }
+			bool CPUOwnsBusAt (CPURasterCycle c) const
+								{ return (c < _firstAECCycle || c > _lastCycle); }
+
+			CPURasterCycle _firstBACycle;
+			CPURasterCycle _firstAECCycle;
+			CPURasterCycle _lastCycle;
+		};
+
+		using CPUStopWindows = std::vector <CPUStopWindow>;
+		using CPUStopWindowSets = std::array <CPUStopWindows, 512>;
+
+		/** Result of projecting one already executed CPU transaction over the
+			current and next VIC-II stop windows. \n
+			Besides the final instruction effect, the structure stores the number
+			of elapsed CPU/VIC-II positions at which every write bus cycle can
+			really complete after applying BA/AEC stalls. */
+		struct CPUStopPrediction final
+		{
+			CPUStopPrediction ()
+				: _valid (false), _stopRequired (false), _stopRequested (false),
+				  _firstStopCycle (0), _instructionEffectCycle (0), _firstNormalCycle (0),
+				  _cyclesToStop (0), _positionsToInstructionEffect (0),
+				  _positionsToWriteEffects { 0, 0, 0 }
+								{ }
+
+			bool _valid;
+			bool _stopRequired;
+			bool _stopRequested;
+			CPURasterCycle _firstStopCycle;
+			CPURasterCycle _instructionEffectCycle;
+			CPURasterCycle _firstNormalCycle;
+			unsigned int _cyclesToStop;
+			unsigned int _positionsToInstructionEffect;
+			/** Positions elapsed from the beginning of the transaction to each
+				effective write, indexed by the write ordinal in BusCycleData. */
+			std::array <unsigned int, _MAXCPUTRANSACTIONWRITES>
+				_positionsToWriteEffects;
+		};
+
+		/** Minimum immutable context required to recalculate a CPU transaction
+			prediction after a late bad-line or sprite-DMA window change. \n
+			The cycle structure and its metadata are owned by the instruction or
+			interrupt definition. Retaining these pointers transfers no ownership. \n
+			_startCycle can be adjusted when crossing a raster line, whereas
+			_startCPUCycle remains the absolute CPU-clock origin of the transaction. */
+		struct PendingCPUTransaction final
+		{
+			PendingCPUTransaction ()
+				: _cycleStructure (nullptr), _busCycleData (nullptr),
+				  _clockCycles (0), _startCycle (0), _startCPUCycle (0)
+								{ }
+
+			bool valid () const
+								{ return (_cycleStructure != nullptr); }
+			void reset ()
+								{ _cycleStructure = nullptr; _busCycleData = nullptr;
+								  _clockCycles = 0; _startCycle = 0;
+								  _startCPUCycle = 0; }
+
+			const MCHEmul::CycleStructure* _cycleStructure;
+			const MCHEmul::BusCycleData* _busCycleData;
+			unsigned int _clockCycles;
+			CPURasterCycle _startCycle;
+			unsigned int _startCPUCycle;
+		};
 
 		/** Invoked from initialize to create the right screen memory. \n
 			It also creates the Palette used by CBM 64 (_format variable). */
@@ -313,22 +410,71 @@ namespace COMMODORE
 							{ _vicGraphicInfo._idleState = true; }
 
 		// Bus arbitration/BA-like stop requests...
-		/** To request a BA-like CPU stop when the VIC-II is about to need the bus. */
-		inline void requestCPUStopForDMAIfNeeded (MCHEmul::CPU* cpu, unsigned int cC);
-		/** To determine whether the VIC-II is about to read sprite info. */
-		inline bool isAboutToReadSpriteInfo () const;
-		/** To determine whether the VIC-II is about to read character/color info. */
-		inline bool isAboutToReadCharacterInfo () const;
+		/** Creates the 512 immutable combinations of bad-line and sprite-DMA
+			windows used by this concrete VIC-II model. */
+		void initializeCPUStopWindowSets ();
+		/** Creates one of the immutable stop-window combinations. */
+		void buildCPUStopWindowSet
+			(bool bL, unsigned char sM, CPUStopWindows& result) const;
+		/** Adds the normal bad-line interval BA=12..54, AEC=15..54. */
+		void addBadLineCPUStopWindow (CPUStopWindows& result) const;
+		/** Adds the bus interval assigned to one sprite in the concrete video model. */
+		virtual void addSpriteCPUStopWindow
+			(size_t nS, CPUStopWindows& result) const = 0;
+		/** Sorts and joins intervals whose BA-low portions form one effective stop. */
+		void mergeCPUStopWindows (CPUStopWindows& result) const;
+		/** Returns the table index made of the bad-line flag and eight DMA bits. */
+		size_t cpuStopWindowSetIndex (bool bL, unsigned char sM) const
+							{ return ((bL ? 0x0100 : 0) | sM); }
+		/** Returns the current eight-bit sprite-DMA mask without allocating. */
+		unsigned char spriteDMAMask () const;
+		/** Determines the regular bad-line condition for an arbitrary raster line. */
+		bool badLineConditionForRasterLine (unsigned short rL) const;
+		/** Selects immutable stop-window sets for the current and following lines. */
+		void selectCPUStopWindowsForCurrentAndNextLine ();
+		/** Replaces only the current-line bad-line part after a late transition. */
+		void actualizeCPUStopWindowsAfterBadLineChange ();
+		/** Locates the effective window containing a linear raster-cycle position. \n
+			The returned copy is shifted to the current-line coordinate system. */
+		bool CPUStopWindowAt
+			(CPURasterCycle c, const CPUStopWindows& currentWindows,
+			 const CPUStopWindows& nextWindows, CPUStopWindow& result) const;
+		/** Projects a nominal CPU bus-cycle structure over two raster lines. \n
+			A final implicit read represents the opcode fetch of the following
+			instruction, allowing BA to stop the CPU immediately after the current
+			instruction has produced its effect. */
+		CPUStopPrediction calculateCPUStopPrediction
+			(const MCHEmul::CycleStructure& cS, const MCHEmul::BusCycleData& bD,
+			 unsigned int nC, CPURasterCycle startCycle,
+			 const CPUStopWindows& currentWindows,
+			 const CPUStopWindows& nextWindows) const;
+		/** Selects and predicts the bus structure of the CPU transaction that
+			is about to execute atomically. The referenced structures are owned
+			by the corresponding instruction or interrupt definition. */
+		void prepareCPUStopPrediction
+			(const MCHEmul::CycleStructure* cS,
+			 const MCHEmul::BusCycleData* bD, unsigned int nC,
+			 unsigned int startCPUCycle);
+		/** Recalculates the pending prediction after a window-set transition. */
+		void recalculatePendingCPUStopPrediction ();
+		/** Requests the single compensated CPU stop at the predicted raster cycle. */
+		void requestPredictedCPUStopIfNeeded (MCHEmul::CPU* cpu, unsigned int cC);
+		/** Extracts buffered writes targeting the VIC-II register subset. \n
+			An already pending collection means that the CPU is still completing
+			the same transaction and no new extraction is required. */
+		void extractPendingRegisterWrites ();
+		/** Executes the first pending VIC-II register write when the current
+			absolute CPU cycle matches its predicted effective position. \n
+			After execution the command is erased, making the next command the new
+			element zero. Returns true when one write has been applied. \n
+			A $d016 write reports through hDZC that its horizontal display limits
+			must be updated after drawing the current eight-pixel slice. */
+		bool executePendingRegisterWriteAt (unsigned int cC, bool* hDZC);
 
 		// Raster-cycle execution...
-		/** To treat the current raster cycle and request a full CPU stop if the VIC-II
-			has actually stolen bus cycles during this cycle. */
-		inline void treatRasterCycleAndRequestCPUStopIfNeeded (MCHEmul::CPU* cpu, unsigned int cC);
 		/** Different actions are taken depending on the raster cycle. \n
-			Returns the number of CPU cycles that have to be fully stopped as a
-			consequence of VIC-II bus usage. \n
 			The way raster cycles are treated depends on the concrete VIC-II variant. */
-		virtual unsigned int treatRasterCycle ();
+		virtual void treatRasterCycle ();
 		/** To treat the VIC-II cycle where VC is loaded from VCBASE and
 			the graphic access indexes are reset for the current line. */
 		inline void treatGraphicFetchStartCycle ();
@@ -351,12 +497,10 @@ namespace COMMODORE
 							{ return (_lastVICDataRead); }
 
 		// Graphics and bad-line accesses performed during raster-cycle execution...
-		/** To treat a graphics access cycle.
-			Returns the number of CPU cycles that have to be fully stolen. */
-		inline unsigned int treatGraphicAccessCycle ();
-		/** To treat a bad-line c-access cycle.
-			Returns the number of CPU cycles that have to be fully stolen. */
-		inline unsigned int treatBadLineCAccessCycle ();
+		/** To treat a graphics access cycle. */
+		inline void treatGraphicAccessCycle ();
+		/** To treat a bad-line c-access cycle. */
+		inline void treatBadLineCAccessCycle ();
 		/** To determine the first attempted c-access cycle for the current bad-line sequence. \n
 			The first attempts can be invalid DMA-delay/FLI accesses returning $ff.
 			0 means that no c-access sequence has been defined. */
@@ -485,7 +629,29 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugDisconnected (MCHEmul::CPU* cpu);
-		void debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugVICIICycle
+			(MCHEmul::CPU* cpu, unsigned int i, bool registerWriteApplied);
+		/** Records a buffered VIC-II register write when it becomes effective at
+			its predicted absolute CPU cycle. */
+		void debugVICIIRegisterWriteApplied
+			(unsigned int cC, const MCHEmul::SetMemoryCommand* command,
+			 size_t writeIndex, size_t pendingAfter);
+		/** Returns the stop windows in a compact format suitable for deep debug. */
+		std::string debugCPUStopWindowsAsString (const CPUStopWindows& windows) const;
+		/** Returns the current CPU stop prediction in a compact format. */
+		std::string debugCPUStopPredictionAsString () const;
+		/** Returns the effective write positions of the current CPU prediction. */
+		std::string debugCPUWriteEffectPositionsAsString () const;
+		/** Records the prediction calculated for an instruction notification. */
+		void debugCPUStopPrediction
+			(const MCHEmul::InstructionContextEventData* dt);
+		/** Records the prediction calculated for an interrupt notification. */
+		void debugCPUStopPrediction
+			(const MCHEmul::InterruptContextEventData* dt);
+		/** Records why an already pending prediction has been recalculated. */
+		void debugCPUStopPredictionRecalculated (const std::string& reason);
+		/** Records the exact CPU cycle where a predicted stop is requested. */
+		void debugCPUStopRequested (unsigned int cC) const;
 		void debugBadLine ();
 		void debugReadingSpriteInfo (size_t nS);
 		void debugSpriteDrawFinishes (size_t nS);
@@ -541,6 +707,32 @@ namespace COMMODORE
 			In full-instruction mode it represents the CPU data bits D0-D3
 			available when the following opcode fetch is stopped by BA. */
 		MCHEmul::UByte _cpuOpcodeLowNibble;
+		/** Immutable stop-window combinations indexed by bad-line state and the
+			eight-bit sprite-DMA mask. They are built once at initialization. */
+		CPUStopWindowSets _cpuStopWindowSets;
+		/** Selected immutable windows for the current and following raster lines. \n
+			The following-line set is required because sprite windows and delayed
+			instructions can cross the horizontal raster boundary. */
+		const CPUStopWindows* _currentCPUStopWindows;
+		const CPUStopWindows* _nextCPUStopWindows;
+		/** Reusable current-line storage used only for a bad line whose BA start
+			differs from the normal precalculated cycle 12. */
+		CPUStopWindows _adjustedCurrentCPUStopWindows;
+		/** Sprite-DMA masks represented by the two selected window sets. */
+		unsigned char _currentSpriteDMAMask;
+		unsigned char _nextSpriteDMAMask;
+		/** Minimal context retained only while its stop prediction can still be
+			recalculated after a VIC-II timing-state transition. */
+		PendingCPUTransaction _pendingCPUTransaction;
+		/** Current projection of the pending CPU transaction over the stop windows. */
+		CPUStopPrediction _pendingCPUStopPrediction;
+		/** Buffered CPU writes targeting the VIC-II register subset and not yet
+			applied at their predicted bus cycles. \n
+			The first element is always the next command to execute. Executed
+			commands are erased, so no separate consumption index is required. \n
+			For a 6500 instruction targeting VIC-II registers, command order is the
+			same as the write-cycle order stored in BusCycleData. */
+		MCHEmul::SetMemoryCommands _pendingRegisterWrites;
 		/** True when DEN has been active at least once during raster line $30. */
 		bool _DENSeenAtLine30;
 		/** True when a bad line has already been accepted in the current raster line. \n
@@ -800,6 +992,10 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()
 	{
+		const bool previousBadLineCondition = _badLineConditionActive;
+		const bool previousCAccessActive = _badLineCAccessActive;
+		const unsigned short previousCAccessStartCycle = _badLineCAccessStartCycle;
+
 		updateDENSeenAtLine30 ();
 
 		// Current Bad Line Condition for this exact VIC-II cycle.
@@ -859,6 +1055,11 @@ namespace COMMODORE
 				_badLineInvalidColorData = _cpuOpcodeLowNibble;
 			}
 		}
+
+		if (previousBadLineCondition != _badLineConditionActive ||
+			previousCAccessActive != _badLineCAccessActive ||
+			previousCAccessStartCycle != _badLineCAccessStartCycle)
+			actualizeCPUStopWindowsAfterBadLineChange ();
 	}
 
 	// ---
@@ -899,65 +1100,6 @@ namespace COMMODORE
 			_vicGraphicInfo._ROW <= _LASTBADLINE &&
 			(unsigned char) (_vicGraphicInfo._ROW & 0x07) /** The three last bits only */ ==
 				_VICIIRegisters -> verticalScrollPosition ()); // aligned with the scrollY
-	}
-
-	// ---
-	inline void VICII::requestCPUStopForDMAIfNeeded (MCHEmul::CPU* cpu, unsigned int cC)
-	{
-		const bool aboutToReadSpriteInfo	= isAboutToReadSpriteInfo ();
-		const bool aboutToReadCharacterInfo = isAboutToReadCharacterInfo ();
-		if ((cpu -> lastState () != MCHEmul::CPU::_STOPPED && !cpu -> stopped ()) &&
-			(aboutToReadSpriteInfo || aboutToReadCharacterInfo))
-		{
-			cpu -> setStop (
-				true,
-				MCHEmul::InstructionDefined::_CYCLEREAD,
-				cC,
-				3);
-
-			// Specifically when reading the chars...
-			if (aboutToReadCharacterInfo)
-			{
-				_badLineBAAlreadyRequested = true;
-				_badLineBARequestCycle = _cycleInRasterLine;
-			}
-		}
-	}
-
-	// ---
-	inline bool VICII::isAboutToReadSpriteInfo () const
-	{
-		return (
-			(_cycleInRasterLine == 2								&& _vicSpriteInfo [5]._DMAActive) ||
-			(_cycleInRasterLine == 4								&& _vicSpriteInfo [6]._DMAActive) ||
-			(_cycleInRasterLine == 6								&& _vicSpriteInfo [7]._DMAActive) ||
-			(_cycleInRasterLine == (55 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [0]._DMAActive) ||
-			(_cycleInRasterLine == (57 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [1]._DMAActive) ||
-			(_cycleInRasterLine == (59 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [2]._DMAActive) ||
-			(_cycleInRasterLine == (61 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [3]._DMAActive) ||
-			(_cycleInRasterLine == (63 + _incCyclesPerRasterLine)	&& _vicSpriteInfo [4]._DMAActive));
-	}
-
-	// ---
-	inline bool VICII::isAboutToReadCharacterInfo () const
-	{ 
-		return (
-			_badLineConditionActive &&
-			_cycleInRasterLine >= _BADLINE_START_FIRST_CYCLE &&
-			_cycleInRasterLine <= _BADLINE_START_LAST_CYCLE &&
-			!_badLineBAAlreadyRequested);
-	}
-
-	// ---
-	inline void VICII::treatRasterCycleAndRequestCPUStopIfNeeded (MCHEmul::CPU* cpu, unsigned int cC)
-	{
-		unsigned int cS = treatRasterCycle ();
-		if (cS > 0)
-			cpu -> setStop (
-				true,
-				MCHEmul::InstructionDefined::_CYCLEALL,
-				cC,
-				(int) cS);
 	}
 
 	// ---
@@ -1003,6 +1145,8 @@ namespace COMMODORE
 			_badLineInvalidCAccessCycles = 0;
 			_badLineCAccessStartCycle = 0;
 		}
+
+		actualizeCPUStopWindowsAfterBadLineChange ();
 	}
 
 	// ---
@@ -1132,10 +1276,10 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline unsigned int VICII::treatGraphicAccessCycle ()
+	inline void VICII::treatGraphicAccessCycle ()
 	{
 		if (!isGraphicAccessCycle ())
-			return (0);
+			return;
 
 		// This grouped cycle represents the VIC-II graphics work for one
 		// CPU-visible cycle. If a bad-line c-access is active, it is performed
@@ -1144,7 +1288,7 @@ namespace COMMODORE
 		// the g-access is the normal VIC-II phase for this cycle.
 		memoryRef () -> setActiveView (_VICIIView);
 
-		unsigned int result = treatBadLineCAccessCycle ();
+		treatBadLineCAccessCycle ();
 
 		readGraphicalInfo ();
 
@@ -1154,14 +1298,13 @@ namespace COMMODORE
 
 		_IFDEBUG debugReadingGraphics ();
 
-		return (result);
 	}
 
 	// ---
-	inline unsigned int VICII::treatBadLineCAccessCycle ()
+	inline void VICII::treatBadLineCAccessCycle ()
 	{
 		if (!isBadLineCAccessCycle ())
-			return (0);
+			return;
 
 		const unsigned short fCA = firstBadLineCAccessCycle ();
 
@@ -1187,16 +1330,13 @@ namespace COMMODORE
 
 			_IFDEBUG debugReadingVideoMatrix ();
 
-			// One CPU-visible bus slot is stolen by this bad-line c-access.
-			return (1);
+			return;
 		}
 
 		readVideoMatrixAndColorRAM ();
 
 		_IFDEBUG debugReadingVideoMatrix ();
 
-		// One CPU-visible bus slot is stolen by this bad-line c-access.
-		return (1);
 	}
 
 	// ---
@@ -1281,11 +1421,17 @@ namespace COMMODORE
 			_cycleInRasterLine = 1;
 			_rasterIRQAlreadyTriggeredThisLine = false;
 
+			// Every piece of state selected below belongs to the new raster
+			// line. ROW must be updated before evaluating bad-line conditions
+			// or selecting the current stop-window set.
+			_vicGraphicInfo._ROW = _raster.currentLine ();
+
 			resetBadLineStateForNewRasterLine ();
 
-			// At the beginning of the new raster line, update the VIC-II ROW.
-			// ...and if it is the first line of the frame, reset the video counters.
-			if ((_vicGraphicInfo._ROW = _raster.currentLine ()) == 0)
+			// At the first line of a frame, reset the video counters and allow
+			// the light pen to latch a new position. On every other line, VC
+			// starts from the current VCBASE value.
+			if (_vicGraphicInfo._ROW == 0)
 			{ 
 				resetGraphicCountersForNewFrame ();
 			
@@ -1296,6 +1442,23 @@ namespace COMMODORE
 			{
 				// At the beginning of every other line, VC starts from VCBASE.
 				_vicGraphicInfo._VC = _vicGraphicInfo._VCBASE & _VCMASK;
+			}
+
+			// Sprite DMA was decided during cycles 55/56. Once ROW represents
+			// the new line, both immutable window sets can be selected without
+			// inheriting the previous line's bad-line state.
+			_currentSpriteDMAMask = _nextSpriteDMAMask = spriteDMAMask ();
+			selectCPUStopWindowsForCurrentAndNextLine ();
+			if (_pendingCPUTransaction.valid () &&
+				!_pendingCPUStopPrediction._stopRequested)
+			{
+				// Cycle 1 of the former next line is now cycle 1 of the current
+				// line. Keep the retained transaction origin in that coordinate
+				// system before recalculating its prediction.
+				_pendingCPUTransaction._startCycle -= _cyclesPerRasterLine;
+				recalculatePendingCPUStopPrediction ();
+
+				_IFDEBUG debugCPUStopPredictionRecalculated ("RasterLineChange");
 			}
 		}
 	}
@@ -1414,6 +1577,9 @@ namespace COMMODORE
 		// and if it is, _vicGraphicInfo._ffMBorderPixels will hold the number of pixels to draw... 
 		// 8 by default (or the limit of the visible zone)!
 		bool atLeft = false;
+		// Treat the slice as [cav, cav + 8). This also detects a display limit
+		// moved by CSEL exactly onto cav after the preceding slice was drawn,
+		// without detecting an aligned limit one slice too early.
 		if (cav < _raster.hData ().firstScreenPosition () &&
 				((cav + 8) >= _raster.hData ().firstScreenPosition ()))
 		{
@@ -1602,7 +1768,9 @@ namespace COMMODORE
 			const MCHEmul::Address& cRA, int vV);
 
 		private:
-		virtual unsigned int treatRasterCycle () override;
+		virtual void addSpriteCPUStopWindow
+			(size_t nS, CPUStopWindows& result) const override;
+		virtual void treatRasterCycle () override;
 	};
 
 	/** The version for NTSC systems. \n
@@ -1617,7 +1785,9 @@ namespace COMMODORE
 			const MCHEmul::Address& cRA, int vV);
 
 		private:
-		virtual unsigned int treatRasterCycle () override;
+		virtual void addSpriteCPUStopWindow
+			(size_t nS, CPUStopWindows& result) const override;
+		virtual void treatRasterCycle () override;
 	};
 }
 

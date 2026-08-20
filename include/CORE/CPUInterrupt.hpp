@@ -17,6 +17,7 @@
 
 #include <CORE/global.hpp>
 #include <CORE/InfoClass.hpp>
+#include <CORE/NotifyObserver.hpp>
 #include <CORE/CPUTransaction.hpp>
 
 namespace MCHEmul
@@ -24,6 +25,31 @@ namespace MCHEmul
 	class CPU;
 	class Chip;
 	class Computer;
+	class Memory;
+	class CPUInterrupt;
+
+	/** Context notified immediately before an accepted CPU interrupt starts. \n
+		The interrupt, CPU and memory pointers are not owned by this structure
+		and remain valid while the synchronous event is being processed. \n
+		The event is emitted only after the interrupt has been accepted, but
+		before its acknowledge or launch sequence produces any side effect. */
+	struct InterruptContextEventData final : public Event::Data
+	{
+		InterruptContextEventData (CPUInterrupt* i, CPU* c, Memory* m)
+			: _interrupt (i), _cpu (c), _memory (m)
+		{
+			assert (_interrupt != nullptr);
+			assert (_cpu != nullptr);
+			assert (_memory != nullptr);
+		}
+
+		/** Interrupt whose launch sequence is about to start. It is not owned. */
+		CPUInterrupt* _interrupt;
+		/** CPU that accepted the interrupt. It is not owned. */
+		CPU* _cpu;
+		/** Memory context used during interrupt launch. It is not owned. */
+		Memory* _memory;
+	};
 
 	/** A CPU Interrupt is something that is able to stop the normal progress of the CPU execution. \n
 		The different Interrupts of a system can have different levels of prority.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Emulator CPU"
+  short_description: "Implement CPUs, instructions, timing, and tests"
+  default_prompt: "Use $emulators-cpu-builder to implement and validate a processor in EMULATORS."

@@ -1,0 +1,43 @@
+machine:
+  name: "TODO"
+  manufacturer: "TODO"
+  models: []
+  regions: []
+  accuracy_target: "functional"
+  excluded_scope: []
+
+sources:
+  authoritative: []
+  diagnostics: []
+  roms_and_media: []
+  unknowns: []
+
+clocks:
+  master_hz: null
+  domains: []
+  synchronization_owner: "TODO"
+
+cpu:
+  family: "TODO"
+  variant: "TODO"
+  decision: "new"
+  existing_candidate: null
+  interrupt_model: "TODO"
+
+memory:
+  address_bits: null
+  regions: []
+  overlays: []
+  unmapped_behavior: "TODO"
+
+io:
+  ports: []
+  buses: []
+  host_adapters: []
+
+components: []
+interrupt_routes: []
+model_differences: []
+acceptance_tests: []
+known_limitations: []
+

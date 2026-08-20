@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build New Emulator"
+  short_description: "Plan and coordinate a complete new emulator"
+  default_prompt: "Use $emulators-new-machine to design and build a new machine in EMULATORS."

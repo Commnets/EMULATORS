@@ -1,0 +1,19 @@
+{
+  "id": "msx",
+  "title": "MSX DEBUG File",
+  "subtitle": "Structure, VDP, PSG, PPI, and tape",
+  "output": "docs/MSXData/MSX_DEBUG_File_Format.docx",
+  "models": "SVI-728, Sony HB-10P, Philips VG-8010, Canon V-20, and SVI-738, according to emulator configuration.",
+  "cpu": "Zilog Z80.",
+  "components": [["1120","TMS9918A/TMS9928A/TMS9929A","VDP raster position"],["1100","AY-3-8910","Integrated and selectable, but with no implemented DEBUG fields"],["100","PPI 8255","Integrated and selectable, but with no implemented DEBUG fields"],["100/101","Datasette","Port and BIOS-routine simulation"],["Memory","Slots and subslots","Applied Set for selected subsets"]],
+  "records": [
+    {"name":"TMS99xx — Info Cyle","producer":"src/TEXASINSTRUMENTS/TMS99xxFamily/TMS99xxFamily.cpp :: debugTMS9918ACycle","fields":"Raster=zero-based column,zero-based line.","timing":"cpu.clockCycles()-(i * _clockFactor). The implemented literal is Info Cyle.","events":"debugVideoNoActive exists, but its body is TODO and writes no data."},
+    {"name":"AY-3-8910 — no current output","producer":"src/GENERALINSTRUMENTS/AY38910/AY38910.cpp :: debugAY38910Cycle","fields":"None: the method contains TODO.","timing":"The cycle calls the method when DEBUG is active for the component, but no header is currently written.","events":"No AY38910 records should be expected until the producer is implemented."},
+    {"name":"PPI8255 — no current output","producer":"src/MSX/PPI8255.cpp :: debugPPI8255Cycle","fields":"None: the method contains TODO.","timing":"Invoked while simulating the PPI with DEBUG active, with no current output.","events":"The current file must not be documented as containing port A/B/C state."},
+    {"name":"MSXDatasetteInjection","producer":"src/MSX/Datasette.cpp","fields":"BIOS-simulation state, CPU cycle, block read, errors, and No data to read.","timing":"CPU cycle of the intercepted routine.","events":"May write a simple context line before the complete header."}
+  ],
+  "example": ["CPU     64000       Info Cycle","                    Last 11 cycles","TMS9929A64000       Info Cyle","                    Raster              :100,50","MSXDatas64011       Entering Routine Simulation","+"],
+  "example_note": "Schematic example. DebugFile truncates names longer than eight characters.",
+  "limitations": ["AY-3-8910 and PPI 8255 are wired and receive the DEBUG file, but their methods still produce no output.","The VDP publishes only the raster; registers, mode, and VRAM accesses do not appear in the current format.","VDP timing depends on _clockFactor."],
+  "watched_sources": ["src/MSX/MSX.cpp","src/MSX/Model.cpp","src/MSX/PPI8255.cpp","src/MSX/Datasette.cpp","src/TEXASINSTRUMENTS/TMS99xxFamily/TMS99xxFamily.cpp","src/GENERALINSTRUMENTS/AY38910/AY38910.cpp"]
+}

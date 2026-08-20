@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Emulator Chip"
+  short_description: "Implement reusable chips, registers, and timing"
+  default_prompt: "Use $emulators-chip-builder to implement and validate a hardware chip in EMULATORS."

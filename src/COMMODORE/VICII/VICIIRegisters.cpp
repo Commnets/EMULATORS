@@ -8,7 +8,7 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 	  _spriteSharedColor (2, 0x00),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _interruptsEnabledBack (false),
-	  _numberPositionsNextInstruction (0),
+	  _numberPositionsToInstructionEffect (0),
 	  _raster (nullptr) // It is initialized later...
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
@@ -377,7 +377,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 
 				bool oP = false;
 				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
+				_raster -> simulateMoveCycles (_numberPositionsToInstructionEffect, oP);
 				if (oP) rL++;
 				result = (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
 					(((rL & 0xff00) != 0) ? 0x80 : 0x00);
@@ -396,7 +396,7 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 				// change in the position of the raster or not!
 				bool oP = false;
 				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP); 
+				_raster -> simulateMoveCycles (_numberPositionsToInstructionEffect, oP);
 				if (oP) rL++;
 				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
 			}

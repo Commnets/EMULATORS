@@ -391,6 +391,16 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 
 				case CPUInterrupt::_EXECUTIONALLOWED:
 					{
+						_IFDEBUG debugInterruptAboutToExecute (interr);
+
+						// Notify the launch transaction before acknowledge or
+						// interrupt execution changes any CPU-visible state.
+						notify (MCHEmul::Event
+							(_CPUTOEXECUTEINTERRUPT, 0 /** No sense. */,
+							 std::shared_ptr <MCHEmul::Event::Data> (
+								new MCHEmul::InterruptContextEventData
+									(interr, this, _memory))));
+
 						aknowledgeInterrupt (iR);
 
 						_currentInterruptRequest = iR;
@@ -496,6 +506,15 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 		case CPUInterrupt::_EXECUTIONALLOWED:
 			{
 				_IFDEBUG debugInterruptLaunched ();
+				_IFDEBUG debugInterruptAboutToExecute (_currentInterrupt);
+
+				// The full launch sequence will be executed atomically after
+				// this synchronous notification.
+				notify (MCHEmul::Event
+					(_CPUTOEXECUTEINTERRUPT, 0 /** No sense. */,
+					 std::shared_ptr <MCHEmul::Event::Data> (
+						new MCHEmul::InterruptContextEventData
+							(_currentInterrupt, this, _memory))));
 
 				// The acknowledge has to be issued!
 				aknowledgeInterrupt (iR);
@@ -556,6 +575,10 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			// For now, only the nominal cycles are scheduled here.
 			_cyclesPendingExecution = 
 				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
+
+			_IFDEBUG debugInstructionAboutToExecute
+				(_currentInstruction, programCounter ().asAddress (),
+				 _cyclesPendingExecution);
 
 			// Notify the instruction context before its first intrinsic cycle is consumed.
 			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
@@ -656,6 +679,11 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...
+	_IFDEBUG debugInstructionAboutToExecute
+		(inst, programCounter ().asAddress (),
+		 inst -> clockCyclesToExecute
+			(this, _memory, programCounter ().asAddress ()));
+
 	notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
 		std::shared_ptr <MCHEmul::Event::Data> (
 			new MCHEmul::InstructionContextEventData (
@@ -717,6 +745,92 @@ MCHEmul::Instruction* MCHEmul::CPU::instructionAt
 }
 
 // ---
+void MCHEmul::CPU::debugInstructionAboutToExecute
+	(const MCHEmul::Instruction* instruction,
+	 const MCHEmul::Address& address, unsigned int cycles) const
+{
+	assert (_deepDebugFile != nullptr);
+	assert (instruction != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return;
+
+	const MCHEmul::InstructionDefined* definedInstruction =
+		dynamic_cast <const MCHEmul::InstructionDefined*> (instruction);
+	std::string busData = "Defined=0";
+	if (definedInstruction != nullptr)
+	{
+		const MCHEmul::BusCycleData& data =
+			definedInstruction -> busCycleData ();
+
+		busData =
+			"Defined=1," +
+			std::string ("Structure=0,") +
+			"Reads=" + std::to_string (data._numberReadCycles) + "," +
+			"Writes=" + std::to_string (data._numberWriteCycles) + "," +
+			"TrailingWrites=" +
+				std::to_string (data._trailingWriteCycles) + "," +
+			"LastCycleType=" +
+				std::to_string (data._lastCycleType);
+	}
+
+	_deepDebugFile -> writeCompleteLine
+		("CPU", _clockCycles, "Transaction about to execute",
+		{ { "Transaction",
+			"Type=Instruction," +
+			std::string ("Address=$") +
+				MCHEmul::removeAll0 (address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"Code=" + std::to_string (instruction -> code ()) + "," +
+			"Cycles=" + std::to_string (cycles) },
+		  { "Bus cycle data",
+			busData },
+		  { "Execution",
+			"Mode=" +
+				std::string
+					(ticksCounter () == nullptr ? "Full" : "PerCycle") + "," +
+			"State=" + std::to_string (_state) + "," +
+			"LastState=" + std::to_string (_lastState) } });
+}
+
+// ---
+void MCHEmul::CPU::debugInterruptAboutToExecute
+	(const MCHEmul::CPUInterrupt* interrupt) const
+{
+	assert (_deepDebugFile != nullptr);
+	assert (interrupt != nullptr);
+
+	if (_programCounter < _debugLimitsInit ||
+		_programCounter > _debugLimitsEnd)
+		return;
+
+	const MCHEmul::BusCycleData& data = interrupt -> busCycleData ();
+
+	_deepDebugFile -> writeCompleteLine
+		("CPU", _clockCycles, "Transaction about to execute",
+		{ { "Transaction",
+			"Type=Interrupt," +
+			std::string ("Id=") + std::to_string (interrupt -> id ()) + "," +
+			"Cycles=" + std::to_string (interrupt -> cyclesToLaunch ()) },
+		  { "Bus cycle data",
+			"Structure=0," +
+			std::string ("Reads=") +
+				std::to_string (data._numberReadCycles) + "," +
+			"Writes=" + std::to_string (data._numberWriteCycles) + "," +
+			"TrailingWrites=" +
+				std::to_string (data._trailingWriteCycles) + "," +
+			"LastCycleType=" +
+				std::to_string (data._lastCycleType) },
+		  { "Execution",
+			"Mode=" +
+				std::string
+					(ticksCounter () == nullptr ? "Full" : "PerCycle") + "," +
+			"State=" + std::to_string (_state) + "," +
+			"LastState=" + std::to_string (_lastState) } });
+}
+
+// ---
 void MCHEmul::CPU::debugStopRequest () const
 {
 	assert (_deepDebugFile != nullptr);
@@ -725,8 +839,13 @@ void MCHEmul::CPU::debugStopRequest () const
 		_programCounter > _debugLimitsEnd)
 		return; // Nothing to do...
 
-	_deepDebugFile -> writeLineData 
-		("New stop request. " + _stopStatusData.asStringCore ());
+	_deepDebugFile -> writeCompleteLine
+		("CPU", _clockCycles, "Stop request",
+		{ { "Stop",
+			_stopStatusData.asString () },
+		  { "Execution",
+			"State=" + std::to_string (_state) + "," +
+			"LastState=" + std::to_string (_lastState) } });
 }
 
 // ---
@@ -767,10 +886,13 @@ void MCHEmul::CPU::debugStopSituation () const
 		_programCounter > _debugLimitsEnd)
 		return; // Nothing to do...
 
-	_deepDebugFile -> writeCompleteLine ("CPU", _clockCycles, "Stopped", 
-		_stopStatusData.attributes ());
-	_deepDebugFile -> writeLineData	("State:" + std::to_string (_state) + 
-		", Last State:" + std::to_string (_lastState));
+	_deepDebugFile -> writeCompleteLine
+		("CPU", _clockCycles, "Stopped",
+		{ { "Stop",
+			_stopStatusData.asString () },
+		  { "Execution",
+			"State=" + std::to_string (_state) + "," +
+			"LastState=" + std::to_string (_lastState) } });
 }
 
 // ---

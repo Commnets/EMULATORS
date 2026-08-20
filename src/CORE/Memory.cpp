@@ -313,6 +313,32 @@ void MCHEmul::SetMemoryCommand::execute ()
 }
 
 // ---
+MCHEmul::SetMemoryCommands MCHEmul::Memory::Configuration::extractMemorySetCommandsBuffered
+	(MCHEmul::PhysicalStorageSubset* pS)
+{
+	assert (pS != nullptr);
+
+	MCHEmul::SetMemoryCommands result;
+
+	// Moving the matching commands out individually preserves the order of
+	// both collections. Capacity is intentionally acquired only after a match,
+	// avoiding allocations for the usual writes targeting another subset.
+	for (MCHEmul::SetMemoryCommands::iterator i = _memorySetCommands.begin ();
+		i != _memorySetCommands.end ();)
+	{
+		if (i -> subset () == pS)
+		{
+			result.emplace_back (std::move (*i));
+			i = _memorySetCommands.erase (i);
+		}
+		else
+			i++;
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::InfoStructure MCHEmul::MemoryViewDUMP::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;

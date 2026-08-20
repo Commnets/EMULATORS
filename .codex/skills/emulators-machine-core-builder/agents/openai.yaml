@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Machine Core"
+  short_description: "Create and wire the core classes of an emulator"
+  default_prompt: "Use $emulators-machine-core-builder to create the core classes and wiring for a machine."

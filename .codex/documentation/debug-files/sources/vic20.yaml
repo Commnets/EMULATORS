@@ -1,0 +1,20 @@
+{
+  "id": "vic20",
+  "title": "VIC-20 DEBUG File",
+  "subtitle": "Structure, fields, and interpretation criteria",
+  "output": "docs/VIC20Data/VIC20_DEBUG_File_Format.docx",
+  "models": "VIC-20 PAL and NTSC; memory configurations and console or console-free executables.",
+  "cpu": "MOS 6502.",
+  "components": [["106","VIC-I","Raster, instruction projection, screen/character/colour memory, and sound"],["210","VIA1","PortA and PortB; signals connected according to the model"],["211","VIA2","PortA and PortB; keyboard, joystick, and peripherals"],["I/O","Datasette 1530/IEC/printer","Tape traps and serial state when selected"],["Memory","VIC-20 map","Applied Set for selected subsets"]],
+  "records": [
+    {"name":"VICI — Info Cycle","producer":"src/COMMODORE/VICI/VICI.cpp :: debugVICICycle","fields":"Raster: zero-based column, zero-based line, and raster cycle; Instruction projection: PositionsToEffect; Memory: hexadecimal Screen, Characters, and Color.","timing":"cpu.clockCycles()-i for each recovered position.","events":"This method adds no subordinate events."},
+    {"name":"VICI — CPU transaction projection","producer":"src/COMMODORE/VICI/VICI.cpp :: debugCPUAboutToExecute","fields":"Transaction(Type, Address, Code, Cycles); Raster origin(Row, Cycle); Raster projection(PositionsToEffect).","timing":"Emitted when VIC-I receives the context of the next instruction.","events":"Allows the projection to be compared with PositionsToEffect in following cycles."},
+    {"name":"VICI Sound — Info Cycle","producer":"src/COMMODORE/VICI/VICI.cpp :: SoundFunction::debugVICISoundCycle","fields":"Voice state produced by the wrapper: activity, volume/frequency, and waveform according to the current sound structure.","timing":"cpu.clockCycles()-i.","events":"Adds no subordinate events."},
+    {"name":"VIA1/VIA2 — Info Cycle","producer":"src/COMMODORE/VIA/VIA.cpp :: debugVIACycle","fields":"PortA and PortB in the format returned by each VIA port.","timing":"cpu.clockCycles()-i for each recovered cycle.","events":"CA1/CA2/CB1/CB2 changes appear indirectly in serialisation and connected logic; they have no dedicated line here."},
+    {"name":"Datasette/SerialIO","producer":"src/COMMODORE/1530Datasette.cpp and src/COMMODORE/SerialIOPeripherals.cpp","fields":"C2N1530DN and SerialIO trap states, block/header found, errors or missing data, and serial-protocol states.","timing":"Uses the CPU cycle of the observed trap or transition.","events":"Some information is written as simple text before a complete header."}
+  ],
+  "example": ["CPU     24500       Info Cycle","                    Last 2 cycles","                    PC:$e000(Stack 255) SEI","VICI    24500       CPU transaction projection","                    Raster origin       :Row=12,Cycle=33","VICI    24500       Info Cycle","                    Raster              :120,11,33","                    Memory              :Screen=$1e00,Characters=$8000,Color=$9400","+"],
+  "example_note": "Schematic example built from the code's current literals and fields; values are illustrative.",
+  "limitations": ["The VIC-I projection expresses internal positions, not necessarily physical CPU-bus cycles.","VIA serialises PortA/PortB through asString(); this guide must be reviewed if that representation changes.","ALLIO may include records from dynamically connected peripherals."],
+  "watched_sources": ["src/VIC20/VIC20.cpp","src/COMMODORE/VICI/VICI.cpp","src/COMMODORE/VIA/VIA.cpp","src/COMMODORE/1530Datasette.cpp","src/COMMODORE/SerialIOPeripherals.cpp"]
+}

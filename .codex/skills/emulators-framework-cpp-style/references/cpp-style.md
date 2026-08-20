@@ -104,6 +104,47 @@ Headers end with:
 - When an optimized expression, lookup, bit manipulation, indexing scheme, cache, or combined operation is complex or non-obvious, place a concise comment immediately beside it explaining how it works, which invariant makes it safe, and which repeated or slower work it avoids.
 - Keep straightforward optimized code uncommented when its behavior is already obvious; comments are required for complexity introduced specifically to gain runtime performance.
 
+## Deep-Debug Output
+
+- Treat deep-debug output as a structured diagnostic interface. When a `debug*Cycle` method already uses `writeCompleteLine (...)`, preserve its initializer-list collection of named blocks instead of flattening new state into an unlabelled string.
+- Give every block a stable semantic name such as `Raster position`, `Internal`, `CPU stop prediction`, `Interrupt`, or `Memory access`. Do not encode a changing value in the block name.
+- Inside a block, concatenate closely related values as explicit `Field=value` entries separated by commas. Keep field names stable so logs remain both human-readable and searchable.
+- Add a value to the nearest existing block when it describes the same subsystem or phase. Create a new block only when the information represents a distinct concern that is important for diagnosing timing, state transitions, bus ownership, interrupts, memory effects, or another observable emulation problem.
+- Prefer one coherent block over several one-field blocks. Conversely, do not append unrelated prediction, raster, interrupt, and memory state to a generic `Internal` block merely to avoid creating a justified block.
+- Preserve the block ordering used by the local method: physical position or time first, internal state next, then specialized state such as bus arbitration, graphics, borders, memory, sound, or interrupts. Append a new block beside the block it most directly explains.
+- Use `writeLineData (...)` only for a short event or narrative continuation attached to the preceding complete line. State that must be compared across cycles or parsed later belongs in a named `writeCompleteLine (...)` block.
+- Keep all string construction and diagnostic-only calculations inside the existing `_IFDEBUG` path or debug method. Do not calculate formatted values in the normal emulation path solely for logging.
+- Do not duplicate unchanged information in multiple blocks or chips. The component that owns the state logs the authoritative detail; callers log only the context needed to correlate the event, such as CPU clock, transaction type, instruction address, or interrupt identifier.
+- `MCHEmul::Address::asString (...)` can return a string containing embedded null characters when `'\0'` is selected as the separator between the address `UByte` values. For any result sent to deep debug, logs, `std::cout`, formatters, consoles, or another textual channel, wrap that conversion in `MCHEmul::removeAll0 (...)`. Apply this at the point where the address is converted, before concatenating it with labels or other fields.
+
+Correct textual conversion:
+
+```cpp
+"Address=$" + MCHEmul::removeAll0
+	(address.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+```
+
+Do not emit the raw result:
+
+```cpp
+"Address=$" + address.asString
+	(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)
+```
+
+Follow the local formatting pattern:
+
+```cpp
+_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
+	{ { "Raster position",
+		"Column=" + std::to_string (_raster.currentColumn ()) + "," +
+		"Row=" + std::to_string (_raster.currentLine ()) },
+	  { "CPU stop prediction",
+		"Valid=" + std::to_string (_pendingCPUTransaction._valid) + "," +
+		"StopCycles=" + std::to_string (_pendingCPUTransaction._stopCycles) } });
+```
+
+Match nearby capitalization, indentation, field vocabulary, and hexadecimal formatting rather than mechanically copying the example.
+
 ## Function Ownership
 
 - Do not add free functions outside the existing `global.hpp` and `global.cpp`, including `static` file helpers and functions inside anonymous namespaces.

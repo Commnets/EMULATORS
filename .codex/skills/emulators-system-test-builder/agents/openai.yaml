@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Emulator Tests"
+  short_description: "Design conformance and integration test suites"
+  default_prompt: "Use $emulators-system-test-builder to build a conformance test suite for an emulator."

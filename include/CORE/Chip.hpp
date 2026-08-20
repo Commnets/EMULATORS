@@ -24,6 +24,7 @@ namespace MCHEmul
 	class CPU;
 	class Instruction;
 	struct InstructionContextEventData;
+	struct InterruptContextEventData;
 
 	/** A chip is a specialized element within the computer (different that the CPU). \n
 		All chips are set with the full memory accesible when the computer is initialized,
@@ -66,6 +67,11 @@ namespace MCHEmul
 			and a copy of the instruction starting address. \n
 			The event is processed synchronously and the context pointer must not be retained. */
 		virtual void CPUAboutToExecute (const InstructionContextEventData*)
+							{ /** Nothing is done by default. */ }
+		/** Notifies the chip that an accepted interrupt is about to start its
+			launch bus transaction. \n
+			The context is processed synchronously and must not be retained. */
+		virtual void CPUAboutToExecute (const InterruptContextEventData*)
 							{ /** Nothing is done by default. */ }
 		/** To simulate th behaviour of the chip. It has to be defined per chip. \n
 			Returns true if everything was ok, and false in any other circunstance. \n 

@@ -1,0 +1,20 @@
+{
+  "id": "c264",
+  "title": "C264 Family DEBUG File",
+  "subtitle": "Commodore 16, 116, and Plus/4: structure and interpretation",
+  "output": "docs/C264Data/C264_DEBUG_File_Format.docx",
+  "models": "Commodore 16, Commodore 116, and Commodore Plus/4, PAL or NTSC.",
+  "cpu": "MOS 7501/8501, implemented through C7501.",
+  "components": [["101","TED","Raster, single/double clock, graphics modes, memory, badlines, and integrated sound"],["200/201","6529B","Keyboard/model latches; they currently have no dedicated DEBUG producer"],["202","ROM/RAM switch","ROM Active state on FF3E/FF3F access"],["203","C1/C2 selector","Selected memory configuration at FDD0/FDDF"],["I/O","Datasette 1531/IEC","Tape traps and serial peripherals"],["Memory","C264 map","Applied Set for selected subsets"]],
+  "records": [
+    {"name":"TED — Info Cycle","producer":"src/COMMODORE/TED/TED.cpp :: debugTEDCycle","fields":"Info Cycle type with In Single Clock indicator; Raster position; Instruction projection; Graphics mode; Memory(Screen, Attributes, Characters and ROM used, Bitmap).","timing":"The cycle column currently receives i, not the absolute CPU counter. Treat it as the recovered-loop index.","events":"Bad line situation; Reading Video Matrix & Attribute RAM; Reading Graphics."},
+    {"name":"TED — CPU transaction projection","producer":"src/COMMODORE/TED/TED.cpp :: debugCPUAboutToExecute","fields":"Transaction(Type, Address, Code, CPU Cycles); raster origin; PositionsToEffect; SingleClock.","timing":"Emitted when instruction context is received; it relates CPU cycles to TED positions.","events":"Adds no subordinate events."},
+    {"name":"ROMRAMSwitch — direct line","producer":"src/C264/ROMRAMSwitch.cpp :: debugROMRAMSwitchCycle","fields":"Component FF3E/FF3F,X; CPU cycle; Info cycle; ROM Active:YES|NO.","timing":"Emitted only when configurationChanged() is true.","events":"Legacy tab-separated format."},
+    {"name":"C1C2Selector — direct line","producer":"src/C264/C1C2Selector.cpp :: debugC1C2SelectorCycle","fields":"Component FDD0/FDDF,X; CPU cycle; Info cycle; Memory Cfg:number.","timing":"Emitted only when the configuration changes.","events":"Legacy tab-separated format."},
+    {"name":"Datasette 1531 / SerialIO","producer":"src/C264/1531Datasette.cpp and src/COMMODORE/SerialIOPeripherals.cpp","fields":"Header/data found, block, simulation state, error or missing data; serial-bus transitions.","timing":"CPU cycle of the trap or transition.","events":"May mix subordinate text and complete headers."}
+  ],
+  "example": ["CPU     50000       Info Cycle","                    Last 3 cycles","TED     0           Info Cycle (In Single Clock:YES)","                    Raster position     :Column=...,Row=...,25","                    Instruction projection:PositionsToEffect=...,SingleClock=1","FF3E/FF3F,X    50000    Info cycle      ROM Active:YES","+"],
+  "example_note": "Schematic example. The TED time field is i and must not be read as an absolute CPU cycle.",
+  "limitations": ["The debugTEDCycle header uses i, so the absolute-continuity rules used for other chips cannot be applied directly.","The 6529B latches are part of the machine but produce no DEBUG lines of their own.","ROM/RAM and C1/C2 retain a legacy tab-separated format with variable-length labels."],
+  "watched_sources": ["src/C264/C264.cpp","src/C264/C1C2Selector.cpp","src/C264/ROMRAMSwitch.cpp","src/C264/1531Datasette.cpp","src/COMMODORE/TED/TED.cpp","src/COMMODORE/SerialIOPeripherals.cpp"]
+}

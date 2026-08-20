@@ -140,12 +140,8 @@ namespace COMMODORE
 			The content of several registers (0x1c, 0x1d,...) are "real time".
 			Any read instruction could read different values depending on the position of the raster 
 			when that instruction happens. */
-		virtual void CPUAboutToExecute (const MCHEmul::InstructionContextEventData* dt) override
-							{ assert (dt != nullptr);
-							  _TEDRegisters -> setNumberPositionsNextInstruction
-								(dt -> _instruction -> clockCyclesToExecute
-									(dt -> _cpu, dt -> _memory, dt -> _address) >>
-										(inSingleClockMode () ? 0 : 1)); } // The number of cycles in TED will vary depending on the mode...
+		virtual void CPUAboutToExecute
+			(const MCHEmul::InstructionContextEventData* dt) override;
 
 		/** Simulates cycles in the TED. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
@@ -284,6 +280,10 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i);
+		/** Records the CPU-cycle and TED-position projection for the notified instruction. */
+		void debugCPUAboutToExecute
+			(const MCHEmul::InstructionContextEventData* dt,
+			 unsigned int cpuCycles, unsigned int positions);
 		void debugBadLine ();
 		void debugReadingVideoMatrix ();
 		void debugReadingGraphics ();

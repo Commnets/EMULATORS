@@ -1,0 +1,45 @@
+{
+  "id": "c64",
+  "title": "Commodore 64 DEBUG File",
+  "subtitle": "Structure, fields, and interpretation criteria",
+  "output": "docs/C64Data/C64_DEBUG_File_Format.docx",
+  "models": "Commodore 64 PAL and NTSC; console and console-free executables.",
+  "cpu": "MOS 6510 (6500 family).",
+  "components": [
+    ["200", "CIA1", "CIA cycle and keyboard/joystick Additional Info"],
+    ["201", "CIA2", "CIA cycle; ports, timers, and connected signals"],
+    ["203", "PLA", "LORAM, HIRAM, CHAREN, GAME, and EXROM when configuration changes"],
+    ["104", "VIC-II", "Raster, graphics state, badlines, sprites, BA/AEC, and stop prediction"],
+    ["105", "SID", "Three-voice state, ADSR, and waveforms"],
+    ["Memory", "C64 map", "Configuration changes and Applied Set writes"],
+    ["I/O", "Datasette/IEC/peripherals", "Tape traps and serial-bus state when selected"]
+  ],
+  "records": [
+    {"name":"VICII — Info Cycle","producer":"src/COMMODORE/VICII/VICII.cpp :: debugVICIICycle","fields":"Raster position; Internal(IDLE, VCBASE, VC, VLMI, GAccessIndex, RC, ROW, last data, and complete badline state); CPU bus ownership(BA, AEC, windows, and DMA masks); CPU stop prediction; Border; Graphics mode; Memory location.","timing":"Snapshot taken before the main processing of the recovered VIC-II cycle. The header uses cpu.clockCycles()-i.","events":"Bad line situation; matrix/colour and graphics reads; sprite information and drawing; pixel drawing."},
+    {"name":"VICII — CPU transaction prediction","producer":"src/COMMODORE/VICII/VICII.cpp :: debugCPUStopPrediction","fields":"Transaction and bus structure; raster origin; current and following BA/AEC windows; DMA masks; stop prediction and write-effect positions.","timing":"Emitted when instruction or interrupt context is received, before its cycles are recovered.","events":"CPU stop recalculation reports Reason=BadLineChange or SpriteDMAChange and serialises the windows/prediction again."},
+    {"name":"VICII — CPU stop applied / VIC-II register write","producer":"src/COMMODORE/VICII/VICII.cpp","fields":"Applied cycle, raster position, duration, and first stop cycle; or address/register/value, write index, and pending writes.","timing":"Explicit records separate the prediction from the applied effect.","events":"RegisterWriteApplied in the next Info Cycle confirms the effect in that cycle."},
+    {"name":"CIA1/CIA2 — Info Cycle","producer":"src/COMMODORE/CIA/CIA.cpp :: debugCIACycle","fields":"Each port: output latch, DDR, and effective hexadecimal value. Each timer: ON/OFF, count mode, initial latch, and current counter.","timing":"cpu.clockCycles()-i for each recovered cycle.","events":"CIA1 adds Additional Info with the keyboard matrix, last pressed/released key, and joystick registers."},
+    {"name":"SID — Info Cycle","producer":"src/COMMODORE/SID/SID.cpp :: debugSIDCycle","fields":"Voice N: ACTIVE, ADSR, and three Wave n=TYPEANDFREQUENCY descriptions.","timing":"cpu.clockCycles()-i. Describes the current sound wrapper, both simple and reSID.","events":"Adds no subordinate events."},
+    {"name":"PLA / C64 Memory","producer":"src/C64/PLA.cpp and src/C64/Memory.cpp","fields":"PLA: five on/off logic lines. C64 Memory: per subset (active, active for reading).","timing":"PLA uses the current CPU cycle; Change Configuration uses cycle -.","events":"The state reflects the implemented configuration after changes to the 6510 port or cartridge lines."}
+  ],
+  "example": [
+    "CPU     171065245   Info Cycle",
+    "                    Last 4 cycles",
+    "CPU     171065245   Transaction about to execute",
+    "                    Transaction         :Type=Instruction,Address=$1222,Code=208,Cycles=2",
+    "VICII   171065245   CPU transaction prediction",
+    "                    Raster origin       :Row=297,Cycle=17",
+    "VICII   171065245   Info Cycle",
+    "                    CPU bus ownership   :BALow=0,AECLow=0,...",
+    "                    Raster position     :Column=28(128),Row=297(297),17",
+    "+"
+  ],
+  "example_note": "Reduced extract from emulators/N.LOG. Ellipses replace fields to keep the example focused; the preceding catalog defines the current output.",
+  "limitations": [
+    "A block may contain register values already modified by a complete instruction even when the recovered VIC-II cycle is earlier within that instruction.",
+    "Windows are serialised as FirstBA/FirstAEC/LastCycle, with multiple windows separated by |.",
+    "CIA1 Additional Info does not represent an additional cycle.",
+    "Sprite and pixel events can make the file grow substantially when VIC-II is selected."
+  ],
+  "watched_sources": ["src/C64/C64.cpp","src/C64/PLA.cpp","src/C64/CIA1.cpp","src/C64/Memory.cpp","src/C64/Cartridge.cpp","src/COMMODORE/VICII/VICII.cpp","src/COMMODORE/CIA/CIA.cpp","src/COMMODORE/SID/SID.cpp","src/COMMODORE/1530Datasette.cpp","src/COMMODORE/SerialIOPeripherals.cpp"]
+}

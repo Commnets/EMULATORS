@@ -404,6 +404,17 @@ namespace MCHEmul
 			: _subset (s), _position (p), _value (v)
 						{ assert (_subset != nullptr); }
 
+		/** Returns the physical-storage subset targeted by this buffered command. \n
+			The pointer is not owned by the command. */
+		PhysicalStorageSubset* subset () const
+						{ return (_subset); }
+		/** Returns the position relative to the targeted physical-storage subset. */
+		size_t position () const
+						{ return (_position); }
+		/** Returns the value buffered by this command. */
+		const UByte& value () const
+						{ return (_value); }
+
 		/** Execute finally the setValue command, but add info in the debug file
 			if it was active. */
 		void execute ();
@@ -653,6 +664,11 @@ namespace MCHEmul
 							{ _memorySetCommands.emplace_back (o); }
 			void addMemorySetCommand (SetMemoryCommand&& o)
 							{ _memorySetCommands.emplace_back (std::move (o)); }
+			/** Extracts, without executing them, every buffered command targeting pS. \n
+				The extracted commands and the commands remaining in the buffer both keep
+				their original relative order. The caller becomes responsible for finally
+				executing the returned commands. */
+			SetMemoryCommands extractMemorySetCommandsBuffered (PhysicalStorageSubset* pS);
 			/** Execute all set memory commands buffered if that configuration is active.
 				Bear in mind that when that configuration is disconnected, this method will also be executed. */
 			inline void executeMemorySetCommandsBuffered ();

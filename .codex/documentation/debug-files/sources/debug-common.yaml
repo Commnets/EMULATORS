@@ -1,0 +1,118 @@
+{
+  "schema_version": 1,
+  "language": "en-GB",
+  "author": "Ignacio Cea Forniés",
+  "year": 2026,
+  "purpose": "Provide a verifiable description of the format, provenance, timing, and interpretation of EMULATORS deep-debug files.",
+  "audience": "Framework and emulator developers, timing-test authors, and users diagnosing execution traces.",
+  "activation": {
+    "command": "DEBUGON FILENAME YES|NO [YES|NO] [D:DIR1-DIR2] [ALLCHIP|C:id ...] [ALLIO|I:id ...] [ALLMEM|M:id ...]",
+    "off_command": "DEBUGOFF",
+    "interrupt_on": "IDEBUGON FILENAME [YES|NO]",
+    "interrupt_off": "IDEBUGOFF",
+    "parameters": [
+      ["FILENAME", "Output file path."],
+      ["First YES|NO", "YES connects the CPU to DEBUG; NO omits CPU records."],
+      ["Second YES|NO", "YES appends to the file; NO creates or truncates it. The default is NO."],
+      ["D:start-end", "Restricts CPU records to the stated PC range. It does not by itself filter selected chips."],
+      ["ALLCHIP / C:id", "Selects every chip or specific identifiers."],
+      ["ALLIO / I:id", "Selects every device or specific identifiers."],
+      ["ALLMEM / M:id", "Selects every memory unit or specific identifiers."]
+    ],
+    "notes": [
+      "DEBUGON and IDEBUGON are mutually exclusive.",
+      "Deactivation is deferred when requested while an instruction is executing, so that a block is not cut in half.",
+      "The canonical internal command is CACTIVATEDEEPDEBUG; DEBUGON is its console alias. DEBUGOFF is an alias for CDESACTIVATEDEEPDEBUG.",
+      "An additional path exists: when peripheral data is loaded with a third parameter, the console can activate an appended CPU trace without explicitly selecting chips, devices, or memory."
+    ]
+  },
+  "layout": [
+    ["Complete header", "COMPONENT + absolute cycle + record class. Component and cycle are fitted into 8- and 12-character columns."],
+    ["Subordinate data", "Five tabs of indentation. An attribute uses a name fitted to 20 characters, a colon, and its value."],
+    ["Simple text", "Written without columns or indentation; it is used, for example, in the IDEBUGON preamble."],
+    ["Direct write", "Some older producers build tab-separated lines with operator<< and do not guarantee exactly the same column widths."],
+    ["Block separator", "A line containing only + closes one complete computer iteration. It is emitted after CPU, chip, and I/O processing while DEBUG is active."]
+  ],
+  "common_records": [
+    {
+      "name": "CPU — Info Cycle",
+      "producer": "src/CORE/CPU.cpp :: CPU::debugLastExecutionData / debugInstructionWaiting",
+      "trigger": "At the start of a CPU iteration, or while waiting for an instruction in cycle-by-cycle mode.",
+      "fields": "Absolute cycle; Last N cycles, or Instruction in N cycles.",
+      "meaning": "Last N cycles belongs to the previous instruction. The following PC line describes the instruction that has just executed in the current block. Duration is compared between consecutive blocks.",
+      "stability": "Implemented"
+    },
+    {
+      "name": "CPU — Transaction about to execute",
+      "producer": "src/CORE/CPU.cpp :: CPU::debugInstructionAboutToExecute / debugInterruptAboutToExecute",
+      "trigger": "Before consuming an instruction transaction or launching an interrupt.",
+      "fields": "Transaction(Type, Address/Id, Code, Cycles); Bus cycle data(Defined, Structure, Reads, Writes, TrailingWrites, LastCycleType); Execution(Mode, State, LastState).",
+      "meaning": "Exposes the selected nominal bus structure. LastCycleType uses CPUCycle flags: read=2 and write=4; interpret other values according to CPUTransaction.hpp.",
+      "stability": "Implemented"
+    },
+    {
+      "name": "CPU — Executed instruction",
+      "producer": "src/CORE/CPU.cpp :: CPU::debugInstructionExecuted",
+      "trigger": "After a complete instruction has executed successfully.",
+      "fields": "Previous PC and stack position; disassembly; IN/OUT address and data when present; State/Last State; status register; CPU registers.",
+      "meaning": "The parenthesised annotation is the effective address and the data observed or transferred by the instruction, not a separate new record.",
+      "stability": "Implemented"
+    },
+    {
+      "name": "CPU — Stop",
+      "producer": "src/CORE/CPU.cpp :: debugStopRequest / debugStopSituation / debugAlreadyStopped",
+      "trigger": "Stop request, entry into the stopped state, and later cycles still covered by the stop.",
+      "fields": "Serialised StopStatusData; State; LastState; number of pending cycles.",
+      "meaning": "Stop request is the request; Stopped describes the applied state; Already stopped confirms that the validity counter remains active.",
+      "stability": "Implemented"
+    },
+    {
+      "name": "CPU — Interrupts",
+      "producer": "src/CORE/CPU.cpp and src/CORE/CPUInterrupt.cpp",
+      "trigger": "Request, wait, rejection, launch, failure, or start of interrupt code.",
+      "fields": "Serialised request; Id; Priority; LaunchCycles; bus structure; Clock and PC.",
+      "meaning": "Repeated requests while a line remains active do not prove repeated edges. Correlate them with wait, not allowed, launched, and CPUINT records.",
+      "stability": "Implemented"
+    },
+    {
+      "name": "Memory — Applied Set",
+      "producer": "src/CORE/Memory.cpp :: SetMemoryCommand::execute",
+      "trigger": "Application of a memory write stored as a command.",
+      "fields": "Subset name; cycle shown as -; hexadecimal Address; hexadecimal Value.",
+      "meaning": "The dash means that the producer supplies no absolute cycle. The write is documented when the command is applied to the subset.",
+      "stability": "Implemented"
+    }
+  ],
+  "timing_rules": [
+    "The header cycle is the emulator's absolute counter unless the machine-specific section documents an anomaly or different unit.",
+    "In complete-instruction mode, the CPU finishes the instruction before chips recover their cycles. Membership of a block does not prove the exact physical cycle of a mapped write.",
+    "Chip snapshots are normally written before the recovered cycle is processed. A subordinate event occurs during that cycle, and its resulting state is usually visible in the next snapshot.",
+    "Additional Info records do not count as ordinary cycles when checking instruction duration.",
+    "Duration comparisons must be restarted around stop blocks or interrupt entry.",
+    "An isolated PC jump does not prove an interrupt; explicit evidence or reconstruction from the vector and stack is required."
+  ],
+  "interpretation_workflow": [
+    "Identify the block delimited by + and note the absolute CPU cycle.",
+    "Read Transaction about to execute and the PC line to establish the instruction, mode, and nominal bus structure.",
+    "Count each chip's ordinary cycles, excluding Additional Info and projection records.",
+    "Correlate subordinate events with the snapshot they follow and check their effect in the next cycle.",
+    "For interrupts, build the sequence request → wait/rejection → launch → CPUINT → effective entry.",
+    "Record observed facts, inferences, and timing limitations separately."
+  ],
+  "maintenance": [
+    "The current code is the semantic authority, not an old LOG file or help text.",
+    "Every change to a DEBUG producer requires review of debug-common.yaml or the relevant machine source and regeneration of the DOCX files.",
+    "check_debug_docs.py compares the structured sources, watched C++ files, and generated artefacts with generated-state.json.",
+    "Items marked TODO exist in the emulator assembly but currently write no fields; they are documented to avoid promising output that does not exist."
+  ],
+  "watched_sources": [
+    "include/CORE/DebugFile.hpp",
+    "src/CORE/DebugFile.cpp",
+    "src/CORE/Computer.cpp",
+    "src/CORE/CPU.cpp",
+    "src/CORE/CPUInterrupt.cpp",
+    "src/CORE/Memory.cpp",
+    "src/CORE/StdCommands.cpp",
+    "src/CONSOLE/LocalConsole.cpp"
+  ]
+}

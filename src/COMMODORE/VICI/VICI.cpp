@@ -303,6 +303,21 @@ bool COMMODORE::VICI::initialize ()
 }
 
 // ---
+void COMMODORE::VICI::CPUAboutToExecute
+	(const MCHEmul::InstructionContextEventData* dt)
+{
+	assert (dt != nullptr);
+
+	const unsigned int positions =
+		dt -> _instruction -> clockCyclesToExecute
+			(dt -> _cpu, dt -> _memory, dt -> _address);
+
+	_VICIRegisters -> setNumberPositionsNextInstruction (positions);
+
+	_IFDEBUG debugCPUAboutToExecute (dt, positions);
+}
+
+// ---
 bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 {
 	// First time?
@@ -680,6 +695,10 @@ void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
 				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 				std::to_string (_raster.currentLineAtBase0 ()) + "," +
 				std::to_string (_cycleInRasterLine) },
+		  { "Instruction projection",
+				"PositionsToEffect=" +
+					std::to_string
+						(_VICIRegisters -> _numberPositionsNextInstruction) },
 		  { "Memory",
 				"Screen=$" + MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
@@ -687,6 +706,31 @@ void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
 				"Color=$" + MCHEmul::removeAll0 (_VICIRegisters -> colourMemory ().asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
+}
+
+// ---
+void COMMODORE::VICI::debugCPUAboutToExecute
+	(const MCHEmul::InstructionContextEventData* dt,
+	 unsigned int positions)
+{
+	assert (_deepDebugFile != nullptr);
+	assert (dt != nullptr);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), dt -> _cpu -> clockCycles (),
+		 "CPU transaction projection",
+		{ { "Transaction",
+			"Type=Instruction," +
+			std::string ("Address=$") +
+				dt -> _address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2) + "," +
+			"Code=" + std::to_string (dt -> _instruction -> code ()) + "," +
+			"Cycles=" + std::to_string (positions) },
+		  { "Raster origin",
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Raster projection",
+			"PositionsToEffect=" + std::to_string (positions) } });
 }
 
 // ---

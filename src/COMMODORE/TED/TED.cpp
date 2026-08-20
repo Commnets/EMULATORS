@@ -206,6 +206,23 @@ bool COMMODORE::TED::initialize ()
 }
 
 // ---
+void COMMODORE::TED::CPUAboutToExecute
+	(const MCHEmul::InstructionContextEventData* dt)
+{
+	assert (dt != nullptr);
+
+	const unsigned int cpuCycles =
+		dt -> _instruction -> clockCyclesToExecute
+			(dt -> _cpu, dt -> _memory, dt -> _address);
+	const unsigned int positions =
+		cpuCycles >> (inSingleClockMode () ? 0 : 1);
+
+	_TEDRegisters -> setNumberPositionsNextInstruction (positions);
+
+	_IFDEBUG debugCPUAboutToExecute (dt, cpuCycles, positions);
+}
+
+// ---
 bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 {
 	// First time?
@@ -1295,6 +1312,11 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 				"Row=" + std::to_string (_raster.currentLine ()) + 
 					"(" + std::to_string (_raster.currentLineAtBase0 ()) + ")," +
 				std::to_string (_cycleInRasterLine) },
+		  { "Instruction projection",
+				"PositionsToEffect=" +
+					std::to_string
+						(_TEDRegisters -> _numberPositionsNextInstruction) + "," +
+				"SingleClock=" + std::to_string (_inSingleClockMode) },
 		  { "Graphics mode",
 				std::to_string ((int) _TEDRegisters -> graphicModeActive ()) },
 		  { "Memory",
@@ -1307,6 +1329,32 @@ void COMMODORE::TED::debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i)
 					"(ROM=" + (_TEDRegisters -> ROMActiveToFetchCharAndBitmap () ? "TRUE" : "FALSE") + ")," +
 				"Bitmap=$" + MCHEmul::removeAll0 (_TEDRegisters -> bitmapMemory ().asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
+}
+
+// ---
+void COMMODORE::TED::debugCPUAboutToExecute
+	(const MCHEmul::InstructionContextEventData* dt,
+	 unsigned int cpuCycles, unsigned int positions)
+{
+	assert (_deepDebugFile != nullptr);
+	assert (dt != nullptr);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), dt -> _cpu -> clockCycles (),
+		 "CPU transaction projection",
+		{ { "Transaction",
+			"Type=Instruction," +
+			std::string ("Address=$") +
+				dt -> _address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2) + "," +
+			"Code=" + std::to_string (dt -> _instruction -> code ()) + "," +
+			"Cycles=" + std::to_string (cpuCycles) },
+		  { "Raster origin",
+			"Row=" + std::to_string (_raster.currentLine ()) + "," +
+			"Cycle=" + std::to_string (_cycleInRasterLine) },
+		  { "Raster projection",
+			"PositionsToEffect=" + std::to_string (positions) + "," +
+			"SingleClock=" + std::to_string (_inSingleClockMode) } });
 }
 
 // ---

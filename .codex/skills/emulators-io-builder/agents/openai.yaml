@@ -1,0 +1,4 @@
+interface:
+  display_name: "Build Emulator I/O"
+  short_description: "Implement ports, buses, input, and peripherals"
+  default_prompt: "Use $emulators-io-builder to implement machine I/O or a peripheral in EMULATORS."

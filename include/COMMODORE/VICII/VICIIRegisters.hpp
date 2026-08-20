@@ -241,15 +241,13 @@ namespace COMMODORE
 							{ return (_raster -> hData ().currentPosition ()); }
 
 		// Very important method...
-		/** When the CPU is about to execute an instruction, VICII is informed about it
-			and the VICII keeps that information in its registers. \n
-			When VICII is requested about raster position (vertical), this information is then used. \n
-			to simulate the position where the raster will be when the instruction finishes. \n
-			The instruction requesting this information (e.g. the VICII were connected to a 6500 Family CPU)
-			might read the register info just in the last cycle of the instruction, so 
-			returning the right value is mandatory. */
-		void setNumberPositionsNextInstruction (unsigned int nP)
-							{ _numberPositionsNextInstruction = nP; }
+		/** Sets the number of VIC-II raster cycles from the beginning of the
+			instruction to the cycle where its CPU-visible effect takes place. \n
+			The value includes predicted BA/RDY stalls. Raster registers $d011 and
+			$d012 use it because their read access is assumed to happen in the last
+			cycle of the instruction. */
+		void setNumberPositionsToInstructionEffect (unsigned int nP)
+							{ _numberPositionsToInstructionEffect = nP; }
 
 		// Very important flag that is used to draw sprites...
 		// see how VICII uses it!
@@ -373,8 +371,11 @@ namespace COMMODORE
 		bool _expansionYFlipFlop [8];
 		MCHEmul::OBool _interruptsEnabledBack;
 
-		/** The number of cycle that the next instruction to be executed in the CPU will take. */
-		unsigned int _numberPositionsNextInstruction;
+		/** Number of raster cycles to the CPU-visible effect of the instruction
+			most recently notified by the CPU. \n
+			The current implementation assumes that the effect occurs in the last
+			nominal cycle and does not yet select execution-dependent extra cycles. */
+		unsigned int _numberPositionsToInstructionEffect;
 		/** A reference to the raster. This class is not the owner of it. */
 		MCHEmul::Raster* _raster;
 	};

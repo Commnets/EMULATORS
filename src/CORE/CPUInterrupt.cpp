@@ -221,8 +221,30 @@ void MCHEmul::CPUInterrupt::debugStartingToDebugInterrupt ()
 void MCHEmul::CPUInterrupt::debugInterruptToStart (MCHEmul::CPU* c)
 {
 	assert (c != nullptr);
+	assert (c -> deepDebugFile () != nullptr);
 
-	c -> deepDebugFile () -> writeSimpleLine ("->Interrupt code about to start:");
+	const MCHEmul::BusCycleData& data = busCycleData ();
+
+	c -> deepDebugFile () -> writeCompleteLine
+		("CPUINT", c -> clockCycles (), "Interrupt code about to start",
+		{ { "Interrupt",
+			"Id=" + std::to_string (_id) + "," +
+			"Priority=" + std::to_string (_priority) + "," +
+			"LaunchCycles=" + std::to_string (_cyclesToLaunch) },
+		  { "Bus cycle data",
+			"Structure=0," +
+			std::string ("Reads=") +
+				std::to_string (data._numberReadCycles) + "," +
+			"Writes=" + std::to_string (data._numberWriteCycles) + "," +
+			"TrailingWrites=" +
+				std::to_string (data._trailingWriteCycles) + "," +
+			"LastCycleType=" +
+				std::to_string (data._lastCycleType) },
+		  { "CPU",
+			"Clock=" + std::to_string (c -> clockCycles ()) + "," +
+			"PC=$" +
+				c -> programCounter ().asAddress ().asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2) } });
 }
 
 std::string MCHEmul::CPUInterruptRequest::toString () const

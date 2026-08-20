@@ -7,6 +7,14 @@ description: Crear, ampliar o actualizar documentación técnica de EMULATORS en
 
 Crear documentos DOCX técnicamente rigurosos a partir de la plantilla incluida. Mantener `assets/emulators-documentation-template.docx` como autoridad visual y no modificarla directamente.
 
+## Higiene del repositorio
+
+- Reservar `docs/` exclusivamente para entregables finales y colocarlos en el subdirectorio propio del emulador o tema. No guardar allí fuentes estructuradas, generadores, scripts, estados, cachés ni material de control de calidad.
+- Los planes, especificaciones de trabajo, contratos, workbooks, matrices y demás soporte para generar código no son entregables documentales: guardarlos bajo una jerarquía descriptiva en `.codex/work/`, conforme a `.codex/skills/emulators-new-machine/references/workspace-artifacts.md`.
+- Guardar recursos mantenidos por Codex bajo una jerarquía descriptiva en `.codex/`. Para una familia documental, separar como mínimo `sources/`, `scripts/` y `state/` cuando existan esos tipos de recurso.
+- Crear cualquier material temporal bajo `.codex/tmp/<tarea>/`, nunca en `tmp/` o `temp/` en la raíz del repositorio. Eliminar el directorio de la tarea al finalizar una vez que los entregables hayan sido verificados.
+- Antes de borrar material temporal, resolver y comprobar la ruta absoluta y limitar el borrado al directorio concreto de la tarea.
+
 ## Preparar el trabajo
 
 1. Leer [references/template-contract.md](references/template-contract.md) por completo.
@@ -49,6 +57,13 @@ No escribir sobre el asset ni sobre `docs/UserGuide.docx`. Trabajar siempre en l
 - Para parámetros de arranque, recorrer el punto de entrada del ejecutable y toda la jerarquía de la clase `Emulator`; no confiar únicamente en el texto breve de ayuda de `main`.
 - Para comandos, auditar `LocalConsole` y toda la cadena de responsabilidad específica. En Commodore: `C64::CommandBuilder`, `VIC20::CommandBuilder` o `C264::CommandBuilder` -> `COMMODORE::CommandBuilder` -> `MCHEmul::StandardCommandBuilder`. En ZX80/ZX81: `ZX81::CommandBuilder` -> `SINCLAIR::CommandBuilder` -> `MCHEmul::StandardCommandBuilder`. En ZX Spectrum: `ZXSPECTRUM::CommandBuilder` -> `SINCLAIR::CommandBuilder` -> `MCHEmul::StandardCommandBuilder`. En MSX, auditar la cadena efectiva construida por los puntos de entrada: `MSX::CommandBuilder` -> `MCHEmul::StandardCommandBuilder` -> `MCHEmul::StandardCommandBuilder`; la duplicación actual no añade órdenes distintas, pero forma parte del código que debe revisarse. Indicar expresamente qué órdenes son exclusivas de la consola local y cuáles admite el canal remoto de la versión sin consola.
 - Si cambia el contrato `InfoStructure` o la salida de un comando, mantener también los `.fmt` canónicos bajo `projects` mediante `emulators-fmt-audit`.
+
+### Mantener las guías de ficheros DEBUG
+
+- Tratar `docs/C64Data/C64_DEBUG_File_Format.docx`, `docs/VIC20Data/VIC20_DEBUG_File_Format.docx`, `docs/C264Data/C264_DEBUG_File_Format.docx`, `docs/ZX81Data/ZX80_ZX81_DEBUG_File_Format.docx`, `docs/ZXSpectrumData/ZXSpectrum_DEBUG_File_Format.docx` y `docs/MSXData/MSX_DEBUG_File_Format.docx` como artefactos generados y mantenidos.
+- Todo cambio que añada, elimine, renombre, reordene o altere una cabecera, campo, evento, unidad, temporización o condición de emisión del fichero DEBUG debe actualizar `.codex/documentation/debug-files/sources/debug-common.yaml` o la fuente específica afectada y regenerar los seis DOCX o los afectados mediante `.codex/documentation/debug-files/scripts/generate_debug_docs.py`.
+- Considerar productores tanto los métodos `debug...` como las llamadas `writeCompleteLine`, `writeLineData`, `writeSimpleLine`, las escrituras directas mediante `_deepDebugFile`, la propagación `setDeepDebugFile` y la selección `activateDeepDebug`.
+- Ejecutar `.codex/documentation/debug-files/scripts/check_debug_docs.py` después de regenerar. Su estado es conservador: cualquier cambio en un fichero C++ vigilado obliga a revisar la documentación, aunque finalmente no altere el formato.
 
 ## Actualizar campos y verificar
 

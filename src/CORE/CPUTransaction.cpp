@@ -19,7 +19,8 @@ MCHEmul::BusCycleData::BusCycleData ()
 	  _trailingWriteCycles (0),
 	  _maximumConsecutiveWriteCycles (0),
 	  _lastCycleType (MCHEmul::CPUCycle::_NOTDEFINED),
-	  _nextReadCycles (1, _NOCYCLE)
+	  _nextReadCycles (1, _NOCYCLE),
+	  _writeCycles ()
 {
 	// An empty descriptor is useful when no cycle structure was supplied.
 }
@@ -63,8 +64,11 @@ MCHEmul::BusCycleData::BusCycleData (const MCHEmul::CycleStructure& cS)
 	  _trailingWriteCycles (0),
 	  _maximumConsecutiveWriteCycles (0),
 	  _lastCycleType (cS.empty () ? MCHEmul::CPUCycle::_NOTDEFINED : cS.back ()),
-	  _nextReadCycles (cS.size () + 1, _NOCYCLE)
+	  _nextReadCycles (cS.size () + 1, _NOCYCLE),
+	  _writeCycles ()
 {
+	_writeCycles.reserve (cS.size ());
+
 	size_t consecutiveWriteCycles = 0;
 
 	// Gather the scalar data once so bus arbitration does not need to
@@ -87,6 +91,7 @@ MCHEmul::BusCycleData::BusCycleData (const MCHEmul::CycleStructure& cS)
 
 			_lastWriteCycle = i;
 			_numberWriteCycles++;
+			_writeCycles.emplace_back (i);
 
 			if (++consecutiveWriteCycles > _maximumConsecutiveWriteCycles)
 				_maximumConsecutiveWriteCycles = consecutiveWriteCycles;
@@ -114,4 +119,6 @@ MCHEmul::BusCycleData::BusCycleData (const MCHEmul::CycleStructure& cS)
 
 		_nextReadCycles [cycle] = nextReadCycle;
 	}
+
+	assert (_writeCycles.size () == _numberWriteCycles);
 }

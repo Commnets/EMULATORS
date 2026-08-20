@@ -1,0 +1,18 @@
+{
+  "id": "zx80-zx81",
+  "title": "ZX80 and ZX81 DEBUG File",
+  "subtitle": "Structure, CPU-generated video, and simulated peripherals",
+  "output": "docs/ZX81Data/ZX80_ZX81_DEBUG_File_Format.docx",
+  "models": "ZX80 and the PAL/NTSC ZX81 variants supported by the ZX81 executable.",
+  "cpu": "Zilog Z80.",
+  "components": [["210","ULA","Raster, NMI generator, sync zone, and line counter"],["100/101","Datasette","Tape port and load simulation"],["102","Thermal printer","Simulated printing trap"],["Memory","ZX80/ZX81 map","Applied Set for selected subsets"]],
+  "records": [
+    {"name":"ULA — Info Cycle","producer":"src/ZX81/ULA.cpp :: debugULACycle","fields":"Raster position (zero-based column and line); Internal status: NMI=NMI_ON|NMI_OFF, ZONE=WHITE|BLACK, and LNCTRL.","timing":"_lastCPUCycles + (i >> 1). Two internal positions correspond to one CPU cycle.","events":"The snapshot method adds no event line."},
+    {"name":"ZX81DN — Datasette trap executed","producer":"src/ZX81/Datasette.cpp :: debugSimulation","fields":"ZX81DN header, CPU cycle, and the literal Datasette trap executed.","timing":"Emitted when tape-routine simulation is applied.","events":"Contains no additional attributes."},
+    {"name":"ZX81PRT — Printer trap executed","producer":"src/ZX81/StdPrinter.cpp :: debugSimulation","fields":"ZX81PRT header, CPU cycle, and the literal Printer trap executed.","timing":"Emitted when the printer routine is intercepted.","events":"The device manages printed content; this header confirms the trap."}
+  ],
+  "example": ["CPU     12000       Info Cycle","                    Last 4 cycles","                    PC:$02a0(Stack 255) HALT","ULA     12000       Info Cycle","                    Raster position     :180,64","                    Internal status     :NMI=NMI_ON,ZONE=WHITE,LNCTRL=3","ZX81DN  12004       Datasette trap executed","+"],
+  "example_note": "Schematic example based on the current producers; values are illustrative.",
+  "limitations": ["ZX80 and ZX81 share one document because the executable and ULA class parameterise the type.","The ULA derives its cycle from _lastCPUCycles and i>>1; it must not be replaced with cpu.clockCycles()-i.","A tape or printer trap describes firmware simulation, not an electrical signal."],
+  "watched_sources": ["src/ZX81/ZX81.cpp","src/ZX81/ULA.cpp","src/ZX81/Datasette.cpp","src/ZX81/StdPrinter.cpp"]
+}

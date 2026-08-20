@@ -72,11 +72,12 @@ namespace MCHEmul
 			void* _data;
 		};
 
-		/** An event when the system is about to execute an instruction. \n
-			Its data is an InstructionContextEventData created before the instruction
+		/** Events emitted immediately before a CPU transaction starts. \n
+			Their data is created before the instruction or accepted interrupt
 			produces any side effect. */
 		static const unsigned int _CPUTOEXECUTEINSTRUCTION = 130;
 		static const unsigned int _CPUINSTRUCTIONEXECUTED  = 131;
+		static const unsigned int _CPUTOEXECUTEINTERRUPT   = 132;
 
 		// States of the CPU
 		/** The possible different states of the CPU. 
@@ -521,6 +522,12 @@ namespace MCHEmul
 		void debugStopRequest () const; // tC = type of stop cycles, nC = number cycles to stop (== -1 forever)
 		void debugInterruptRequest (const CPUInterruptRequest& iR) const;
 		void debugLastExecutionData () const; // Using information in _lastInstruction...
+		/** Records the immutable context immediately before an instruction starts. */
+		void debugInstructionAboutToExecute
+			(const Instruction* instruction, const Address& address,
+			 unsigned int cycles) const;
+		/** Records the immutable context immediately before an interrupt starts. */
+		void debugInterruptAboutToExecute (const CPUInterrupt* interrupt) const;
 		void debugStopSituation () const; // Using information in CPU abour stop situation (@see below)
 		void debugAlreadyStopped () const; // That situation is not ususal...
 		void debugInterruptLaunched () const; // Using the information in _currentInterrupt...
