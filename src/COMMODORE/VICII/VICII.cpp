@@ -44,7 +44,6 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
-	  _rasterIRQAlreadyTriggeredThisLine (false),
 	  _lastVICDataRead (MCHEmul::UByte::_0),
 	  _cpuOpcodeLowNibble (MCHEmul::UByte::_0),
 	  _cpuStopWindowSets (),
@@ -125,7 +124,6 @@ bool COMMODORE::VICII::initialize ()
 	_lastCPUCycles = 0;
 	
 	_cycleInRasterLine = 1;
-	_rasterIRQAlreadyTriggeredThisLine = false;
 
 	_lastVICDataRead = MCHEmul::UByte::_0;
 	_cpuOpcodeLowNibble = MCHEmul::UByte::_0;
@@ -1455,7 +1453,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorChar (int cb)
 
 			result._foregroundColorData [i] = idle 
 				? 0x00 // In idle state the color is always 0...
-				: (unsigned int) (_vicGraphicInfo._colorData [iBy].value () & 0x0f /** Useful nibble. */);
+				: (unsigned int) (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f /** Useful nibble. */);
 		}
 
 		// When false, it is background...
@@ -1500,13 +1498,13 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 		// The way the pixels are going to be drawn will depend on the information in the color memory
 		// If the most significant bit of the low significant nibble of the color memory is set to 0
 		// the data will be managed in a monolor way...
-		if ((_vicGraphicInfo._colorData [iBy] & 0x08) == 0x00 ||
+		if ((_vicGraphicInfo._colorDrawData [iBy] & 0x08) == 0x00 ||
 			 idle) // The idle state is treated as monocolor...
 		{
 			unsigned int fc = 
 				(inv || idle) // also in idle state it is black...
 					? 0x00 // When invalid or idle all pixels are black...
-					: _vicGraphicInfo._colorData [iBy].value () & 0x07;
+					: _vicGraphicInfo._colorDrawData [iBy].value () & 0x07;
 
 			// ...and remember we are dealing with pairs of pixels...
 
@@ -1553,7 +1551,7 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorChar (int cb, bool 
 				inv
 					? 0x00 // unless the mode is invalid where everything is black...
 					: (unsigned int) ((cs == 0x03) 
-						? (_vicGraphicInfo._colorData [iBy].value () & 0x07)
+						? (_vicGraphicInfo._colorDrawData [iBy].value () & 0x07)
 						: _VICIIRegisters -> backgroundColor (cs));
 
 			// The combination "01" is also considered as part of the background...
@@ -1596,11 +1594,11 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorExtendedChar (int c
 		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
 		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
 		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
-		unsigned int cs = ((_vicGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
+		unsigned int cs = ((_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
 		unsigned int fc = idle 
 			? 0x00 // In idle state the color is always 0...
 			: (bS 
-				? (_vicGraphicInfo._colorData [iBy].value () & 0x0f) 
+				? (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f)
 				: _VICIIRegisters -> backgroundColor (cs));
 
 		if (bS)
@@ -1642,8 +1640,8 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMonoColorBitMap (int cb, bool
 			(inv || idle)
 				? 0x00 // When invalid or idle state, all pixels are black...
 				: bS 
-					? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
-					: (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
+					? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
+					: (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
 
 		// If the mode is invalid all bits must be invalid...
 		// Reme,ber that at this point the background will have been already drawn
@@ -1705,10 +1703,10 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawMultiColorBitMap (int cb, boo
 				(inv || idle)
 					? 0x00 // When invalid or idle state all pixels are black...
 					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
-						? (_vicGraphicInfo._screenCodeData [iBy].value () & 0xf0) >> 4
+						? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xf0) >> 4
 						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-							? (_vicGraphicInfo._screenCodeData [iBy].value () & 0x0f)
-							: (_vicGraphicInfo._colorData [iBy].value () & 0x0f)); // The color is defined in color matrix...
+							? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0x0f)
+							: (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f)); // The color is defined in color matrix...
 
 		// The combination "01" is managed as background also...
 		// ...the 0x00 has already been jumped an then treated as background!

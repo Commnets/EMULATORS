@@ -530,8 +530,8 @@ namespace COMMODORE
 		/** To advance the internal raster position one VIC-II cycle.
 			It also handles the transition to a new raster line. */
 		inline void advanceRasterPosition ();
-		/** To activate the raster IRQ flag if the current raster position matches
-			the programmed raster interrupt position. */
+		/** To activate the raster IRQ flag at the VIC-II raster comparison
+			cycle when the current raster line matches the programmed line. */
 		inline void treatRasterIRQAtCurrentPosition ();
 		/** To request a CPU IRQ if any VIC-II IRQ reason is currently active. */
 		inline void requestIRQIfNeeded (MCHEmul::CPU* cpu, unsigned int cC);
@@ -610,6 +610,8 @@ namespace COMMODORE
 		// Memory reads performed by the raster-cycle pipeline.
 		// --------------------------------------------------------------------
 		// Character/color and graphics data.
+		/** To get the logical index used to access the internal Video Matrix / Color RAM line. */
+		inline size_t videoMatrixLineIndex () const;
 		/** To get the emulator-side index used to access the 40-byte graphics buffers. */
 		inline size_t graphicAccessIndex () const;
 		/** To read Video Matrix and Color RAM during an effective normal bad-line c-access. */
@@ -701,9 +703,6 @@ namespace COMMODORE
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
-		/** True when the raster comparison has already generated its event
-			in the current raster line. */
-		bool _rasterIRQAlreadyTriggeredThisLine;
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. \n
 			It is updated by matrix, graphics, sprite and invalid DMA-delay/FLI
 			accesses. It is not yet connected to CPU open-bus reads. */
@@ -808,9 +807,10 @@ namespace COMMODORE
 		  *	- the display output is produced from the idle graphics data and uses color 0.
 		  *
 		  *	This emulator separates two concepts:
-		  *	- _VLMI is the logical Video Matrix Line Index;
+		  *	- _VLMI is the logical Video Matrix Line Index used to address
+		  *	  _screenCodeData and _colorData;
 		  *	- _GAccessIndex is an emulator-side 0..39 buffer index used to address
-		  *	  _screenCodeData, _colorData and _graphicData.
+		  *	  _graphicData, _screenCodeDrawData and _colorDrawData.
 		  *
 		  *	Relevant raster-cycle rules in this implementation:
 		  * - At cycle 14, VC is loaded from VCBASE and the line access indexes are reset.
@@ -843,6 +843,8 @@ namespace COMMODORE
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _screenCodeDrawData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _colorDrawData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _lastScreenCodeDataRead (MCHEmul::UByte::_0),
 				  _lastGraphicDataRead (MCHEmul::UByte::_0),
 				  _lastColorDataRead (MCHEmul::UByte::_0)
@@ -853,7 +855,9 @@ namespace COMMODORE
 							  _colorData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
 			
 			void emptyGraphicData ()
-							{ _graphicData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
+							{ _graphicData			= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
+							  _screenCodeDrawData	= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
+							  _colorDrawData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
 
 
 			/** 
@@ -912,6 +916,9 @@ namespace COMMODORE
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
+			/** Video Matrix and Color RAM data aligned with _graphicData for drawing. */
+			mutable MCHEmul::UBytes _screenCodeDrawData;
+			mutable MCHEmul::UBytes _colorDrawData;
 			/** The last info read. */
 			mutable MCHEmul::UByte _lastScreenCodeDataRead;
 			mutable MCHEmul::UByte _lastGraphicDataRead;
@@ -1010,6 +1017,14 @@ namespace COMMODORE
 		// Current Bad Line Condition for this exact VIC-II cycle.
 		_badLineConditionActive = isBadLineCondition ();
 
+		// A late Bad Line Condition created in the previous cycle starts its
+		// display-state c/g-access sequence with the first attempted c-access.
+		if (_badLineCAccessActive &&
+			_badLineCAccessStartCycle > 14 &&
+			_cycleInRasterLine == firstBadLineCAccessCycle () &&
+			idleStateActive ())
+			enterScreenState ();
+
 		// Bauer: a Bad Line Condition in cycles 54..57 while RC == 7 prevents
 		// the graphics sequencer from returning to idle state at cycle 58.
 		if (_badLineConditionActive &&
@@ -1028,7 +1043,14 @@ namespace COMMODORE
 		{
 			_badLineAlreadyDetectedThisLine = true;
 
-			enterScreenState ();
+			// DMA delay switches an idle sequencer to display state in the cycle
+			// following recognition of the late Bad Line Condition.
+			const bool lateDMAFromIdle =
+				idleStateActive () &&
+				_cycleInRasterLine > 14 &&
+				_cycleInRasterLine <= _BADLINE_START_LAST_CYCLE;
+			if (!lateDMAFromIdle)
+				enterScreenState ();
 
 			_eventStatus._badLine =
 				_raster.vData ().currentVisiblePosition ();
@@ -1339,7 +1361,7 @@ namespace COMMODORE
 			_cycleInRasterLine < (fCA + _badLineInvalidCAccessCycles);
 		if (invalidCAccess)
 		{
-			const size_t gAI = graphicAccessIndex ();
+			const size_t vMLI = videoMatrixLineIndex ();
 
 			// Latch CPU D0-D3 immediately before the first invalid c-access.
 			// CPU notification has already advanced to the instruction reached
@@ -1351,12 +1373,12 @@ namespace COMMODORE
 			// $ff on D0-D7 instead of valid Video Matrix data.
 			_vicGraphicInfo._lastScreenCodeDataRead =
 				_lastVICDataRead =
-				_vicGraphicInfo._screenCodeData [gAI] = MCHEmul::UByte::_FF;
+				_vicGraphicInfo._screenCodeData [vMLI] = MCHEmul::UByte::_FF;
 
 			// While AEC is still high, U16 connects CPU D0-D3 to the VIC-II
 			// color-data inputs instead of selecting Color RAM.
 			_vicGraphicInfo._lastColorDataRead =
-				_vicGraphicInfo._colorData [gAI] =
+				_vicGraphicInfo._colorData [vMLI] =
 					_badLineInvalidColorData;
 
 			_IFDEBUG debugReadingVideoMatrix ();
@@ -1379,11 +1401,13 @@ namespace COMMODORE
 
 		// In this grouped model, normal bad lines and FLI-like bad lines that
 		// are active by cycle 14 start their attempted c-accesses at cycle 16.
-		// Late DMA-delay/VSP sequences start after the BA/AEC delay.
+		// Late DMA-delay/VSP sequences start attempting c-accesses in the cycle
+		// immediately following recognition of the Bad Line Condition. The BA/AEC
+		// delay makes the first attempts invalid; it does not postpone them.
 		unsigned short result =
 			(_badLineCAccessStartCycle <= 14)
 				? _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE
-				: (unsigned short) (_badLineCAccessStartCycle + 3);
+				: (unsigned short) (_badLineCAccessStartCycle + 1);
 
 		if (result < _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE)
 			result = _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE;
@@ -1414,7 +1438,6 @@ namespace COMMODORE
 	inline void VICII::resetGraphicCountersForNewFrame ()
 	{
 		_vicGraphicInfo._VCBASE = _vicGraphicInfo._VC = 0;
-		_vicGraphicInfo._RC = 0;
 
 		resetGraphicAccessCountersForCurrentLine ();
 	}
@@ -1450,7 +1473,6 @@ namespace COMMODORE
 		if (cLine)
 		{
 			_cycleInRasterLine = 1;
-			_rasterIRQAlreadyTriggeredThisLine = false;
 
 			// Every piece of state selected below belongs to the new raster
 			// line. ROW must be updated before evaluating bad-line conditions
@@ -1461,7 +1483,7 @@ namespace COMMODORE
 
 			// At the first line of a frame, reset the video counters and allow
 			// the light pen to latch a new position. On every other line, VC
-			// starts from the current VCBASE value.
+			// starts from the current VCBASE value, but not RC
 			if (_vicGraphicInfo._ROW == 0)
 			{ 
 				resetGraphicCountersForNewFrame ();
@@ -1497,13 +1519,12 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatRasterIRQAtCurrentPosition ()
 	{
-		if (!_rasterIRQAlreadyTriggeredThisLine &&
-			_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt ())
-		{
-			_rasterIRQAlreadyTriggeredThisLine = true;
+		const unsigned short cC =
+			(_vicGraphicInfo._ROW == 0) ? 2 : 1;
 
+		if (_cycleInRasterLine == cC &&
+			_vicGraphicInfo._ROW == _VICIIRegisters -> IRQRasterLineAt ())
 			_VICIIRegisters -> activateRasterIRQ ();
-		}
 	}
 
 	// ---
@@ -1709,6 +1730,14 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline size_t VICII::videoMatrixLineIndex () const
+	{
+		assert (_vicGraphicInfo._VLMI < _GRAPHMAXCHARCOLUMNS);
+
+		return ((size_t) _vicGraphicInfo._VLMI);
+	}
+
+	// ---
 	inline size_t VICII::graphicAccessIndex () const
 	{ 
 		assert (_vicGraphicInfo._GAccessIndex < _GRAPHMAXCHARCOLUMNS); 
@@ -1720,21 +1749,20 @@ namespace COMMODORE
 	inline void VICII::readVideoMatrixAndColorRAM ()
 	{
 		// _VC determines the real VIC-II memory position to read from.
-		// _GAccessIndex determines the emulator-side 40-byte buffer position
-		// where the fetched data is stored.
-		const size_t gAI = graphicAccessIndex ();
+		// _VLMI determines the position in the internal 40-byte matrix/color line.
+		const size_t vMLI = videoMatrixLineIndex ();
 		const size_t vC = (size_t) (_vicGraphicInfo._VC & _VCMASK);
 	
 		_vicGraphicInfo._lastScreenCodeDataRead = 
 			_lastVICDataRead =
-			_vicGraphicInfo._screenCodeData [gAI] =
+			_vicGraphicInfo._screenCodeData [vMLI] =
 				memoryRef () -> value (_VICIIRegisters -> screenMemory () + vC);
 		// In the invalid text mode, the bits 6 & 7 won't be used.
 		// In invalid bitmap modes 1 & 2, this information won't be used later.
 	
 		// Color RAM is accessed directly by the VIC-II when fetching matrix data.
 		_vicGraphicInfo._lastColorDataRead = 
-			_vicGraphicInfo._colorData [gAI] = 
+			_vicGraphicInfo._colorData [vMLI] =
 				_colorRAM -> valueDirect (_colorRAMAddress + vC) &
 					(_VICIIRegisters -> invalidGraphicMode () ? 0x08 : 0x0f); 
 		// In the invalid text mode, only the MG flag is relevant at this point.
@@ -1753,6 +1781,9 @@ namespace COMMODORE
 		// line buffer at the current graphics access index.
 		if (idleStateActive ()) 
 		{
+			_vicGraphicInfo._screenCodeDrawData [gAI] = MCHEmul::UByte::_0;
+			_vicGraphicInfo._colorDrawData [gAI] = MCHEmul::UByte::_0;
+
 			_vicGraphicInfo._lastGraphicDataRead =
 				_lastVICDataRead =
 				_vicGraphicInfo._graphicData [gAI] = 
@@ -1760,16 +1791,23 @@ namespace COMMODORE
 						? memoryRef () -> value (_MEMORYPOSIDLE1 + (bank () << 14))
 						: memoryRef () -> value (_MEMORYPOSIDLE2 + (bank () << 14));
 		}
-		// In display state, graphic data is read from character memory or bitmap
-		// memory. In text modes, the character code comes from the Video Matrix
-		// buffer slot previously fetched for the same graphics access index.
+		// In display state, VMLI selects the logical matrix/color entry while
+		// GAccessIndex selects the horizontal output slot receiving that entry.
 		else 
 		{
+			const size_t vMLI = videoMatrixLineIndex ();
+			const MCHEmul::UByte& screenCodeData =
+				_vicGraphicInfo._screenCodeData [vMLI];
+
+			_vicGraphicInfo._screenCodeDrawData [gAI] = screenCodeData;
+			_vicGraphicInfo._colorDrawData [gAI] =
+				_vicGraphicInfo._colorData [vMLI];
+
 			_vicGraphicInfo._lastGraphicDataRead =
 				_lastVICDataRead =
 				_vicGraphicInfo._graphicData [gAI] = _VICIIRegisters -> textMode () 
 					? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
-						(((size_t) _vicGraphicInfo._screenCodeData [gAI].value () & 
+						(((size_t) screenCodeData.value () &
 							((_VICIIRegisters -> graphicExtendedColorTextModeActive () ||
 							  _VICIIRegisters -> invalidGraphicMode ()) ? 0x3f : 0xff))
 							/** In extended-background mode or invalid text mode,
