@@ -5,6 +5,8 @@ description: Implement or extend a CPU architecture, processor variant, instruct
 
 # Build an EMULATORS CPU
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Required Context
 
 1. Read `references/processor-workbook.md` before designing instructions or tests.

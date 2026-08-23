@@ -25,6 +25,17 @@ Use the framework's existing idioms deliberately:
 - When adding or changing deep-debug output, preserve the framework's structured block format used by `debug*Cycle` methods: emit a `writeCompleteLine (...)` whose attributes are grouped into stable, semantically named blocks, and build each block value by concatenating its related `Field=value` entries. Extend the nearest existing block when the new state belongs there; create a new block only for a distinct and diagnostically relevant concern. Keep transient narrative messages in `writeLineData (...)`, not hardware state that later log analysis must correlate. Read the deep-debug guidance in `references/cpp-style.md` before changing debug methods.
 - Whenever a `MCHEmul::Address` is converted to text with `asString (...)` using `'\0'` as the separator between its `UByte` values, and that string is intended for a textual output channel such as deep debug, logging, `std::cout`, a formatter, or a console, pass the result through `MCHEmul::removeAll0 (...)` before concatenating or emitting it. Embedded null characters must never reach textual output.
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `static_cast <T>`, `_ptr -> method ()`, `return (value);`.
+- Declare variables of the same type together in one declaration, including
+  their initializers when needed: `int a = 0, b = 1, c;`. Do not emit consecutive
+  declarations such as `int a; int b; int c;` in the same scope.
+- Omit braces around the body of `if`, `else`, `for`, `while`, and similar
+  control statements when that body contains exactly one instruction.
+  Keep braces only when the body has several instructions.
+- Treat `switch` cases as a coordinated group. Uniform, very simple one-line
+  actions may use the compact form `case 2: a = 3; break;`. If any peer case
+  needs a braced block because it contains several instructions, declarations,
+  or a complex action, use braced blocks for the other action-bearing cases in
+  that switch as well, even when an individual case would not require one.
 - Use the fundamental integer types already established by the framework, such as `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`. Do not introduce fixed-width aliases from `<cstdint>` such as `int8_t`, `uint16_t`, `int32_t`, or `int64_t`. Use `size_t` for sizes, memory positions, and indices into arrays or containers.
 - Do not introduce SDL width aliases such as `Sint8`, `Uint8`, `Sint16`, `Uint16`, `Sint32`, or `Uint32` when a fundamental integer type can be used. Keep semantic SDL types such as `SDL_AudioFormat` and `SDL_AudioDeviceID` where they express an API domain rather than only an integer width.
 - Put non-trivial method implementations in `.cpp` and separate them with `// ---`.

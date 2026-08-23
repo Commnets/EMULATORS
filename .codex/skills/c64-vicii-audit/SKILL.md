@@ -5,6 +5,8 @@ description: Validate Commodore 64 VIC-II emulation in EMULATORS, including $D00
 
 # C64 VIC-II Audit
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Core Workflow
 
 Use this skill to audit whether EMULATORS simulates the VIC-II as a timing-sensitive bus participant, not only as a frame renderer.

@@ -5,6 +5,8 @@ description: Validate Commodore 64 CIA 6526 emulation in EMULATORS, including CI
 
 # C64 CIA Audit
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Core Workflow
 
 Use this skill to audit whether the two C64 CIA chips behave like 6526 devices in their C64 wiring context.

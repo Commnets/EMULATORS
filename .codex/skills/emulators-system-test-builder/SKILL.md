@@ -5,6 +5,8 @@ description: Design and implement unit, conformance, integration, timing, boot, 
 
 # Build EMULATORS System Tests
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Required Context
 
 1. Read `references/validation-matrix.md`.

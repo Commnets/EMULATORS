@@ -233,6 +233,8 @@ namespace COMMODORE
 		void setGraphicModeActive ();
 		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
+		/** Returns the logical raster line at the effective CPU-visible access cycle. */
+		inline unsigned short rasterLineAtInstructionEffect () const;
 		
 		// Some of the instruction within the VICII needs to know about the raster status...
 		// So there is instructions to link the raster (defined in VICII chip) to its registers
@@ -243,6 +245,16 @@ namespace COMMODORE
 							{ return (_raster -> vData ().currentPosition ()); }
 		unsigned short currentRasterPositionInLine () const
 							{ return (_raster -> hData ().currentPosition ()); }
+		/** Defines the immutable raster timing of the active VIC-II model. \n
+			It can be invoked again during initialization only with the same values. */
+		inline void setRasterReadTiming
+			(unsigned short cPL, unsigned short rLs);
+		/** Defines the logical VIC-II raster position at the beginning of the
+			current CPU transaction. \n
+			The position is expressed in the same coordinate system used by ROW and
+			_cycleInRasterLine, independently of the geometrical horizontal retrace. */
+		inline void setRasterReadContext
+			(unsigned short rL, unsigned short c);
 
 		// Very important method...
 		/** Sets the number of VIC-II raster cycles from the beginning of the
@@ -377,6 +389,19 @@ namespace COMMODORE
 		bool _expansionYFlipFlop [8];
 		MCHEmul::OBool _interruptsEnabledBack;
 
+		/** Number of VIC-II cycles per logical raster line for the active model. \n
+			It is configured by VICII during initialization and does not change
+			between CPU transactions. */
+		unsigned short _cyclesPerRasterLineForRead;
+		/** Number of logical raster lines per frame for the active model. \n
+			It is configured by VICII during initialization and does not change
+			between CPU transactions. */
+		unsigned short _rasterLinesForRead;
+		/** Logical VIC-II raster line at the beginning of the current CPU transaction. */
+		unsigned short _rasterLineAtInstructionStart;
+		/** Logical VIC-II cycle, numbered from 1, at the beginning of the transaction. */
+		unsigned short _rasterCycleAtInstructionStart;
+
 		/** Number of raster cycles to the CPU-visible effect of the instruction
 			most recently notified by the CPU. \n
 			The current implementation assumes that the effect occurs in the last
@@ -385,6 +410,59 @@ namespace COMMODORE
 		/** A reference to the raster. This class is not the owner of it. */
 		MCHEmul::Raster* _raster;
 	};
+
+	// ---
+	inline void VICIIRegisters::setRasterReadTiming
+		(unsigned short cPL, unsigned short rLs)
+	{
+		assert (cPL != 0);
+		assert (rLs != 0);
+
+		// The VIC-II model cannot change while the same chip is running.
+		assert (_cyclesPerRasterLineForRead == 0 ||
+			_cyclesPerRasterLineForRead == cPL);
+		assert (_rasterLinesForRead == 0 ||
+			_rasterLinesForRead == rLs);
+
+		_cyclesPerRasterLineForRead = cPL;
+		_rasterLinesForRead = rLs;
+	}
+
+	// ---
+	inline void VICIIRegisters::setRasterReadContext
+		(unsigned short rL, unsigned short c)
+	{
+		assert (_cyclesPerRasterLineForRead != 0);
+		assert (_rasterLinesForRead != 0);
+		assert (rL < _rasterLinesForRead);
+		assert (c >= 1 && c <= _cyclesPerRasterLineForRead);
+
+		_rasterLineAtInstructionStart = rL;
+		_rasterCycleAtInstructionStart = c;
+	}
+
+	// ---
+	inline unsigned short VICIIRegisters::rasterLineAtInstructionEffect () const
+	{
+		assert (_cyclesPerRasterLineForRead != 0);
+		assert (_rasterLinesForRead != 0);
+		assert (_rasterLineAtInstructionStart < _rasterLinesForRead);
+		assert (_rasterCycleAtInstructionStart >= 1 &&
+			_rasterCycleAtInstructionStart <= _cyclesPerRasterLineForRead);
+
+		// Convert the 1-based VIC-II cycle to a linear 0-based position before
+		// adding the predicted CPU-visible access displacement. The additional
+		// position represents the CPU phi2 read phase: at the final VIC-II cycle
+		// of a raster line, $d011/$d012 already expose the following raster line.
+		const unsigned int p =
+			(unsigned int) (_rasterCycleAtInstructionStart - 1) +
+			_numberPositionsToInstructionEffect + 1;
+
+		return ((unsigned short)
+			((_rasterLineAtInstructionStart +
+				(p / _cyclesPerRasterLineForRead)) %
+			 _rasterLinesForRead));
+	}
 
 	// ---
 	inline bool VICIIRegisters::invalidGraphicMode () const

@@ -56,10 +56,82 @@ Headers end with:
 - Put a space in casts: `static_cast <size_t> (value)`.
 - Put spaces around pointer arrows: `_memory -> initialize ()`.
 - Wrap return expressions in parentheses: `return (result);`.
+- Group variables of the same type in a single declaration and initialize them
+  there when appropriate:
+
+```cpp
+int x = 0, y = 0, displacement;
+bool active = false, finished = false;
+```
+
+  Do not spread the same declaration group across consecutive statements:
+
+```cpp
+int x;
+int y;
+int displacement;
+```
+
 - Keep braces in the local style:
   - Free/member function definitions put `{` on the next line.
   - Constructors use initializer lists with members on separate aligned lines when non-trivial.
   - Short inline methods use the compact aligned body style already present in headers.
+  - Omit braces for a control statement whose body is exactly one
+    instruction:
+
+```cpp
+if (active)
+	advance ();
+else
+	reset ();
+```
+
+  - Use braces when the body contains several instructions.
+  - `switch` cases follow a symmetry rule. If all actions are uniform and very
+    simple, place each action and its `break` compactly on the case line:
+
+```cpp
+switch (mode)
+{
+	case 0: result = 1; break;
+	case 1: result = 2; break;
+	default: result = 0; break;
+}
+```
+
+  - If any peer case requires several instructions, local declarations, or a
+    complex action, enclose that case in braces and use the same braced shape
+    for the other action-bearing cases in the switch:
+
+```cpp
+switch (mode)
+{
+	case 0:
+		{
+			result = 1;
+			advance ();
+		}
+
+		break;
+
+	case 1:
+		{
+			result = 2;
+		}
+
+		break;
+
+	default:
+		{
+			result = 0;
+		}
+
+		break;
+}
+```
+
+    Braces required for declaration scope or safe control flow take precedence
+    over compactness.
 - Separate `.cpp` function definitions with:
 
 ```cpp

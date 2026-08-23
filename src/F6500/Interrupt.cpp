@@ -1,4 +1,5 @@
 #include <F6500/Interrupt.hpp>
+#include <F6500/C6500.hpp>
 
 const MCHEmul::CycleStructure F6500::Interrupt::_CYCLESTRUCTURE =
 {
@@ -16,8 +17,7 @@ F6500::Interrupt::Interrupt (int id, int pr)
 	: MCHEmul::CPUInterrupt (id, 7, pr, _CYCLESTRUCTURE),
 	  _exeAddress (),
 	  _requestClock (0),
-	  _execClock (0),
-	  _instChecked (false)
+	  _execClock (0)
 {
 	assert (busCycleData ()._numberReadCycles == 4);
 	assert (busCycleData ()._numberWriteCycles == 3);
@@ -28,8 +28,6 @@ F6500::Interrupt::Interrupt (int id, int pr)
 void F6500::Interrupt::initialize ()
 { 
 	MCHEmul::CPUInterrupt::initialize (); 
-							  
-	_instChecked = false; 
 }
 
 // ---
@@ -48,33 +46,14 @@ MCHEmul::InfoStructure F6500::Interrupt::getInfoStructure () const
 // ---
 unsigned int F6500::Interrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 {
-	// If a previous instruction was checked,
-	// the interrupt has to be launched, because even if the last one had only 2 cycles
-	// the total accumulated since the previous one will be more than 2 cycles.
-	if (_instChecked)
-	{ 
-		// ...ready for a new consult...
-		_instChecked = false;
+	assert (c != nullptr);
 
-		_execClock = c -> clockCycles ();
+	_requestClock = cC;
 
-		return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);	
-	}
-	else
-	{
-		if ((c -> clockCycles () - cC) > 2)
-		{
-			_requestClock = _execClock = c -> clockCycles ();
+	if (!static_cast <const F6500::C6500*> (c) -> interruptRequestSampled (cC))
+		return (MCHEmul::CPUInterrupt::_EXECUTIONTOWAIT);
 
-			return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
-		}
-		else
-		{ 
-			_instChecked = true;
+	_execClock = c -> clockCycles ();
 
-			_requestClock = c -> clockCycles ();
-
-			return (MCHEmul::CPUInterrupt::_EXECUTIONTOWAIT);
-		}
-	}
+	return (MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
 }

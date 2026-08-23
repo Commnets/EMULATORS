@@ -286,45 +286,156 @@ class TestVICII final : public VICIIType
 	}
 
 	/** Verifies that the left border detects both a non-aligned reduced limit
-		and a normal limit coinciding with the beginning of the current slice. */
+		and a normal limit coinciding with the beginning of the current slice. \n
+		The real horizontal raster position is driven to each comparator so the
+		test exercises the same phase entry point used by VICII::simulate(). */
 	bool testLeftBorderAtSliceBeginning ()
 	{
+		this -> _raster.initialize ();
 		while (this -> _raster.currentLine () < 100)
 			this -> _raster.vData ().next ();
 
+		_registers.setRegister (0x16, MCHEmul::UByte::_0);
 		this -> _raster.hData ().reduceDisplayZone (true);
 		this -> _vicGraphicInfo._ffVBorder = false;
 		this -> _vicGraphicInfo._ffMBorder = true;
 		this -> _vicGraphicInfo._ffLBorder = false;
 		this -> _vicGraphicInfo._ffRBorder = false;
+		while (((_registers.minRasterH () +
+			this -> _raster.hData ().totalPositions () -
+			this -> _raster.currentColumn ()) %
+			this -> _raster.hData ().totalPositions ()) >= this -> _raster.step ())
+			this -> _raster.hData ().add (this -> _raster.step ());
 		const unsigned short reducedFirstPosition =
 			this -> _raster.hData ().firstScreenPosition ();
 		const unsigned short reducedSliceBeginning =
-			(reducedFirstPosition >> 3) << 3;
-		this -> actualizeMainBorderStatus
-			(reducedSliceBeginning, this -> _raster.currentLine ());
+			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
+		this -> treatBorderComparatorsAtCurrentCycle
+			(true, reducedSliceBeginning);
 		const bool reducedLimitDetected =
 			this -> _vicGraphicInfo._ffLBorder &&
 			this -> _vicGraphicInfo._ffMBorderPixels ==
 				reducedFirstPosition - reducedSliceBeginning;
 
+		this -> _raster.hData ().initialize ();
+		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
 		this -> _raster.hData ().reduceDisplayZone (false);
 		this -> _vicGraphicInfo._ffMBorder = true;
 		this -> _vicGraphicInfo._ffLBorder = false;
 		this -> _vicGraphicInfo._ffRBorder = false;
+		while (((_registers.minRasterH () +
+			this -> _raster.hData ().totalPositions () -
+			this -> _raster.currentColumn ()) %
+			this -> _raster.hData ().totalPositions ()) >= this -> _raster.step ())
+			this -> _raster.hData ().add (this -> _raster.step ());
 		const unsigned short alignedFirstPosition =
 			this -> _raster.hData ().firstScreenPosition ();
-		this -> actualizeMainBorderStatus
-			(alignedFirstPosition, this -> _raster.currentLine ());
+		const unsigned short alignedSliceBeginning =
+			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
+		this -> treatBorderComparatorsAtCurrentCycle
+			(true, alignedSliceBeginning);
 		const bool alignedLimitDetected =
 			this -> _vicGraphicInfo._ffLBorder &&
-			this -> _vicGraphicInfo._ffMBorderPixels == 0;
+			this -> _vicGraphicInfo._ffMBorderPixels == 0 &&
+			alignedFirstPosition == alignedSliceBeginning;
 		const bool result = reducedLimitDetected && alignedLimitDetected;
 		this -> _vicGraphicInfo._ffMBorder = false;
 		this -> _vicGraphicInfo._ffLBorder = false;
+		this -> _cycleInRasterLine = 1;
 
 		std::cout << "Left border at slice beginning | "
 			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that the shared vertical-border phase changes the flip-flop only
+		at the final raster cycle selected by the concrete PAL or NTSC model. */
+	bool testVerticalBorderComparatorCycle (const std::string& testName)
+	{
+		this -> _raster.initialize ();
+		_registers.initialize ();
+		_registers.setRegister (0x11, MCHEmul::UByte (0x18));
+		while (this -> _raster.currentLine () != _registers.maxRasterV ())
+			this -> _raster.vData ().next ();
+
+		this -> _vicGraphicInfo._ffVBorder = false;
+		this -> _cycleInRasterLine = this -> cyclesPerRasterLine () - 1;
+		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		const bool unchangedBeforeLastCycle =
+			!this -> _vicGraphicInfo._ffVBorder;
+
+		this -> _cycleInRasterLine = this -> cyclesPerRasterLine ();
+		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		const bool closedAtLastCycle = this -> _vicGraphicInfo._ffVBorder;
+
+		while (this -> _raster.currentLine () != _registers.minRasterV ())
+			this -> _raster.vData ().next ();
+		this -> _cycleInRasterLine = this -> cyclesPerRasterLine () - 1;
+		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		const bool stillClosedBeforeLastCycle =
+			this -> _vicGraphicInfo._ffVBorder;
+
+		this -> _cycleInRasterLine = this -> cyclesPerRasterLine ();
+		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		const bool openedAtLastCycle = !this -> _vicGraphicInfo._ffVBorder;
+		const bool result =
+			unchangedBeforeLastCycle && closedAtLastCycle &&
+			stillClosedBeforeLastCycle && openedAtLastCycle;
+
+		this -> _cycleInRasterLine = 1;
+		std::cout << testName << " | cycle " << this -> cyclesPerRasterLine ()
+			<< " | " << (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that a sprite ending at cycle 16 keeps an early slot for
+		sprites 3..7 but does not reserve a late slot for sprites 0..2. */
+	bool testProjectedSpriteDMAMask ()
+	{
+		for (size_t i = 0; i < 8; i++)
+		{
+			this -> _vicSpriteInfo [i]._DMAActive = true;
+			this -> _vicSpriteInfo [i]._MCBASE = 60;
+		}
+		_registers.setRegister (0x17, MCHEmul::UByte::_0);
+
+		const unsigned char finishingMask =
+			this -> projectedSpriteDMAMaskForNextRasterLine ();
+
+		// Enabling Y expansion and processing cycle 55 toggles every flip-flop
+		// from its known true state without exposing private register internals.
+		_registers.setRegister (0x17, MCHEmul::UByte (0xff));
+		this -> _cycleInRasterLine = 55;
+		this -> treatSpriteDMAStartAtCurrentCycle ();
+		const unsigned char heldMask =
+			this -> projectedSpriteDMAMaskForNextRasterLine ();
+
+		_registers.setRegister (0x17, MCHEmul::UByte::_0);
+		for (size_t i = 0; i < 8; i++)
+			this -> _vicSpriteInfo [i]._MCBASE = 59;
+		const unsigned char continuingMask =
+			this -> projectedSpriteDMAMaskForNextRasterLine ();
+
+		const bool result =
+			finishingMask == 0xf8 &&
+			heldMask == 0xff &&
+			continuingMask == 0xff;
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			this -> _vicSpriteInfo [i]._DMAActive = false;
+			this -> _vicSpriteInfo [i]._MCBASE = 0;
+		}
+		this -> _cycleInRasterLine = 1;
+
+		std::cout
+			<< "Projected sprite DMA mask | finishing $"
+			<< std::hex << (unsigned int) finishingMask
+			<< " | held $" << (unsigned int) heldMask
+			<< " | continuing $" << (unsigned int) continuingMask
+			<< std::dec << " | " << (result ? "OK" : "ERROR") << std::endl;
 
 		return (result);
 	}
@@ -430,6 +541,11 @@ int main ()
 	result &= vicii.testRMWRegisterWriteTiming ();
 	result &= vicii.testHorizontalDisplayZoneDeferred ();
 	result &= vicii.testLeftBorderAtSliceBeginning ();
+	result &= vicii.testVerticalBorderComparatorCycle
+		("PAL vertical border comparator");
+	result &= viciiNTSC.testVerticalBorderComparatorCycle
+		("NTSC vertical border comparator");
+	result &= vicii.testProjectedSpriteDMAMask ();
 
 	// YSCROLL=2: line 50 is a bad line and neither line 49 nor 51 is.
 	vicii.advanceFromRasterLine (49, 2);

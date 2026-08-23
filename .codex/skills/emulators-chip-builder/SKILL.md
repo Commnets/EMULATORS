@@ -5,6 +5,8 @@ description: Implement or extend a reusable hardware chip and its machine-specif
 
 # Build an EMULATORS Chip
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Required Context
 
 1. Read `references/chip-contract.md`.

@@ -428,6 +428,10 @@ namespace COMMODORE
 							{ return ((bL ? 0x0100 : 0) | sM); }
 		/** Returns the current eight-bit sprite-DMA mask without allocating. */
 		unsigned char spriteDMAMask () const;
+		/** Projects which sprite slots will actually steal the bus on the next
+			raster line. Sprites 3..7 fetch before the cycle-16 DMA termination,
+			whereas sprites 0..2 fetch after it. */
+		unsigned char projectedSpriteDMAMaskForNextRasterLine () const;
 		/** Determines the regular bad-line condition for an arbitrary raster line. */
 		bool badLineConditionForRasterLine (unsigned short rL) const;
 		/** Selects immutable stop-window sets for the current and following lines. */
@@ -455,26 +459,36 @@ namespace COMMODORE
 			(const MCHEmul::CycleStructure* cS,
 			 const MCHEmul::BusCycleData* bD, unsigned int nC,
 			 unsigned int startCPUCycle);
-		/** Recalculates the pending prediction after a window-set transition. */
-		void recalculatePendingCPUStopPrediction ();
+		/** Recalculates the pending prediction after a window-set transition. \n
+			Returns true only when the prediction was actually replaced. */
+		bool recalculatePendingCPUStopPrediction ();
 		/** Requests the single compensated CPU stop at the predicted raster cycle. */
 		void requestPredictedCPUStopIfNeeded (MCHEmul::CPU* cpu, unsigned int cC);
 		/** Extracts buffered writes targeting the VIC-II register subset. \n
 			An already pending collection means that the CPU is still completing
 			the same transaction and no new extraction is required. */
 		void extractPendingRegisterWrites ();
-		/** Executes the first pending VIC-II register write when the current
-			absolute CPU cycle matches its predicted effective position. \n
+		/** Executes the first pending VIC-II register write during the CPU phase
+			of the current cycle, after the VIC-II bus activity represented by
+			treatRasterBusCycle () and before the border and sprite comparator phase. \n
+			The write keeps its predicted absolute CPU cycle; only its phase inside
+			that cycle is represented explicitly. \n
 			After execution the command is erased, making the next command the new
 			element zero. Returns true when one write has been applied. \n
-			A $d016 write reports through hDZC that its horizontal display limits
-			must be updated after drawing the current eight-pixel slice. */
+			A $d016 write updates the VIC-II CSEL comparator values immediately. The
+			host-side horizontal display limits are reported through hDZC and remain
+			deferred until the current eight-pixel slice has been drawn. */
 		bool executePendingRegisterWriteAt (unsigned int cC, bool* hDZC);
 
 		// Raster-cycle execution...
-		/** Different actions are taken depending on the raster cycle. \n
-			The way raster cycles are treated depends on the concrete VIC-II variant. */
-		virtual void treatRasterCycle ();
+		/** Executes the VIC-II memory-bus activity and the internal sequencer
+			state transitions associated with the current raster cycle. \n
+			This phase is executed before the CPU write belonging to the same grouped
+			cycle becomes visible. It includes sprite pointer/data accesses, c-accesses,
+			g-accesses and the counter transitions directly associated with them. \n
+			Border comparators are deliberately excluded and are evaluated later by
+			treatBorderComparatorsAtCurrentCycle (). */
+		virtual void treatRasterBusCycle ();
 		/** To treat the VIC-II cycle where VC is loaded from VCBASE and
 			the graphic access indexes are reset for the current line. */
 		inline void treatGraphicFetchStartCycle ();
@@ -546,14 +560,42 @@ namespace COMMODORE
 		// Drawing pipeline.
 		// These methods are reached from drawVisibleZone().
 		// --------------------------------------------------------------------
-		/** Treat the visible zone.
-			Draws the graphics, detects collisions, and finally draws the border. */
-		void drawVisibleZone (MCHEmul::CPU* cpu);
+		/** Composes the visible eight-pixel slice using the raster and border state
+			already evaluated by simulate (). \n
+			This method performs rendering and collision processing only; it does not
+			evaluate VIC-II border comparators. \n
+			@param cpu	CPU used for collision IRQ notification and debug context. \n
+			@param cv	Current horizontal position inside the visible raster area. \n
+			@param rv	Current vertical position inside the visible raster area. \n
+			@param cav	Horizontal position aligned to the beginning of the current
+						eight-pixel slice. */
+		void drawVisibleZone
+			(MCHEmul::CPU* cpu, unsigned short cv,
+			 unsigned short rv, unsigned short cav);
 
 		// Border management.
-		/** To manage the main border status for the current visible slice. */
-		inline void actualizeMainBorderStatus (unsigned short cav, unsigned short rv);
-		/** To manage the vertical border status within VICGraphicInfo. */
+		/** Evaluates the border flip-flop comparators after the CPU write phase of
+			the current grouped cycle. \n
+			The vertical comparator is evaluated once at the last cycle of the raster
+			line. Horizontal comparators are evaluated only when the current eight-pixel
+			slice belongs to the visible raster area. \n
+			@param rV	Whether the current raster position is in the visible zone. \n
+			@param cav	Visible horizontal position aligned to the beginning of the
+						current eight-pixel slice. */
+		inline void treatBorderComparatorsAtCurrentCycle
+			(bool rV, unsigned short cav);
+		/** Evaluates the left and right horizontal main-border comparators for the
+			current eight-pixel raster slice. \n
+			The vertical border flip-flop must already have been updated by
+			treatBorderComparatorsAtCurrentCycle (). This method only consumes that
+			state when applying the left-comparator rule. \n
+			The temporary left/right flags describe a partial transition for rendering;
+			they are not VIC-II hardware flip-flops. */
+		inline void actualizeMainBorderStatus (unsigned short cav);
+		/** Evaluates the vertical border flip-flop at the final cycle of the current
+			raster line. \n
+			The comparison uses the RSEL-derived vertical limits and the DEN state that
+			are effective after the CPU write phase of the grouped cycle. */
 		inline void actualizeVerticalBorderStatus ();
 
 		// Graphics, sprites and collision composition.
@@ -636,8 +678,7 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugDisconnected (MCHEmul::CPU* cpu);
-		void debugVICIICycle
-			(MCHEmul::CPU* cpu, unsigned int i, bool registerWriteApplied);
+		void debugVICIICycle (MCHEmul::CPU* cpu, unsigned int i);
 		/** Records a buffered VIC-II register write when it becomes effective at
 			its predicted absolute CPU cycle. */
 		void debugVICIIRegisterWriteApplied
@@ -722,7 +763,12 @@ namespace COMMODORE
 		/** Reusable current-line storage used only for a bad line whose BA start
 			differs from the normal precalculated cycle 12. */
 		CPUStopWindows _adjustedCurrentCPUStopWindows;
-		/** Sprite-DMA masks represented by the two selected window sets. */
+		/** Actual sprite-DMA state most recently observed by the bus-arbitration
+			pipeline. It is deliberately separate from the masks of raster-line
+			slots because DMA can finish between the early and late sprite slots. */
+		unsigned char _spriteDMAStateMask;
+		/** Sprite-DMA slot masks represented by the selected current-line and
+			next-line window sets. They are not simple copies of _DMAActive. */
 		unsigned char _currentSpriteDMAMask;
 		unsigned char _nextSpriteDMAMask;
 		/** Minimal context retained only while its stop prediction can still be
@@ -901,11 +947,15 @@ namespace COMMODORE
 			// Internal elements used to manage the border...
 			bool _ffVBorder; 
 			bool _ffMBorder;
-			/** These two ones are temporal variables due to the VICII simulation doesn't execute cycle by clcle. 
-				When the border is partially detected (either in the right or the left), the border has to be "drawn",
-				and just after that the main border effect is either dissactivated (at the left) or activated (at the right). \n
-				These variables are not part of the internal VICII registers actually. */
+			/** Rendering-only flags describing a horizontal border transition inside
+				the current eight-pixel raster slice. \n
+				The simulation evaluates the hardware comparator before rendering, but
+				pixels preceding and following its exact position need different border
+				states. These flags are not VIC-II hardware flip-flops. */
 			bool _ffLBorder, _ffRBorder;
+			/** Beginning and length of the border portion inside the current visible
+				eight-pixel slice. They are rendering data derived from the hardware
+				comparator result. */
 			unsigned short _ffMBorderBegin;
 			unsigned char _ffMBorderPixels;
 
@@ -1500,7 +1550,9 @@ namespace COMMODORE
 			// Sprite DMA was decided during cycles 55/56. Once ROW represents
 			// the new line, both immutable window sets can be selected without
 			// inheriting the previous line's bad-line state.
-			_currentSpriteDMAMask = _nextSpriteDMAMask = spriteDMAMask ();
+			_currentSpriteDMAMask = _nextSpriteDMAMask;
+			_spriteDMAStateMask = spriteDMAMask ();
+			_nextSpriteDMAMask = projectedSpriteDMAMaskForNextRasterLine ();
 			selectCPUStopWindowsForCurrentAndNextLine ();
 			if (_pendingCPUTransaction.valid () &&
 				!_pendingCPUStopPrediction._stopRequested)
@@ -1509,9 +1561,9 @@ namespace COMMODORE
 				// line. Keep the retained transaction origin in that coordinate
 				// system before recalculating its prediction.
 				_pendingCPUTransaction._startCycle -= _cyclesPerRasterLine;
-				recalculatePendingCPUStopPrediction ();
-
-				_IFDEBUG debugCPUStopPredictionRecalculated ("RasterLineChange");
+				if (recalculatePendingCPUStopPrediction ())
+					_IFDEBUG debugCPUStopPredictionRecalculated
+						("RasterLineChange");
 			}
 		}
 	}
@@ -1602,7 +1654,24 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICII::actualizeMainBorderStatus (unsigned short cav, unsigned short rv)
+	inline void VICII::treatBorderComparatorsAtCurrentCycle
+		(bool rV, unsigned short cav)
+	{
+		// Bauer vertical-border rules are evaluated once at the final cycle of
+		// each raster line. _cyclesPerRasterLine selects cycle 63 or 64 without
+		// duplicating this behaviour in the PAL and NTSC implementations.
+		if (_cycleInRasterLine == _cyclesPerRasterLine)
+			actualizeVerticalBorderStatus ();
+
+		// Both horizontal comparator positions are inside the emulated visible
+		// raster interval. The rendering coordinate is needed only to describe a
+		// partial border transition inside the current eight-pixel slice.
+		if (rV)
+			actualizeMainBorderStatus (cav);
+	}
+
+	// ---
+	inline void VICII::actualizeMainBorderStatus (unsigned short cav)
 	{
 		_vicGraphicInfo._ffMBorderBegin = cav;
 		_vicGraphicInfo._ffMBorderPixels = (cav + 8) > _raster.visibleColumns () 
@@ -1667,17 +1736,10 @@ namespace COMMODORE
 
 		if (atLeft)
 		{
-			// Bauer rules 4 and 5 are evaluated at the left horizontal
-			// comparator. Their order matters because rule 6 immediately consumes
-			// the resulting vertical flip-flop state at this same raster position.
-			if (_raster.currentLine () == _VICIIRegisters -> maxRasterV ())
-				_vicGraphicInfo._ffVBorder = true; // Bauer rule 4.
-			if (_raster.currentLine () == _VICIIRegisters -> minRasterV () &&
-				!_VICIIRegisters -> blankEntireScreen ())
-				_vicGraphicInfo._ffVBorder = false; // Bauer rule 5.
-
-			// Bauer rule 6 resets the main border flip-flop only if the vertical
-			// one is clear. Test the flip-flop itself instead of inferring its value
+			// The vertical border flip-flop was evaluated at the final cycle of the
+			// corresponding raster line. The left comparator only consumes that state:
+			// graphics can be exposed when the vertical border is already open. Test
+			// the flip-flop itself instead of inferring its value
 			// from the normal vertical display interval: timed RSEL changes can keep
 			// the vertical border open outside that geometrical interval. Likewise,
 			// no temporary transition is needed if the main flip-flop is already
@@ -1891,7 +1953,7 @@ namespace COMMODORE
 		private:
 		virtual void addSpriteCPUStopWindow
 			(size_t nS, CPUStopWindows& result) const override;
-		virtual void treatRasterCycle () override;
+		virtual void treatRasterBusCycle () override;
 	};
 
 	/** The version for NTSC systems. \n
@@ -1908,7 +1970,7 @@ namespace COMMODORE
 		private:
 		virtual void addSpriteCPUStopWindow
 			(size_t nS, CPUStopWindows& result) const override;
-		virtual void treatRasterCycle () override;
+		virtual void treatRasterBusCycle () override;
 	};
 }
 

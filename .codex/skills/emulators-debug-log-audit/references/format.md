@@ -20,7 +20,7 @@ For consecutive instruction blocks, compare the current block chip-cycle count w
 
 For VIC-II, verify cycle/row wrap; DEN latch at `$30`; badline condition; BA request; CPU stop; c-access; RC reset; cycle-58 state; and the effective timing of CPU accesses to `$d011/$d012/$d019/$d01a`.
 
-The VIC-II snapshot is emitted before 	reatBadLineStateAtCurrentCycle and the remaining per-cycle phases. Read an event appended to that record as occurring during the recorded cycle, with its state visible in the following snapshot. Because the CPU normally runs a complete instruction before chips catch up, treat mapped-register write timing within the recovered block as ambiguous unless memory buffering or a per-cycle CPU trace proves the phase.
+The VIC-II snapshot is emitted before `treatBadLineStateAtCurrentCycle` and the remaining per-cycle phases. Read an event appended to that record as occurring during the recorded cycle, with its state visible in the following snapshot. VIC-II memory-access events belong to the VIC phase of that cycle. A following `VIC-II register write` event belongs to the CPU phase of the same absolute cycle, after the VIC-II bus activity and before final pixel/IRQ processing. Because the CPU normally runs a complete instruction before chips catch up, treat any write without that explicit event as ambiguous within the recovered block.
 
 For interrupts, record source/reason, request cycle, wait/rejection, launch, entry PC and acknowledgement. Separate a held level from multiple edges and include BA/RDY delays.
 

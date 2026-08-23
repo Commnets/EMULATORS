@@ -5,6 +5,8 @@ description: Create and integrate the machine-level core of a new EMULATORS emul
 
 # Build an EMULATORS Machine Core
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Required Context
 
 1. Read `references/machine-integration.md`.

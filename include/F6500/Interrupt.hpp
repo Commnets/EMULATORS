@@ -40,15 +40,12 @@ namespace F6500
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
-		/** As the code is designed, the interrupt is invoked after the execution of one instruction,
-			when the _lockCycles of the CPU have been actualized, 
-			but it should have been launched at cC cycles (the chip decides when). \n
-			In the 6500 family a interrupt can not be launched never before 2 cycles the end of the last instruction. */
+		/** Determines whether the request was active at the interrupt-sampling point
+			recorded by the last instruction executed by the 6500. */
 		virtual unsigned int isTime (MCHEmul::CPU* c, unsigned int cC) const override;
-		/** Just to put back the counter to 0. */
+		/** Nothing common has to be executed at this level. */
 		virtual bool executeOverImpl (MCHEmul::CPU* c, unsigned int cC) override
-							{ _instChecked = false; /** Just in case. */ 
-							  return (true); /** Not relevant. */ }
+							{ return (true); /** Not relevant. */ }
 
 		protected:
 		// Implementation
@@ -61,7 +58,6 @@ namespace F6500
 		// Implementation
 		/** IRQ and NMI share two initial reads, three stack writes and two vector reads. */
 		static const MCHEmul::CycleStructure _CYCLESTRUCTURE;
-		mutable bool _instChecked;
 	};
 }
 

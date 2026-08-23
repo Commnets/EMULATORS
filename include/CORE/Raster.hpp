@@ -79,6 +79,8 @@ namespace MCHEmul
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0); }
 		unsigned short visiblePositions () const
 						{ return (_lastVisiblePosition_0 - _firstVisiblePosition_0 + 1); }
+		unsigned short totalPositions () const
+						{ return (_maxPositions); }
 		unsigned short positionInVisibleZone (unsigned short p) const
 						{ return (toBase0 (p) - _firstVisiblePosition_0); }
 

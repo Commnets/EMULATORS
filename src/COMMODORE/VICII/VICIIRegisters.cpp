@@ -8,6 +8,10 @@ COMMODORE::VICIIRegisters::VICIIRegisters (MCHEmul::PhysicalStorage* ps, size_t 
 	  _spriteSharedColor (2, 0x00),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _interruptsEnabledBack (false),
+	  _cyclesPerRasterLineForRead (0),
+	  _rasterLinesForRead (0),
+	  _rasterLineAtInstructionStart (0),
+	  _rasterCycleAtInstructionStart (1),
 	  _numberPositionsToInstructionEffect (0),
 	  _raster (nullptr) // It is initialized later...
 	  // At this point the rest internal variables will have random values...
@@ -374,12 +378,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// Just to consider that when reading the raster MSB bit shows where the raster is now
 		case 0x11:
 			{
-				assert (_raster != nullptr);
+				const unsigned short rL = rasterLineAtInstructionEffect ();
 
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsToInstructionEffect, oP);
-				if (oP) rL++;
 				result = (MCHEmul::PhysicalStorageSubset::readValue (pp).value () & 0x7f) | 
 					(((rL & 0xff00) != 0) ? 0x80 : 0x00);
 			}
@@ -389,17 +389,8 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::readValue (size_t p) const
 		// RASTER: When reading get the current raster postion (except the MSB that is in the previous)
 		case 0x12:
 			{
-				assert (_raster != nullptr);
-
-				// The real "read" happens in the very last cycle of the instruction
-				// The same is with any other register but this one might be the very important one (and $d011)
-				// So if is necessary to know whether the execution of the instruction will imply a 
-				// change in the position of the raster or not!
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsToInstructionEffect, oP);
-				if (oP) rL++;
-				result = MCHEmul::UByte ((unsigned char) (rL & 0x00ff));
+				result = MCHEmul::UByte
+					((unsigned char) (rasterLineAtInstructionEffect () & 0x00ff));
 			}
 
 			break;
@@ -587,6 +578,9 @@ const MCHEmul::UByte& COMMODORE::VICIIRegisters::peekValue (size_t p) const
 void COMMODORE::VICIIRegisters::initializeInternalValues ()
 {
 	// The internal variables are initialized direcly throught the data in the register...
+	_rasterLineAtInstructionStart = 0;
+	_rasterCycleAtInstructionStart = 1;
+	_numberPositionsToInstructionEffect = 0;
 
 	// _spriteXCoord = std::vector <unsigned short> (8, 0x0000);
 	setValue (0x00, MCHEmul::UByte::_0);

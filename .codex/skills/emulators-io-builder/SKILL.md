@@ -5,6 +5,8 @@ description: Implement machine input/output, I/O port decoding, external buses, 
 
 # Build EMULATORS I/O
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Required Context
 
 1. Read `references/io-contract.md`.

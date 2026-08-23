@@ -1,11 +1,16 @@
 #include <F6500/IRQInterrupt.hpp>
-#include <F6500/C6510.hpp>
+#include <F6500/C6500.hpp>
 
 // ---
 unsigned int F6500::IRQInterrupt::isTime (MCHEmul::CPU* c, unsigned int cC) const
 {
-	return (c -> statusRegister ().bitStatus (F6500::C6500::_IRQFLAG) 
-		? MCHEmul::CPUInterrupt::_EXECUTIONNOTALLOWED : F6500::Interrupt::isTime (c, cC));
+	const unsigned int result = F6500::Interrupt::isTime (c, cC);
+	if (result != MCHEmul::CPUInterrupt::_EXECUTIONALLOWED)
+		return (result);
+
+	return (static_cast <F6500::C6500*> (c) -> IRQDisabledAtInterruptSampling ()
+		? MCHEmul::CPUInterrupt::_EXECUTIONNOTALLOWED
+		: MCHEmul::CPUInterrupt::_EXECUTIONALLOWED);
 }
 
 // ---

@@ -5,6 +5,8 @@ description: Plan, scaffold, implement, and integrate a complete new emulated co
 
 # Build a New EMULATORS Machine
 
+When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
+
 ## Core Workflow
 
 1. Read `references/workspace-artifacts.md`, then read `references/machine-contract.md`. When the scope spans more than one subsystem, copy `assets/machine-spec.yaml` into a task-specific directory under `.codex/work/emulators/<machine>/<model-or-variant>/<scope>/`; never use `docs/` for this working material.

@@ -85,6 +85,16 @@ namespace F6500
 		const MCHEmul::Register& yRegister () const
 							{ return (internalRegister (_YREGISTER)); }
 
+		/** Whether an interrupt request was already active at the sampling point
+			of the last instruction executed. */
+		bool interruptRequestSampled (unsigned int cC) const
+							{ return (_interruptSamplingValid &&
+								cC <= _instructionEndClock &&
+								(_instructionEndClock - cC) >= 2); }
+		/** The value of the interrupt-disable flag seen at that sampling point. */
+		bool IRQDisabledAtInterruptSampling () const
+							{ return (_IRQDisabledAtInterruptSampling); }
+
 		virtual bool initialize () override;
 
 		virtual void restartPC () override
@@ -112,6 +122,9 @@ namespace F6500
 			That actualization has to be configured as "buffered" in the definition of the memory. */
 		virtual bool unbufferCommands () override;
 
+		virtual bool executeNextInstruction_PerCycle (unsigned int& e) override;
+		virtual bool executeNextInstruction_Full (unsigned int& e) override;
+
 		virtual MCHEmul::CPUInterruptSystem* createInterruptSystem () const override
 							{ return (new MCHEmul::StandardCPUInterruptSystem 
 								({ { F6500::IRQInterrupt::_ID, new F6500::IRQInterrupt }, 
@@ -125,10 +138,23 @@ namespace F6500
 
 		private:
 		// Implementation
+		void startInterruptSamplingData ();
+		void finishInterruptSamplingData
+			(const MCHEmul::Instruction* inst, unsigned int endClock);
+		void cancelInterruptSamplingData ();
+
 		static MCHEmul::CPUArchitecture createArchitecture ();
 		static MCHEmul::Registers createInternalRegisters ();
 		static MCHEmul::StatusRegister createStatusRegister ();
 		static MCHEmul::Instructions createInstructions ();
+
+		bool _interruptSamplingValid;
+		bool _instructionSamplingInProgress;
+		unsigned int _instructionStartClock;
+		unsigned int _instructionEndClock;
+		unsigned int _interruptSamplingClock;
+		bool _IRQDisabledAtInstructionStart;
+		bool _IRQDisabledAtInterruptSampling;
 	};
 }
 

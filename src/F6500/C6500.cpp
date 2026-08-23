@@ -16,7 +16,14 @@ F6500::C6500::C6500 (int id, const MCHEmul::Attributes& attrs)
 		F6500::C6500::createInternalRegisters (), 
 		F6500::C6500::createStatusRegister (),
 		F6500::C6500::createInstructions (),
-		attrs)
+		attrs),
+	  _interruptSamplingValid (false),
+	  _instructionSamplingInProgress (false),
+	  _instructionStartClock (0),
+	  _instructionEndClock (0),
+	  _interruptSamplingClock (0),
+	  _IRQDisabledAtInstructionStart (false),
+	  _IRQDisabledAtInterruptSampling (false)
 {
 	// The non used bit (5) is usually true!
 	// ...and this is the way it is managed in this simulation!
@@ -36,6 +43,14 @@ bool F6500::C6500::initialize ()
 	// The interrupts are initialized to be admitted again...
 	for (const auto& i : interrupts ())
 		i.second -> setNewInterruptRequestAdmitted (false);
+
+	_interruptSamplingValid = false;
+	_instructionSamplingInProgress = false;
+	_instructionStartClock = 0;
+	_instructionEndClock = 0;
+	_interruptSamplingClock = 0;
+	_IRQDisabledAtInstructionStart = false;
+	_IRQDisabledAtInterruptSampling = false;
 
 	// The 6500 family execute every instruction in several cycles.
 	// Usually the cycle that actualized the memory is the last one.
@@ -83,6 +98,97 @@ bool F6500::C6500::unbufferCommands ()
 	}
 
 	return (!result);
+}
+
+// ---
+bool F6500::C6500::executeNextInstruction_PerCycle (unsigned int& e)
+{
+	if (_currentInstruction == nullptr)
+		startInterruptSamplingData ();
+
+	const bool result = MCHEmul::CPU::executeNextInstruction_PerCycle (e);
+
+	if (_instructionSamplingInProgress && _currentInstruction == nullptr)
+	{
+		if (result && e == MCHEmul::_NOERROR && lastInstruction () != nullptr)
+			finishInterruptSamplingData
+				(lastInstruction (), clockCycles () + _lastCPUClockCycles);
+		else
+			cancelInterruptSamplingData ();
+	}
+
+	return (result);
+}
+
+// ---
+bool F6500::C6500::executeNextInstruction_Full (unsigned int& e)
+{
+	startInterruptSamplingData ();
+
+	const bool result = MCHEmul::CPU::executeNextInstruction_Full (e);
+
+	if (result && e == MCHEmul::_NOERROR && lastInstruction () != nullptr)
+		finishInterruptSamplingData
+			(lastInstruction (),
+			 clockCycles () + lastInstruction () -> totalClockCyclesExecuted ());
+	else
+		cancelInterruptSamplingData ();
+
+	return (result);
+}
+
+// ---
+void F6500::C6500::startInterruptSamplingData ()
+{
+	_interruptSamplingValid = false;
+	_instructionSamplingInProgress = true;
+	_instructionStartClock = clockCycles ();
+	_IRQDisabledAtInstructionStart =
+		statusRegister ().bitStatus (F6500::C6500::_IRQFLAG);
+}
+
+// ---
+void F6500::C6500::finishInterruptSamplingData
+	(const MCHEmul::Instruction* inst, unsigned int endClock)
+{
+	assert (inst != nullptr);
+
+	// JAM is the only 6500 instruction shorter than the two cycles needed
+	// to reach a normal interrupt-sampling point.
+	if (inst -> totalClockCyclesExecuted () < 2)
+	{
+		cancelInterruptSamplingData ();
+		return;
+	}
+
+	_instructionEndClock = endClock;
+	_interruptSamplingClock = endClock - 2;
+
+	// CLI, SEI and PLP change I after the interrupt polling logic has
+	// sampled it. RTI restores I early enough and therefore uses the final value.
+	switch (inst -> code ())
+	{
+		case 0x58: // CLI
+		case 0x78: // SEI
+		case 0x28: // PLP
+			_IRQDisabledAtInterruptSampling = _IRQDisabledAtInstructionStart;
+			break;
+
+		default:
+			_IRQDisabledAtInterruptSampling =
+				statusRegister ().bitStatus (F6500::C6500::_IRQFLAG);
+			break;
+	}
+
+	_interruptSamplingValid = true;
+	_instructionSamplingInProgress = false;
+}
+
+// ---
+void F6500::C6500::cancelInterruptSamplingData ()
+{
+	_interruptSamplingValid = false;
+	_instructionSamplingInProgress = false;
 }
 
 // ---

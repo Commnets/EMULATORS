@@ -160,7 +160,9 @@ def add_table_before(doc, anchor, headers, rows, widths_cm):
 def add_heading(anchor, text: str, level: int = 1):
     paragraph = insert_paragraph_before(anchor, text, f"Heading {level}")
     remove_page_break_before(paragraph)
-    paragraph.paragraph_format.space_before = Pt(14 if level >= 2 else 10)
+    # Repeated record headings need enough separation from the preceding Status
+    # paragraph to remain visually distinct, including at page boundaries.
+    paragraph.paragraph_format.space_before = Pt(14)
     keep_with_next(paragraph)
     return paragraph
 

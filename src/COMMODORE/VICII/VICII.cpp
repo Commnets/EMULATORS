@@ -49,6 +49,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _cpuStopWindowSets (),
 	  _currentCPUStopWindows (nullptr), _nextCPUStopWindows (nullptr),
 	  _adjustedCurrentCPUStopWindows (),
+	  _spriteDMAStateMask (0),
 	  _currentSpriteDMAMask (0), _nextSpriteDMAMask (0),
 	  _pendingCPUTransaction (), _pendingCPUStopPrediction (),
 	  _pendingRegisterWrites (),
@@ -148,12 +149,19 @@ bool COMMODORE::VICII::initialize ()
 	// PAL starts at line 0 while the NTSC raster definition starts at line 27.
 	// Window selection always requires ROW to identify that physical line.
 	_vicGraphicInfo._ROW = _raster.currentLine ();
+	_VICIIRegisters -> setRasterReadTiming
+		(_cyclesPerRasterLine, _raster.vData ().totalPositions ());
+	_VICIIRegisters -> setRasterReadContext
+		(_vicGraphicInfo._ROW, _cycleInRasterLine);
+	_VICIIRegisters -> setNumberPositionsToInstructionEffect (0);
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
 
 	// Window construction is delayed until initialize () so the concrete PAL
 	// or NTSC sprite timing method is available through virtual dispatch.
 	initializeCPUStopWindowSets ();
-	_currentSpriteDMAMask = _nextSpriteDMAMask = spriteDMAMask ();
+	_spriteDMAStateMask = spriteDMAMask ();
+	_currentSpriteDMAMask = _spriteDMAStateMask;
+	_nextSpriteDMAMask = projectedSpriteDMAMaskForNextRasterLine ();
 	selectCPUStopWindowsForCurrentAndNextLine ();
 	_pendingCPUTransaction.reset ();
 	_pendingCPUStopPrediction = CPUStopPrediction ();
@@ -223,16 +231,23 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 	// the predicted compensated stop is requested at the BA boundary, and graphics
 	// counters advance once per 8-pixel graphics access.
 	//
-	// The method below is intentionally organized as a per-cycle pipeline, not
-	// as hardware phi1/phi2 phases:
-	//   1. apply buffered register writes at their effective bus cycle,
-	//   2. update internal bad-line and sprite-DMA state,
-	//   3. apply the pending instruction stop prediction at the BA boundary,
-	//   4. execute the current VIC-II raster-cycle activity,
-	//   5. draw the current visible slice,
-	//   6. advance the raster beam,
-	//   7. evaluate position-dependent events,
-	//   8. request IRQ if any VIC-II IRQ source is pending.
+	// The method below is intentionally organized as a grouped per-cycle
+	// pipeline, not as independently scheduled hardware phi1/phi2 phases:
+	//   1. record the state at the beginning of the cycle,
+	//   2. evaluate bad-line and sprite-DMA state,
+	//   3. apply the predicted BA/AEC CPU stop,
+	//   4. execute VIC-II bus accesses and related sequencer transitions,
+	//   5. apply the CPU register write belonging to the same absolute cycle,
+	//   6. evaluate border and sprite horizontal comparators,
+	//   7. compose the current visible eight-pixel slice,
+	//   8. apply deferred host-screen geometry changes,
+	//   9. advance the raster position,
+	//  10. evaluate raster and light-pen events,
+	//  11. request IRQ after all sources have been evaluated.
+	//
+	// This ordering preserves the causal relationship of the hardware phases:
+	// VIC-II memory accesses cannot observe a later CPU write, while comparators
+	// evaluated after that write use the newly effective register state.
 
 	// First invocation: synchronize the VIC-II with the CPU cycle counter.
 	// No VIC-II activity is simulated yet because there is no elapsed cycle
@@ -270,26 +285,10 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// stops or requesting IRQs.
 		const unsigned int cC = cpu -> clockCycles () - i;
 
-		// Phase 1: make a buffered VIC-II register write visible before any
-		// internal state transition belonging to this cycle observes it.
-		bool displayZoneChanged; // True when the display zone changed!
-		const bool registerWriteApplied = executePendingRegisterWriteAt
-			(cC, &displayZoneChanged);
-		// The $d016 write itself was already visible at its predicted CPU cycle.
-		// Only the CSEL-derived horizontal border limits wait until the video part
-		// of the current grouped cycle has finished.
-		if (displayZoneChanged)
-			_raster.hData ().reduceDisplayZone
-				(!_VICIIRegisters -> textDisplay40ColumnsActive ());
-		// $d019 can clear interrupt flags and re-arm VIC-II IRQ admission. OBool
-		// is consulted only after an actual write, avoiding a destructive check
-		// in every simulated cycle.
-		if (registerWriteApplied &&
-			_VICIIRegisters -> interruptsEnabledBack ())
-			cpu -> interrupt (_interruptId) ->
-				setNewInterruptRequestAdmitted (false);
-
-		_IFDEBUG debugVICIICycle (cpu, i, registerWriteApplied);
+		// Phase 1: record the VIC-II state before processing the current cycle.
+		// Events appended to this record describe activity occurring during cC;
+		// their resulting state is visible in the following cycle snapshot.
+		_IFDEBUG debugVICIICycle (cpu, i);
 
 		// Phase 2: update bad-line state for this exact VIC-II cycle.
 		// This includes:
@@ -308,19 +307,28 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// Sprite DMA is decided before BA/RDY arbitration. Sprite 0 data is
 		// fetched at cycle 58, so cycle 55 must already request the BA lead.
 		treatSpriteDMAStartAtCurrentCycle ();
-		const unsigned char spriteMask = spriteDMAMask ();
-		if (spriteMask != _currentSpriteDMAMask)
+		if (_cycleInRasterLine == 55 || _cycleInRasterLine == 56)
 		{
-			_currentSpriteDMAMask = _nextSpriteDMAMask = spriteMask;
-			selectCPUStopWindowsForCurrentAndNextLine ();
-			if (_badLineCAccessActive &&
-				_badLineCAccessStartCycle != _BADLINE_START_FIRST_CYCLE)
-				actualizeCPUStopWindowsAfterBadLineChange ();
-			else
+			const unsigned char spriteStateMask = spriteDMAMask ();
+			const unsigned char projectedSpriteMask =
+				projectedSpriteDMAMaskForNextRasterLine ();
+			if (spriteStateMask != _spriteDMAStateMask ||
+				projectedSpriteMask != _nextSpriteDMAMask)
 			{
-				recalculatePendingCPUStopPrediction ();
-
-				_IFDEBUG debugCPUStopPredictionRecalculated ("SpriteDMAChange");
+				// DMA can start in cycles 55/56 after the early sprite slots have
+				// passed. Preserve those historical slots and add the newly active
+				// state only to the still relevant current-line window selection.
+				_currentSpriteDMAMask |= spriteStateMask;
+				_spriteDMAStateMask = spriteStateMask;
+				_nextSpriteDMAMask = projectedSpriteMask;
+				selectCPUStopWindowsForCurrentAndNextLine ();
+				if (_badLineCAccessActive &&
+					_badLineCAccessStartCycle != _BADLINE_START_FIRST_CYCLE)
+					actualizeCPUStopWindowsAfterBadLineChange ();
+				else if (recalculatePendingCPUStopPrediction ())
+				{
+					_IFDEBUG debugCPUStopPredictionRecalculated ("SpriteDMAChange");
+				}
 			}
 		}
 
@@ -329,24 +337,83 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// considered, so only one compensated stop request is issued.
 		requestPredictedCPUStopIfNeeded (cpu, cC);
 
-		// Phase 4: execute the VIC-II activity associated with the current raster cycle.
-		// This performs cycle-specific actions such as sprite data reads,
+		// Phase 4: execute the VIC-II bus activity and sequencer transitions
+		// associated with the current raster cycle. This performs actions such as
+		// sprite data reads,
 		// normal or invalid bad-line c-access attempts, graphic-data reads,
 		// effective bad-line matrix/color accesses when allowed, graphic-data reads,
-		// VC/VLMI advancement, RC handling and sprite activation/deactivation.
-		treatRasterCycle ();
+		// VC/VLMI advancement, RC handling and sprite activation/deactivation. All
+		// accesses observe the register values effective before the CPU write of cC.
+		treatRasterBusCycle ();
 
-		// Phase 5: latch sprite horizontal starts independently of video visibility.
+		// Cycle 16 can advance MCBASE and terminate DMA after the early sprite
+		// slots have already occurred. Keep the current-line slot mask intact,
+		// but refresh the actual state and the next-line projection immediately.
+		if (_cycleInRasterLine == 16)
+		{
+			_spriteDMAStateMask = spriteDMAMask ();
+			const unsigned char nextSpriteMask =
+				projectedSpriteDMAMaskForNextRasterLine ();
+			if (nextSpriteMask != _nextSpriteDMAMask)
+			{
+				_nextSpriteDMAMask = nextSpriteMask;
+				selectCPUStopWindowsForCurrentAndNextLine ();
+				if (_badLineCAccessActive)
+					actualizeCPUStopWindowsAfterBadLineChange ();
+				else if (recalculatePendingCPUStopPrediction ())
+					_IFDEBUG debugCPUStopPredictionRecalculated
+						("SpriteDMAProjectionChange");
+			}
+		}
+
+		// Phase 5: apply the CPU write during phi2 of the same absolute cycle.
+		// The VIC-II memory accesses performed in phi1 have therefore observed
+		// the register value that was active at the beginning of cC.
+		bool horizontalDisplayZoneChanged;
+		const bool registerWriteApplied = executePendingRegisterWriteAt
+			(cC, &horizontalDisplayZoneChanged);
+
+		// A $d019 write can clear interrupt flags during phi2. The final IRQ
+		// evaluation of this cycle must observe that acknowledgement.
+		if (registerWriteApplied &&
+			_VICIIRegisters -> interruptsEnabledBack ())
+			cpu -> interrupt (_interruptId) ->
+				setNewInterruptRequestAdmitted (false);
+
+		// Calculate the current visible coordinates once. They are shared by the
+		// comparator and drawing phases in this cycle-sensitive hot path.
+		const bool rasterVisible = _raster.isInVisibleZone ();
+		unsigned short cv = 0;
+		unsigned short rv = 0;
+		unsigned short cav = 0;
+		if (rasterVisible)
+		{
+			_raster.currentVisiblePosition (cv, rv);
+			cav = (cv >> 3) << 3;
+		}
+
+		// Phase 6: evaluate border comparators after the CPU write has become
+		// visible. The vertical comparator runs at the final raster cycle;
+		// horizontal comparators prepare a possible partial border transition.
+		treatBorderComparatorsAtCurrentCycle (rasterVisible, cav);
+
+		// Latch sprite horizontal starts independently of video visibility.
 		treatSpriteHorizontalStartAtCurrentCycle ();
 
-		// Phase 6: draw the current visible 8-pixel slice, if the raster is in
+		// Phase 7: draw the current visible 8-pixel slice, if the raster is in
 		// the visible zone. The drawing path uses the data already fetched by
 		// the raster-cycle phase and then applies sprites, priority, collisions
 		// and border overlay.
-		if (_raster.isInVisibleZone ())
-			drawVisibleZone (cpu);
+		if (rasterVisible)
+			drawVisibleZone (cpu, cv, rv, cav);
 
-		// Phase 7: advance the raster beam by one VIC-II cycle.
+		// Phase 8: CSEL changes the host-side horizontal display limits only after
+		// the current grouped eight-pixel slice has completed.
+		if (horizontalDisplayZoneChanged)
+			_raster.hData ().reduceDisplayZone
+				(!_VICIIRegisters -> textDisplay40ColumnsActive ());
+
+		// Phase 9: advance the raster beam by one VIC-II cycle.
 		// This moves the horizontal raster position, advances the vertical raster
 		// when horizontal retrace is crossed, and performs new-line/new-frame
 		// housekeeping such as resetting per-line bad-line state, restoring VC
@@ -354,18 +421,18 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// of a new frame.
 		advanceRasterPosition ();
 
-		// Phase 8a: evaluate raster IRQ at the new raster position.
+		// Phase 10a: evaluate raster IRQ at the new raster position.
 		// The IRQ flag is only activated here; the actual CPU IRQ request is
 		// performed later together with all other VIC-II IRQ sources.
 		treatRasterIRQAtCurrentPosition ();
 
-		// Phase 8b: evaluate light-pen detection at the new raster position.
+		// Phase 10b: evaluate light-pen detection at the new raster position.
 		// The emulated light pen uses the mouse position and button state. The
 		// position is latched when the raster beam reaches the mouse/light-pen
 		// position, and at most once per frame.
 		treatLightPenAtCurrentRasterPosition ();
 
-		// Phase 9: final IRQ evaluation for this VIC-II cycle.
+		// Phase 11: final IRQ evaluation for this VIC-II cycle.
 		// At this point all per-cycle IRQ sources have had the opportunity to set
 		// their corresponding flags: raster IRQ, light pen, sprite/sprite
 		// collision and sprite/data collision.
@@ -817,6 +884,27 @@ unsigned char COMMODORE::VICII::spriteDMAMask () const
 }
 
 // ---
+unsigned char COMMODORE::VICII::projectedSpriteDMAMaskForNextRasterLine () const
+{
+	unsigned char result = 0;
+	for (size_t i = 0; i < 8; i++)
+	{
+		if (!_vicSpriteInfo [i]._DMAActive)
+			continue;
+
+		// Sprites 3..7 fetch at the beginning of the next line, before MCBASE
+		// can terminate DMA at cycle 16. Sprites 0..2 fetch afterwards and must
+		// be omitted when the two counter steps will consume their final row.
+		if (i >= 3 ||
+			!_VICIIRegisters -> expansionYFlipFlop (i) ||
+			_vicSpriteInfo [i]._MCBASE + 3 < 63)
+			result |= (1 << i);
+	}
+
+	return (result);
+}
+
+// ---
 bool COMMODORE::VICII::badLineConditionForRasterLine (unsigned short rL) const
 {
 	return (
@@ -886,9 +974,8 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		_currentCPUStopWindows = &_adjustedCurrentCPUStopWindows;
 	}
 
-	recalculatePendingCPUStopPrediction ();
-
-	_IFDEBUG debugCPUStopPredictionRecalculated ("BadLineChange");
+	if (recalculatePendingCPUStopPrediction ())
+		_IFDEBUG debugCPUStopPredictionRecalculated ("BadLineChange");
 }
 
 // ---
@@ -1019,16 +1106,18 @@ void COMMODORE::VICII::prepareCPUStopPrediction
 		(*cS, *bD, nC, _pendingCPUTransaction._startCycle,
 		 *_currentCPUStopWindows, *_nextCPUStopWindows);
 
+	_VICIIRegisters -> setRasterReadContext
+		(_vicGraphicInfo._ROW, _cycleInRasterLine);
 	_VICIIRegisters -> setNumberPositionsToInstructionEffect
 		(_pendingCPUStopPrediction._positionsToInstructionEffect);
 }
 
 // ---
-void COMMODORE::VICII::recalculatePendingCPUStopPrediction ()
+bool COMMODORE::VICII::recalculatePendingCPUStopPrediction ()
 {
 	if (!_pendingCPUTransaction.valid () ||
 		_pendingCPUStopPrediction._stopRequested)
-		return;
+		return (false);
 
 	_pendingCPUStopPrediction = calculateCPUStopPrediction
 		(*_pendingCPUTransaction._cycleStructure,
@@ -1039,6 +1128,8 @@ void COMMODORE::VICII::recalculatePendingCPUStopPrediction ()
 
 	_VICIIRegisters -> setNumberPositionsToInstructionEffect
 		(_pendingCPUStopPrediction._positionsToInstructionEffect);
+
+	return (true);
 }
 
 // ---
@@ -1114,12 +1205,11 @@ bool COMMODORE::VICII::executePendingRegisterWriteAt (unsigned int cC, bool* hDZ
 
 	registerWrite.execute ();
 
-	// RSEL is visible to the vertical limits immediately. CSEL is written at
-	// the CPU phase of the cycle, after the current eight-pixel border comparison;
-	// its horizontal limits are therefore updated after drawing this slice.
-	// The vertical position has not the same level of "urgency", but both
-	// are treated in the same manner!...
-	*hDZC = (registerPosition == 0x11 || registerPosition == 0x16);
+	// The register value becomes visible during the CPU phase of cC. A CSEL
+	// change is therefore available to the later comparator phase, while its
+	// host-side horizontal display geometry remains deferred until this slice
+	// has been composed.
+	*hDZC = (registerPosition == 0x16);
 
 	_IFDEBUG debugVICIIRegisterWriteApplied
 		(cC, &registerWrite, writeIndex, _pendingRegisterWrites.size () - 1);
@@ -1130,7 +1220,7 @@ bool COMMODORE::VICII::executePendingRegisterWriteAt (unsigned int cC, bool* hDZ
 }
 
 // ---
-void COMMODORE::VICII::treatRasterCycle ()
+void COMMODORE::VICII::treatRasterBusCycle ()
 {
 	// Read graphics zone?
 	switch (_cycleInRasterLine)
@@ -1197,19 +1287,9 @@ void COMMODORE::VICII::treatRasterCycle ()
 }
 
 // ---
-void COMMODORE::VICII::drawVisibleZone (MCHEmul::CPU* cpu)
+void COMMODORE::VICII::drawVisibleZone
+	(MCHEmul::CPU* cpu, unsigned short cv, unsigned short rv, unsigned short cav)
 {
-	// These two variables are very key.	
-	// They hold the position of the raster within the VISIBLE ZONE.
-	// It is the left up corner of the "computer screen" will be cv = 0 & rv = 0...
-	unsigned short cv, rv; 
-	_raster.currentVisiblePosition (cv, rv);
-	// The same value than cv, but adjusted to a multiple of 8.
-	unsigned short cav = (cv >> 3) << 3;
-
-	// actualize the status of the border...
-	actualizeMainBorderStatus (cav, rv);
-
 	DrawContext dC =
 	{
 		/** _ICD */ _raster.hData ().firstDisplayPosition (),		// DISPLAY: The original...
@@ -2171,6 +2251,8 @@ void COMMODORE::VICII::debugCPUStopPrediction
 				debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
 			"Next=" +
 				debugCPUStopWindowsAsString (*_nextCPUStopWindows) + "," +
+			"ActualSpriteMask=" +
+				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
 				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
 			"NextSpriteMask=" +
@@ -2217,6 +2299,8 @@ void COMMODORE::VICII::debugCPUStopPrediction
 				debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
 			"Next=" +
 				debugCPUStopWindowsAsString (*_nextCPUStopWindows) + "," +
+			"ActualSpriteMask=" +
+				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
 				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
 			"NextSpriteMask=" +
@@ -2241,7 +2325,13 @@ void COMMODORE::VICII::debugCPUStopPredictionRecalculated
 				"Current=" +
 					debugCPUStopWindowsAsString (*_currentCPUStopWindows) + "," +
 				"Next=" +
-					debugCPUStopWindowsAsString (*_nextCPUStopWindows) },
+					debugCPUStopWindowsAsString (*_nextCPUStopWindows) + "," +
+				"ActualSpriteMask=" +
+					std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
+				"CurrentSpriteMask=" +
+					std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+				"NextSpriteMask=" +
+					std::to_string ((unsigned int) _nextSpriteDMAMask) },
 			  { "Prediction",
 				debugCPUStopPredictionAsString () } }));
 }
@@ -2300,7 +2390,7 @@ void COMMODORE::VICII::debugVICIIRegisterWriteApplied
 
 // ---
 void COMMODORE::VICII::debugVICIICycle
-	(MCHEmul::CPU* cpu, unsigned int i, bool registerWriteApplied)
+	(MCHEmul::CPU* cpu, unsigned int i)
 {
 	assert (_deepDebugFile != nullptr);
 
@@ -2357,6 +2447,8 @@ void COMMODORE::VICII::debugVICIICycle
 			"AdjustedCurrent=" +
 				std::to_string
 					(_currentCPUStopWindows == &_adjustedCurrentCPUStopWindows) + "," +
+			"ActualSpriteMask=" +
+				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
 				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
 			"NextSpriteMask=" +
@@ -2364,8 +2456,6 @@ void COMMODORE::VICII::debugVICIICycle
 		  { "CPU stop prediction",
 			"Pending=" +
 				std::to_string (_pendingCPUTransaction.valid ()) + "," +
-			"RegisterWriteApplied=" +
-				std::to_string (registerWriteApplied) + "," +
 			"RegisterWritesPending=" +
 				std::to_string (_pendingRegisterWrites.size ()) + "," +
 			"StartCycle=" +
@@ -2506,9 +2596,9 @@ void COMMODORE::VICII_PAL::addSpriteCPUStopWindow
 }
 
 // ---
-void COMMODORE::VICII_PAL::treatRasterCycle ()
+void COMMODORE::VICII_PAL::treatRasterBusCycle ()
 {
-	COMMODORE::VICII::treatRasterCycle ();
+	COMMODORE::VICII::treatRasterBusCycle ();
 
 	switch (_cycleInRasterLine)
 	{
@@ -2524,14 +2614,6 @@ void COMMODORE::VICII_PAL::treatRasterCycle ()
 				{
 					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
-			}
-
-			break;
-
-		// Manages the situation of the border...
-		case 63:
-			{ 
-				actualizeVerticalBorderStatus ();
 			}
 
 			break;
@@ -2569,9 +2651,9 @@ void COMMODORE::VICII_NTSC::addSpriteCPUStopWindow
 }
 
 // ---
-void COMMODORE::VICII_NTSC::treatRasterCycle ()
+void COMMODORE::VICII_NTSC::treatRasterBusCycle ()
 {
-	COMMODORE::VICII::treatRasterCycle ();
+	COMMODORE::VICII::treatRasterBusCycle ();
 
 	switch (_cycleInRasterLine)
 	{
@@ -2588,10 +2670,6 @@ void COMMODORE::VICII_NTSC::treatRasterCycle ()
 					_IFDEBUG debugReadingSpriteInfo (nSR);
 				}
 
-				// In NTSC, update the vertical border state only once,
-				// at the last raster cycle of the line.
-				if (_cycleInRasterLine == 64)
-					actualizeVerticalBorderStatus ();
 			}
 
 			break;
