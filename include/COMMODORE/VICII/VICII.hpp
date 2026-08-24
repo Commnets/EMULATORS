@@ -574,16 +574,6 @@ namespace COMMODORE
 			 unsigned short rv, unsigned short cav);
 
 		// Border management.
-		/** Evaluates the border flip-flop comparators after the CPU write phase of
-			the current grouped cycle. \n
-			The vertical comparator is evaluated once at the last cycle of the raster
-			line. Horizontal comparators are evaluated only when the current eight-pixel
-			slice belongs to the visible raster area. \n
-			@param rV	Whether the current raster position is in the visible zone. \n
-			@param cav	Visible horizontal position aligned to the beginning of the
-						current eight-pixel slice. */
-		inline void treatBorderComparatorsAtCurrentCycle
-			(bool rV, unsigned short cav);
 		/** Evaluates the left and right horizontal main-border comparators for the
 			current eight-pixel raster slice. \n
 			The vertical border flip-flop must already have been updated by
@@ -705,8 +695,12 @@ namespace COMMODORE
 		void debugSpriteDrawFinishes (size_t nS);
 		void debugSpriteDrawToStart (size_t nS);
 		void debugReadingVideoMatrix ();
+		/** Records the data and the counters used by the completed g-access.
+			It must be called before advancing VC, VLMI and GAccessIndex. */
 		void debugReadingGraphics ();
-		void debugDrawPixelAt (unsigned short cav);
+		/** Records both the raster position and the graphics-buffer interval
+			selected to compose the current eight-pixel slice. */
+		void debugDrawPixelAt (unsigned short cav, int cb);
 		void debugDrawSpriteAt (size_t nS, unsigned short x, unsigned short r);
 		// -----
 
@@ -847,7 +841,9 @@ namespace COMMODORE
 		  *   data before normal matrix/color reads resume.
 		  *
 		  *	In idle state:
-		  *	- no new Video Matrix / Color RAM c-accesses are performed;
+		  *	- no regular Video Matrix / Color RAM c-accesses are performed;
+		  *	  the first attempted c-access of a late DMA-delay transition can
+		  *	  occur before display state becomes visible to the g-access path;
 		  *	- g-accesses still occur, but they read from the idle address:
 		  *	  $3fff normally, or $39ff when ECM affects the address lines;
 		  *	- the display output is produced from the idle graphics data and uses color 0.
@@ -868,6 +864,11 @@ namespace COMMODORE
 		  *	- Effective graphics accesses are grouped in cycles 16..55 in this emulator.
 		  *	  During these accesses, _GAccessIndex always advances. VC and _VLMI advance
 		  *	  only while the sequencer is in display state.
+		  *	- When a late Bad Line Condition is accepted while the sequencer is
+		  *	  idle, its first attempted c-access occurs in the selected grouped
+		  *	  cycle, but the g-access of that cycle still uses idle state.
+		  *	  Display state becomes active after that bus cycle, so VC and _VLMI
+		  *	  start advancing with the following g-access.
 		  *	- At cycle 58, if RC == 7, VCBASE is loaded from VC. The sequencer enters
 		  *	  idle state only if there is no current Bad Line Condition and no late
 		  *	  Bad Line Condition has prevented idle entry for this line.
@@ -1066,14 +1067,6 @@ namespace COMMODORE
 
 		// Current Bad Line Condition for this exact VIC-II cycle.
 		_badLineConditionActive = isBadLineCondition ();
-
-		// A late Bad Line Condition created in the previous cycle starts its
-		// display-state c/g-access sequence with the first attempted c-access.
-		if (_badLineCAccessActive &&
-			_badLineCAccessStartCycle > 14 &&
-			_cycleInRasterLine == firstBadLineCAccessCycle () &&
-			idleStateActive ())
-			enterScreenState ();
 
 		// Bauer: a Bad Line Condition in cycles 54..57 while RC == 7 prevents
 		// the graphics sequencer from returning to idle state at cycle 58.
@@ -1391,9 +1384,11 @@ namespace COMMODORE
 
 		memoryRef () -> setCPUView ();
 
-		advanceGraphicAccessCounters ();
-
+		// Record the counters and buffer index used by the completed g-access
+		// before advancing them for the following graphics cycle.
 		_IFDEBUG debugReadingGraphics ();
+
+		advanceGraphicAccessCounters ();
 
 	}
 
@@ -1651,23 +1646,6 @@ namespace COMMODORE
 		_lightPenFrameLatched = true;
 
 		_VICIIRegisters -> activateLightPenOnScreenIRQ ();
-	}
-
-	// ---
-	inline void VICII::treatBorderComparatorsAtCurrentCycle
-		(bool rV, unsigned short cav)
-	{
-		// Bauer vertical-border rules are evaluated once at the final cycle of
-		// each raster line. _cyclesPerRasterLine selects cycle 63 or 64 without
-		// duplicating this behaviour in the PAL and NTSC implementations.
-		if (_cycleInRasterLine == _cyclesPerRasterLine)
-			actualizeVerticalBorderStatus ();
-
-		// Both horizontal comparator positions are inside the emulated visible
-		// raster interval. The rendering coordinate is needed only to describe a
-		// partial border transition inside the current eight-pixel slice.
-		if (rV)
-			actualizeMainBorderStatus (cav);
 	}
 
 	// ---

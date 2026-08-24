@@ -294,14 +294,12 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// This includes:
 		// - latching whether DEN has been seen at raster line $30,
 		// - evaluating the current bad-line condition,
-		// - switching from idle state to display state when a new bad line
-		//   is accepted,
+		// - entering display state immediately for regular bad lines, while a
+		//   late transition from idle is deferred until the current bus cycle
+		//   has completed,
 		// - latching a c-access sequence if the condition appears inside
 		//   the c-access start window. Cycle-14 sequences are validated there;
 		//   later sequences are handled as DMA-delay/VSP-like c-access attempts.
-		// - latching a c-access sequence if the condition appears inside
-		//   the c-access start window. Normal matrix/color reads are later
-		//   validated at cycle 14.		
 		treatBadLineStateAtCurrentCycle ();
 
 		// Sprite DMA is decided before BA/RDY arbitration. Sprite 0 data is
@@ -346,6 +344,16 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		// accesses observe the register values effective before the CPU write of cC.
 		treatRasterBusCycle ();
 
+		// A late Bad Line Condition starts its first c-access after the
+		// phi1 g-access of the same grouped cycle has already remained idle.
+		// Display state therefore becomes visible to graphics accesses from
+		// the following VIC-II cycle.
+		if (_badLineCAccessActive &&
+			_badLineCAccessStartCycle > 14 &&
+			_cycleInRasterLine == firstBadLineCAccessCycle () &&
+			idleStateActive ())
+			enterScreenState ();
+
 		// Cycle 16 can advance MCBASE and terminate DMA after the early sprite
 		// slots have already occurred. Keep the current-line slot mask intact,
 		// but refresh the actual state and the next-line projection immediately.
@@ -382,20 +390,29 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 
 		// Calculate the current visible coordinates once. They are shared by the
 		// comparator and drawing phases in this cycle-sensitive hot path.
+		unsigned short cv = 0, rv = 0, cav = 0;
 		const bool rasterVisible = _raster.isInVisibleZone ();
-		unsigned short cv = 0;
-		unsigned short rv = 0;
-		unsigned short cav = 0;
 		if (rasterVisible)
 		{
 			_raster.currentVisiblePosition (cv, rv);
+
+			// Adjusted to draw...
 			cav = (cv >> 3) << 3;
 		}
 
-		// Phase 6: evaluate border comparators after the CPU write has become
+		// Phase 6: Evaluate border comparators after the CPU write has become
 		// visible. The vertical comparator runs at the final raster cycle;
-		// horizontal comparators prepare a possible partial border transition.
-		treatBorderComparatorsAtCurrentCycle (rasterVisible, cav);
+		// Horizontal comparators prepare a possible partial border transition.
+		// Bauer vertical-border rules are evaluated once at the final cycle of
+		// each raster line. _cyclesPerRasterLine selects cycle 63 or 64 without
+		// duplicating this behaviour in the PAL and NTSC implementations.
+		if (_cycleInRasterLine == _cyclesPerRasterLine)
+			actualizeVerticalBorderStatus ();
+		// Both horizontal comparator positions are inside the emulated visible
+		// raster interval. The rendering coordinate is needed only to describe a
+		// partial border transition inside the current eight-pixel slice.
+		if (rasterVisible)
+			actualizeMainBorderStatus (cav);
 
 		// Latch sprite horizontal starts independently of video visibility.
 		treatSpriteHorizontalStartAtCurrentCycle ();
@@ -1430,9 +1447,9 @@ COMMODORE::VICII::DrawResult COMMODORE::VICII::drawGraphics (const COMMODORE::VI
 	// Never invoke the methods within the swith case statements direcly
 	// a crash might be generated...
 
-	// What is debugged is where the raster is,
-	// Not what is going to be drawn!
-	_IFDEBUG debugDrawPixelAt (dC._RCA);
+	// Record both the raster position and the graphics-buffer interval selected
+	// to compose the current eight-pixel slice.
+	_IFDEBUG debugDrawPixelAt (dC._RCA, cb);
 
 	COMMODORE::VICII::DrawResult result;
 	switch (_VICIIRegisters -> graphicModeActive ())
@@ -2533,17 +2550,39 @@ void COMMODORE::VICII::debugReadingGraphics ()
 {
 	assert (_deepDebugFile != nullptr);
 	
-	_deepDebugFile -> writeLineData ("Reading Graphics [" + 
-		_vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
+	_deepDebugFile -> writeLineData (std::string ("Reading Graphics [") +
+		"Data=" + _vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"GAccessIndex=" + std::to_string (_vicGraphicInfo._GAccessIndex) + "," +
+		"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
+		"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
+		"RC=" + std::to_string ((unsigned int) _vicGraphicInfo._RC) + "," +
+		"Idle=" + std::to_string (_vicGraphicInfo._idleState) + "]");
 }
 
 // ---
-void COMMODORE::VICII::debugDrawPixelAt (unsigned short cb)
+void COMMODORE::VICII::debugDrawPixelAt (unsigned short cav, int cb)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeLineData ("Drawing pixels at " + std::to_string (cb) +
-		", background color " + std::to_string ((unsigned int) _VICIIRegisters -> backgroundColor ()));
+	// In or out the visual streen...
+	if (cb >= 320)
+	{
+		_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
+			"Raster=" + std::to_string (cav) + "," +
+			"XScroll=" + std::to_string ((unsigned int) _VICIIRegisters -> horizontalScrollPosition ()) + "," +
+			"GraphicPixel=" + std::to_string (cb) + "," +
+			"FirstByte=OUT,LastByte=OUT]");
+	}
+	else
+	{
+		int firstPixel = cb < 0 ? 0 : cb, lastPixel = (cb + 7) > 319 ? 319 : cb + 7;
+		_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
+			"Raster=" + std::to_string (cav) + "," +
+			"XScroll=" + std::to_string ((unsigned int) _VICIIRegisters -> horizontalScrollPosition ()) + "," +
+			"GraphicPixel=" + std::to_string (cb) + "," +
+			"FirstByte=" + std::to_string (firstPixel >> 3) + "," +
+			"LastByte=" + std::to_string (lastPixel >> 3) + "]");
+	}
 }
 
 // ---
