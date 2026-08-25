@@ -41,6 +41,7 @@
   "limitations": [
     "A block may contain register values already modified by a complete instruction even when the recovered VIC-II cycle is earlier within that instruction.",
     "Windows are serialised as FirstBA/FirstAEC/LastCycle, with multiple windows separated by |.",
+    "For bad lines, BadlineCAccessStartCycle is the latch cycle, BadlineFirstCAccessCycle is the first attempted access, and BadlineBARequestCycle is the first effective BA cycle.",
     "CIA1 Additional Info does not represent an additional cycle.",
     "Sprite and pixel events can make the file grow substantially when VIC-II is selected."
   ],

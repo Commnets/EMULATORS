@@ -487,6 +487,37 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
+	/** Verifies that a late bad-line sequence starts BA with its first attempted
+		c-access and makes AEC effective after the three invalid attempts. */
+	bool testLateBadLineCPUStopWindow ()
+	{
+		this -> _badLineConditionActive = true;
+		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessStartCycle = 36;
+		this -> _cycleInRasterLine = 36;
+		this -> _currentSpriteDMAMask = 0;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		const CPUStopWindows& windows = *this -> _currentCPUStopWindows;
+		const bool result = windows.size () == 1 &&
+			windows [0]._firstBACycle == 37 &&
+			windows [0]._firstAECCycle == 40 &&
+			windows [0]._lastCycle == 54 &&
+			this -> _badLineBAAlreadyRequested &&
+			this -> _badLineBARequestCycle == 37;
+
+		this -> _badLineConditionActive = false;
+		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartCycle = 0;
+		this -> _cycleInRasterLine = 1;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		std::cout << "Late bad-line BA/AEC window | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
 	unsigned short currentRasterLine () const
 							{ return (this -> _raster.currentLine ()); }
 
@@ -594,6 +625,7 @@ int main ()
 		("NTSC vertical border comparator");
 	result &= vicii.testProjectedSpriteDMAMask ();
 	result &= vicii.testGraphicAccessPipelineWindows ();
+	result &= vicii.testLateBadLineCPUStopWindow ();
 
 	// YSCROLL=2: line 50 is a bad line and neither line 49 nor 51 is.
 	vicii.advanceFromRasterLine (49, 2);

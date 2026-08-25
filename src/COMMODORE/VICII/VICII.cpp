@@ -949,9 +949,15 @@ void COMMODORE::VICII::selectCPUStopWindowsForCurrentAndNextLine ()
 // ---
 void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 {
-	_badLineBAAlreadyRequested = _badLineCAccessActive;
-	_badLineBARequestCycle = _badLineCAccessActive
-		? _badLineCAccessStartCycle : 0;
+	const unsigned short firstBACycle = !_badLineCAccessActive
+		? 0
+		: ((_badLineCAccessStartCycle <= 14)
+			? _badLineCAccessStartCycle
+			: firstBadLineCAccessCycle ());
+
+	_badLineBAAlreadyRequested = firstBACycle != 0;
+	_badLineBARequestCycle = firstBACycle;
+
 	const CPUStopWindows* noBadLineWindows =
 		&_cpuStopWindowSets [cpuStopWindowSetIndex
 			(false, _currentSpriteDMAMask)];
@@ -977,12 +983,17 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		// Line Condition does not retroactively release its already committed BA
 		// interval. An aborted cycle-12/13 sequence is cleared at cycle 14 by the
 		// existing graphics-fetch state machine and therefore adds no interval.
-		if (_badLineCAccessActive && _badLineCAccessStartCycle != 0 &&
-			_badLineCAccessStartCycle <= _BADLINE_START_LAST_CYCLE)
+		//
+		// A sequence latched after cycle 14 starts its BA lead together with its
+		// first attempted c-access, in the cycle following recognition. AEC becomes
+		// effective after the three initial invalid c-access attempts. Sequences
+		// already latched by cycle 14 retain their original BA start cycle.
+		if (_badLineCAccessActive && firstBACycle != 0 &&
+			firstBACycle <= _BADLINE_START_LAST_CYCLE)
 		{
 			_adjustedCurrentCPUStopWindows.emplace_back
-				(_badLineCAccessStartCycle,
-				 _badLineCAccessStartCycle + 3,
+				(firstBACycle,
+				 firstBACycle + 3,
 				 _BADLINE_START_LAST_CYCLE);
 			mergeCPUStopWindows (_adjustedCurrentCPUStopWindows);
 		}

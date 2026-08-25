@@ -184,16 +184,18 @@ namespace COMMODORE
 		  * BadlineCondition				= Attribute: Whether the instantaneous Bad Line Condition is active. \n
 		  * BadlinePreventedIdleThisLine	= Attribute: Whether a late Bad Line Condition has prevented idle entry. \n
 		  * BadlineDetected					= Attribute: Whether a Bad Line Condition has been accepted during the display-state window. \n
-		  * BadlineBARequested				= Attribute: Whether a BA-like bus request has been issued for the current bad line. \n
-		  * BadlineBARequestCycle			= Attribute: Number of the VICII internal cycle where the bus
-		  *		request to access to the character data happens. \n
+		  * BadlineBARequested				= Attribute: Whether a BA-like bus request has been scheduled for the current bad line. \n
+		  * BadlineBARequestCycle			= Attribute: First VICII internal cycle in which the scheduled
+		  *		BA-like request is effective. \n
 		  * BadlineFirstCAccessCycle			= Attribute: Number of the VICII internal cycle where the first
 		  *		access to the character data happens. \n
 		  * BadlineCAccess					= Attribute: Whether a bad-line c-access sequence is latched for the current raster line. \n
 		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed
 		  *		to perform normal Video Matrix / Color RAM reads in this raster line. \n
 		  * BadlineInvalidCAccessCycles		= Attribute: Number of initial invalid c-access attempts in the current raster line. \n
-		  * BadlineCAccessStartCycle		= Attribute: Number of the VICII internal cycle where the access to the character data starts. \n
+		  * BadlineCAccessStartCycle		= Attribute: VICII internal cycle where the bad-line c-access
+		  *		sequence was latched. For late sequences, the first attempted c-access is reported separately
+		  *		by BadlineFirstCAccessCycle. \n
 		  * Cycle							= Attribute: Number of the VICII internal cycle where the raster beam is. \n
 		  * LastVICDataRead					= Attribute: The last byte read by the VICII. \n
 		  */
@@ -793,10 +795,11 @@ namespace COMMODORE
 			exactly at cycle 58. */
 		bool _badLinePreventedIdleThisLine;
 		/** True when the BA-like CPU stop request for the current bad line
-			has already been issued. */
+			has already been scheduled. */
 		bool _badLineBAAlreadyRequested;
-		/** Raster cycle where the BA-like CPU stop request for the current bad line
-			was issued. 0 means that no BA request has been issued for this line. */
+		/** First raster cycle in which the scheduled BA-like CPU stop request for
+			the current bad line is effective. 0 means that no BA request has been
+			scheduled for this line. */
 		unsigned short _badLineBARequestCycle;
 		/** True when a bad-line c-access sequence has been latched for the current raster line. \n
 			This does not necessarily mean that real Video Matrix / Color RAM reads
@@ -817,8 +820,9 @@ namespace COMMODORE
 			While AEC is still high, the VIC-II receives CPU D0-D3 through U16
 			instead of valid Color RAM data. */
 		MCHEmul::UByte _badLineInvalidColorData;
-		/** Raster cycle where the current bad-line c-access sequence started.
-			0 means that no c-access sequence is active in the current line. */
+		/** Raster cycle where the current bad-line c-access sequence was latched. \n
+			For a late sequence, its first attempted c-access can occur in the following
+			cycle. 0 means that no c-access sequence is active in the current line. */
 		unsigned short _badLineCAccessStartCycle;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
