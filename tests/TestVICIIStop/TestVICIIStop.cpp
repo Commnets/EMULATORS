@@ -310,8 +310,7 @@ class TestVICII final : public VICIIType
 			this -> _raster.hData ().firstScreenPosition ();
 		const unsigned short reducedSliceBeginning =
 			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
-		this -> treatBorderComparatorsAtCurrentCycle
-			(true, reducedSliceBeginning);
+		this -> actualizeMainBorderStatus (reducedSliceBeginning);
 		const bool reducedLimitDetected =
 			this -> _vicGraphicInfo._ffLBorder &&
 			this -> _vicGraphicInfo._ffMBorderPixels ==
@@ -332,8 +331,7 @@ class TestVICII final : public VICIIType
 			this -> _raster.hData ().firstScreenPosition ();
 		const unsigned short alignedSliceBeginning =
 			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
-		this -> treatBorderComparatorsAtCurrentCycle
-			(true, alignedSliceBeginning);
+		this -> actualizeMainBorderStatus (alignedSliceBeginning);
 		const bool alignedLimitDetected =
 			this -> _vicGraphicInfo._ffLBorder &&
 			this -> _vicGraphicInfo._ffMBorderPixels == 0 &&
@@ -349,8 +347,8 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
-	/** Verifies that the shared vertical-border phase changes the flip-flop only
-		at the final raster cycle selected by the concrete PAL or NTSC model. */
+	/** Verifies the final-cycle guard used by simulate() and the vertical-border
+		comparator for the concrete PAL or NTSC model. */
 	bool testVerticalBorderComparatorCycle (const std::string& testName)
 	{
 		this -> _raster.initialize ();
@@ -361,23 +359,27 @@ class TestVICII final : public VICIIType
 
 		this -> _vicGraphicInfo._ffVBorder = false;
 		this -> _cycleInRasterLine = this -> cyclesPerRasterLine () - 1;
-		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		if (this -> _cycleInRasterLine == this -> cyclesPerRasterLine ())
+			this -> actualizeVerticalBorderStatus ();
 		const bool unchangedBeforeLastCycle =
 			!this -> _vicGraphicInfo._ffVBorder;
 
 		this -> _cycleInRasterLine = this -> cyclesPerRasterLine ();
-		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		if (this -> _cycleInRasterLine == this -> cyclesPerRasterLine ())
+			this -> actualizeVerticalBorderStatus ();
 		const bool closedAtLastCycle = this -> _vicGraphicInfo._ffVBorder;
 
 		while (this -> _raster.currentLine () != _registers.minRasterV ())
 			this -> _raster.vData ().next ();
 		this -> _cycleInRasterLine = this -> cyclesPerRasterLine () - 1;
-		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		if (this -> _cycleInRasterLine == this -> cyclesPerRasterLine ())
+			this -> actualizeVerticalBorderStatus ();
 		const bool stillClosedBeforeLastCycle =
 			this -> _vicGraphicInfo._ffVBorder;
 
 		this -> _cycleInRasterLine = this -> cyclesPerRasterLine ();
-		this -> treatBorderComparatorsAtCurrentCycle (false, 0);
+		if (this -> _cycleInRasterLine == this -> cyclesPerRasterLine ())
+			this -> actualizeVerticalBorderStatus ();
 		const bool openedAtLastCycle = !this -> _vicGraphicInfo._ffVBorder;
 		const bool result =
 			unchangedBeforeLastCycle && closedAtLastCycle &&
@@ -436,6 +438,51 @@ class TestVICII final : public VICIIType
 			<< " | held $" << (unsigned int) heldMask
 			<< " | continuing $" << (unsigned int) continuingMask
 			<< std::dec << " | " << (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies the independently specified staggered VIC-II graphics pipeline:
+		c-access occupies cycles 15..54 and g-access cycles 16..55. */
+	bool testGraphicAccessPipelineWindows ()
+	{
+		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessAllowedThisLine = true;
+		this -> _badLineCAccessStartCycle = 12;
+
+		this -> _cycleInRasterLine = 14;
+		const bool beforePipeline =
+			!this -> isBadLineCAccessCycle () && !this -> isGraphicAccessCycle ();
+		this -> _cycleInRasterLine = 15;
+		const bool firstCAccess =
+			this -> isBadLineCAccessCycle () && !this -> isGraphicAccessCycle ();
+		this -> _cycleInRasterLine = 16;
+		const bool firstSharedCycle =
+			this -> isBadLineCAccessCycle () && this -> isGraphicAccessCycle ();
+		this -> _cycleInRasterLine = 54;
+		const bool lastSharedCycle =
+			this -> isBadLineCAccessCycle () && this -> isGraphicAccessCycle ();
+		this -> _cycleInRasterLine = 55;
+		const bool lastGAccess =
+			!this -> isBadLineCAccessCycle () && this -> isGraphicAccessCycle ();
+
+		this -> _badLineCAccessStartCycle = 36;
+		this -> _cycleInRasterLine = 36;
+		const bool beforeLateCAccess = !this -> isBadLineCAccessCycle ();
+		this -> _cycleInRasterLine = 37;
+		const bool firstLateCAccess = this -> isBadLineCAccessCycle ();
+		const bool result =
+			beforePipeline && firstCAccess && firstSharedCycle &&
+			lastSharedCycle && lastGAccess &&
+			beforeLateCAccess && firstLateCAccess;
+
+		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessAllowedThisLine = false;
+		this -> _badLineCAccessStartCycle = 0;
+		this -> _cycleInRasterLine = 1;
+
+		std::cout << "Staggered c/g access windows | "
+			<< (result ? "OK" : "ERROR") << std::endl;
 
 		return (result);
 	}
@@ -546,6 +593,7 @@ int main ()
 	result &= viciiNTSC.testVerticalBorderComparatorCycle
 		("NTSC vertical border comparator");
 	result &= vicii.testProjectedSpriteDMAMask ();
+	result &= vicii.testGraphicAccessPipelineWindows ();
 
 	// YSCROLL=2: line 50 is a bad line and neither line 49 nor 51 is.
 	vicii.advanceFromRasterLine (49, 2);

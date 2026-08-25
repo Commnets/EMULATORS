@@ -38,10 +38,11 @@ namespace COMMODORE
 		lines or sprite DMA, the VIC-II can also steal the CPU-visible phase
 		through BA/AEC. \n
 		This emulator advances the VIC-II once per CPU cycle. It does not model
-		the two hardware half-cycles as independent scheduler steps. Instead,
-		phase-related actions such as c-access and g-access are grouped in a
-		single emulated VIC-II cycle, preserving their internal order and their
-		CPU bus-stealing effect. \n
+		the two hardware half-cycles as independent scheduler steps. Instead, it
+		executes the g-access associated with phi1 before the c-access associated
+		with phi2 in their shared cycles. Thus each c-access prepares the Video
+		Matrix and Color RAM data consumed by the following g-access while
+		preserving the CPU bus-stealing effect. \n
 		Every emulated VIC-II cycle corresponds to 8 raster pixels when the beam
 		is inside the visible area.
 		\n
@@ -71,14 +72,12 @@ namespace COMMODORE
 		/** Late Bad Line Condition window that can prevent idle entry at cycle 58. */
 		static const unsigned short _BADLINE_IDLE_PREVENT_FIRST_CYCLE		= 54;
 		static const unsigned short _BADLINE_IDLE_PREVENT_LAST_CYCLE		= 57;
-		/** Effective c-access window used by the grouped CPU-cycle model.
-			Real c-access timing starts earlier in the VIC-II half-cycle model,
-			but this emulator groups the paired c/g work around cycles 16..55. */
-		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE	= 16;
-		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_LAST_CYCLE	= 55;
-		/** Effective g-access window used by the grouped CPU-cycle model.
-			Each cycle can perform the optional bad-line c-access first and then
-			the mandatory g-access before advancing the graphics counters once. */
+		/** Effective c-access window. c-access in phi2 of cycles 15..54 prepares
+			the matrix and color data consumed by g-access in the following cycle. */
+		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE	= 15;
+		static const unsigned short _BADLINE_EFFECTIVE_CACCESS_LAST_CYCLE	= 54;
+		/** Effective g-access window. g-access in phi1 of cycles 16..55 consumes
+			the data prepared by the preceding c-access. */
 		static const unsigned short _GRAPHIC_ACCESS_FIRST_CYCLE				= 16;
 		static const unsigned short _GRAPHIC_ACCESS_LAST_CYCLE				= 55;
 
@@ -486,8 +485,8 @@ namespace COMMODORE
 			This phase is executed before the CPU write belonging to the same grouped
 			cycle becomes visible. It includes sprite pointer/data accesses, c-accesses,
 			g-accesses and the counter transitions directly associated with them. \n
-			Border comparators are deliberately excluded and are evaluated later by
-			treatBorderComparatorsAtCurrentCycle (). */
+			Border comparators are deliberately excluded and are evaluated later in
+			the comparator phase of simulate(). */
 		virtual void treatRasterBusCycle ();
 		/** To treat the VIC-II cycle where VC is loaded from VCBASE and
 			the graphic access indexes are reset for the current line. */
@@ -576,9 +575,9 @@ namespace COMMODORE
 		// Border management.
 		/** Evaluates the left and right horizontal main-border comparators for the
 			current eight-pixel raster slice. \n
-			The vertical border flip-flop must already have been updated by
-			treatBorderComparatorsAtCurrentCycle (). This method only consumes that
-			state when applying the left-comparator rule. \n
+			The vertical border flip-flop must already have been updated by the
+			final-cycle comparator phase in simulate(). This method only consumes
+			that state when applying the left-comparator rule. \n
 			The temporary left/right flags describe a partial transition for rendering;
 			they are not VIC-II hardware flip-flops. */
 		inline void actualizeMainBorderStatus (unsigned short cav);
@@ -694,7 +693,9 @@ namespace COMMODORE
 		void debugReadingSpriteInfo (size_t nS);
 		void debugSpriteDrawFinishes (size_t nS);
 		void debugSpriteDrawToStart (size_t nS);
-		void debugReadingVideoMatrix ();
+		/** Records the data and counters targeted by the completed c-access,
+			including whether the access returned DMA-delay/FLI fallback data. */
+		void debugReadingVideoMatrix (bool invalidCAccess);
 		/** Records the data and the counters used by the completed g-access.
 			It must be called before advancing VC, VLMI and GAccessIndex. */
 		void debugReadingGraphics ();
@@ -861,12 +862,14 @@ namespace COMMODORE
 		  *   the first attempts are treated as invalid FLI/DMA-delay accesses.
 		  *   If the condition was latched earlier
 		  *   but is no longer active at cycle 14, the c-access sequence is cancelled. 
-		  *	- Effective graphics accesses are grouped in cycles 16..55 in this emulator.
-		  *	  During these accesses, _GAccessIndex always advances. VC and _VLMI advance
-		  *	  only while the sequencer is in display state.
+		  *	- c-accesses occur in phi2 of cycles 15..54 and g-accesses in phi1 of
+		  *	  cycles 16..55. In cycles containing both, g-access and its counter
+		  *	  advance precede the c-access that prepares the following entry.
+		  *	  _GAccessIndex advances on every g-access. VC and _VLMI advance only
+		  *	  while the sequencer is in display state.
 		  *	- When a late Bad Line Condition is accepted while the sequencer is
-		  *	  idle, its first attempted c-access occurs in the selected grouped
-		  *	  cycle, but the g-access of that cycle still uses idle state.
+		  *	  idle, its first attempted c-access occurs after the g-access of that
+		  *	  cycle, which therefore still uses idle state.
 		  *	  Display state becomes active after that bus cycle, so VC and _VLMI
 		  *	  start advancing with the following g-access.
 		  *	- At cycle 58, if RC == 7, VCBASE is loaded from VC. The sequencer enters
@@ -1368,28 +1371,33 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatGraphicAccessCycle ()
 	{
-		if (!isGraphicAccessCycle ())
+		const bool gAccess = isGraphicAccessCycle ();
+		const bool cAccess = isBadLineCAccessCycle ();
+		if (!gAccess && !cAccess)
 			return;
 
-		// This grouped cycle represents the VIC-II graphics work for one
-		// CPU-visible cycle. If a bad-line c-access is active, it is performed
-		// before the g-access because text-mode g-accesses use the just-fetched
-		// Video Matrix byte. Only the c-access reports extra CPU bus stealing;
-		// the g-access is the normal VIC-II phase for this cycle.
+		// The scheduler advances once per CPU cycle, but the VIC-II bus pipeline
+		// remains staggered. phi1 first performs the g-access prepared by the
+		// preceding c-access. Its counter advance then selects the matrix entry
+		// that phi2 prepares for the following cycle. Only c-access steals the
+		// CPU-visible bus phase.
 		memoryRef () -> setActiveView (_VICIIView);
 
-		treatBadLineCAccessCycle ();
+		if (gAccess)
+		{
+			readGraphicalInfo ();
 
-		readGraphicalInfo ();
+			// Record the counters and buffer index used by the completed g-access
+			// before advancing them for the following graphics cycle.
+			_IFDEBUG debugReadingGraphics ();
+
+			advanceGraphicAccessCounters ();
+		}
+
+		if (cAccess)
+			treatBadLineCAccessCycle ();
 
 		memoryRef () -> setCPUView ();
-
-		// Record the counters and buffer index used by the completed g-access
-		// before advancing them for the following graphics cycle.
-		_IFDEBUG debugReadingGraphics ();
-
-		advanceGraphicAccessCounters ();
-
 	}
 
 	// ---
@@ -1426,14 +1434,14 @@ namespace COMMODORE
 				_vicGraphicInfo._colorData [vMLI] =
 					_badLineInvalidColorData;
 
-			_IFDEBUG debugReadingVideoMatrix ();
+			_IFDEBUG debugReadingVideoMatrix (true);
 
 			return;
 		}
 
 		readVideoMatrixAndColorRAM ();
 
-		_IFDEBUG debugReadingVideoMatrix ();
+		_IFDEBUG debugReadingVideoMatrix (false);
 
 	}
 
@@ -1444,8 +1452,8 @@ namespace COMMODORE
 			_badLineCAccessStartCycle == 0)
 			return (0);
 
-		// In this grouped model, normal bad lines and FLI-like bad lines that
-		// are active by cycle 14 start their attempted c-accesses at cycle 16.
+		// Normal bad lines and FLI-like bad lines that are active by cycle 14
+		// start their attempted c-accesses in phi2 of cycle 15.
 		// Late DMA-delay/VSP sequences start attempting c-accesses in the cycle
 		// immediately following recognition of the Bad Line Condition. The BA/AEC
 		// delay makes the first attempts invalid; it does not postpone them.
@@ -1453,7 +1461,6 @@ namespace COMMODORE
 			(_badLineCAccessStartCycle <= 14)
 				? _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE
 				: (unsigned short) (_badLineCAccessStartCycle + 1);
-
 		if (result < _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE)
 			result = _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE;
 
@@ -1557,8 +1564,7 @@ namespace COMMODORE
 				// system before recalculating its prediction.
 				_pendingCPUTransaction._startCycle -= _cyclesPerRasterLine;
 				if (recalculatePendingCPUStopPrediction ())
-					_IFDEBUG debugCPUStopPredictionRecalculated
-						("RasterLineChange");
+					_IFDEBUG debugCPUStopPredictionRecalculated	("RasterLineChange");
 			}
 		}
 	}

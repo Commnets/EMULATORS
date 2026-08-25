@@ -336,18 +336,17 @@ bool COMMODORE::VICII::simulate (MCHEmul::CPU* cpu)
 		requestPredictedCPUStopIfNeeded (cpu, cC);
 
 		// Phase 4: execute the VIC-II bus activity and sequencer transitions
-		// associated with the current raster cycle. This performs actions such as
-		// sprite data reads,
-		// normal or invalid bad-line c-access attempts, graphic-data reads,
-		// effective bad-line matrix/color accesses when allowed, graphic-data reads,
-		// VC/VLMI advancement, RC handling and sprite activation/deactivation. All
-		// accesses observe the register values effective before the CPU write of cC.
+		// associated with the current raster cycle. In shared graphics cycles, the
+		// phi1 g-access first consumes the matrix/color entry prepared previously,
+		// advances VC/VLMI and then the phi2 c-access prepares the following entry.
+		// Sprite reads, RC handling and sprite activation/deactivation also occur
+		// here. Every access observes the register values effective before the CPU
+		// write of cC.
 		treatRasterBusCycle ();
 
-		// A late Bad Line Condition starts its first c-access after the
-		// phi1 g-access of the same grouped cycle has already remained idle.
-		// Display state therefore becomes visible to graphics accesses from
-		// the following VIC-II cycle.
+		// On the first cycle of a late Bad Line Condition, phi1 has already made
+		// an idle g-access before phi2 performs the first c-access. Enter display
+		// state after both phases so the following g-access consumes matrix slot 0.
 		if (_badLineCAccessActive &&
 			_badLineCAccessStartCycle > 14 &&
 			_cycleInRasterLine == firstBadLineCAccessCycle () &&
@@ -2536,13 +2535,16 @@ void COMMODORE::VICII::debugSpriteDrawToStart (size_t nS)
 }
 
 // ---
-void COMMODORE::VICII::debugReadingVideoMatrix ()
+void COMMODORE::VICII::debugReadingVideoMatrix (bool invalidCAccess)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeLineData ("Reading Video Matrix & Color RAM [" +
-					_vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + ", " +
-					_vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "]");
+	_deepDebugFile -> writeLineData (std::string ("Reading Video Matrix & Color RAM [") +
+		"Screen=" + _vicGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"Color=" + _vicGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
+		"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
+		"Invalid=" + std::to_string (invalidCAccess) + "]");
 }
 
 // ---
