@@ -632,7 +632,7 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 			// Once the instruction's been executed, the total cycles dedicated is notified...
 			notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
-				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
+				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_lastInstruction))));
 
 			_IFDEBUG debugInstructionExecuted (sdd);
 		}
@@ -705,7 +705,7 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 		// Once the instruction's been executed, the total cycles dedicated is notified...
 		notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
-			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_currentInstruction))));
+			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_lastInstruction))));
 
 		_IFDEBUG debugInstructionExecuted (sdd);
 	}

@@ -267,7 +267,7 @@ def clear_update_fields(doc) -> None:
 
 
 def normalize_word_field_results(doc) -> None:
-    """Translate cached empty-list results produced by a Spanish Word install."""
+    """Normalize cached field results and discard Word pagination hints."""
     replacements = {
         "NO SE ENCUENTRAN ELEMENTOS DE TABLA DE ILUSTRACIONES.": "No table of illustrations entries were found.",
         "No se encuentran elementos de tabla de ilustraciones.": "No table of illustrations entries were found.",
@@ -282,6 +282,14 @@ def normalize_word_field_results(doc) -> None:
             for old, new in replacements.items():
                 if old in run.text:
                     run.text = run.text.replace(old, new)
+
+    # Word adds these non-semantic hints while updating fields. When one lands
+    # inside a Title run that already has pageBreakBefore, reopening the DOCX
+    # can place the title above the printable area and move its footer outside
+    # the page. Pagination must be recalculated from the actual paragraph
+    # properties instead of retaining the stale cached marker.
+    for page_break in list(doc.element.body.iter(qn("w:lastRenderedPageBreak"))):
+        page_break.getparent().remove(page_break)
 
 
 def configure_styles(doc) -> None:

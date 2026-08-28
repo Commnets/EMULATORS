@@ -25,6 +25,9 @@ class TestVICII final : public VICIIType
 	using CPUStopPrediction = typename VICIIType::CPUStopPrediction;
 	using CPUStopWindow = typename VICIIType::CPUStopWindow;
 	using CPUStopWindows = typename VICIIType::CPUStopWindows;
+	using DrawContext = typename VICIIType::DrawContext;
+	using DrawResult = typename VICIIType::DrawResult;
+	using RegisterEffect = typename VICIIType::DrawContext::RegisterEffect;
 
 	TestVICII ()
 		: VICIIType (0, nullptr, MCHEmul::Address (2, 0), 0),
@@ -78,6 +81,162 @@ class TestVICII final : public VICIIType
 			<< " | stop cycles " << prediction._cyclesToStop << "/" << expected._cyclesToStop
 			<< " | writes " << (writeEffectsMatch ? "OK" : "ERROR")
 			<< " | " << (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that output capture preserves the state on both sides of a
+		visual register write and reuses the initial state when no write applies. */
+	bool testOutputStateCapture ()
+	{
+		_registers.initialize ();
+		_registers.setRegister (0x11, MCHEmul::UByte (0x18));
+		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
+		_registers.setRegister (0x20, MCHEmul::UByte (0x02));
+		_registers.setRegister (0x21, MCHEmul::UByte (0x03));
+
+		DrawContext dC (0, 0, 0, 0);
+		this -> captureOutputState (dC._beforeCPUWrite);
+		const bool unchangedStateReused =
+			&dC.outputStateAfterCPUWrite () == &dC._beforeCPUWrite &&
+			!dC.outputChangesDuringSlice () &&
+			&dC.outputStateAtPixel (0) == &dC._beforeCPUWrite &&
+			&dC.outputStateAtPixel (7) == &dC._beforeCPUWrite;
+
+		_registers.setRegister (0x16, MCHEmul::UByte (0x17));
+		_registers.setRegister (0x1b, MCHEmul::UByte (0x01));
+		_registers.setRegister (0x1c, MCHEmul::UByte (0x02));
+		_registers.setRegister (0x1d, MCHEmul::UByte (0x04));
+		_registers.setRegister (0x20, MCHEmul::UByte (0x05));
+		_registers.setRegister (0x21, MCHEmul::UByte (0x06));
+		_registers.setRegister (0x25, MCHEmul::UByte (0x07));
+		_registers.setRegister (0x27, MCHEmul::UByte (0x08));
+		dC._registerEffect._applied = true;
+		dC._registerEffect._affectsOutput = true;
+		this -> captureOutputState (dC._afterCPUWrite);
+		const bool splitState =
+			dC.outputChangesDuringSlice () &&
+			&dC.outputStateAtPixel (0) == &dC._beforeCPUWrite &&
+			&dC.outputStateAtPixel (3) == &dC._beforeCPUWrite &&
+			&dC.outputStateAtPixel (4) == &dC._afterCPUWrite &&
+			&dC.outputStateAtPixel (7) == &dC._afterCPUWrite;
+
+		const bool result =
+			unchangedStateReused && splitState &&
+			dC._beforeCPUWrite._horizontalScroll == 0 &&
+			dC._beforeCPUWrite._textDisplay40Columns &&
+			dC._beforeCPUWrite._borderColor == 0x02 &&
+			dC._beforeCPUWrite._backgroundColors [0] == 0x03 &&
+			&dC.outputStateAfterCPUWrite () == &dC._afterCPUWrite &&
+			dC._afterCPUWrite._graphicMode ==
+				COMMODORE::VICIIRegisters::GraphicMode::_MULTICOLORCHARMODE &&
+			dC._afterCPUWrite._horizontalScroll == 7 &&
+			!dC._afterCPUWrite._textDisplay40Columns &&
+			dC._afterCPUWrite._borderColor == 0x05 &&
+			dC._afterCPUWrite._backgroundColors [0] == 0x06 &&
+			dC._afterCPUWrite._spritePriorityMask == 0x01 &&
+			dC._afterCPUWrite._spriteMulticolorMask == 0x02 &&
+			dC._afterCPUWrite._spriteDoubleWidthMask == 0x04 &&
+			dC._afterCPUWrite._spriteSharedColors [0] == 0x07 &&
+			dC._afterCPUWrite._spriteColors [0] == 0x08;
+
+		_registers.initialize ();
+		std::cout << "VIC-II output-state capture | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that an invalid mode can cover only the phi2 half of a slice
+		without forcing the pixels previously produced during phi1 to black. */
+	bool testInvalidGraphicPixelMask () const
+	{
+		DrawResult drawResult;
+		for (size_t i = DrawContext::_FIRSTPIXELAFTERCPUWRITE; i < 8; i++)
+			drawResult._invalidGraphicData.setBit (7 - i, true);
+
+		const bool result =
+			!drawResult._invalidGraphicData.bit (7) &&
+			!drawResult._invalidGraphicData.bit (4) &&
+			drawResult._invalidGraphicData.bit (3) &&
+			drawResult._invalidGraphicData.bit (0);
+
+		std::cout << "VIC-II invalid-mode pixel mask | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that the sprite X comparator uses the pre-write value in phi1,
+		the post-write value in phi2 and never repositions an already latched sprite. */
+	bool testSpriteHorizontalStartPhases ()
+	{
+		this -> _raster.initialize ();
+		while (this -> _raster.currentColumn () < 16 ||
+			this -> _raster.currentColumn () > 200)
+			this -> _raster.hData ().add (this -> _raster.step ());
+
+		const unsigned short column = this -> _raster.currentColumn ();
+		_registers.setRegister (0x10, MCHEmul::UByte::_0);
+		_registers.setRegister (0x00, MCHEmul::UByte
+			((unsigned char) (column + 2 - 4)));
+		_registers.setRegister (0x02, MCHEmul::UByte
+			((unsigned char) (column + 12 - 4)));
+		_registers.setRegister (0x04, MCHEmul::UByte
+			((unsigned char) (column + 12 - 4)));
+		_registers.setRegister (0x06, MCHEmul::UByte
+			((unsigned char) (column + 4 - 4)));
+
+		for (size_t i = 0; i < 4; i++)
+		{
+			this -> _vicSpriteInfo [i]._displayActive = true;
+			this -> _vicSpriteInfo [i]._drawing = false;
+			this -> _vicSpriteInfo [i]._xS = 0;
+		}
+
+		this -> treatSpriteHorizontalStartAtCurrentCycle
+			(0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		const bool phi1Latched =
+			this -> _vicSpriteInfo [0]._drawing &&
+			this -> _vicSpriteInfo [0]._xS == column + 2;
+		const bool boundaryNotYetLatched =
+			!this -> _vicSpriteInfo [3]._drawing;
+
+		// Move sprite 0 after it has started, sprite 1 into phi2 and sprite 2
+		// into the already elapsed phi1 interval.
+		_registers.setRegister (0x00, MCHEmul::UByte
+			((unsigned char) (column + 6 - 4)));
+		_registers.setRegister (0x02, MCHEmul::UByte
+			((unsigned char) (column + 6 - 4)));
+		_registers.setRegister (0x04, MCHEmul::UByte
+			((unsigned char) (column + 2 - 4)));
+		this -> treatSpriteHorizontalStartAtCurrentCycle
+			(DrawContext::_FIRSTPIXELAFTERCPUWRITE, this -> _raster.step ());
+
+		const bool phi1PositionPreserved =
+			this -> _vicSpriteInfo [0]._xS == column + 2;
+		const bool phi2Latched =
+			this -> _vicSpriteInfo [1]._drawing &&
+			this -> _vicSpriteInfo [1]._xS == column + 6;
+		const bool elapsedPhi1Ignored =
+			!this -> _vicSpriteInfo [2]._drawing;
+		const bool boundaryLatchedInPhi2 =
+			this -> _vicSpriteInfo [3]._drawing &&
+			this -> _vicSpriteInfo [3]._xS == column + 4;
+		const bool result = phi1Latched && boundaryNotYetLatched &&
+			phi1PositionPreserved && phi2Latched && elapsedPhi1Ignored &&
+			boundaryLatchedInPhi2;
+
+		for (size_t i = 0; i < 4; i++)
+			this -> _vicSpriteInfo [i] = typename VICIIType::VICSpriteInfo ();
+		_registers.initialize ();
+
+		std::cout << "VIC-II sprite horizontal start phases | "
+			<< "phi1 " << phi1Latched << ", preserve " << phi1PositionPreserved
+			<< ", phi2 " << phi2Latched << ", elapsed " << elapsedPhi1Ignored
+			<< ", boundary " << boundaryNotYetLatched << "/"
+			<< boundaryLatchedInPhi2 << " | "
+			<< (result ? "OK" : "ERROR") << std::endl;
 
 		return (result);
 	}
@@ -163,16 +322,23 @@ class TestVICII final : public VICIIType
 			(&_registers, 0x15, MCHEmul::UByte (0x01));
 		_registers.setRegister (0x15, MCHEmul::UByte::_0);
 		bool horizontalDisplayZoneChanged;
+		RegisterEffect pendingEffect, appliedEffect;
 
 		const bool result =
 			!this -> executePendingRegisterWriteAt
-				(102, &horizontalDisplayZoneChanged) &&
+				(102, &pendingEffect, &horizontalDisplayZoneChanged) &&
 			!horizontalDisplayZoneChanged &&
+			!pendingEffect._applied &&
 			!_registers.spriteEnable (0) &&
 			this -> _pendingRegisterWrites.size () == 1 &&
 			this -> executePendingRegisterWriteAt
-				(103, &horizontalDisplayZoneChanged) &&
+				(103, &appliedEffect, &horizontalDisplayZoneChanged) &&
 			!horizontalDisplayZoneChanged &&
+			appliedEffect._applied &&
+			!appliedEffect._affectsOutput &&
+			appliedEffect._registerPosition == 0x15 &&
+			appliedEffect._previousValue == MCHEmul::UByte::_0 &&
+			appliedEffect._newValue == MCHEmul::UByte (0x01) &&
 			_registers.spriteEnable (0) &&
 			this -> _pendingRegisterWrites.empty ();
 
@@ -210,17 +376,26 @@ class TestVICII final : public VICIIType
 			(&_registers, 0x15, MCHEmul::UByte::_0);
 		_registers.setRegister (0x15, MCHEmul::UByte::_0);
 		bool horizontalDisplayZoneChanged;
+		RegisterEffect firstEffect, secondEffect;
 
 		const bool firstWrite =
 			this -> executePendingRegisterWriteAt
-				(204, &horizontalDisplayZoneChanged) &&
+				(204, &firstEffect, &horizontalDisplayZoneChanged) &&
 			!horizontalDisplayZoneChanged &&
+			firstEffect._applied &&
+			!firstEffect._affectsOutput &&
+			firstEffect._previousValue == MCHEmul::UByte::_0 &&
+			firstEffect._newValue == MCHEmul::UByte (0x01) &&
 			_registers.spriteEnable (0) &&
 			this -> _pendingRegisterWrites.size () == 1;
 		const bool secondWrite =
 			this -> executePendingRegisterWriteAt
-				(205, &horizontalDisplayZoneChanged) &&
+				(205, &secondEffect, &horizontalDisplayZoneChanged) &&
 			!horizontalDisplayZoneChanged &&
+			secondEffect._applied &&
+			!secondEffect._affectsOutput &&
+			secondEffect._previousValue == MCHEmul::UByte (0x01) &&
+			secondEffect._newValue == MCHEmul::UByte::_0 &&
 			!_registers.spriteEnable (0) &&
 			this -> _pendingRegisterWrites.empty ();
 		const bool result = firstWrite && secondWrite;
@@ -260,8 +435,9 @@ class TestVICII final : public VICIIType
 		const unsigned short previousScreenPositions =
 			this -> _raster.hData ().screenPositions ();
 		bool horizontalDisplayZoneChanged;
+		RegisterEffect registerEffect;
 		const bool writeApplied = this -> executePendingRegisterWriteAt
-			(303, &horizontalDisplayZoneChanged);
+			(303, &registerEffect, &horizontalDisplayZoneChanged);
 		const bool unchangedDuringSlice =
 			this -> _raster.hData ().screenPositions () == previousScreenPositions;
 
@@ -271,6 +447,10 @@ class TestVICII final : public VICIIType
 
 		const bool result =
 			writeApplied && horizontalDisplayZoneChanged &&
+			registerEffect._applied && registerEffect._affectsOutput &&
+			registerEffect._registerPosition == 0x16 &&
+			registerEffect._previousValue == MCHEmul::UByte (0x08) &&
+			registerEffect._newValue == MCHEmul::UByte (0x07) &&
 			unchangedDuringSlice &&
 			this -> _raster.hData ().screenPositions () < previousScreenPositions;
 
@@ -285,10 +465,9 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
-	/** Verifies that the left border detects both a non-aligned reduced limit
-		and a normal limit coinciding with the beginning of the current slice. \n
-		The real horizontal raster position is driven to each comparator so the
-		test exercises the same phase entry point used by VICII::simulate(). */
+	/** Verifies the per-pixel main-border mask at both CSEL-dependent left
+		comparators. The reduced comparator is the last pixel of its slice, while
+		the normal comparator coincides with the first one. */
 	bool testLeftBorderAtSliceBeginning ()
 	{
 		this -> _raster.initialize ();
@@ -299,49 +478,249 @@ class TestVICII final : public VICIIType
 		this -> _raster.hData ().reduceDisplayZone (true);
 		this -> _vicGraphicInfo._ffVBorder = false;
 		this -> _vicGraphicInfo._ffMBorder = true;
-		this -> _vicGraphicInfo._ffLBorder = false;
-		this -> _vicGraphicInfo._ffRBorder = false;
 		while (((_registers.minRasterH () +
 			this -> _raster.hData ().totalPositions () -
 			this -> _raster.currentColumn ()) %
 			this -> _raster.hData ().totalPositions ()) >= this -> _raster.step ())
 			this -> _raster.hData ().add (this -> _raster.step ());
-		const unsigned short reducedFirstPosition =
-			this -> _raster.hData ().firstScreenPosition ();
-		const unsigned short reducedSliceBeginning =
-			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
-		this -> actualizeMainBorderStatus (reducedSliceBeginning);
+		const unsigned short reducedRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short reducedRCA = (reducedRC >> 3) << 3;
+		DrawContext reducedContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 reducedRC, reducedRCA, 0);
+		this -> actualizeMainBorderStatus
+			(reducedContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(reducedContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
 		const bool reducedLimitDetected =
-			this -> _vicGraphicInfo._ffLBorder &&
-			this -> _vicGraphicInfo._ffMBorderPixels ==
-				reducedFirstPosition - reducedSliceBeginning;
+			reducedContext._mainBorderData == MCHEmul::UByte (0xfe) &&
+			!this -> _vicGraphicInfo._ffMBorder;
 
 		this -> _raster.hData ().initialize ();
 		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
 		this -> _raster.hData ().reduceDisplayZone (false);
 		this -> _vicGraphicInfo._ffMBorder = true;
-		this -> _vicGraphicInfo._ffLBorder = false;
-		this -> _vicGraphicInfo._ffRBorder = false;
 		while (((_registers.minRasterH () +
 			this -> _raster.hData ().totalPositions () -
 			this -> _raster.currentColumn ()) %
 			this -> _raster.hData ().totalPositions ()) >= this -> _raster.step ())
 			this -> _raster.hData ().add (this -> _raster.step ());
-		const unsigned short alignedFirstPosition =
-			this -> _raster.hData ().firstScreenPosition ();
-		const unsigned short alignedSliceBeginning =
-			(this -> _raster.hData ().currentVisiblePosition () >> 3) << 3;
-		this -> actualizeMainBorderStatus (alignedSliceBeginning);
+		const unsigned short alignedRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short alignedRCA = (alignedRC >> 3) << 3;
+		DrawContext alignedContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 alignedRC, alignedRCA, 0);
+		this -> actualizeMainBorderStatus
+			(alignedContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(alignedContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		this -> _raster.hData ().add (this -> _raster.step ());
+		const unsigned short nextAlignedRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short nextAlignedRCA = (nextAlignedRC >> 3) << 3;
+		DrawContext nextAlignedContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 nextAlignedRC, nextAlignedRCA, 0);
+		this -> actualizeMainBorderStatus
+			(nextAlignedContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(nextAlignedContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
 		const bool alignedLimitDetected =
-			this -> _vicGraphicInfo._ffLBorder &&
-			this -> _vicGraphicInfo._ffMBorderPixels == 0 &&
-			alignedFirstPosition == alignedSliceBeginning;
+			alignedContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			nextAlignedContext._mainBorderData == MCHEmul::UByte::_0 &&
+			!this -> _vicGraphicInfo._ffMBorder;
 		const bool result = reducedLimitDetected && alignedLimitDetected;
 		this -> _vicGraphicInfo._ffMBorder = false;
-		this -> _vicGraphicInfo._ffLBorder = false;
 		this -> _cycleInRasterLine = 1;
 
 		std::cout << "Left border at slice beginning | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that a CSEL write affects only the phi2 comparator pass and
+		cannot alter pixels or transitions already evaluated during phi1. */
+	bool testMainBorderComparatorPhases ()
+	{
+		this -> _raster.initialize ();
+		while (this -> _raster.currentLine () < 100)
+			this -> _raster.vData ().next ();
+		while (this -> _raster.currentColumn () != 20)
+			this -> _raster.hData ().add (this -> _raster.step ());
+
+		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
+		this -> _vicGraphicInfo._ffVBorder = false;
+		this -> _vicGraphicInfo._ffMBorder = true;
+		const unsigned short leftRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short leftRCA = (leftRC >> 3) << 3;
+		DrawContext leftContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 leftRC, leftRCA, 0);
+		this -> actualizeMainBorderStatus
+			(leftContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		_registers.setRegister (0x16, MCHEmul::UByte::_0);
+		this -> actualizeMainBorderStatus
+			(leftContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		this -> _raster.hData ().add (this -> _raster.step ());
+		const unsigned short nextLeftRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short nextLeftRCA = (nextLeftRC >> 3) << 3;
+		DrawContext nextLeftContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 nextLeftRC, nextLeftRCA, 0);
+		this -> actualizeMainBorderStatus
+			(nextLeftContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(nextLeftContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		const bool passedLeftComparatorNotReplayed =
+			leftContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			nextLeftContext._mainBorderData == MCHEmul::UByte (0xfe) &&
+			!this -> _vicGraphicInfo._ffMBorder;
+
+		this -> _raster.hData ().initialize ();
+		while (this -> _raster.currentColumn () != 340)
+			this -> _raster.hData ().add (this -> _raster.step ());
+		_registers.setRegister (0x16, MCHEmul::UByte::_0);
+		this -> _vicGraphicInfo._ffMBorder = false;
+		const unsigned short rightRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short rightRCA = (rightRC >> 3) << 3;
+		DrawContext rightContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 rightRC, rightRCA, 0);
+		this -> actualizeMainBorderStatus
+			(rightContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
+		this -> actualizeMainBorderStatus
+			(rightContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		this -> _raster.hData ().add (this -> _raster.step ());
+		const unsigned short nextRightRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short nextRightRCA = (nextRightRC >> 3) << 3;
+		DrawContext nextRightContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 nextRightRC, nextRightRCA, 0);
+		this -> actualizeMainBorderStatus
+			(nextRightContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(nextRightContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		const bool newRightComparatorReachedInPhi2 =
+			rightContext._mainBorderData == MCHEmul::UByte::_0 &&
+			nextRightContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			this -> _vicGraphicInfo._ffMBorder;
+
+		const bool result =
+			passedLeftComparatorNotReplayed && newRightComparatorReachedInPhi2;
+		this -> _vicGraphicInfo._ffMBorder = false;
+		this -> _cycleInRasterLine = 1;
+
+		std::cout << "Main border comparator phases | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies Bauer's vertical-border rules at the exact left-comparator
+		pixel, independently from their second evaluation at the end of the line. */
+	bool testVerticalBorderAtLeftComparator ()
+	{
+		this -> _raster.initialize ();
+		_registers.initialize ();
+		_registers.setRegister (0x11, MCHEmul::UByte (0x18));
+		_registers.setRegister (0x16, MCHEmul::UByte (0x08));
+		while (this -> _raster.currentLine () != _registers.minRasterV ())
+			this -> _raster.vData ().next ();
+		while (this -> _raster.currentColumn () != 20)
+			this -> _raster.hData ().add (this -> _raster.step ());
+
+		this -> _vicGraphicInfo._ffVBorder = true;
+		this -> _vicGraphicInfo._ffMBorder = true;
+		const unsigned short topRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short topRCA = (topRC >> 3) << 3;
+		DrawContext topContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 topRC, topRCA, 0);
+		this -> actualizeMainBorderStatus
+			(topContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(topContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		this -> _raster.hData ().add (this -> _raster.step ());
+		const unsigned short nextTopRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short nextTopRCA = (nextTopRC >> 3) << 3;
+		DrawContext nextTopContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 nextTopRC, nextTopRCA, 0);
+		this -> actualizeMainBorderStatus
+			(nextTopContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(nextTopContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		const bool openedAtTop =
+			topContext._verticalBorderData == MCHEmul::UByte (0xff) &&
+			topContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			nextTopContext._verticalBorderData == MCHEmul::UByte::_0 &&
+			nextTopContext._mainBorderData == MCHEmul::UByte::_0 &&
+			!this -> _vicGraphicInfo._ffVBorder &&
+			!this -> _vicGraphicInfo._ffMBorder;
+
+		this -> _raster.hData ().initialize ();
+		while (this -> _raster.currentColumn () != 20)
+			this -> _raster.hData ().add (this -> _raster.step ());
+		while (this -> _raster.currentLine () != _registers.maxRasterV ())
+			this -> _raster.vData ().next ();
+		this -> _vicGraphicInfo._ffVBorder = false;
+		this -> _vicGraphicInfo._ffMBorder = true;
+		const unsigned short bottomRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short bottomRCA = (bottomRC >> 3) << 3;
+		DrawContext bottomContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 bottomRC, bottomRCA, 0);
+		this -> actualizeMainBorderStatus
+			(bottomContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(bottomContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		this -> _raster.hData ().add (this -> _raster.step ());
+		const unsigned short nextBottomRC =
+			this -> _raster.hData ().currentVisiblePosition ();
+		const unsigned short nextBottomRCA = (nextBottomRC >> 3) << 3;
+		DrawContext nextBottomContext
+			(this -> _raster.hData ().firstDisplayPosition (),
+			 nextBottomRC, nextBottomRCA, 0);
+		this -> actualizeMainBorderStatus
+			(nextBottomContext, 0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
+		this -> actualizeMainBorderStatus
+			(nextBottomContext, DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+			 this -> _raster.step ());
+		const bool closedAtBottom =
+			bottomContext._verticalBorderData == MCHEmul::UByte::_0 &&
+			bottomContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			nextBottomContext._verticalBorderData == MCHEmul::UByte (0xff) &&
+			nextBottomContext._mainBorderData == MCHEmul::UByte (0xff) &&
+			this -> _vicGraphicInfo._ffVBorder &&
+			this -> _vicGraphicInfo._ffMBorder;
+
+		const bool result = openedAtTop && closedAtBottom;
+		this -> _vicGraphicInfo._ffVBorder = false;
+		this -> _vicGraphicInfo._ffMBorder = false;
+		this -> _cycleInRasterLine = 1;
+
+		std::cout << "Vertical border at left comparator | "
 			<< (result ? "OK" : "ERROR") << std::endl;
 
 		return (result);
@@ -618,7 +997,12 @@ int main ()
 	result &= vicii.testSingleRegisterWriteTiming ();
 	result &= vicii.testRMWRegisterWriteTiming ();
 	result &= vicii.testHorizontalDisplayZoneDeferred ();
+	result &= vicii.testOutputStateCapture ();
+	result &= vicii.testInvalidGraphicPixelMask ();
+	result &= vicii.testSpriteHorizontalStartPhases ();
 	result &= vicii.testLeftBorderAtSliceBeginning ();
+	result &= vicii.testMainBorderComparatorPhases ();
+	result &= vicii.testVerticalBorderAtLeftComparator ();
 	result &= vicii.testVerticalBorderComparatorCycle
 		("PAL vertical border comparator");
 	result &= viciiNTSC.testVerticalBorderComparatorCycle

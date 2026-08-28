@@ -37,6 +37,7 @@ namespace COMMODORE
 		video memory activity while the CPU can use the other one; during bad
 		lines or sprite DMA, the VIC-II can also steal the CPU-visible phase
 		through BA/AEC. \n
+		\n
 		This emulator advances the VIC-II once per CPU cycle. It does not model
 		the two hardware half-cycles as independent scheduler steps. Instead, it
 		executes the g-access associated with phi1 before the c-access associated
@@ -118,6 +119,7 @@ namespace COMMODORE
 							{ _VICIIRegisters -> setLigthPenActive (a); 
 							  _eventStatus._lightPenPositionLatched = false;}
 
+		// Related with the grahocal representation when viciievens/gridon is active...
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
 							{ _drawRasterInterruptPositions = d; }
@@ -130,7 +132,8 @@ namespace COMMODORE
 		void setDrawOtherEvents (bool d)
 							{ _drawOtherEvents = d; }
 
-		/** To assign or to know the color RAM. 
+		// Managing the color memory...
+		/** To assign or to know the color RAM. \n
 			The VICII needs to know where the color RAM is, to access the nibbles with the color. */
 		const MCHEmul::PhysicalStorageSubset* colorRAM () const
 							{ return (_colorRAM); }
@@ -170,13 +173,18 @@ namespace COMMODORE
 		/** Prepares VIC-II timing for an accepted interrupt launch sequence. */
 		virtual void CPUAboutToExecute (const MCHEmul::InterruptContextEventData* dt) override;
 
-		/** Simulates cycles in the VICII. \n
-			It draws the border AFTER once graphics info has been drawn within the display zone. \n
-			So sprites can be drawn behing the border and collisions could take place out of the visible zone. */
+		/** Simulates every VIC-II cycle elapsed since the previous CPU
+			synchronization point. \n
+			Batch synchronization and pending-write extraction are handled here;
+			the ordered per-cycle hardware pipeline is executed by
+			simulateRasterCycle (). \n
+			Graphics and sprites are composed before the final border overlay so
+			collisions remain observable behind the border. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**
 		  *	The name of the fields are: \n
+		  * The attributes included in the parent class plus:
 		  * VICIIRegisters					= InfoStructure: Info about the registers. \n
 		  * Raster							= InfoStructure: Info about the raster. \n
 		  * VICIIInternal					= InfoStructure: Info about the internal registers of the VICII. \n
@@ -186,16 +194,17 @@ namespace COMMODORE
 		  * BadlineDetected					= Attribute: Whether a Bad Line Condition has been accepted during the display-state window. \n
 		  * BadlineBARequested				= Attribute: Whether a BA-like bus request has been scheduled for the current bad line. \n
 		  * BadlineBARequestCycle			= Attribute: First VICII internal cycle in which the scheduled
-		  *		BA-like request is effective. \n
-		  * BadlineFirstCAccessCycle			= Attribute: Number of the VICII internal cycle where the first
-		  *		access to the character data happens. \n
+		  *									  BA-like request is effective. \n
+		  * BadlineFirstCAccessCycle		= Attribute: Number of the VICII internal cycle where the first
+		  *									  access to the character data happens. \n
 		  * BadlineCAccess					= Attribute: Whether a bad-line c-access sequence is latched for the current raster line. \n
 		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed
-		  *		to perform normal Video Matrix / Color RAM reads in this raster line. \n
+		  *									  to perform normal Video Matrix / Color RAM reads in this raster line. \n
 		  * BadlineInvalidCAccessCycles		= Attribute: Number of initial invalid c-access attempts in the current raster line. \n
 		  * BadlineCAccessStartCycle		= Attribute: VICII internal cycle where the bad-line c-access
-		  *		sequence was latched. For late sequences, the first attempted c-access is reported separately
-		  *		by BadlineFirstCAccessCycle. \n
+		  *									  sequence was latched. For late sequences, 
+		  *									  the first attempted c-access is reported separately
+		  *									  by BadlineFirstCAccessCycle. \n
 		  * Cycle							= Attribute: Number of the VICII internal cycle where the raster beam is. \n
 		  * LastVICDataRead					= Attribute: The last byte read by the VICII. \n
 		  */
@@ -240,15 +249,20 @@ namespace COMMODORE
 		/** Effective interval in which VIC-II bus activity can stop the CPU. \n
 			BA is low from _firstBACycle through _lastCycle. A pending 6510 write
 			can still finish before _firstAECCycle; a read stops as soon as BA is
-			low. The interval uses inclusive cycle limits. */
+			low. The interval uses inclusive cycle limits. _badLineSource and
+			_spriteSourceMask are diagnostic provenance retained when overlapping
+			requests are merged; they never participate in bus arbitration. */
 		struct CPUStopWindow final
 		{
 			CPUStopWindow ()
-				: _firstBACycle (0), _firstAECCycle (0), _lastCycle (0)
+				: _firstBACycle (0), _firstAECCycle (0), _lastCycle (0),
+				  _badLineSource (false), _spriteSourceMask (0)
 								{ }
 
-			CPUStopWindow (CPURasterCycle fBA, CPURasterCycle fAEC, CPURasterCycle lC)
-				: _firstBACycle (fBA), _firstAECCycle (fAEC), _lastCycle (lC)
+			CPUStopWindow (CPURasterCycle fBA, CPURasterCycle fAEC, CPURasterCycle lC,
+				bool bLS = false, unsigned char sSM = 0)
+				: _firstBACycle (fBA), _firstAECCycle (fAEC), _lastCycle (lC),
+				  _badLineSource (bLS), _spriteSourceMask (sSM)
 								{ }
 
 			bool BAActiveAt (CPURasterCycle c) const
@@ -259,6 +273,8 @@ namespace COMMODORE
 			CPURasterCycle _firstBACycle;
 			CPURasterCycle _firstAECCycle;
 			CPURasterCycle _lastCycle;
+			bool _badLineSource;
+			unsigned char _spriteSourceMask;
 		};
 
 		using CPUStopWindows = std::vector <CPUStopWindow>;
@@ -324,16 +340,97 @@ namespace COMMODORE
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Draw the graphics & Sprites in detail...
-		/** A couple of variables defining the drawing context. \n
-			Tjose are to simplify the use of some of the routines dedicated to draw graphics. */
+		/** Per-cycle information used to compose one eight-pixel raster slice. \n
+			The nested states describe only video-output inputs; they are not VIC-II snapshots
+			and never own sequencer, DMA, interrupt or memory-fetch state. */
 		struct DrawContext
 		{
-			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
-			unsigned short _SC;		// Scroll X
-			unsigned short _RC;		// Raster X position not adjusted
-			unsigned short _RCA;	// Raster X position adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
-			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
-									// Moves 1 by 1. No adjusted needed because how the C64 screen is defined...
+			/** First pixel whose output can observe a CPU write performed during phi2. \n
+				A VIC-II cycle emits eight pixels: pixels 0..3 belong to phi1 and pixels
+				4..7 belong to the CPU phase represented by phi2. */
+			static const size_t _FIRSTPIXELAFTERCPUWRITE = 4;
+
+			/** Register-derived and internal values which can affect final pixel composition. \n
+				Fetched graphics, matrix, color-RAM and sprite data remain in VICGraphicInfo. */
+			struct OutputState
+			{
+				VICIIRegisters::GraphicMode _graphicMode;
+				unsigned char _horizontalScroll, _borderColor;
+				unsigned char _backgroundColors [4];
+				bool _textDisplay40Columns, _textDisplay25Rows, _screenBlanked, _idleState;
+				unsigned char _spriteMulticolorMask, _spriteDoubleWidthMask, _spritePriorityMask;
+				unsigned char _spriteSharedColors [2], _spriteColors [8];
+
+				OutputState ()
+					: _graphicMode (VICIIRegisters::GraphicMode::_CHARMODE),
+					  _horizontalScroll (0), _borderColor (0),
+					  _backgroundColors { 0, 0, 0, 0 },
+					  _textDisplay40Columns (false), _textDisplay25Rows (false),
+					  _screenBlanked (false), _idleState (false),
+					  _spriteMulticolorMask (0), _spriteDoubleWidthMask (0), _spritePriorityMask (0),
+					  _spriteSharedColors { 0, 0 },
+					  _spriteColors { 0, 0, 0, 0, 0, 0, 0, 0 }
+						{ }
+			};
+
+			/** Describes a CPU register write occurring during the represented cycle. \n
+				It is descriptive input for later output-phase selection and must never trigger
+				sequencer, bad-line, DMA, border or interrupt processing by itself. */
+			struct RegisterEffect
+			{
+				bool _applied, _affectsOutput;
+				size_t _registerPosition;
+				MCHEmul::UByte _previousValue, _newValue;
+
+				RegisterEffect ()
+					: _applied (false), _affectsOutput (false), _registerPosition (0),
+					  _previousValue (MCHEmul::UByte::_0), _newValue (MCHEmul::UByte::_0)
+						{ }
+			};
+
+			unsigned short _ICD;		// Initial Column of the Display (Not taken into account reductions in size).
+			unsigned short _RC, _RCA;	// Raster X position and the same position adjusted to eight pixels.
+			unsigned short _RR;			// Raster Y (From the beginning of the visible zone.
+										// Moves 1 by 1. No adjusted needed because how the C64 screen is defined...
+			/** Output values immediately before and after a possible CPU register write. \n
+				The post-write state is captured only for writes classified as affecting output;
+				otherwise outputStateAfterCPUWrite () returns the unchanged initial state. */
+			OutputState _beforeCPUWrite, _afterCPUWrite;
+			/** The register transition separating both output states, if any. */
+			RegisterEffect _registerEffect;
+			/** Pixels covered by the hardware main and vertical border flip-flops. \n
+				Bit 7 represents pixel 0 of the aligned ScreenMemory slice and bit 0
+				represents pixel 7. Comparator positions are evaluated in physical raster
+				coordinates and translated to this aligned output coordinate system. */
+			MCHEmul::UByte _mainBorderData, _verticalBorderData;
+
+			DrawContext (unsigned short iCD, unsigned short rC,
+				unsigned short rCA, unsigned short rR)
+				: _ICD (iCD), _RC (rC), _RCA (rCA), _RR (rR),
+				  _beforeCPUWrite (), _afterCPUWrite (), _registerEffect (),
+				  _mainBorderData (MCHEmul::UByte::_0),
+				  _verticalBorderData (MCHEmul::UByte::_0)
+					{ }
+
+			/** Returns the state effective after the CPU phase without copying the
+				unchanged initial state in cycles without a visual register write. */
+			const OutputState& outputStateAfterCPUWrite () const
+							{ return ((_registerEffect._applied && _registerEffect._affectsOutput)
+								? _afterCPUWrite : _beforeCPUWrite); }
+			/** Indicates whether the current slice contains two different output states. */
+			bool outputChangesDuringSlice () const
+							{ return (_registerEffect._applied && _registerEffect._affectsOutput); }
+			/** Returns the output state applicable to one pixel inside the slice. */
+			const OutputState& outputStateAtPixel (size_t p) const
+							{ return ((outputChangesDuringSlice () &&
+								p >= _FIRSTPIXELAFTERCPUWRITE)
+									? _afterCPUWrite : _beforeCPUWrite); }
+			/** Whether the main border covers one pixel of the slice. */
+			bool mainBorderAtPixel (size_t p) const
+							{ return (_mainBorderData.bit (7 - p)); }
+			/** Whether the vertical border disables graphics at one pixel. */
+			bool verticalBorderAtPixel (size_t p) const
+							{ return (_verticalBorderData.bit (7 - p)); }
 		};
 
 		/** To simplify the way the result of a drawing text/bitmaps routines are managed. \n
@@ -354,9 +451,10 @@ namespace COMMODORE
 				and who is the owner (sprite number) of that pixel! */
 			unsigned int _spriteColor [8];
 			size_t _spriteColorOwner [8];
-			/** To indicate whether it is or not consecuencia of a "bad mode",
-				and the has to be everything draw in black, but taking into account the real graphics behaind. */
-			bool _invalid;
+			/** Pixels generated while an invalid graphics mode was active. \n
+				The corresponding graphics output is black, but its underlying foreground
+				mask still participates in sprite priority and collision processing. */
+			MCHEmul::UByte _invalidGraphicData;
 
 			DrawResult ()
 				: _collisionGraphicData (MCHEmul::UByte::_0),
@@ -375,7 +473,7 @@ namespace COMMODORE
 				  _spriteColorOwner
 						{ MCHEmul::_S0, MCHEmul::_S0, MCHEmul::_S0, MCHEmul::_S0, 
 						  MCHEmul::_S0, MCHEmul::_S0, MCHEmul::_S0, MCHEmul::_S0 },
-				  _invalid (false)
+				  _invalidGraphicData (MCHEmul::UByte::_0)
 							{ }
 		};
 
@@ -386,6 +484,18 @@ namespace COMMODORE
 		// These methods are directly invoked from simulate(), or are the main
 		// entry points for each phase of the VIC-II cycle.
 		// --------------------------------------------------------------------
+		/** Executes one complete grouped VIC-II raster cycle. \n
+			The method preserves the causal order of the emulated hardware phases:
+			initial observation, DMA and bus arbitration, VIC-II bus activity,
+			CPU-phase register write, comparator/output processing, raster advance
+			and final event/IRQ evaluation. \n
+			@param cpu	CPU synchronized with the VIC-II. \n
+			@param cC	Absolute CPU cycle represented by this pipeline invocation. \n
+			@param i	Number of pending CPU cycles, including the represented one.
+						It retains the existing DEBUG timestamps. */
+		void simulateRasterCycle
+			(MCHEmul::CPU* cpu, unsigned int cC, unsigned int i);
+
 		// Bad-line state management...
 		/** To update the complete bad-line state for the current VIC-II cycle. */
 		inline void treatBadLineStateAtCurrentCycle ();
@@ -434,7 +544,7 @@ namespace COMMODORE
 			whereas sprites 0..2 fetch after it. */
 		unsigned char projectedSpriteDMAMaskForNextRasterLine () const;
 		/** Determines the regular bad-line condition for an arbitrary raster line. */
-		bool badLineConditionForRasterLine (unsigned short rL) const;
+		inline bool badLineConditionForRasterLine (unsigned short rL) const;
 		/** Selects immutable stop-window sets for the current and following lines. */
 		void selectCPUStopWindowsForCurrentAndNextLine ();
 		/** Replaces only the current-line bad-line part after a late transition. */
@@ -476,10 +586,17 @@ namespace COMMODORE
 			that cycle is represented explicitly. \n
 			After execution the command is erased, making the next command the new
 			element zero. Returns true when one write has been applied. \n
+			rE receives the raw stored value, the buffered value and whether the
+			register belongs to DrawContext::OutputState. It describes the write only
+			and must not trigger any additional VIC-II state transition. \n
 			A $d016 write updates the VIC-II CSEL comparator values immediately. The
 			host-side horizontal display limits are reported through hDZC and remain
-			deferred until the current eight-pixel slice has been drawn. */
-		bool executePendingRegisterWriteAt (unsigned int cC, bool* hDZC);
+			deferred until the current eight-pixel slice has been drawn. \n
+			@param cC	Absolute CPU cycle represented by the current VIC-II cycle. \n
+			@param rE	Neutral description of the register write applied in that cycle. \n
+			@param hDZC	Reports a $d016 write whose host geometry must be deferred. */
+		bool executePendingRegisterWriteAt
+			(unsigned int cC, DrawContext::RegisterEffect* rE, bool* hDZC);
 
 		// Raster-cycle execution...
 		/** Executes the VIC-II memory-bus activity and the internal sequencer
@@ -506,11 +623,14 @@ namespace COMMODORE
 		inline void treatSpriteCounterCycle16 ();
 		/** To copy MCBASE to MC and enable sprite display at cycle 58 after DMA was decided earlier. */
 		inline void treatSpriteDisplayStartCycle ();
-		/** To latch the horizontal sprite position when the VIC-II X comparator
-			reaches it. The comparison is performed even outside the visible zone,
-			because border and blanking only mask the sprite output; they do not
-			stop its horizontal sequencer. */
-		inline void treatSpriteHorizontalStartAtCurrentCycle ();
+		/** Latches the horizontal sprite position when the VIC-II X comparator
+			reaches it inside the requested pixel interval. \n
+			The interval [firstPixel, lastPixel) is relative to the current eight-pixel
+			VIC-II cycle. It is evaluated outside the visible zone too, because border
+			and blanking only mask sprite output; they do not stop its sequencer. \n
+			Once latched, a later X write cannot reposition the running sequencer. */
+		inline void treatSpriteHorizontalStartAtCurrentCycle
+			(size_t firstPixel, size_t lastPixel);
 
 		/** Last byte read by the VIC-II from the 8-bit memory data bus. */
 		const MCHEmul::UByte& lastVICDataRead () const
@@ -559,30 +679,48 @@ namespace COMMODORE
 
 		// --------------------------------------------------------------------
 		// Drawing pipeline.
-		// These methods are reached from drawVisibleZone().
+		// The context is prepared by simulate() and consumed by drawVisibleZone().
 		// --------------------------------------------------------------------
+		/** Captures the compact register-derived and internal values required to
+			compose an eight-pixel raster slice. \n
+			The method neither reads video memory nor advances any VIC-II sequencer. */
+		inline void captureOutputState (DrawContext::OutputState& oS) const;
+		/** Determines whether a normalized register position changes a value
+			represented by DrawContext::OutputState. */
+		static bool registerAffectsOutputState (size_t p)
+							{ return (p == 0x11 || p == 0x16 ||
+								(p >= 0x1b && p <= 0x1d) ||
+								(p >= 0x20 && p <= 0x2e)); }
 		/** Composes the visible eight-pixel slice using the raster and border state
 			already evaluated by simulate (). \n
 			This method performs rendering and collision processing only; it does not
 			evaluate VIC-II border comparators. \n
 			@param cpu	CPU used for collision IRQ notification and debug context. \n
-			@param cv	Current horizontal position inside the visible raster area. \n
-			@param rv	Current vertical position inside the visible raster area. \n
-			@param cav	Horizontal position aligned to the beginning of the current
-						eight-pixel slice. */
+			@param dC	Context captured around the CPU write for the current raster slice. */
 		void drawVisibleZone
-			(MCHEmul::CPU* cpu, unsigned short cv,
-			 unsigned short rv, unsigned short cav);
+			(MCHEmul::CPU* cpu, const DrawContext& dC);
+		/** Draws a background or border interval using the output state applicable
+			to each half of the current VIC-II cycle. \n
+			The requested interval must be contained in the current eight-pixel slice. \n
+			@param dC	Drawing context containing the possible output transition. \n
+			@param p	First horizontal screen-memory position. \n
+			@param r	Screen-memory row. \n
+			@param n	Number of pixels to draw. \n
+			@param border	Whether to select the border instead of background color. */
+		void drawOutputStateLine
+			(const DrawContext& dC, size_t p, size_t r, size_t n, bool border);
 
 		// Border management.
-		/** Evaluates the left and right horizontal main-border comparators for the
-			current eight-pixel raster slice. \n
-			The vertical border flip-flop must already have been updated by the
-			final-cycle comparator phase in simulate(). This method only consumes
-			that state when applying the left-comparator rule. \n
-			The temporary left/right flags describe a partial transition for rendering;
-			they are not VIC-II hardware flip-flops. */
-		inline void actualizeMainBorderStatus (unsigned short cav);
+		/** Evaluates every horizontal border comparator reached inside the
+			requested physical raster interval. \n
+			The hardware flip-flops are updated immediately, while their resulting
+			state is recorded at the corresponding position of the aligned
+			ScreenMemory slice. A transition beyond that slice is retained by the
+			flip-flops and becomes visible in the following slice. \n
+			The interval [firstPixel, lastPixel) is relative to the current physical
+			eight-pixel VIC-II cycle. */
+		inline void actualizeMainBorderStatus
+			(DrawContext& dC, size_t firstPixel, size_t lastPixel);
 		/** Evaluates the vertical border flip-flop at the final cycle of the current
 			raster line. \n
 			The comparison uses the RSEL-derived vertical limits and the DEN state that
@@ -591,49 +729,73 @@ namespace COMMODORE
 
 		// Graphics, sprites and collision composition.
 		/** Invoked from drawVisibleZone() to compose graphics and sprites and detect collisions. \n
-		  *	@param dC	= The drawing context. \n
-		  * @param sdCA = Whether sprite-data collisions are enabled. The vertical border
-						  flip-flop disables the graphics-data output and these collisions. \n
+		  *	@param dC	= The drawing context and its possible phi1/phi2 transition. \n
 		  * @param dTS	= Whether the priority-multiplexer output has to be copied to ScreenMemory.
-						  Sprite sequencers and collision detection are processed regardless of this value.
+						  Sprite sequencers and collision detection are processed regardless of this value. \n
 		  *	@see DrawContext and DrawResult. */
-		void drawGraphicsSpritesAndDetectCollisions (const DrawContext& dC, bool sdCA, bool dTS);
+		void drawGraphicsSpritesAndDetectCollisions
+			(const DrawContext& dC, bool dTS);
 		/** To draw any text or bitmap graphic mode. \n
-			The method receives the drawing context and returns a DrawResult. */
-		DrawResult drawGraphics (const DrawContext& dC);
+			It composes only the pixel interval [fP, lP) into a shared result so a
+			phi1/phi2 transition never duplicates graphics or collision state. \n
+			@param dC	Drawing context providing the raster position. \n
+			@param oS	Output state effective for the requested interval. \n
+			@param fP	First pixel included in the output interval. \n
+			@param lP	First pixel after the output interval. \n
+			@param result	Shared result receiving this interval. */
+		void drawGraphics (const DrawContext& dC, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result);
 
 		// Character and bitmap drawing modes.
-		/** Draws a monochrome character. */
-		DrawResult drawMonoColorChar (int cb);
+		/** Draws a monochrome character interval into the shared result. */
+		void drawMonoColorChar (int cb, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result);
 		/** Draws a multicolor character. \n
-			The mode can also be used as an invalid mode. */
-		DrawResult drawMultiColorChar (int cb, bool inv = false);
-		/** Draws an extended-background character. */
-		DrawResult drawMultiColorExtendedChar (int cb);
+			The mode can also be used as an invalid mode. \n
+			The supplied output state defines idle and background colors. */
+		void drawMultiColorChar (int cb, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result, bool inv = false);
+		/** Draws an extended-background character interval into the shared result. */
+		void drawMultiColorExtendedChar (int cb, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result);
 		/** Draws a monochrome bitmap. \n
-			The mode can also be used as an invalid mode. */
-		DrawResult drawMonoColorBitMap (int cb, bool inv = false);
+			The mode can also be used as an invalid mode. \n
+			The supplied output state defines whether the sequencer is idle. */
+		void drawMonoColorBitMap (int cb, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result, bool inv = false);
 		/** Draws a multicolor bitmap. \n
-			The mode can also be used as an invalid mode. */
-		DrawResult drawMultiColorBitMap (int cb, bool inv = false);
+			The mode can also be used as an invalid mode. \n
+			The supplied output state defines whether the sequencer is idle. */
+		void drawMultiColorBitMap (int cb, const DrawContext::OutputState& oS,
+			size_t fP, size_t lP, DrawResult& result, bool inv = false);
 
 		// Sprite drawing.
-		/** Draws one sprite over the already computed graphics result. */
-		MCHEmul::UByte drawSpriteOver (size_t spr, unsigned int* d, size_t* dO);
-		/** Draws a monochrome sprite line. */
-		MCHEmul::UByte drawMonoColorSpriteOver (unsigned short c, unsigned short r, 
-			size_t spr, unsigned int* d, size_t* dO);
-		/** Draws a multicolor sprite line. */
-		MCHEmul::UByte drawMultiColorSpriteOver (unsigned short c, unsigned short r, 
-			size_t spr, unsigned int* d, size_t* dO);
+		/** Draws one sprite over the already computed graphics result. \n
+			Each pixel is processed once even when mode or colors change at phi2. */
+		MCHEmul::UByte drawSpriteOver
+			(size_t spr, const DrawContext& dC, unsigned int* d, size_t* dO);
+		/** Draws a monochrome sprite interval into the shared collision result. */
+		void drawMonoColorSpriteOver (unsigned short c, unsigned short r, size_t spr,
+			const DrawContext::OutputState& oS, size_t fP, size_t lP,
+			unsigned int* d, size_t* dO, MCHEmul::UByte& result);
+		/** Draws a multicolor sprite interval into the shared collision result. */
+		void drawMultiColorSpriteOver (unsigned short c, unsigned short r, size_t spr,
+			const DrawContext::OutputState& oS, size_t fP, size_t lP,
+			unsigned int* d, size_t* dO, MCHEmul::UByte& result);
 
 		// Final drawing output and collision status.
-		/** To move the computed graphics/sprite result to screen memory. */
-		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
-		/** To detect collisions between graphics and sprites, and between sprites. 
-			The second parameter is a byte which bits points out which sprites were or not drawn. \n
-			The thors parameter defines whether the detection of the collision and data is or not active. */
-		void detectCollisions (const DrawResult& cT, const MCHEmul::UByte& sD, bool sdCA);
+		/** Moves the computed graphics/sprite result to screen memory. \n
+			The requested interval uses the priority bits captured in its output state. */
+		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC,
+			const DrawContext::OutputState& oS, size_t fP, size_t lP);
+		/** Detects collisions between graphics and sprites, and among sprites. \n
+			@param cT	Composed graphics and sprite data for the current slice. \n
+			@param sD	Bits identifying the sprites that produced opaque pixels. \n
+			@param vBD	Per-pixel vertical-border mask. Covered graphics pixels cannot
+						participate in sprite-data collisions; sprite-sprite collisions remain active. */
+		void detectCollisions
+			(const DrawResult& cT, const MCHEmul::UByte& sD,
+			 const MCHEmul::UByte& vBD);
 
 		// Optional event visualization.
 		/** To draw debug/event markers if _drawOtherEvents is active. */
@@ -693,6 +855,8 @@ namespace COMMODORE
 		void debugCPUStopRequested (unsigned int cC) const;
 		void debugBadLine ();
 		void debugReadingSpriteInfo (size_t nS);
+		/** Records the exact cycle where one sprite DMA channel changes state. */
+		void debugSpriteDMAStateChange (size_t nS, bool active);
 		void debugSpriteDrawFinishes (size_t nS);
 		void debugSpriteDrawToStart (size_t nS);
 		/** Records the data and counters targeted by the completed c-access,
@@ -701,9 +865,12 @@ namespace COMMODORE
 		/** Records the data and the counters used by the completed g-access.
 			It must be called before advancing VC, VLMI and GAccessIndex. */
 		void debugReadingGraphics ();
-		/** Records both the raster position and the graphics-buffer interval
-			selected to compose the current eight-pixel slice. */
-		void debugDrawPixelAt (unsigned short cav, int cb);
+		/** Records the raster position and graphics-buffer interval selected for
+			one output span of the current eight-pixel slice. \n
+			A steady slice emits pixels 0..7 in one record; a visual CPU write emits
+			pixels 0..3 with the phi1 state and pixels 4..7 with the phi2 state. */
+		void debugDrawPixelAt (unsigned short cav, int cb, unsigned char xS,
+			size_t fP, size_t lP);
 		void debugDrawSpriteAt (size_t nS, unsigned short x, unsigned short r);
 		// -----
 
@@ -892,8 +1059,7 @@ namespace COMMODORE
 				  _idleState (true),
 				  _ffVBorder (false),
 				  _ffMBorder (false),
-				  _ffLBorder (false), _ffRBorder (false),
-				  _ffMBorderBegin (0), _ffMBorderPixels (0),
+				  _ffMBorderBegin (0),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _graphicData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
@@ -955,22 +1121,11 @@ namespace COMMODORE
 			// Internal elements used to manage the border...
 			bool _ffVBorder; 
 			bool _ffMBorder;
-			/** Rendering-only flags describing a horizontal border transition inside
-				the current eight-pixel raster slice. \n
-				The simulation evaluates the hardware comparator before rendering, but
-				pixels preceding and following its exact position need different border
-				states. These flags are not VIC-II hardware flip-flops. */
-			bool _ffLBorder, _ffRBorder;
-			/** Beginning and length of the border portion inside the current visible
-				eight-pixel slice. They are rendering data derived from the hardware
-				comparator result. */
+			/** Visible position of the latest horizontal border transition. \n
+				It is diagnostic data used only by the optional event overlay. */
 			unsigned short _ffMBorderBegin;
-			unsigned char _ffMBorderPixels;
 
 			// Implementation...
-			// This one doesn't actually exist "in" the VICII chip, 
-			// but is used when he left border has to be partially drawn.
-			// After doing so, the _ffMBorder will become false...
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
@@ -1009,9 +1164,9 @@ namespace COMMODORE
 		  *	CYCLE 16:				If the _FF is set, _MCBASE is incremented in 1. \n
 		  *							If _MCBASE is 63 then _DMA is set to off. \n
 		  * In this simulation DMA and display are separated. \n
-		  * Sprite bytes are kept as a 3-byte line buffer. Horizontal shift
-		  * position is derived from the circular distance to the X coordinate;
-		  * the implementation still does not model the two VIC-II clock phases.
+		 * Sprite bytes are kept as a 3-byte line buffer. Horizontal shift
+		 * position is latched by independent phi1 and phi2 comparator windows,
+		 * using circular distance to the programmed X coordinate.
 		  */
 		struct VICSpriteInfo
 		{
@@ -1062,6 +1217,44 @@ namespace COMMODORE
 		private:
 		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
 	};
+
+	// ---
+	inline void VICII::captureOutputState (DrawContext::OutputState& oS) const
+	{
+		oS._graphicMode				= _VICIIRegisters -> graphicModeActive ();
+		oS._horizontalScroll		= _VICIIRegisters -> horizontalScrollPosition ();
+		oS._borderColor				= _VICIIRegisters -> foregroundColor ();
+
+		oS._backgroundColors [0]	= _VICIIRegisters -> backgroundColor (0);
+		oS._backgroundColors [1]	= _VICIIRegisters -> backgroundColor (1);
+		oS._backgroundColors [2]	= _VICIIRegisters -> backgroundColor (2);
+		oS._backgroundColors [3]	= _VICIIRegisters -> backgroundColor (3);
+
+		oS._textDisplay40Columns	= _VICIIRegisters -> textDisplay40ColumnsActive ();
+		oS._textDisplay25Rows		= _VICIIRegisters -> textDisplay25RowsActive ();
+		oS._screenBlanked			= _VICIIRegisters -> blankEntireScreen ();
+		oS._idleState				= idleStateActive ();
+
+		oS._spriteMulticolorMask	= 0;
+		oS._spriteDoubleWidthMask	= 0;
+		oS._spritePriorityMask		= 0;
+		oS._spriteSharedColors [0]	= _VICIIRegisters -> spriteSharedColor (0);
+		oS._spriteSharedColors [1]	= _VICIIRegisters -> spriteSharedColor (1);
+
+		for (size_t i = 0; i < 8; i++)
+		{
+			const unsigned char spriteMask = (unsigned char) (0x01 << i);
+
+			if (_VICIIRegisters -> spriteMulticolorMode (i))
+				oS._spriteMulticolorMask |= spriteMask;
+			if (_VICIIRegisters -> spriteDoubleWidth (i))
+				oS._spriteDoubleWidthMask |= spriteMask;
+			if (_VICIIRegisters -> spriteToForegroundPriority (i))
+				oS._spritePriorityMask |= spriteMask;
+
+			oS._spriteColors [i] = _VICIIRegisters -> spriteColor (i);
+		}
+	}
 
 	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()
@@ -1180,6 +1373,16 @@ namespace COMMODORE
 	}
 
 	// ---
+	inline bool VICII::badLineConditionForRasterLine (unsigned short rL) const
+	{
+		return (
+			_DENSeenAtLine30 &&
+			rL >= _FIRSTBADLINE && rL <= _LASTBADLINE &&
+			(unsigned char) (rL & 0x07) ==
+				_VICIIRegisters -> verticalScrollPosition ());
+	}
+
+	// ---
 	inline void VICII::treatGraphicFetchStartCycle ()
 	{
 		// At this cycle, the VIC-II reloads VC from VCBASE and starts a new
@@ -1283,6 +1486,8 @@ namespace COMMODORE
 				// Starting DMA for a Y-expanded sprite resets the expansion flip-flop.
 				if (_VICIIRegisters -> spriteDoubleHeight (i))
 					_VICIIRegisters -> setExpansionYFlipFlop (i, false);
+
+				_IFDEBUG debugSpriteDMAStateChange (i, true);
 			}
 		}
 	}
@@ -1310,6 +1515,8 @@ namespace COMMODORE
 			if (_vicSpriteInfo [i]._MCBASE >= 63)
 			{
 				_vicSpriteInfo [i]._DMAActive = false;
+
+				_IFDEBUG debugSpriteDMAStateChange (i, false);
 
 				// Keep the current line buffer alive: the last sprite row can
 				// still be displayed until cycle 58 observes DMA inactive.
@@ -1350,18 +1557,25 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICII::treatSpriteHorizontalStartAtCurrentCycle ()
+	inline void VICII::treatSpriteHorizontalStartAtCurrentCycle
+		(size_t firstPixel, size_t lastPixel)
 	{
+		assert (firstPixel < lastPixel && lastPixel <= _raster.step ());
+
+		const unsigned short pixelsPerRasterLine = _cyclesPerRasterLine << 3;
 		for (size_t i = 0; i < 8; i++)
 		{
 			if (!_vicSpriteInfo [i]._displayActive ||
 				_vicSpriteInfo [i]._drawing)
 				continue;
 
-			unsigned short x = _VICIIRegisters -> spriteXCoord (i) + 4;
+			unsigned short x = _VICIIRegisters -> spriteXCoord (i) + 4,
+				distance = (x + pixelsPerRasterLine -
+					_raster.currentColumn ()) % pixelsPerRasterLine;
+			if (x >= pixelsPerRasterLine)
+				continue; // The programmed X value is beyond this model's raster line.
 
-			if (x >= _raster.currentColumn () &&
-				x < (_raster.currentColumn () + _raster.step ()))
+			if (distance >= firstPixel && distance < lastPixel)
 			{
 				_vicSpriteInfo [i]._drawing = true;
 				_vicSpriteInfo [i]._xS = x;
@@ -1659,109 +1873,94 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICII::actualizeMainBorderStatus (unsigned short cav)
+	inline void VICII::actualizeMainBorderStatus
+		(DrawContext& dC, size_t firstPixel, size_t lastPixel)
 	{
-		_vicGraphicInfo._ffMBorderBegin = cav;
-		_vicGraphicInfo._ffMBorderPixels = (cav + 8) > _raster.visibleColumns () 
-			? (_raster.visibleColumns () - cav) : 8;
+		assert (firstPixel < lastPixel && lastPixel <= _raster.step ());
+		assert (dC._RC >= dC._RCA);
 
-		// The real VIC-II evaluates the horizontal comparators pixel by pixel,
-		// while this simulation advances the raster by one eight-pixel VIC-II
-		// cycle. currentColumn() is the internal horizontal raster coordinate and
-		// the CSEL-dependent limits in VICIIRegisters use that same coordinate
-		// system. The circular distance therefore predicts whether the exact
-		// comparator value will be reached within the current cycle; it is not an
-		// interval comparison replacing the hardware comparator.
-		unsigned short pixelsPerRasterLine = _cyclesPerRasterLine << 3;
-		unsigned short rightComparator = _VICIIRegisters -> maxRasterH ();
-		unsigned short distanceToRightComparator =
-			(rightComparator + pixelsPerRasterLine - _raster.currentColumn ()) %
-			pixelsPerRasterLine;
+		// The physical raster can lead the beginning of the aligned ScreenMemory
+		// slice. Deriving this offset from the context keeps PAL and NTSC geometry
+		// independent from the two-phase comparator timing.
+		const size_t outputOffset =
+			(size_t) dC._RC - (size_t) dC._RCA;
+		assert (outputOffset < _raster.step ());
 
-		// Bauer rule 1 sets the main border flip-flop at the right comparator.
-		// A transition has to be prepared only while the flip-flop is clear; if
-		// it is already set, reaching the comparator produces no visible change.
-		if (distanceToRightComparator < _raster.step () &&
-			!_vicGraphicInfo._ffMBorder)
+		// Pixels preceding the current physical raster position retain the state
+		// produced by the preceding VIC-II cycle.
+		if (firstPixel == 0)
 		{
-			// cav is deliberately used only from this point onwards. It is the
-			// aligned coordinate of the slice in ScreenMemory, whereas the border
-			// comparison above belongs to the internal raster coordinate system.
-			// Convert the comparator to the visible coordinate system and calculate
-			// how many pixels after it must be covered by the border.
-			unsigned short rightVisiblePosition =
-				_raster.columnInVisibleZone (rightComparator);
-			unsigned short sliceEnd = ((cav + _raster.step ()) >
-				_raster.visibleColumns ())
-				? _raster.visibleColumns ()
-				: (cav + _raster.step ());
-
-			// The complete eight-pixel slice is composed before the border layer is
-			// applied. _ffRBorder postpones the actual main flip-flop transition
-			// until drawVisibleZone() has drawn this partial slice. This preserves
-			// the pixels preceding the comparator as graphics or sprite output.
-			_vicGraphicInfo._ffRBorder = true;
-			_vicGraphicInfo._ffMBorderBegin =
-				(rightVisiblePosition < cav)
-					? cav
-					: ((rightVisiblePosition > sliceEnd)
-						? sliceEnd
-						: rightVisiblePosition);
-			_vicGraphicInfo._ffMBorderPixels =
-				sliceEnd - _vicGraphicInfo._ffMBorderBegin;
-		}
-		
-		// Detect the left comparator in the same internal coordinate system used
-		// for the right one. CSEL may move this comparator while a line is being
-		// generated, so the value currently stored in VICIIRegisters is sampled
-		// for this VIC-II cycle. The modular distance also handles the horizontal
-		// raster wrap without involving the visible, aligned cav coordinate.
-		unsigned short leftComparator = _VICIIRegisters -> minRasterH ();
-		unsigned short distanceToLeftComparator =
-			(leftComparator + pixelsPerRasterLine - _raster.currentColumn ()) %
-			pixelsPerRasterLine;
-		bool atLeft = distanceToLeftComparator < _raster.step ();
-
-		if (atLeft)
-		{
-			// The vertical border flip-flop was evaluated at the final cycle of the
-			// corresponding raster line. The left comparator only consumes that state:
-			// graphics can be exposed when the vertical border is already open. Test
-			// the flip-flop itself instead of inferring its value
-			// from the normal vertical display interval: timed RSEL changes can keep
-			// the vertical border open outside that geometrical interval. Likewise,
-			// no temporary transition is needed if the main flip-flop is already
-			// clear when the comparator is reached.
-			if (!_vicGraphicInfo._ffVBorder &&
-				_vicGraphicInfo._ffMBorder)
+			for (size_t i = 0; i < outputOffset; i++)
 			{
-				// Pixels before the left comparator still belong to the main border;
-				// pixels from the comparator onwards expose graphics and sprites. cav
-				// is used only for this rendering calculation after the hardware event
-				// has been detected with currentColumn().
-				unsigned short leftVisiblePosition =
-					_raster.columnInVisibleZone (leftComparator);
-				unsigned short sliceEnd = ((cav + _raster.step ()) >
-					_raster.visibleColumns ())
-					? _raster.visibleColumns ()
-					: (cav + _raster.step ());
-
-				// _ffLBorder postpones clearing the main flip-flop until the partial
-				// border has been drawn by drawVisibleZone(). The clamping keeps the
-				// pixel count valid at either end of the visible output slice.
-				_vicGraphicInfo._ffLBorder = true;
-				_vicGraphicInfo._ffMBorderBegin = cav;
-				_vicGraphicInfo._ffMBorderPixels =
-					(leftVisiblePosition < cav)
-						? 0
-						: ((leftVisiblePosition > sliceEnd)
-							? (sliceEnd - cav)
-							: (leftVisiblePosition - cav));
+				dC._mainBorderData.setBit
+					(7 - i, _vicGraphicInfo._ffMBorder);
+				dC._verticalBorderData.setBit
+					(7 - i, _vicGraphicInfo._ffVBorder);
 			}
 		}
 
-		// This is used later to draw events...if active!
+		const unsigned short pixelsPerRasterLine = _cyclesPerRasterLine << 3;
+		const unsigned short leftComparator = _VICIIRegisters -> minRasterH ();
+		const unsigned short rightComparator = _VICIIRegisters -> maxRasterH ();
+		const unsigned short rasterLine = _raster.vData ().currentPosition ();
+		const unsigned short topComparator = _VICIIRegisters -> minRasterV ();
+		const unsigned short bottomComparator = _VICIIRegisters -> maxRasterV ();
+		const bool displayEnabled = !_VICIIRegisters -> blankEntireScreen ();
+
+		unsigned short column =
+			_raster.currentColumn () + (unsigned short) firstPixel;
+		if (column >= pixelsPerRasterLine)
+			column -= pixelsPerRasterLine;
+
+		for (size_t i = firstPixel; i < lastPixel; i++)
+		{
+			const bool mainBorderBefore = _vicGraphicInfo._ffMBorder,
+				verticalBorderBefore = _vicGraphicInfo._ffVBorder;
+
+			// Bauer rule 1 closes the main border at the right comparator.
+			if (column == rightComparator)
+				_vicGraphicInfo._ffMBorder = true;
+
+			if (column == leftComparator)
+			{
+				// The vertical border rules are also evaluated at the left
+				// comparator. This is observable when D011 is changed after the
+				// end-of-line evaluation but before the comparator is reached.
+				if (rasterLine == bottomComparator)
+					_vicGraphicInfo._ffVBorder = true;
+				if (rasterLine == topComparator && displayEnabled)
+					_vicGraphicInfo._ffVBorder = false;
+
+				// Bauer rule 2 opens the main border only if the vertical border
+				// is open at the exact left-comparator pixel.
+				if (!_vicGraphicInfo._ffVBorder)
+					_vicGraphicInfo._ffMBorder = false;
+			}
+
+			// Comparator positions belong to the physical raster, whereas the masks
+			// describe the aligned output slice. Events beyond that slice still
+			// update the flip-flops and become visible in the following one.
+			const size_t outputPixel = i + outputOffset;
+			if (outputPixel < _raster.step ())
+			{
+				dC._mainBorderData.setBit
+					(7 - outputPixel, _vicGraphicInfo._ffMBorder);
+				dC._verticalBorderData.setBit
+					(7 - outputPixel, _vicGraphicInfo._ffVBorder);
+			}
+
+			if (mainBorderBefore != _vicGraphicInfo._ffMBorder ||
+				verticalBorderBefore != _vicGraphicInfo._ffVBorder)
+				_vicGraphicInfo._ffMBorderBegin =
+					_raster.columnInVisibleZone (column);
+
+			if (++column == pixelsPerRasterLine)
+				column = 0;
+		}
+
+		// These pulses retain the final flip-flop state for event debugging.
 		_eventStatus._ffMBorderChange.set (_vicGraphicInfo._ffMBorder);
+		_eventStatus._ffVBorderChange.set (_vicGraphicInfo._ffVBorder);
 	}
 
 	// ---

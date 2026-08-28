@@ -225,6 +225,10 @@ namespace COMMODORE
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
+		/** Returns the raw byte stored for a VIC-II register without applying
+			CPU-read substitutions, unused-bit masks or read side effects. */
+		const MCHEmul::UByte& storedRegisterValue (size_t p) const
+							{ return (MCHEmul::PhysicalStorageSubset::readValue (p % 0x40)); }
 
 		// Implementation
 		/** Just to initialize the internal values. */
