@@ -585,6 +585,10 @@ namespace MCHEmul
 		CPUInterrupt* _currentInterrupt;
 		/** The instruction under execution. nullptr when nothing. */
 		Instruction* _currentInstruction;
+		/** Intrinsic cycles predicted before the current instruction started. \n
+			The value excludes external stop cycles and remains valid while the
+			instruction is in progress. */
+		unsigned int _clockCyclesCurrentInstruction;
 		/** Number of intrinsic transaction cycles not consumed yet. \n
 			When an instruction is selected or an interrupt is accepted,
 			the current CPU iteration immediately consumes its first cycle. \n

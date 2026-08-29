@@ -67,13 +67,13 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _debugLimitsInit (a.numberBytes (), 0), _debugLimitsEnd (a.longestAddressPossible ()), // To debug...
-	  _lastInstruction (nullptr),
 	  _error (_NOERROR),
 	  // Only when executing a instruction/interrupt per cycle...
+	  _currentInterruptRequest (CPUInterruptRequest::_NOINTREQUEST),
+	  _currentInterrupt (nullptr),
 	  _currentInstruction (nullptr),
-	  _currentInterruptRequest (CPUInterruptRequest::_NOINTREQUEST), 
-	  _currentInterrupt (nullptr), 
-	  _cyclesPendingExecution (0),
+	  _clockCyclesCurrentInstruction (0), _cyclesPendingExecution (0),
+	  _lastInstruction (nullptr),
 	  _stopStatusData (), // When the CPU is stopped. Then same object is reused!
 	  // For performance reasons...
 	  _rowInstructions () // It will be fulfilled below!
@@ -183,7 +183,7 @@ bool MCHEmul::CPU::initialize ()
 	_currentInterrupt = nullptr;
 	_currentInterruptRequest = MCHEmul::CPUInterruptRequest::_NOINTREQUEST;
 	_currentInstruction = nullptr;
-	_cyclesPendingExecution = 0;
+	_clockCyclesCurrentInstruction = _cyclesPendingExecution = 0;
 
 	// Related with the internal states...
 	_lastInstruction = nullptr;
@@ -571,10 +571,13 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		if (nInst < _rowInstructions.size () && 
 			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
 		{
-			// Additional cycles are still detected by execute ().
-			// For now, only the nominal cycles are scheduled here.
-			_cyclesPendingExecution = 
-				_currentInstruction -> clockCycles (_memory, _programCounter.asAddress ()); // virtual!
+			// Predict every intrinsic cycle before the first one is consumed.
+			// Instructions not yet providing a contextual prediction still
+			// return their nominal duration.
+			_clockCyclesCurrentInstruction =
+				_currentInstruction -> clockCyclesToExecute
+					(this, _memory, _programCounter.asAddress ());
+			_cyclesPendingExecution = _clockCyclesCurrentInstruction;
 
 			_IFDEBUG debugInstructionAboutToExecute
 				(_currentInstruction, programCounter ().asAddress (),
@@ -620,13 +623,16 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		// the rest of the calculations are done.
 		else
 		{
-			// The nominal cycles have already been consumed one by one.
-			// Only cycles discovered during execution are added here.
-			_lastCPUClockCycles += _currentInstruction -> additionalClockCyclesExecuted ();
+			// During the staged migration, instructions without a contextual
+			// prediction can still discover cycles when they finally execute.
+			// Only the part not scheduled beforehand is added here.
+			_lastCPUClockCycles +=
+				_currentInstruction -> totalClockCyclesExecuted () - _clockCyclesCurrentInstruction;
 
 			_lastInstruction = _currentInstruction; // save the last instruction executed...
 
 			_currentInstruction = nullptr; // another one is needed...
+			_clockCyclesCurrentInstruction = 0;
 
 			_lastState = _state; // After one instruction executed, the last state was also running...
 

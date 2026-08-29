@@ -26,6 +26,14 @@ _INST_IMPL (F6500::EOR_ZeroPageIndirectX)
 }
 
 // ---
+unsigned int F6500::EOR_ZeroPageIndirectY::clockCyclesToExecute (
+	MCHEmul::CPU* c, MCHEmul::Memory* m, const MCHEmul::Address& a) const
+{
+	return (clockCyclesForIndirectZeroPageY (m, a,
+		c -> internalRegister (F6500::C6510::_YREGISTER).values ()[0].value ()));
+}
+
+// ---
 _INST_IMPL (F6500::EOR_ZeroPageIndirectY)
 {
 	return (executeWith (value_indirectZeroPageY ()));
@@ -38,9 +46,25 @@ _INST_IMPL (F6500::EOR_ZeroPageX)
 }
 
 // ---
+unsigned int F6500::EOR_AbsoluteX::clockCyclesToExecute (
+	MCHEmul::CPU* c, MCHEmul::Memory* m, const MCHEmul::Address& a) const
+{
+	return (clockCyclesForAbsoluteIndexed (m, a,
+		c -> internalRegister (F6500::C6510::_XREGISTER).values ()[0].value ()));
+}
+
+// ---
 _INST_IMPL (F6500::EOR_AbsoluteX)
 {
 	return (executeWith (value_absoluteX ()));
+}
+
+// ---
+unsigned int F6500::EOR_AbsoluteY::clockCyclesToExecute (
+	MCHEmul::CPU* c, MCHEmul::Memory* m, const MCHEmul::Address& a) const
+{
+	return (clockCyclesForAbsoluteIndexed (m, a,
+		c -> internalRegister (F6500::C6510::_YREGISTER).values ()[0].value ()));
 }
 
 // ---

@@ -53,9 +53,11 @@ Headers end with:
 - Use the repository's tab-based indentation and align continuation lines like nearby code. Do not replace leading tabs with spaces in patches, examples, or proposed snippets.
 - Put a space before function-call parentheses: `initialize ()`, `size ()`.
 - Put a space between template name and argument list: `std::vector <MCHEmul::UByte>`.
-- Put a space in casts: `static_cast <size_t> (value)`.
+- For conversions between fundamental numeric types, including aliases such as `size_t`, use the compact form `(size_t) (value)` or `(unsigned char) (value)`. Do not use `static_cast` for these ordinary numeric conversions.
+- Keep the explicit C++ cast operators when their specific semantics matter: use `static_cast` for pointer, reference, class, or enum conversions; `const_cast` for cv-qualification; `dynamic_cast` for checked polymorphic conversions; and `reinterpret_cast` for intentional representation-level conversions. Do not replace these with a C-style cast merely to shorten the source.
 - Put spaces around pointer arrows: `_memory -> initialize ()`.
 - Wrap return expressions in parentheses: `return (result);`.
+- Separate consecutive structural blocks with exactly one blank line. This includes multi-line preprocessor macros that define classes or declarations, class/struct/enum definitions, and the declaration or explanatory comment that follows them. The closing macro line or `};` must not run directly into the next block; avoid multiple blank lines as well.
 - Group variables of the same type in a single declaration when every
   initializer is simple. A simple initializer is absent, a literal or constant,
   or a previously available variable or member:
@@ -378,9 +380,22 @@ _pendingCycles += elapsedHalfCycles >> 1;
 _halfCycle = elapsedHalfCycles & 0x01;
 ```
 
+Do not create an intermediate solely so that a one-use value can be compared in an `assert`, or to name a subtraction, index, or conversion immediately consumed by the following call. When the relation is already guaranteed by the owning class or caller, use the expression directly and document the invariant next to it:
+
+```cpp
+// Alternative 6500 cycle structures are indexed by additional cycles.
+prepare (instruction -> cycleStructure (
+	clockCycles - instruction -> clockCycles ()));
+```
+
+Keep the intermediate when it avoids recalculating a non-trivial operation, is used more than once, establishes a required evaluation order or lifetime, or gives a genuinely complex value a useful domain name. A comment must explain the non-obvious invariant; it must not hide repeated work or unsafe evaluation.
+
 ## Error Handling And Validation
 
-- Use `assert` for invariants that should never fail in debug builds.
+- Use `assert` at meaningful contract boundaries and for invariants whose violation would otherwise permit unsafe indexing, invalid ownership, corruption, or an impossible hardware/framework state.
+- Do not repeat with an `assert` a relational guarantee already established by the caller, constructor, type, selected container element, or immediately preceding control flow. Avoid routine checks such as `a >= b` immediately before a trusted internal `a - b`, or checking an alternative index derived from a class invariant on every hot-path invocation. State the invariant in a concise nearby comment instead.
+- Do not introduce local variables solely to make such redundant assertions possible. Prefer the direct expression when it is used once.
+- Retain assertions for external or loosely typed inputs, required non-null ownership dependencies, container bounds not already guaranteed by the API, decoded data, and states whose impossibility is central to correctness.
 - Return `false`, empty structures, or default values for normal runtime failure where the surrounding API does that.
 - Use `_LOG (...)` plus `assert (false)` for unsupported internal modes when nearby code follows that pattern.
 - Check boundaries explicitly for memory/address/vector operations.

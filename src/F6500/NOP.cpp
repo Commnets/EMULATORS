@@ -35,6 +35,14 @@ _INST_IMPL (F6500::NOP_ZeroPageX)
 }
 
 // ---
+unsigned int F6500::NOP_AbsoluteX::clockCyclesToExecute (
+	MCHEmul::CPU* c, MCHEmul::Memory* m, const MCHEmul::Address& a) const
+{
+	return (clockCyclesForAbsoluteIndexed (m, a,
+		c -> internalRegister (F6500::C6510::_XREGISTER).values ()[0].value ()));
+}
+
+// ---
 _INST_IMPL (F6500::NOP_AbsoluteX)
 {
 	return (executeWith (value_absoluteX ()));

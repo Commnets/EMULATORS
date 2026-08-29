@@ -41,6 +41,20 @@ namespace F6500
 		virtual bool executeImpl (bool& _FINISH) override; \
 	};
 
+	/** To define a 6500 instruction whose final cycle structure depends on the
+		execution context. The prediction must not modify CPU, memory or instruction state. */
+	#define _INST6500_FROM_VARIABLE(_C, _M, _CC, _RCC, _T, _I, _J) \
+	class _I final : public _J \
+	{ \
+		public: \
+		_I () : _J (_C, _M, _CC, _RCC, _T) { } \
+		virtual unsigned int clockCyclesToExecute ( \
+			MCHEmul::CPU*, MCHEmul::Memory*, \
+			const MCHEmul::Address&) const override; \
+		protected: \
+		virtual bool executeImpl (bool& _FINISH) override; \
+	};
+
 	// Internal structure of the instructions...
 	// In this case the structure is declared only from the perspective of the use of the address and data bus.
 	/** For those instructions where all cycles are read cycles. */
@@ -95,6 +109,19 @@ namespace F6500
 			_ADD,
 			_IGNORE
 		};
+
+		/** Predicts the cycles of a relative branch. \n
+			A taken branch adds one cycle and a page crossing adds another. */
+		inline unsigned int clockCyclesForBranch (
+			MCHEmul::Memory*, const MCHEmul::Address&, bool) const;
+		/** Predicts the cycles of an absolute indexed read. \n
+			The concrete instruction supplies the current X or Y value. */
+		inline unsigned int clockCyclesForAbsoluteIndexed (
+			MCHEmul::Memory*, const MCHEmul::Address&, unsigned char) const;
+		/** Predicts the cycles of an indirect zero-page indexed-Y read. \n
+			The zero-page pointer wraps from $ff to $00. */
+		inline unsigned int clockCyclesForIndirectZeroPageY (
+			MCHEmul::Memory*, const MCHEmul::Address&, unsigned char) const;
 
 		/** To access the different registers. */
 		const MCHEmul::Register& registerA () const
@@ -201,6 +228,56 @@ namespace F6500
 		result.insert (result.end (), write.begin (), write.end ());
 		
 		return (result);
+	}
+
+	// ---
+	inline unsigned int Instruction::clockCyclesForBranch (
+		MCHEmul::Memory* m, const MCHEmul::Address& a, bool branchCondition) const
+	{
+		assert (m != nullptr);
+
+		if (!branchCondition)
+			return (clockCycles ());
+
+		int jump = MCHEmul::UInt ({ m -> value (a + 1) }).asInt ();
+		MCHEmul::Address nextAddress = a + memoryPositions ();
+		MCHEmul::Address finalAddress = jump >= 0
+			? nextAddress + (size_t) (jump)
+			: nextAddress - (size_t) (-jump);
+
+		return (clockCycles () + 1 +
+			(nextAddress [0] != finalAddress [0] ? 1 : 0));
+	}
+
+	// ---
+	inline unsigned int Instruction::clockCyclesForAbsoluteIndexed (
+		MCHEmul::Memory* m, const MCHEmul::Address& a, unsigned char index) const
+	{
+		assert (m != nullptr);
+
+		MCHEmul::Address initialAddress (m -> values (a + 1, 2), false);
+		MCHEmul::Address finalAddress =
+			initialAddress + (size_t) (index);
+
+		return (clockCycles () +
+			(initialAddress [0] != finalAddress [0] ? 1 : 0));
+	}
+
+	// ---
+	inline unsigned int Instruction::clockCyclesForIndirectZeroPageY (
+		MCHEmul::Memory* m, const MCHEmul::Address& a, unsigned char indexY) const
+	{
+		assert (m != nullptr);
+
+		unsigned char zeroPage = m -> value (a + 1).value ();
+		MCHEmul::Address lowAddress ({ MCHEmul::UByte (zeroPage) });
+		MCHEmul::Address highAddress ({ MCHEmul::UByte ((unsigned char) (zeroPage + 1)) });
+		MCHEmul::Address initialAddress
+			({ m -> value (lowAddress), m -> value (highAddress) }, false);
+		MCHEmul::Address finalAddress =	initialAddress + (size_t) (indexY);
+
+		return (clockCycles () +
+			(initialAddress [0] != finalAddress [0] ? 1 : 0));
 	}
 
 	// ---
@@ -484,14 +561,14 @@ namespace F6500
 	_INST6500_FROM (0x6d, 3, 4, _6500R(4),		"ADC[$2]",				ADC_Absolute, ADC_General);
 	_INST6500_FROM (0x65, 2, 3, _6500R(3),		"ADC[$1]",				ADC_ZeroPage, ADC_General);
 	_INST6500_FROM (0x61, 2, 6, _6500R(6),		"ADC([$1],X)",			ADC_ZeroPageIndirectX, ADC_General);
-	_INST6500_FROM (0x71, 2, 5,
+	_INST6500_FROM_VARIABLE (0x71, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"ADC([$1]),Y",			ADC_ZeroPageIndirectY, ADC_General);
 	_INST6500_FROM (0x75, 2, 4, _6500R(4),		"ADC[$1],X",			ADC_ZeroPageX, ADC_General);
-	_INST6500_FROM (0x7d, 3, 4,
+	_INST6500_FROM_VARIABLE (0x7d, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"ADC[$2],X",			ADC_AbsoluteX, ADC_General);
-	_INST6500_FROM (0x79, 3, 4,
+	_INST6500_FROM_VARIABLE (0x79, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"ADC[$2],Y",			ADC_AbsoluteY, ADC_General);
 
@@ -662,14 +739,14 @@ namespace F6500
 	_INST6500_FROM (0x2d, 3, 4, _6500R(4),		"AND[$2]",				AND_Absolute, AND_General);
 	_INST6500_FROM (0x25, 2, 3, _6500R(3),		"AND[$1]",				AND_ZeroPage, AND_General);
 	_INST6500_FROM (0x21, 2, 6, _6500R(6),		"AND([$1],X)",			AND_ZeroPageIndirectX, AND_General);
-	_INST6500_FROM (0x31, 2, 5,
+	_INST6500_FROM_VARIABLE (0x31, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),			
 												"AND([$1]),Y",			AND_ZeroPageIndirectY, AND_General);
 	_INST6500_FROM (0x35, 2, 4, _6500R(4),		"AND[$1],X",			AND_ZeroPageX, AND_General);
-	_INST6500_FROM (0x3d, 3, 4,
+	_INST6500_FROM_VARIABLE (0x3d, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"AND[$2],X",			AND_AbsoluteX, AND_General);
-	_INST6500_FROM (0x39, 3, 4,
+	_INST6500_FROM_VARIABLE (0x39, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"AND[$2],Y",			AND_AbsoluteY, AND_General);
 
@@ -814,17 +891,17 @@ namespace F6500
 	}
 
 	// BCC 
-	_INST6500_FROM (0x90, 2, 2,
+	_INST6500_FROM_VARIABLE (0x90, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BCC[&1]",				BCC, BXX_General);
 
 	// BCS 
-	_INST6500_FROM (0xb0, 2, 2,
+	_INST6500_FROM_VARIABLE (0xb0, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BCS[&1]",				BCS, BXX_General);
 
 	// BEQ
-	_INST6500_FROM (0xf0, 2, 2,
+	_INST6500_FROM_VARIABLE (0xf0, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BEQ[&1]",				BEQ, BXX_General);
 
@@ -833,17 +910,17 @@ namespace F6500
 	_INST6500_FROM (0x24, 2, 3, _6500R(3),		"BIT[$1]",				BIT_ZeroPage, Instruction);
 
 	// BMI
-	_INST6500_FROM (0x30, 2, 2,
+	_INST6500_FROM_VARIABLE (0x30, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BMI[&1]",				BMI, BXX_General);
 
 	// BNE
-	_INST6500_FROM (0xd0, 2, 2,
+	_INST6500_FROM_VARIABLE (0xd0, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BNE[&1]",				BNE, BXX_General);
 
 	// BPL
-	_INST6500_FROM (0x10, 2, 2,
+	_INST6500_FROM_VARIABLE (0x10, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BPL[&1]",				BPL, BXX_General);
 
@@ -851,12 +928,12 @@ namespace F6500
 	_INST6500_FROM (0x00, 1, 7, _6500BRK,		"BRK",					BRK, Instruction);
 
 	// BVC
-	_INST6500_FROM (0x50, 2, 2,
+	_INST6500_FROM_VARIABLE (0x50, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BVC[&1]",				BVC, BXX_General);
 
 	// BVS
-	_INST6500_FROM (0x70, 2, 2,
+	_INST6500_FROM_VARIABLE (0x70, 2, 2,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(2), _6500R(3), _6500R(4) }),	
 												"BVS[&1]",				BVS, BXX_General);
 
@@ -913,14 +990,14 @@ namespace F6500
 	_INST6500_FROM (0xcd, 3, 4, _6500R(4),		"CMP[$2]",				CMP_Absolute, CMP_General);
 	_INST6500_FROM (0xc5, 2, 3, _6500R(3),		"CMP[$1]",				CMP_ZeroPage, CMP_General);
 	_INST6500_FROM (0xc1, 2, 6, _6500R(6),		"CMP([$1],X)",			CMP_ZeroPageIndirectX, CMP_General);
-	_INST6500_FROM (0xd1, 2, 5,
+	_INST6500_FROM_VARIABLE (0xd1, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"CMP([$1]),Y",			CMP_ZeroPageIndirectY, CMP_General);
 	_INST6500_FROM (0xd5, 2, 4, _6500R(4),		"CMP[$1],X",			CMP_ZeroPageX, CMP_General);
-	_INST6500_FROM (0xdd, 3, 4,
+	_INST6500_FROM_VARIABLE (0xdd, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"CMP[$2],X",			CMP_AbsoluteX, CMP_General);
-	_INST6500_FROM (0xd9, 3, 4,
+	_INST6500_FROM_VARIABLE (0xd9, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"CMP[$2],Y",			CMP_AbsoluteY, CMP_General);
 
@@ -1131,14 +1208,14 @@ namespace F6500
 	_INST6500_FROM (0x4d, 3, 4, _6500R(4),		"EOR[$2]",				EOR_Absolute, EOR_General);
 	_INST6500_FROM (0x45, 2, 3, _6500R(3),		"EOR[$1]",				EOR_ZeroPage, EOR_General);
 	_INST6500_FROM (0x41, 2, 6, _6500R(6),		"EOR([$1],X)",			EOR_ZeroPageIndirectX, EOR_General);
-	_INST6500_FROM (0x51, 2, 5,
+	_INST6500_FROM_VARIABLE (0x51, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"EOR([$1]),Y",			EOR_ZeroPageIndirectY, EOR_General);
 	_INST6500_FROM (0x55, 2, 4, _6500R(4),		"EOR[$1],X",			EOR_ZeroPageX, EOR_General);
-	_INST6500_FROM (0x5d, 3, 4,
+	_INST6500_FROM_VARIABLE (0x5d, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"EOR[$2],X",			EOR_AbsoluteX, EOR_General);
-	_INST6500_FROM (0x59, 3, 4,
+	_INST6500_FROM_VARIABLE (0x59, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"EOR[$2],Y",			EOR_AbsoluteY, EOR_General);
 
@@ -1289,14 +1366,14 @@ namespace F6500
 	_INST6500_FROM (0xad, 3, 4, _6500R(4),		"LDA[$2]",				LDA_Absolute, LDA_General);
 	_INST6500_FROM (0xa5, 2, 3, _6500R(3),		"LDA[$1]",				LDA_ZeroPage, LDA_General);
 	_INST6500_FROM (0xa1, 2, 6, _6500R(6),		"LDA([$1],X)",			LDA_ZeroPageIndirectX, LDA_General);
-	_INST6500_FROM (0xb1, 2, 5,
+	_INST6500_FROM_VARIABLE (0xb1, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"LDA([$1]),Y",			LDA_ZeroPageIndirectY, LDA_General);
 	_INST6500_FROM (0xb5, 2, 4, _6500R(4),		"LDA[$1],X",			LDA_ZeroPageX, LDA_General);
-	_INST6500_FROM (0xbd, 3, 4,
+	_INST6500_FROM_VARIABLE (0xbd, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LDA[$2],X",			LDA_AbsoluteX, LDA_General);
-	_INST6500_FROM (0xb9, 3, 4,
+	_INST6500_FROM_VARIABLE (0xb9, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LDA[$2],Y",			LDA_AbsoluteY, LDA_General);
 
@@ -1340,7 +1417,7 @@ namespace F6500
 		return (true);
 	}
 
-	_INST6500_FROM (0xbb, 3, 4,
+	_INST6500_FROM_VARIABLE (0xbb, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LAS[$2],Y",			LAS_AbsoluteY, LAS_General);
 
@@ -1386,11 +1463,11 @@ namespace F6500
 	_INST6500_FROM (0xaf, 3, 4, _6500R(4),		"LAX[$2]",				LAX_Absolute, LAX_General);
 	_INST6500_FROM (0xa7, 2, 3, _6500R(3),		"LAX[$1]",				LAX_ZeroPage, LAX_General);
 	_INST6500_FROM (0xa3, 2, 6, _6500R(6),		"LAX([$1],X)",			LAX_ZeroPageIndirectX, LAX_General);
-	_INST6500_FROM (0xb3, 2, 5,
+	_INST6500_FROM_VARIABLE (0xb3, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"LAX([$1]),Y",			LAX_ZeroPageIndirectY, LAX_General);
 	_INST6500_FROM (0xb7, 2, 4, _6500R(4),		"LAX[$1],Y",			LAX_ZeroPageY, LAX_General);
-	_INST6500_FROM (0xbf, 3, 4,
+	_INST6500_FROM_VARIABLE (0xbf, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LAX[$2],Y",			LAX_AbsoluteY, LAX_General);
 
@@ -1466,7 +1543,7 @@ namespace F6500
 	_INST6500_FROM (0xa2, 2, 2, _6500R(2),		"LDX#[#1]",				LDX_Inmediate, LDX_General);
 	_INST6500_FROM (0xae, 3, 4, _6500R(4),		"LDX[$2]",				LDX_Absolute, LDX_General);
 	_INST6500_FROM (0xa6, 2, 3, _6500R(3),		"LDX[$1]",				LDX_ZeroPage, LDX_General);
-	_INST6500_FROM (0xbe, 3, 4,
+	_INST6500_FROM_VARIABLE (0xbe, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LDX[$2],Y",			LDX_AbsoluteY, LDX_General);
 	_INST6500_FROM (0xb6, 2, 4, _6500R(4),		"LDX[$1],Y",			LDX_ZeroPageY, LDX_General);
@@ -1509,7 +1586,7 @@ namespace F6500
 	_INST6500_FROM (0xac, 3, 4, _6500R(4),		"LDY[$2]",				LDY_Absolute, LDY_General);
 	_INST6500_FROM (0xa4, 2, 3, _6500R(3),		"LDY[$1]",				LDY_ZeroPage, LDY_General);
 	_INST6500_FROM (0xb4, 2, 4, _6500R(4),		"LDY[$1],X",			LDY_ZeroPageX, LDY_General);
-	_INST6500_FROM (0xbc, 3, 4,
+	_INST6500_FROM_VARIABLE (0xbc, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"LDY[$2],X",			LDY_AbsoluteX, LDY_General);
 
@@ -1595,7 +1672,7 @@ namespace F6500
 												"NOP[$1]", NOP_ZeroPage, NOP_General);
 	_INST6500_FROM (0x14 /** 0x34, 0x54, 0x74, 0xd4, 0xf4 */, 2, 4, _6500R(4), 
 												"NOP[$1],X", NOP_ZeroPageX, NOP_General);
-	_INST6500_FROM (0x1c /** 0x3c, 0x5c, 0x7c, 0xdc, 0xfc */, 3, 4,
+	_INST6500_FROM_VARIABLE (0x1c /** 0x3c, 0x5c, 0x7c, 0xdc, 0xfc */, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"NOP[$2],X",			NOP_AbsoluteX, NOP_General);
 
@@ -1640,14 +1717,14 @@ namespace F6500
 	_INST6500_FROM (0x0d, 3, 4, _6500R(4),		"ORA[$2]",				ORA_Absolute, ORA_General);
 	_INST6500_FROM (0x05, 2, 3, _6500R(3),		"ORA[$1]",				ORA_ZeroPage, ORA_General);
 	_INST6500_FROM (0x01, 2, 6, _6500R(6),		"ORA([$1],X)",			ORA_ZeroPageIndirectX, ORA_General);
-	_INST6500_FROM (0x11, 2, 5,
+	_INST6500_FROM_VARIABLE (0x11, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"ORA([$1]),Y",			ORA_ZeroPageIndirectY, ORA_General);
 	_INST6500_FROM (0x15, 2, 4, _6500R(4),		"ORA[$1],X",			ORA_ZeroPageX, ORA_General);
-	_INST6500_FROM (0x1d, 3, 4,
+	_INST6500_FROM_VARIABLE (0x1d, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"ORA[$2],X",			ORA_AbsoluteX, ORA_General);
-	_INST6500_FROM (0x19, 3, 4,
+	_INST6500_FROM_VARIABLE (0x19, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"ORA[$2],Y",			ORA_AbsoluteY, ORA_General);
 
@@ -1922,14 +1999,14 @@ namespace F6500
 	_INST6500_FROM (0xed, 3, 4, _6500R(4),		"SBC[$2]",				SBC_Absolute, SBC_General);
 	_INST6500_FROM (0xe5, 2, 3, _6500R(3),		"SBC[$1]",				SBC_ZeroPage, SBC_General);
 	_INST6500_FROM (0xe1, 2, 6, _6500R(6),		"SBC([$1],X)",			SBC_ZeroPageIndirectX, SBC_General);
-	_INST6500_FROM (0xf1, 2, 5,
+	_INST6500_FROM_VARIABLE (0xf1, 2, 5,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(5), _6500R(6) }),				
 												"SBC([$1]),Y",			SBC_ZeroPageIndirectY, SBC_General);
 	_INST6500_FROM (0xf5, 2, 4, _6500R(4),		"SBC[$1],X",			SBC_ZeroPageX, SBC_General);
-	_INST6500_FROM (0xfd, 3, 4,
+	_INST6500_FROM_VARIABLE (0xfd, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"SBC[$2],X",			SBC_AbsoluteX, SBC_General);
-	_INST6500_FROM (0xf9, 3, 4,
+	_INST6500_FROM_VARIABLE (0xf9, 3, 4,
 		MCHEmul::InstructionDefined::CycleStructures ({ _6500R(4), _6500R(5) }),				
 												"SBC[$2],Y",			SBC_AbsoluteY, SBC_General);
 

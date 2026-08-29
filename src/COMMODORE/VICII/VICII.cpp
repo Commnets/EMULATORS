@@ -179,12 +179,14 @@ void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InstructionContextEvent
 
 	const MCHEmul::InstructionDefined* instruction =
 		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
+	unsigned int clockCycles = instruction -> clockCyclesToExecute
+		(dt -> _cpu, dt -> _memory, dt -> _address);
+	size_t cycleStructure = (size_t) (clockCycles - instruction -> clockCycles ());
 
 	prepareCPUStopPrediction
-		(&instruction -> cycleStructure (),
-		 &instruction -> busCycleData (),
-		 instruction -> clockCyclesToExecute
-			(dt -> _cpu, dt -> _memory, dt -> _address),
+		(&instruction -> cycleStructure (cycleStructure),
+		 &instruction -> busCycleData (cycleStructure),
+		 clockCycles,
 		 dt -> _cpu -> clockCycles ());
 
 	_IFDEBUG debugCPUStopPrediction (dt);
@@ -2304,7 +2306,11 @@ void COMMODORE::VICII::debugCPUStopPrediction
 
 	const MCHEmul::InstructionDefined* instruction =
 		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
-	const MCHEmul::BusCycleData& busData = instruction -> busCycleData ();
+
+	size_t cycleStructure = static_cast <size_t>
+		(_pendingCPUTransaction._clockCycles - instruction -> clockCycles ());
+	const MCHEmul::BusCycleData& busData =
+		*_pendingCPUTransaction._busCycleData;
 
 	_deepDebugFile -> writeCompleteLine
 		(className (), dt -> _cpu -> clockCycles (),
@@ -2317,7 +2323,7 @@ void COMMODORE::VICII::debugCPUStopPrediction
 			"Code=" + std::to_string (instruction -> code ()) + "," +
 			"Cycles=" +
 				std::to_string (_pendingCPUTransaction._clockCycles) + "," +
-			"Structure=0" },
+			"Structure=" + std::to_string (cycleStructure) },
 		  { "Bus cycle data",
 			"Cycles=" + std::to_string (busData._numberCycles) + "," +
 			"Reads=" + std::to_string (busData._numberReadCycles) + "," +
