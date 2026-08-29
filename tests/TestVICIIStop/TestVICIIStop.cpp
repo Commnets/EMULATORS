@@ -921,8 +921,9 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
-	/** Verifies that a late bad-line sequence starts BA with its first attempted
-		c-access and makes AEC effective after the three invalid attempts. */
+	/** Verifies that a late bad-line sequence starts BA when it is recognized,
+		attempts its first c-access one cycle later and makes AEC effective after
+		the complete three-cycle BA warning. */
 	bool testLateBadLineCPUStopWindow ()
 	{
 		this -> _badLineConditionActive = true;
@@ -933,12 +934,37 @@ class TestVICII final : public VICIIType
 		this -> actualizeCPUStopWindowsAfterBadLineChange ();
 
 		const CPUStopWindows& windows = *this -> _currentCPUStopWindows;
-		const bool result = windows.size () == 1 &&
-			windows [0]._firstBACycle == 37 &&
-			windows [0]._firstAECCycle == 40 &&
+		const bool middleResult = windows.size () == 1 &&
+			windows [0]._firstBACycle == 36 &&
+			windows [0]._firstAECCycle == 39 &&
 			windows [0]._lastCycle == 54 &&
 			this -> _badLineBAAlreadyRequested &&
-			this -> _badLineBARequestCycle == 37;
+			this -> _badLineBARequestCycle == 36 &&
+			this -> firstBadLineCAccessCycle () == 37;
+
+		this -> _badLineCAccessStartCycle = 41;
+		this -> _cycleInRasterLine = 41;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		const bool lateResult = windows.size () == 1 &&
+			windows [0]._firstBACycle == 41 &&
+			windows [0]._firstAECCycle == 44 &&
+			windows [0]._lastCycle == 54 &&
+			this -> _badLineBARequestCycle == 41 &&
+			this -> firstBadLineCAccessCycle () == 42;
+
+		this -> _badLineCAccessStartCycle = 54;
+		this -> _cycleInRasterLine = 54;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		const bool lastCycleResult = windows.size () == 1 &&
+			windows [0]._firstBACycle == 54 &&
+			windows [0]._firstAECCycle == 57 &&
+			windows [0]._lastCycle == 54 &&
+			this -> _badLineBARequestCycle == 54 &&
+			this -> firstBadLineCAccessCycle () == 55;
+
+		const bool result = middleResult && lateResult && lastCycleResult;
 
 		this -> _badLineConditionActive = false;
 		this -> _badLineCAccessActive = false;

@@ -933,11 +933,8 @@ void COMMODORE::VICII::selectCPUStopWindowsForCurrentAndNextLine ()
 // ---
 void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 {
-	const unsigned short firstBACycle = !_badLineCAccessActive
-		? 0
-		: ((_badLineCAccessStartCycle <= 14)
-			? _badLineCAccessStartCycle
-			: firstBadLineCAccessCycle ());
+	const unsigned short firstBACycle = 
+		!_badLineCAccessActive ? 0 : _badLineCAccessStartCycle;
 
 	_badLineBAAlreadyRequested = firstBACycle != 0;
 	_badLineBARequestCycle = firstBACycle;
@@ -966,10 +963,10 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		// interval. An aborted cycle-12/13 sequence is cleared at cycle 14 by the
 		// existing graphics-fetch state machine and therefore adds no interval.
 		//
-		// A sequence latched after cycle 14 starts its BA lead together with its
-		// first attempted c-access, in the cycle following recognition. AEC becomes
-		// effective after the three initial invalid c-access attempts. Sequences
-		// already latched by cycle 14 retain their original BA start cycle.
+		// A sequence latched after cycle 14 starts its BA lead in the recognition
+		// cycle. Its first attempted c-access occurs in the following cycle, while
+		// AEC becomes effective three cycles after BA. Keeping both moments separate
+		// preserves the complete BA warning even for late bad-line sequences.
 		if (_badLineCAccessActive && firstBACycle != 0 &&
 			firstBACycle <= _BADLINE_START_LAST_CYCLE)
 		{
