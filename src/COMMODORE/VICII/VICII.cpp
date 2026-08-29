@@ -404,6 +404,11 @@ void COMMODORE::VICII::simulateRasterCycle
 		cpu -> interrupt (_interruptId) ->
 			setNewInterruptRequestAdmitted (false);
 
+	if (registerWriteApplied &&
+		registerAffectsSpriteDMAProjection
+			(dC._registerEffect._registerPosition))
+		actualizeCPUStopWindowsAfterSpriteRegisterChange ();
+
 	// A second state is needed only when the CPU write changes an output value.
 	// Every other cycle reuses the initial state without copying it.
 	if (rasterVisible &&
@@ -919,10 +924,10 @@ void COMMODORE::VICII::selectCPUStopWindowsForCurrentAndNextLine ()
 
 	_currentCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
 		(badLineConditionForRasterLine (_raster.currentLine ()),
-		 _currentSpriteDMAMask)];
+		 currentSpriteDMAStopMask ())];
 	_nextCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
 		(badLineConditionForRasterLine (_raster.nextLine ()),
-		 _nextSpriteDMAMask)];
+		 nextSpriteDMAStopMask ())];
 }
 
 // ---
@@ -939,7 +944,7 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 
 	const CPUStopWindows* noBadLineWindows =
 		&_cpuStopWindowSets [cpuStopWindowSetIndex
-			(false, _currentSpriteDMAMask)];
+			(false, currentSpriteDMAStopMask ())];
 	if (!_badLineCAccessActive &&
 		_currentCPUStopWindows == noBadLineWindows)
 		return;
@@ -951,7 +956,7 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		(_badLineCAccessActive &&
 		 _badLineCAccessStartCycle == _BADLINE_START_FIRST_CYCLE))
 		_currentCPUStopWindows = &_cpuStopWindowSets [cpuStopWindowSetIndex
-			(true, _currentSpriteDMAMask)];
+			(true, currentSpriteDMAStopMask ())];
 	else
 	{
 		_adjustedCurrentCPUStopWindows = *noBadLineWindows;
@@ -2345,9 +2350,9 @@ void COMMODORE::VICII::debugCPUStopPrediction
 			"ActualSpriteMask=" +
 				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
-				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+				std::to_string ((unsigned int) currentSpriteDMAStopMask ()) + "," +
 			"NextSpriteMask=" +
-				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+				std::to_string ((unsigned int) nextSpriteDMAStopMask ()) },
 		  { "Prediction",
 			debugCPUStopPredictionAsString () } });
 }
@@ -2393,9 +2398,9 @@ void COMMODORE::VICII::debugCPUStopPrediction
 			"ActualSpriteMask=" +
 				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
-				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+				std::to_string ((unsigned int) currentSpriteDMAStopMask ()) + "," +
 			"NextSpriteMask=" +
-				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+				std::to_string ((unsigned int) nextSpriteDMAStopMask ()) },
 		  { "Prediction",
 			debugCPUStopPredictionAsString () } });
 }
@@ -2420,9 +2425,9 @@ void COMMODORE::VICII::debugCPUStopPredictionRecalculated
 				"ActualSpriteMask=" +
 					std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 				"CurrentSpriteMask=" +
-					std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+					std::to_string ((unsigned int) currentSpriteDMAStopMask ()) + "," +
 				"NextSpriteMask=" +
-					std::to_string ((unsigned int) _nextSpriteDMAMask) },
+					std::to_string ((unsigned int) nextSpriteDMAStopMask ()) },
 			  { "Prediction",
 				debugCPUStopPredictionAsString () } }));
 }
@@ -2572,9 +2577,9 @@ void COMMODORE::VICII::debugVICIICycle
 			"ActualSpriteMask=" +
 				std::to_string ((unsigned int) _spriteDMAStateMask) + "," +
 			"CurrentSpriteMask=" +
-				std::to_string ((unsigned int) _currentSpriteDMAMask) + "," +
+				std::to_string ((unsigned int) currentSpriteDMAStopMask ()) + "," +
 			"NextSpriteMask=" +
-				std::to_string ((unsigned int) _nextSpriteDMAMask) },
+				std::to_string ((unsigned int) nextSpriteDMAStopMask ()) },
 		  { "CPU stop prediction",
 			"Pending=" +
 				std::to_string (_pendingCPUTransaction.valid ()) + "," +

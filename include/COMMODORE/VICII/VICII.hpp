@@ -543,6 +543,23 @@ namespace COMMODORE
 			raster line. Sprites 3..7 fetch before the cycle-16 DMA termination,
 			whereas sprites 0..2 fetch after it. */
 		unsigned char projectedSpriteDMAMaskForNextRasterLine () const;
+		/** Returns the sprites whose Y comparator will request DMA on the
+			specified raster line if their current register values are preserved. \n
+			The result is predictive only and never changes the real DMA state. */
+		inline unsigned char spriteDMAStartMaskForRasterLine
+			(unsigned short rL) const;
+		/** Combines the current DMA-slot state with starts still predictable
+			before the sprite 0..2 slots of the current raster line. */
+		inline unsigned char currentSpriteDMAStopMask () const;
+		/** Combines retained DMA with starts that can affect sprite slots on
+			the following raster line. */
+		inline unsigned char nextSpriteDMAStopMask () const;
+		/** Rebuilds the selected sprite stop windows after a CPU write changes
+			a register participating in vertical sprite DMA. */
+		inline void actualizeCPUStopWindowsAfterSpriteRegisterChange ();
+		/** Determines whether a VIC-II register can change the projected
+			vertical sprite-DMA windows. */
+		inline bool registerAffectsSpriteDMAProjection (size_t rP) const;
 		/** Determines the regular bad-line condition for an arbitrary raster line. */
 		inline bool badLineConditionForRasterLine (unsigned short rL) const;
 		/** Selects immutable stop-window sets for the current and following lines. */
@@ -1450,6 +1467,83 @@ namespace COMMODORE
 			if (++_vicGraphicInfo._RC == 8)
 				_vicGraphicInfo._RC = 0;
 		}
+	}
+
+	// ---
+	inline unsigned char VICII::spriteDMAStartMaskForRasterLine
+		(unsigned short rL) const
+	{
+		unsigned char result = 0;
+		const unsigned char rasterY =
+			(unsigned char) (rL & 0x00ff);
+
+		for (size_t i = 0; i < 8; i++)
+			if (_VICIIRegisters -> spriteEnable (i) &&
+				_VICIIRegisters -> spriteYCoord (i) == rasterY)
+				result |= (1 << i);
+
+		return (result);
+	}
+
+	// ---
+	inline unsigned char VICII::currentSpriteDMAStopMask () const
+	{
+		unsigned char result = _currentSpriteDMAMask;
+
+		// Sprites 0..2 fetch after the cycle-55/56 comparator. Sprites 3..7
+		// have already used their current-line slots before a new DMA can start.
+		if (_cycleInRasterLine < 56)
+			result |= spriteDMAStartMaskForRasterLine
+				(_raster.currentLine ()) & 0x07;
+
+		return (result);
+	}
+
+	// ---
+	inline unsigned char VICII::nextSpriteDMAStopMask () const
+	{
+		unsigned char result = _nextSpriteDMAMask;
+
+		// Every sprite starting in the current line remains active for its slot
+		// on the following line. Only sprites 0..2 can also start and fetch there.
+		if (_cycleInRasterLine < 56)
+			result |= spriteDMAStartMaskForRasterLine
+				(_raster.currentLine ());
+
+		result |= spriteDMAStartMaskForRasterLine
+			(_raster.nextLine ()) & 0x07;
+
+		return (result);
+	}
+
+	// ---
+	inline void VICII::actualizeCPUStopWindowsAfterSpriteRegisterChange ()
+	{
+		// D017 can alter whether an active DMA survives the next cycle-16
+		// counter update. Rebuilding it is harmless for Y and D015 writes.
+		_nextSpriteDMAMask =
+			projectedSpriteDMAMaskForNextRasterLine ();
+
+		selectCPUStopWindowsForCurrentAndNextLine ();
+
+		// A late bad-line interval uses a mutable current-line window set and
+		// must be reconstructed after selecting the new sprite combination.
+		if (_badLineCAccessActive &&
+			_badLineCAccessStartCycle != _BADLINE_START_FIRST_CYCLE)
+			actualizeCPUStopWindowsAfterBadLineChange ();
+		else if (recalculatePendingCPUStopPrediction ())
+			_IFDEBUG debugCPUStopPredictionRecalculated
+				("SpriteRegisterWrite");
+	}
+
+	// ---
+	inline bool VICII::registerAffectsSpriteDMAProjection
+		(size_t rP) const
+	{
+		return (
+			(rP <= 0x0f && (rP & 0x01) != 0) ||
+			rP == 0x15 ||
+			rP == 0x17);
 	}
 
 	// ---

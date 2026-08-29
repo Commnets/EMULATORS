@@ -821,6 +821,61 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
+	/** Verifies that vertical sprite comparators reserve only the DMA slots
+		that remain reachable in the current and following raster lines. */
+	bool testPredictedSpriteDMAStartMasks ()
+	{
+		this -> _raster.initialize ();
+		_registers.initialize ();
+		this -> _currentSpriteDMAMask = this -> _nextSpriteDMAMask = 0;
+		this -> _cycleInRasterLine = 1;
+
+		const unsigned char currentY =
+			(unsigned char) this -> _raster.currentLine ();
+		const unsigned char nextY =
+			(unsigned char) this -> _raster.nextLine ();
+
+		_registers.setRegister (0x01, MCHEmul::UByte (currentY));
+		_registers.setRegister (0x07, MCHEmul::UByte (currentY));
+		_registers.setRegister (0x15, MCHEmul::UByte (0x09));
+		const unsigned char currentLineCurrentMask =
+			this -> currentSpriteDMAStopMask ();
+		const unsigned char currentLineNextMask =
+			this -> nextSpriteDMAStopMask ();
+
+		_registers.setRegister (0x01, MCHEmul::UByte (nextY));
+		_registers.setRegister (0x15, MCHEmul::UByte (0x01));
+		const unsigned char nextLineCurrentMask =
+			this -> currentSpriteDMAStopMask ();
+		const unsigned char nextLineNextMask =
+			this -> nextSpriteDMAStopMask ();
+
+		_registers.setRegister (0x15, MCHEmul::UByte::_0);
+		const unsigned char disabledCurrentMask =
+			this -> currentSpriteDMAStopMask ();
+		const unsigned char disabledNextMask =
+			this -> nextSpriteDMAStopMask ();
+
+		const bool result =
+			currentLineCurrentMask == 0x01 &&
+			currentLineNextMask == 0x09 &&
+			nextLineCurrentMask == 0x00 &&
+			nextLineNextMask == 0x01 &&
+			disabledCurrentMask == 0x00 &&
+			disabledNextMask == 0x00;
+
+		_registers.initialize ();
+		std::cout
+			<< "Predicted sprite DMA start masks | current $"
+			<< std::hex << (unsigned int) currentLineCurrentMask
+			<< "/" << (unsigned int) currentLineNextMask
+			<< " | next $" << (unsigned int) nextLineCurrentMask
+			<< "/" << (unsigned int) nextLineNextMask
+			<< std::dec << " | " << (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
 	/** Verifies the independently specified staggered VIC-II graphics pipeline:
 		c-access occupies cycles 15..54 and g-access cycles 16..55. */
 	bool testGraphicAccessPipelineWindows ()
@@ -1008,6 +1063,7 @@ int main ()
 	result &= viciiNTSC.testVerticalBorderComparatorCycle
 		("NTSC vertical border comparator");
 	result &= vicii.testProjectedSpriteDMAMask ();
+	result &= vicii.testPredictedSpriteDMAStartMasks ();
 	result &= vicii.testGraphicAccessPipelineWindows ();
 	result &= vicii.testLateBadLineCPUStopWindow ();
 
