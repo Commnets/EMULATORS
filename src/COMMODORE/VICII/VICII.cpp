@@ -7,13 +7,17 @@
 /** At the information is in https://www.cebix.net/VIC-Article.txt. */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA 
 	(0, 16, 51, 250, 289, 311 /** When the reatrace starts. */, 311 /** When the retrace finishes. */, 312, 4, 4);
-/** The real VICII does actions in both phases of the clock (it really uses a clock running at double speed and creates the CPU clock from that) \n
-	When the raster beam is in the visible zone 4 pixels are drawn in each phase of the cycle, so 8 pixels per CPU cycle.
-	As the documentation describes, the graphics are read from cycle 15 onwards (in a badline). \n
-	The first char code is actually read at the 2nd phase (up) of the cycle 15 and the graphic data is read at the 1st phase of the cycle 16. \n
-	The simulation doesn't manage a clock with two phases, so both actions are programmed to happen at cycle 16 (see below). That is from cycle 16 to cycle 55 (40).
-	At the beginning of that cycle 16 the raster will haved moved: (16 - 1) * 8 = 120 "pixels" since the counter of cycles started.
-	Drawing of the content should start at position (as defined): 24, that's 124 "pixels" since the counter of cycles started (504 - 404 + 24). */
+/** The real VIC-II performs activity in both clock phases and derives the CPU
+	clock from that timing. Four visible pixels belong to each phase, for eight
+	pixels per CPU cycle. \n
+	On a regular bad line, the first matrix/color c-access occurs in phi2 of cycle
+	15 and the first graphics g-access in phi1 of cycle 16. This implementation
+	uses one CPU-cycle scheduling unit but preserves that ordering explicitly:
+	cycle 15 performs only the first c-access, and shared cycles 16..54 perform
+	the g-access before the c-access. The final g-access occurs in cycle 55. \n
+	At the beginning of cycle 16 the raster has moved (16 - 1) * 8 = 120 pixels
+	since the cycle counter started. Drawing begins at position 24, or 124 pixels
+	in the raster coordinate system (504 - 404 + 24). */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
 	(404, 496 /** The 2nd HBI finishes and then the drawing border starts. 
 				  In the documentation it happens at 480, but it wouldn't make a border with the same with than the right one! */, 
@@ -60,6 +64,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _badLineBAAlreadyRequested (false),
 	  _badLineBARequestCycle (0),
 	  _badLineCAccessActive (false),
+	  _badLineCAccessStartedFromIdle (false),
 	  _badLineCAccessAllowedThisLine (false),
 	  _badLineInvalidCAccessCycles (0),
 	  _badLineInvalidColorData (MCHEmul::UByte::_0),
@@ -136,6 +141,7 @@ bool COMMODORE::VICII::initialize ()
 	_badLineBAAlreadyRequested = false;
 	_badLineBARequestCycle = 0;
 	_badLineCAccessActive = false;
+	_badLineCAccessStartedFromIdle = false;
 	_badLineCAccessAllowedThisLine = false;
 	_badLineInvalidCAccessCycles = 0;
 	_badLineInvalidColorData = MCHEmul::UByte::_0;
@@ -290,9 +296,9 @@ void COMMODORE::VICII::simulateRasterCycle
 	// This includes:
 	// - latching whether DEN has been seen at raster line $30,
 	// - evaluating the current bad-line condition,
-	// - entering display state immediately for regular bad lines, while a
-	//   late transition from idle is deferred until the current bus cycle
-	//   has completed,
+	// - entering display state immediately for an accepted condition, including
+	//   an early condition before cycle 12; only a late transition from idle is
+	//   deferred until its first effective c-access cycle has completed,
 	// - latching a c-access sequence if the condition appears inside
 	//   the c-access start window. Cycle-14 sequences are validated there;
 	//   later sequences are handled as DMA-delay/VSP-like c-access attempts.
@@ -336,9 +342,9 @@ void COMMODORE::VICII::simulateRasterCycle
 	// effective before the CPU write of cC.
 	treatRasterBusCycle ();
 
-	// On the first cycle of a late Bad Line Condition, phi1 has already made
-	// an idle g-access before phi2 performs the first c-access. Enter display
-	// state after both phases so the following g-access consumes matrix slot 0.
+	// On the first effective c-access cycle of a late sequence latched from idle,
+	// phi1 still makes an idle g-access before phi2 performs the c-access. Enter
+	// display state after both phases so the following g-access consumes matrix slot 0.
 	if (_badLineCAccessActive &&
 		_badLineCAccessStartCycle > 14 &&
 		_cycleInRasterLine == firstBadLineCAccessCycle () &&
@@ -476,6 +482,8 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	result.add ("BadlineBARequestCycle",		_badLineBARequestCycle);
 	result.add ("BadlineFirstCAccessCycle",		firstBadLineCAccessCycle ());
 	result.add ("BadlineCAccess",				std::string (_badLineCAccessActive ? "YES" : "NO"));
+	result.add ("BadlineCAccessStartedFromIdle",
+		std::string (_badLineCAccessStartedFromIdle ? "YES" : "NO"));
 	result.add ("BadlineCAccessAllowed",		std::string (_badLineCAccessAllowedThisLine ? "YES" : "NO"));
 	result.add ("BadlineInvalidCAccessCycles",	_badLineInvalidCAccessCycles);
 	result.add ("BadlineCAccessStartCycle",		_badLineCAccessStartCycle);
@@ -964,9 +972,9 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		// existing graphics-fetch state machine and therefore adds no interval.
 		//
 		// A sequence latched after cycle 14 starts its BA lead in the recognition
-		// cycle. Its first attempted c-access occurs in the following cycle, while
-		// AEC becomes effective three cycles after BA. Keeping both moments separate
-		// preserves the complete BA warning even for late bad-line sequences.
+		// cycle. Its first attempted c-access occurs there if display is active, or
+		// in the following cycle if the sequence starts from idle. AEC always becomes
+		// effective three cycles after BA, preserving the complete warning interval.
 		if (_badLineCAccessActive && firstBACycle != 0 &&
 			firstBACycle <= _BADLINE_START_LAST_CYCLE)
 		{
@@ -2556,6 +2564,8 @@ void COMMODORE::VICII::debugVICIICycle
 			"BadlineBARequestCycle=" + std::to_string (_badLineBARequestCycle) + "," +
 			"BadlineFirstCAccessCycle=" + std::to_string (firstBadLineCAccessCycle ()) + "," +
 			"BadlineCAccess=" + std::to_string (_badLineCAccessActive) + "," +
+			"BadlineCAccessStartedFromIdle=" +
+				std::to_string (_badLineCAccessStartedFromIdle) + "," +
 			"BadlineCAccessAllowed=" + std::to_string (_badLineCAccessAllowedThisLine) + "," +
 			"BadlineInvalidCAccessCycles=" + std::to_string (_badLineInvalidCAccessCycles) + "," +
 			"BadlineCAccessStartCycle=" + std::to_string (_badLineCAccessStartCycle) + "," +

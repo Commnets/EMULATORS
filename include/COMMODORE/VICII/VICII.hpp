@@ -67,8 +67,11 @@ namespace COMMODORE
 		static const unsigned short _BADLINE_START_FIRST_CYCLE				= 12;
 		static const unsigned short _BADLINE_START_LAST_CYCLE				= 54;
 		/** Window where a Bad Line Condition can switch the graphics
-			sequencer from idle to screen/display state. */
-		static const unsigned short _BADLINE_DISPLAY_FIRST_CYCLE			= 12;
+			sequencer from idle to screen/display state. \n
+			This transition is independent of the BA/c-access window: an early
+			condition can activate display state before cycle 12, although it cannot
+			start matrix DMA until that window is reached. */
+		static const unsigned short _BADLINE_DISPLAY_FIRST_CYCLE			= 1;
 		static const unsigned short _BADLINE_DISPLAY_LAST_CYCLE				= 57;
 		/** Late Bad Line Condition window that can prevent idle entry at cycle 58. */
 		static const unsigned short _BADLINE_IDLE_PREVENT_FIRST_CYCLE		= 54;
@@ -191,19 +194,19 @@ namespace COMMODORE
 		  * DENSeenAtLine30					= Attribute: Whether the DEN signal has been seen at line 30. \n
 		  * BadlineCondition				= Attribute: Whether the instantaneous Bad Line Condition is active. \n
 		  * BadlinePreventedIdleThisLine	= Attribute: Whether a late Bad Line Condition has prevented idle entry. \n
-		  * BadlineDetected					= Attribute: Whether a Bad Line Condition has been accepted during the display-state window. \n
+		  * BadlineDetected					= Attribute: Whether a Bad Line Condition has been accepted in this raster line. \n
 		  * BadlineBARequested				= Attribute: Whether a BA-like bus request has been scheduled for the current bad line. \n
 		  * BadlineBARequestCycle			= Attribute: First VICII internal cycle in which the scheduled
 		  *									  BA-like request is effective. \n
-		  * BadlineFirstCAccessCycle		= Attribute: Number of the VICII internal cycle where the first
-		  *									  access to the character data happens. \n
+		  * BadlineFirstCAccessCycle		= Attribute: VICII internal cycle of the first matrix/color
+		  *									  c-access attempt. The attempt can return invalid data. \n
 		  * BadlineCAccess					= Attribute: Whether a bad-line c-access sequence is latched for the current raster line. \n
+		  * BadlineCAccessStartedFromIdle	= Attribute: Whether the sequence was latched while the graphics sequencer was idle. \n
 		  * BadlineCAccessAllowed			= Attribute: Whether the latched c-access sequence is allowed
-		  *									  to perform normal Video Matrix / Color RAM reads in this raster line. \n
+		  *									  to perform c-access attempts in this raster line. Initial attempts can be invalid. \n
 		  * BadlineInvalidCAccessCycles		= Attribute: Number of initial invalid c-access attempts in the current raster line. \n
 		  * BadlineCAccessStartCycle		= Attribute: VICII internal cycle where the bad-line c-access
-		  *									  sequence was latched. For late sequences, 
-		  *									  the first attempted c-access is reported separately
+		  *									  sequence was recognized and latched. The first effective attempt is reported separately
 		  *									  by BadlineFirstCAccessCycle. \n
 		  * Cycle							= Attribute: Number of the VICII internal cycle where the raster beam is. \n
 		  * LastVICDataRead					= Attribute: The last byte read by the VICII. \n
@@ -280,7 +283,7 @@ namespace COMMODORE
 		using CPUStopWindows = std::vector <CPUStopWindow>;
 		using CPUStopWindowSets = std::array <CPUStopWindows, 512>;
 
-		/** Result of projecting one already executed CPU transaction over the
+		/** Result of projecting one CPU transaction that is about to execute over the
 			current and next VIC-II stop windows. \n
 			Besides the final instruction effect, the structure stores the number
 			of elapsed CPU/VIC-II positions at which every write bus cycle can
@@ -597,8 +600,9 @@ namespace COMMODORE
 			the same transaction and no new extraction is required. */
 		void extractPendingRegisterWrites ();
 		/** Executes the first pending VIC-II register write during the CPU phase
-			of the current cycle, after the VIC-II bus activity represented by
-			treatRasterBusCycle () and before the border and sprite comparator phase. \n
+			of the current cycle, after treatRasterBusCycle () and the pre-write border
+			and sprite comparators for pixels 0..3, but before the post-write comparators
+			for pixels 4..7. \n
 			The write keeps its predicted absolute CPU cycle; only its phase inside
 			that cycle is represented explicitly. \n
 			After execution the command is erased, making the next command the new
@@ -712,7 +716,7 @@ namespace COMMODORE
 			already evaluated by simulate (). \n
 			This method performs rendering and collision processing only; it does not
 			evaluate VIC-II border comparators. \n
-			@param cpu	CPU used for collision IRQ notification and debug context. \n
+			@param cpu	Reserved CPU context; the current rendering path does not read it. \n
 			@param dC	Context captured around the CPU write for the current raster slice. */
 		void drawVisibleZone
 			(MCHEmul::CPU* cpu, const DrawContext& dC);
@@ -904,7 +908,9 @@ namespace COMMODORE
 		int _VICIIView;
 		/** The number of cycles per raster line as it depends on the type of Chip. */
 		unsigned short _cyclesPerRasterLine;
-		/** The difference with the PAL System. */
+		/** Difference between the selected model and the PAL cycles-per-line value. \n
+			It is retained as initialized model data; the current raster pipeline uses
+			_cyclesPerRasterLine directly. */
 		unsigned short _incCyclesPerRasterLine;
 		/** The raster. */
 		MCHEmul::Raster _raster;
@@ -916,9 +922,9 @@ namespace COMMODORE
 		bool _drawOtherEvents;
 
 		// Implementation
-		/** When the CPU is not stopped (sometimes the VIC requires to stop it). \n 
-			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
-			to define what the VICII has to do. */
+		/** Absolute CPU-cycle synchronization origin. \n
+			Every simulate () call processes the elapsed interval from this value to the
+			current CPU clock, irrespective of whether that interval includes CPU stops. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
@@ -941,8 +947,10 @@ namespace COMMODORE
 			instructions can cross the horizontal raster boundary. */
 		const CPUStopWindows* _currentCPUStopWindows;
 		const CPUStopWindows* _nextCPUStopWindows;
-		/** Reusable current-line storage used only for a bad line whose BA start
-			differs from the normal precalculated cycle 12. */
+		/** Reusable current-line storage for bad-line timing that cannot use the
+			precalculated cycle-12 window. \n
+			It represents either a late BA start or removal of the normal window after
+			an early condition disappears before c-accesses begin. */
 		CPUStopWindows _adjustedCurrentCPUStopWindows;
 		/** Actual sprite-DMA state most recently observed by the bus-arbitration
 			pipeline. It is deliberately separate from the masks of raster-line
@@ -991,6 +999,12 @@ namespace COMMODORE
 			returning $ff, and aborted sequences can be blocked by
 			_badLineCAccessAllowedThisLine. */
 		bool _badLineCAccessActive;
+		/** True when the current c-access sequence was latched while the graphics
+			sequencer was still in idle state. \n
+			Late sequences from idle defer their first c-access by one cycle;
+			late sequences with the sequencer already active can fill the matrix
+			entry prepared by the g-access of the recognition cycle. */
+		bool _badLineCAccessStartedFromIdle;
 		/** True when the current bad-line c-access sequence is allowed to perform
 			matrix/color access attempts in this raster line. \n
 			Some of those attempts can be invalid DMA-delay/FLI accesses and therefore
@@ -1005,8 +1019,9 @@ namespace COMMODORE
 			instead of valid Color RAM data. */
 		MCHEmul::UByte _badLineInvalidColorData;
 		/** Raster cycle where the current bad-line c-access sequence was latched. \n
-			For a late sequence, its first attempted c-access can occur in the following
-			cycle. 0 means that no c-access sequence is active in the current line. */
+			This is the recognition cycle, not necessarily the first effective c-access:
+			a late sequence latched from idle defers that attempt by one cycle. 0 means
+			that no c-access sequence is active in the current line. */
 		unsigned short _badLineCAccessStartCycle;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
@@ -1044,6 +1059,10 @@ namespace COMMODORE
 		  *	  _graphicData, _screenCodeDrawData and _colorDrawData.
 		  *
 		  *	Relevant raster-cycle rules in this implementation:
+		  * - A Bad Line Condition accepted before cycle 12 leaves idle state immediately,
+		  *   independently of BA and matrix DMA. If it disappears before the c-access
+		  *   window, no c-access sequence starts and cycle 14 does not reset RC; display-state
+		  *   g-accesses still advance VC/VLMI, so cycle 58 can commit the advanced VC to VCBASE.
 		  * - At cycle 14, VC is loaded from VCBASE and the line access indexes are reset.
 		  *   If a Bad Line Condition is active, RC is reset to 0 and c-access attempts
 		  *   are allowed for this line. If the sequence was first latched at cycle 14,
@@ -1055,11 +1074,11 @@ namespace COMMODORE
 		  *	  advance precede the c-access that prepares the following entry.
 		  *	  _GAccessIndex advances on every g-access. VC and _VLMI advance only
 		  *	  while the sequencer is in display state.
-		  *	- When a late Bad Line Condition is accepted while the sequencer is
-		  *	  idle, its first attempted c-access occurs after the g-access of that
-		  *	  cycle, which therefore still uses idle state.
-		  *	  Display state becomes active after that bus cycle, so VC and _VLMI
-		  *	  start advancing with the following g-access.
+		  *	- When a late Bad Line Condition is accepted while the sequencer is idle,
+		  *	  its first attempted c-access is deferred to the following cycle. The phi1
+		  *	  g-access of that effective c-access cycle still uses idle state. Display
+		  *	  state becomes active after the bus cycle, so VC and _VLMI advance from
+		  *	  the next g-access onwards.
 		  *	- At cycle 58, if RC == 7, VCBASE is loaded from VC. The sequencer enters
 		  *	  idle state only if there is no current Bad Line Condition and no late
 		  *	  Bad Line Condition has prevented idle entry for this line.
@@ -1099,13 +1118,13 @@ namespace COMMODORE
 
 			/** 
 				The name of the fields are: \n
-				VCBASE			= Attribute: 10-bit video position counter base for the current character/bitmap row.
-				VC				= Attribute: 10-bit video position counter. It advances by 1 during display-state g-accesses.
+				VCBASE			= Attribute: 10-bit video position counter base for the current character/bitmap row. \n
+				VC				= Attribute: 10-bit video position counter. It advances by 1 during display-state g-accesses. \n
 				VLMI			= Attribute: Logical Video Matrix Line Index. \n
 				GAccessIndex	= Attribute: Emulator-side graphics access index within the 40-byte line buffer. \n
 				RC				= Attribute: Line position within the graphics memory. From 0 to 7. \n
 				ROW				= Attribute: Row number. Depending on the VICII type. \n
-				IDLE			= Attribute: Whether the VICII is or not in idle state.
+				IDLE			= Attribute: Whether the VICII is or not in idle state. \n
 			  */
 			MCHEmul::InfoStructure getInfoStructure () const;
 
@@ -1127,7 +1146,8 @@ namespace COMMODORE
 				This counter gets updated just when the first cycle of the VICII happens. */
 			unsigned short _ROW;
 			/** Whether the VIC-II graphics sequencer is in idle state. \n
-				The sequencer leaves idle state when a new Bad Line Condition is accepted. \n
+				The sequencer leaves idle state when a new Bad Line Condition is accepted,
+				independently of whether the BA/c-access window has started. \n
 				It can return to idle state at cycle 58 when RC == 7, provided that no
 				current Bad Line Condition is active and no late Bad Line Condition in
 				cycles 54..57 has prevented the idle transition for this raster line. \n
@@ -1216,9 +1236,9 @@ namespace COMMODORE
 			associated to the movement of the raster line. */
 		struct EventsStatus
 		{
-			/** When the internal variable to indicate the status of the main border, changes. */
+			/** When the vertical-border flip-flop changes. */
 			MCHEmul::Pulse _ffVBorderChange;
-			/** Same when what change is an auxiliar variable to support changes in the border. */
+			/** When the main-border flip-flop changes. */
 			MCHEmul::Pulse _ffMBorderChange;
 			/** The bad line to hightlight. */
 			unsigned short _badLine;
@@ -1276,8 +1296,9 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()
 	{
-		const bool previousBadLineCondition = _badLineConditionActive;
-		const bool previousCAccessActive = _badLineCAccessActive;
+		const bool previousBadLineCondition = _badLineConditionActive,
+			previousCAccessActive = _badLineCAccessActive;
+		const bool idleAtCycleStart = idleStateActive ();
 		const unsigned short previousCAccessStartCycle = _badLineCAccessStartCycle;
 
 		updateDENSeenAtLine30 ();
@@ -1293,9 +1314,10 @@ namespace COMMODORE
 			_cycleInRasterLine <= _BADLINE_IDLE_PREVENT_LAST_CYCLE)
 			_badLinePreventedIdleThisLine = true;
 
-		// A Bad Line Condition can switch the sequencer to display state only
-		// during the hardware acceptance window. Conditions before cycle 12
-		// remain observable but must not alter VC, VCBASE, RC or the idle state.
+		// A Bad Line Condition can switch the sequencer to display state before
+		// the BA/c-access window begins. An early condition removed before cycle 12
+		// therefore activates the graphics sequencer without starting matrix DMA.
+		// RC is reset separately at cycle 14 only if the condition remains active.
 		if (_badLineConditionActive &&
 			!_badLineAlreadyDetectedThisLine &&
 			_cycleInRasterLine >= _BADLINE_DISPLAY_FIRST_CYCLE &&
@@ -1306,7 +1328,7 @@ namespace COMMODORE
 			// DMA delay switches an idle sequencer to display state in the cycle
 			// following recognition of the late Bad Line Condition.
 			const bool lateDMAFromIdle =
-				idleStateActive () &&
+				idleAtCycleStart &&
 				_cycleInRasterLine > 14 &&
 				_cycleInRasterLine <= _BADLINE_START_LAST_CYCLE;
 			if (!lateDMAFromIdle)
@@ -1330,6 +1352,7 @@ namespace COMMODORE
 			_cycleInRasterLine <= _BADLINE_START_LAST_CYCLE)
 		{
 			_badLineCAccessActive = true;
+			_badLineCAccessStartedFromIdle = idleAtCycleStart;
 			_badLineCAccessStartCycle = _cycleInRasterLine;
 
 			// If the Bad Line Condition appears after cycle 14, this is a late
@@ -1358,6 +1381,7 @@ namespace COMMODORE
 		_badLineBAAlreadyRequested = false;
 		_badLineBARequestCycle = 0;
 		_badLineCAccessActive = false;
+		_badLineCAccessStartedFromIdle = false;
 		_badLineCAccessAllowedThisLine = false;
 		_badLineInvalidCAccessCycles = 0;
 		_badLineInvalidColorData = MCHEmul::UByte::_0;
@@ -1435,6 +1459,7 @@ namespace COMMODORE
 			// and then aborted before cycle 14. The sequencer remains in display
 			// state, but no normal matrix/color c-accesses continue.
 			_badLineCAccessActive = false;
+			_badLineCAccessStartedFromIdle = false;
 			_badLineCAccessAllowedThisLine = false;
 			_badLineInvalidCAccessCycles = 0;
 			_badLineCAccessStartCycle = 0;
@@ -1764,15 +1789,16 @@ namespace COMMODORE
 			_badLineCAccessStartCycle == 0)
 			return (0);
 
-		// Normal bad lines and FLI-like bad lines that are active by cycle 14
-		// start their attempted c-accesses in phi2 of cycle 15.
-		// Late DMA-delay/VSP sequences start attempting c-accesses in the cycle
-		// immediately following recognition of the Bad Line Condition. The BA/AEC
-		// delay makes the first attempts invalid; it does not postpone them.
+		// Regular bad lines and FLI-like sequences active by cycle 14 start their
+		// c-accesses in cycle 15. A late sequence recognized from idle preserves
+		// the existing one-cycle deferral because phi1 has already performed an
+		// idle g-access. If the graphics sequencer was active, phi2 can fill the
+		// matrix entry selected by the g-access of the same recognition cycle.
 		unsigned short result =
 			(_badLineCAccessStartCycle <= 14)
 				? _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE
-				: (unsigned short) (_badLineCAccessStartCycle + 1);
+				: (unsigned short) (_badLineCAccessStartCycle +
+					(_badLineCAccessStartedFromIdle ? 1 : 0));
 		if (result < _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE)
 			result = _BADLINE_EFFECTIVE_CACCESS_FIRST_CYCLE;
 

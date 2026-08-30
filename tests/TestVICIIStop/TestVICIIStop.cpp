@@ -901,16 +901,22 @@ class TestVICII final : public VICIIType
 			!this -> isBadLineCAccessCycle () && this -> isGraphicAccessCycle ();
 
 		this -> _badLineCAccessStartCycle = 36;
+		this -> _badLineCAccessStartedFromIdle = true;
 		this -> _cycleInRasterLine = 36;
 		const bool beforeLateCAccess = !this -> isBadLineCAccessCycle ();
 		this -> _cycleInRasterLine = 37;
 		const bool firstLateCAccess = this -> isBadLineCAccessCycle ();
+		this -> _badLineCAccessStartedFromIdle = false;
+		this -> _cycleInRasterLine = 36;
+		const bool firstActiveLateCAccess = this -> isBadLineCAccessCycle ();
 		const bool result =
 			beforePipeline && firstCAccess && firstSharedCycle &&
 			lastSharedCycle && lastGAccess &&
-			beforeLateCAccess && firstLateCAccess;
+			beforeLateCAccess && firstLateCAccess &&
+			firstActiveLateCAccess;
 
 		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartedFromIdle = false;
 		this -> _badLineCAccessAllowedThisLine = false;
 		this -> _badLineCAccessStartCycle = 0;
 		this -> _cycleInRasterLine = 1;
@@ -921,13 +927,14 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
-	/** Verifies that a late bad-line sequence starts BA when it is recognized,
-		attempts its first c-access one cycle later and makes AEC effective after
-		the complete three-cycle BA warning. */
+	/** Verifies that a late bad-line sequence starting from idle requests BA when
+		it is recognized, attempts its first c-access one cycle later and makes AEC
+		effective after the complete three-cycle BA warning. */
 	bool testLateBadLineCPUStopWindow ()
 	{
 		this -> _badLineConditionActive = true;
 		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessStartedFromIdle = true;
 		this -> _badLineCAccessStartCycle = 36;
 		this -> _cycleInRasterLine = 36;
 		this -> _currentSpriteDMAMask = 0;
@@ -968,6 +975,7 @@ class TestVICII final : public VICIIType
 
 		this -> _badLineConditionActive = false;
 		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartedFromIdle = false;
 		this -> _badLineCAccessStartCycle = 0;
 		this -> _cycleInRasterLine = 1;
 		this -> actualizeCPUStopWindowsAfterBadLineChange ();
