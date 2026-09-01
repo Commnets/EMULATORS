@@ -16,8 +16,10 @@ const MCHEmul::RasterData COMMODORE::VICII_PAL::_VRASTERDATA
 	cycle 15 performs only the first c-access, and shared cycles 16..54 perform
 	the g-access before the c-access. The final g-access occurs in cycle 55. \n
 	At the beginning of cycle 16 the raster has moved (16 - 1) * 8 = 120 pixels
-	since the cycle counter started. Drawing begins at position 24, or 124 pixels
-	in the raster coordinate system (504 - 404 + 24). */
+	since the cycle counter started. Its aligned visible position is 24, eight
+	pixels before the display begins at visible position 32. The first g-access
+	is therefore staged in cycle 16 and reaches the output in cycle 17; accesses
+	16..55 feed the forty output slices 17..56. */
 const MCHEmul::RasterData COMMODORE::VICII_PAL::_HRASTERDATA 
 	(404, 496 /** The 2nd HBI finishes and then the drawing border starts. 
 				  In the documentation it happens at 480, but it wouldn't make a border with the same with than the right one! */, 
@@ -204,8 +206,7 @@ void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InstructionContextEvent
 }
 
 // ---
-void COMMODORE::VICII::CPUAboutToExecute
-	(const MCHEmul::InterruptContextEventData* dt)
+void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InterruptContextEventData* dt)
 {
 	assert (dt != nullptr);
 
@@ -440,6 +441,10 @@ void COMMODORE::VICII::simulateRasterCycle
 	// and then applies sprites, priority, collisions and border overlay.
 	if (rasterVisible)
 		drawVisibleZone (cpu, dC);
+
+	// A g-access supplies the input latch used by the following VIC-II cycle.
+	// Commit after drawing so cycle 16 cannot consume the byte intended for 17.
+	commitGraphicOutputData ();
 
 	// Phase 6: apply deferred geometry and advance the raster.
 	// CSEL changes the host-side horizontal display limits only after the current
@@ -832,7 +837,7 @@ void COMMODORE::VICII::buildCPUStopWindowSet
 	(bool bL, unsigned char sM, COMMODORE::VICII::CPUStopWindows& result) const
 {
 	result.clear ();
-	result.reserve (9);
+	result.reserve (9); // To avoid dyamic allocation later...
 
 	if (bL)
 		addBadLineCPUStopWindow (result);
@@ -1000,15 +1005,18 @@ bool COMMODORE::VICII::CPUStopWindowAt
 	 const CPUStopWindows& nextWindows, CPUStopWindow& result) const
 {
 	for (const auto& i : currentWindows)
+	{
 		if (i.BAActiveAt (c))
 		{
 			result = i;
 
 			return (true);
 		}
+	}
 
 	const CPURasterCycle nextCycle = c - _cyclesPerRasterLine;
 	for (const auto& i : nextWindows)
+	{
 		if (i.BAActiveAt (nextCycle))
 		{
 			result = CPUStopWindow
@@ -1020,6 +1028,7 @@ bool COMMODORE::VICII::CPUStopWindowAt
 
 			return (true);
 		}
+	}
 
 	return (false);
 }
@@ -1320,8 +1329,7 @@ void COMMODORE::VICII::drawVisibleZone
 	// flip-flop state, which describes only the last pixel of the slice.
 	size_t visiblePixels;
 	visiblePixels = (dC._RCA + 8) >= _raster.visibleColumns ()
-		? (size_t) (_raster.visibleColumns () - dC._RCA)
-		: 8;
+		? (size_t) (_raster.visibleColumns () - dC._RCA) : 8;
 	bool borderCoversEntireSlice = true;
 	for (size_t i = 0; i < visiblePixels && borderCoversEntireSlice; i++)
 		borderCoversEntireSlice = dC.mainBorderAtPixel (i);
@@ -1342,6 +1350,7 @@ void COMMODORE::VICII::drawVisibleZone
 		if (!dC.mainBorderAtPixel (i))
 		{
 			i++;
+
 			continue;
 		}
 
@@ -1388,7 +1397,8 @@ void COMMODORE::VICII::drawOutputStateLine
 {
 	if (n == 0)
 		return;
-	assert (p >= (size_t) dC._RCA && p + n <= (size_t) dC._RCA + 8);
+
+	assert (p >= (size_t) dC._RCA && (p + n) <= ((size_t) dC._RCA + 8));
 
 	const size_t transitionPosition =
 		(size_t) dC._RCA + DrawContext::_FIRSTPIXELAFTERCPUWRITE;
@@ -1482,29 +1492,12 @@ void COMMODORE::VICII::drawGraphics
 {
 	assert (fP < lP && lP <= 8);
 
-	/** IMPORTANT NOTE:
-		When it is in idle state it also drawn
-		With the content of a fixed position depending on the active bacnk and always in color 0. \n
-		When the raster cycle is 16, _RC = 28 and _RCA = 24.
-		The VIC should start to draw at that cycle. 
-		As the code is now, using _RCA instead _RC to determine the initial position to start the drawing,
-		that wouldn't happen until cycle 17. */
+	// The screen coordinate only gates composition. XSCROLL controls the
+	// persistent shift-register reload and never selects a buffer byte directly.
+	int cb = (int) dC._RCA - (int) dC._ICD;
 
-	// The "display" column being involved...
-	// In cb, the SCROLLX is involved, so it could be negative! starting from -7, 
-	// When e.g. the raster is at the very first "screen "dislay" column, 
-	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
-	int cb = (int) dC._RCA - (int) dC._ICD - (int) oS._horizontalScroll;
-	// To draw just only when there is a possibility of at least draw a pixel!
-	if (cb <= -8)
-		return;
-
-	// At this point rc positive for sure, and cb could be negative...
-	// Never invoke the methods within the swith case statements direcly
-	// a crash might be generated...
-
-	// Record the raster position and graphics-buffer interval selected for this
-	// output span. A visual CPU write therefore emits one phi1 and one phi2 record.
+	// Record the output interval and sequencer state before this span consumes it.
+	// A visual CPU write therefore emits one phi1 and one phi2 record.
 	_IFDEBUG debugDrawPixelAt
 		(dC._RCA, cb, oS._horizontalScroll, fP, lP);
 
@@ -1585,27 +1578,23 @@ void COMMODORE::VICII::drawMonoColorChar
 	(int cb, const COMMODORE::VICII::DrawContext::OutputState& oS,
 	 size_t fP, size_t lP, COMMODORE::VICII::DrawResult& result)
 {
-	const bool idle = oS._idleState;
-
 	for (size_t i = fP; i < lP; i++)
 	{
 		int pp = cb + (int) i;
-		if (pp < 0)
-			continue; // The pixel is not still visible...
-		if (pp >= 320)
-			break; // No more pixels to draw...
-
-		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
-		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
-
-		if (_vicGraphicInfo._graphicData [iBy].bit (iBt))
+		if (prepareGraphicOutputPixel (oS._horizontalScroll, i) &&
+			pp >= 0 && pp < 320 &&
+			_vicGraphicInfo._graphicOutput._data.bit
+				(7 - _vicGraphicInfo._graphicOutput._pixel))
 		{
 			result._collisionGraphicData.setBit (7 - i, true);
 
-			result._foregroundColorData [i] = idle 
+			result._foregroundColorData [i] = oS._idleState 
 				? 0x00 // In idle state the color is always 0...
-				: (unsigned int) (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f /** Useful nibble. */);
+				: (unsigned int) (_vicGraphicInfo._graphicOutput._colorData.value () & 0x0f /** Useful nibble. */);
 		}
+
+		// The hardware stream advances even when border or display geometry masks it.
+		advanceGraphicOutputPixel ();
 
 		// When false, it is background...
 		// Not necessary to specify neither collision information
@@ -1624,97 +1613,78 @@ void COMMODORE::VICII::drawMultiColorChar
 	for (size_t i = fP; i < lP; i++)
 	{
 		int pp = cb + (int) i;
-		if (pp < 0)
-			continue; // The pixel is not still visible...
-		if (pp >= 320)
-			break; // No more pixels to draw...
-
-		size_t iBy = ((size_t) pp) >> 3;
-		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-
-		// If it is invalid all colors are black, including the background...
-		// Rememeber that at this point that background will have been already drawn...
-		if (inv)
-			result._backgroundColorData [i] = 0x00;
-
-		// If 0, the pixel should be drawn (and considered) as background 
-		// and it is already the default status tha comes from the parent method...
-		if (cs == 0x00)
-			continue;
-
-		// The way the pixels are going to be drawn will depend on the information in the color memory
-		// If the most significant bit of the low significant nibble of the color memory is set to 0
-		// the data will be managed in a monolor way...
-		if ((_vicGraphicInfo._colorDrawData [iBy] & 0x08) == 0x00 ||
-			 idle) // The idle state is treated as monocolor...
+		if (prepareGraphicOutputPixel (oS._horizontalScroll, i) &&
+			pp >= 0 && pp < 320)
 		{
-			unsigned int fc = 
-				(inv || idle) // also in idle state it is black...
-					? 0x00 // When invalid or idle all pixels are black...
-					: _vicGraphicInfo._colorDrawData [iBy].value () & 0x07;
+			VICGraphicInfo::GraphicOutputSequencer& output =
+				_vicGraphicInfo._graphicOutput;
+			size_t iBt = 3 - ((size_t) output._pixel >> 1);
+			unsigned char cs =
+				(output._data.value () >> (iBt << 1)) & 0x03;
 
-			// ...and remember we are dealing with pairs of pixels...
+			// Invalid modes also replace already prepared background pixels with black.
+			if (inv)
+				result._backgroundColorData [i] = 0x00;
 
-			switch (cs)
+			if (cs != 0x00 &&
+				((output._colorData & 0x08) == 0x00 || idle))
 			{
-				case 0x01:
-					{
-						if ((pp % 2) == 1) // El pixel to be drawn has to be odd...
-							result._backgroundColorData [i] = fc;
-					}
+				unsigned int fc = (inv || idle)
+					? 0x00
+					: output._colorData.value () & 0x07;
 
-					break;
+				switch (cs)
+				{
+					case 0x01:
+						{
+							if ((output._pixel & 0x01) != 0)
+								result._backgroundColorData [i] = fc;
+						}
 
-				case 0x02:
-					{
-						if ((pp % 2) == 0) // El pixel to be draw has to be even...
+						break;
+
+					case 0x02:
+						{
+							if ((output._pixel & 0x01) == 0)
+							{
+								result._collisionGraphicData.setBit (7 - i, true);
+								result._foregroundColorData [i] = fc;
+							}
+						}
+
+						break;
+
+					case 0x03:
 						{
 							result._collisionGraphicData.setBit (7 - i, true);
-
 							result._foregroundColorData [i] = fc;
 						}
-					}
 
-					break;
+						break;
 
-				case 0x03:
-					{
-						result._collisionGraphicData.setBit (7 - i, true);
-
-						result._foregroundColorData [i] = fc;
-					}
-
-					break;
-
-				default:
-					break;
+					default:
+						break;
+				}
 			}
-		}
-		// But if it is 1, 
-		// then it will be draw as in the multicolor version...
-		else
-		{
-			unsigned int fc = 
-				inv
-					? 0x00 // unless the mode is invalid where everything is black...
-					: (unsigned int) ((cs == 0x03) 
-						? (_vicGraphicInfo._colorDrawData [iBy].value () & 0x07)
+			else if (cs != 0x00)
+			{
+				unsigned int fc = inv
+					? 0x00
+					: (unsigned int) ((cs == 0x03)
+						? (output._colorData.value () & 0x07)
 						: oS._backgroundColors [cs]);
 
-			// The combination "01" is also considered as part of the background...
-			// ...and are not taken into account to detect collision...
-			if (cs == 0x01)
-				result._backgroundColorData [i] = fc;
-			// ..while the other two are part of the foreground...
-			// ..and also included in the collision info!
-			else
-			{
-				result._collisionGraphicData.setBit (7 - i, true);
-
-				result._foregroundColorData [i] = fc;
+				if (cs == 0x01)
+					result._backgroundColorData [i] = fc;
+				else
+				{
+					result._collisionGraphicData.setBit (7 - i, true);
+					result._foregroundColorData [i] = fc;
+				}
 			}
 		}
+
+		advanceGraphicOutputPixel ();
 	}
 }
 
@@ -1725,40 +1695,33 @@ void COMMODORE::VICII::drawMultiColorExtendedChar
 {
 	// The mode is quite similar to the standard text mode, 
 	// with the difference the 0 pixels (background) can have different background colors...
-
-	const bool idle = oS._idleState;
-
 	for (size_t i = fP; i < lP; i++)
 	{
 		int pp = cb + (int) i;
-		if (pp < 0)
-			continue; // The pixel is not still visible...
-		if (pp >= 320)
-			break; // No more pixels to draw...
-
-		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
-		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
-		// The color of the pixel 0 is determined by the 2 MSBites of the char code...
-		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt); // To know whether the bit is 1 or 0...
-		unsigned int cs = ((_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = idle 
-			? 0x00 // In idle state the color is always 0...
-			: (bS 
-				? (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f)
-				: oS._backgroundColors [cs]);
-
-		if (bS)
+		if (prepareGraphicOutputPixel (oS._horizontalScroll, i) &&
+			pp >= 0 && pp < 320)
 		{
-			result._collisionGraphicData.setBit (7 - i, true);
+			VICGraphicInfo::GraphicOutputSequencer& output =
+				_vicGraphicInfo._graphicOutput;
+			bool bS = output._data.bit (7 - output._pixel);
+			unsigned int cs =
+				((output._screenCode.value () & 0xc0) >> 6) & 0x03;
+			unsigned int fc = oS._idleState
+				? 0x00
+				: (bS
+					? (output._colorData.value () & 0x0f)
+					: oS._backgroundColors [cs]);
 
-			result._foregroundColorData [i] = fc;
+			if (bS)
+			{
+				result._collisionGraphicData.setBit (7 - i, true);
+				result._foregroundColorData [i] = fc;
+			}
+			else if (cs != 0x00)
+				result._backgroundColorData [i] = fc;
 		}
-		else
-		// ...all of them are treated as background...
-		// ...but with the possibility to have different colors!
-		// The value 0x00 has been already treated in the main loop...(drawn as $d021)
-		if (cs != 0x00)
-			result._backgroundColorData [i] = fc;
+
+		advanceGraphicOutputPixel ();
 	}
 }
 
@@ -1767,46 +1730,34 @@ void COMMODORE::VICII::drawMonoColorBitMap
 	(int cb, const COMMODORE::VICII::DrawContext::OutputState& oS,
 	 size_t fP, size_t lP, COMMODORE::VICII::DrawResult& result, bool inv)
 {
-	const bool idle = oS._idleState;
-
 	for (size_t i = fP; i < lP; i++)
 	{
 		int pp = cb + (int) i;
-		if (pp < 0)
-			continue; // The pixel is not still visible...
-		if (pp >= 320)
-			break; // No more pixels to draw...
-
-		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
-		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
-		bool bS = _vicGraphicInfo._graphicData [iBy].bit (iBt);
-		unsigned int fc = 
-			(inv || idle)
-				? 0x00 // When invalid or idle state, all pixels are black...
-				: bS 
-					? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xf0) >> 4	// If the bit is 1, the color is determined by the MSNibble
-					: (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0x0f);		// ...and for LSNibble if it is 0...
-
-		// If the mode is invalid all bits must be invalid...
-		// Reme,ber that at this point the background will have been already drawn
-		// so it is needed to draw it back all black!
-		if (inv)
-			result._backgroundColorData [i] = 0x00;
-
-		// And then attending to the status of the pixels itself
-		// it would be drawn either as background or foregrand and 
-		// taken into account for the collision purposes
-		if (bS)
+		if (prepareGraphicOutputPixel (oS._horizontalScroll, i) &&
+			pp >= 0 && pp < 320)
 		{
-			result._collisionGraphicData.setBit (7 - i, true);
+			VICGraphicInfo::GraphicOutputSequencer& output =
+				_vicGraphicInfo._graphicOutput;
+			bool bS = output._data.bit (7 - output._pixel);
+			unsigned int fc = (inv || oS._idleState)
+				? 0x00
+				: bS
+					? (output._screenCode.value () & 0xf0) >> 4
+					: (output._screenCode.value () & 0x0f);
 
-			result._foregroundColorData [i] = fc;
+			if (inv)
+				result._backgroundColorData [i] = 0x00;
+
+			if (bS)
+			{
+				result._collisionGraphicData.setBit (7 - i, true);
+				result._foregroundColorData [i] = fc;
+			}
+			else
+				result._backgroundColorData [i] = fc;
 		}
-		// The pixels 0 are treated as background...
-		// but they will have different color that the one defined in $d021 (and treated in the main loop)..
-		// but the one defined in the graphics data (2 nibbles)...
-		else
-			result._backgroundColorData [i] = fc;
+
+		advanceGraphicOutputPixel ();
 	}
 }
 
@@ -1815,51 +1766,42 @@ void COMMODORE::VICII::drawMultiColorBitMap
 	(int cb, const COMMODORE::VICII::DrawContext::OutputState& oS,
 	 size_t fP, size_t lP, COMMODORE::VICII::DrawResult& result, bool inv)
 {
-	const bool idle = oS._idleState;
-
 	for (size_t i = fP; i < lP; i++)
 	{
 		int pp = cb + (int) i;
-		if (pp < 0) // The pixel is not still visible...
-			continue;
-		if (pp >= 320)
-			break; // No more pixels to draw...
-
-		size_t iBy = ((size_t) pp) >> 3;
-		size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-		unsigned char cs = (_vicGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
-
-		// If the mode is invalid all bits must be invalid...
-		// Reme,ber that at this point the background will have been already drawn
-		// so it is needed to draw it back all black!
-		if (inv)
-			result._backgroundColorData [i] = 0x00;
-
-		// If 0, the pixel should be drawn (and considered) as background 
-		// and it is already the default status tha comes from the parent method...
-		if (cs == 0x00)
-			continue;
-
-		unsigned fc = // The value 0x00 is not tested....
-				(inv || idle)
-					? 0x00 // When invalid or idle state all pixels are black...
-					: (cs == 0x01) // The color is the defined in the video matrix, high nibble...
-						? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0xf0) >> 4
-						: ((cs == 0x02) // The color is defined in the video matrix, low nibble...
-							? (_vicGraphicInfo._screenCodeDrawData [iBy].value () & 0x0f)
-							: (_vicGraphicInfo._colorDrawData [iBy].value () & 0x0f)); // The color is defined in color matrix...
-
-		// The combination "01" is managed as background also...
-		// ...the 0x00 has already been jumped an then treated as background!
-		if (cs == 0x01)
-			result._backgroundColorData [i] = fc;
-		// ...while the rest as managed as foreground...
-		else
+		if (prepareGraphicOutputPixel (oS._horizontalScroll, i) &&
+			pp >= 0 && pp < 320)
 		{
-			result._collisionGraphicData.setBit (7 -i, true);
+			VICGraphicInfo::GraphicOutputSequencer& output =
+				_vicGraphicInfo._graphicOutput;
+			size_t iBt = 3 - ((size_t) output._pixel >> 1);
+			unsigned char cs =
+				(output._data.value () >> (iBt << 1)) & 0x03;
 
-			result._foregroundColorData [i] = fc;
+			if (inv)
+				result._backgroundColorData [i] = 0x00;
+
+			if (cs != 0x00)
+			{
+				unsigned int fc = (inv || oS._idleState)
+					? 0x00
+					: (cs == 0x01)
+						? (output._screenCode.value () & 0xf0) >> 4
+						: ((cs == 0x02)
+							? (output._screenCode.value () & 0x0f)
+							: (output._colorData.value () & 0x0f));
+
+				if (cs == 0x01)
+					result._backgroundColorData [i] = fc;
+				else
+				{
+					result._collisionGraphicData.setBit (7 - i, true);
+					result._foregroundColorData [i] = fc;
+				}
+			}
 		}
+
+		advanceGraphicOutputPixel ();
 	}
 }
 
@@ -2715,29 +2657,20 @@ void COMMODORE::VICII::debugDrawPixelAt
 	assert (_deepDebugFile != nullptr);
 	assert (fP < lP && lP <= 8);
 
-	int firstGraphicPixel = cb + (int) fP,
-		lastGraphicPixel = cb + (int) lP - 1;
-	std::string span =
+	const VICGraphicInfo::GraphicOutputSequencer& output =
+		_vicGraphicInfo._graphicOutput;
+	_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
 		"Raster=" + std::to_string (cav) + "," +
 		"FirstPixel=" + std::to_string (fP) + "," +
 		"LastPixel=" + std::to_string (lP - 1) + "," +
 		"XScroll=" + std::to_string ((unsigned int) xS) + "," +
-		"GraphicPixel=" + std::to_string (firstGraphicPixel) + ",";
-
-	// Report OUT only when the complete span lies beyond the graphics buffer.
-	if (lastGraphicPixel < 0 || firstGraphicPixel >= 320)
-		_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
-			span +
-			"FirstByte=OUT,LastByte=OUT]");
-	else
-	{
-		int firstPixel = firstGraphicPixel < 0 ? 0 : firstGraphicPixel,
-			lastPixel = lastGraphicPixel > 319 ? 319 : lastGraphicPixel;
-		_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
-			span +
-			"FirstByte=" + std::to_string (firstPixel >> 3) + "," +
-			"LastByte=" + std::to_string (lastPixel >> 3) + "]");
-	}
+		"OutputPixel=" + std::to_string (cb + (int) fP) + "," +
+		"ShiftActive=" + std::to_string (output._active) + "," +
+		"ShiftPixel=" + std::to_string ((unsigned int) output._pixel) + "," +
+		"PendingReload=" + std::to_string (output._pending) + "," +
+		"StagedAccess=" + std::to_string (output._staged) + "," +
+		"ReloadInSpan=" + std::to_string (output._pending &&
+			(size_t) xS >= fP && (size_t) xS < lP) + "]");
 }
 
 // ---

@@ -681,6 +681,18 @@ namespace COMMODORE
 		inline void resetGraphicCountersForNewFrame ();
 		/** To advance the VIC-II video counters after a graphics access cycle. */
 		inline void advanceGraphicAccessCounters ();
+		/** Stages the graphics, matrix and color data fetched by the current
+			g-access until the complete output slice has been consumed. */
+		inline void stageGraphicOutputData ();
+		/** Transfers the staged g-access data to the input latch used by the
+			XSCROLL comparator of the following VIC-II cycle. */
+		inline void commitGraphicOutputData ();
+		/** Loads the pending g-access data when the current pixel reaches XSCROLL. \n
+			The returned state remains valid until advanceGraphicOutputPixel() consumes
+			the represented output pixel. */
+		inline bool prepareGraphicOutputPixel (unsigned char xS, size_t p);
+		/** Advances the persistent graphics shift register by one output pixel. */
+		inline void advanceGraphicOutputPixel ();
 
 		// Raster movement and position-dependent events...
 		/** To advance the internal raster position one VIC-II cycle.
@@ -758,7 +770,9 @@ namespace COMMODORE
 			(const DrawContext& dC, bool dTS);
 		/** To draw any text or bitmap graphic mode. \n
 			It composes only the pixel interval [fP, lP) into a shared result so a
-			phi1/phi2 transition never duplicates graphics or collision state. \n
+			phi1/phi2 transition never duplicates graphics or collision state. The
+			persistent output sequencer is advanced for every requested pixel, including
+			pixels later hidden by display geometry or the border. \n
 			@param dC	Drawing context providing the raster position. \n
 			@param oS	Output state effective for the requested interval. \n
 			@param fP	First pixel included in the output interval. \n
@@ -886,8 +900,8 @@ namespace COMMODORE
 		/** Records the data and the counters used by the completed g-access.
 			It must be called before advancing VC, VLMI and GAccessIndex. */
 		void debugReadingGraphics ();
-		/** Records the raster position and graphics-buffer interval selected for
-			one output span of the current eight-pixel slice. \n
+		/** Records the raster position and persistent graphics-sequencer state before
+			one output span consumes it. \n
 			A steady slice emits pixels 0..7 in one record; a visual CPU write emits
 			pixels 0..3 with the phi1 state and pixels 4..7 with the phi2 state. */
 		void debugDrawPixelAt (unsigned short cav, int cb, unsigned char xS,
@@ -1055,8 +1069,13 @@ namespace COMMODORE
 		  *	This emulator separates two concepts:
 		  *	- _VLMI is the logical Video Matrix Line Index used to address
 		  *	  _screenCodeData and _colorData;
-		  *	- _GAccessIndex is an emulator-side 0..39 buffer index used to address
-		  *	  _graphicData, _screenCodeDrawData and _colorDrawData.
+		  *	- _GAccessIndex is an emulator-side 0..39 fetch-buffer index used to address
+		  *	  _graphicData, _screenCodeDrawData and _colorDrawData. A g-access stages
+		  *	  that triplet before the indexes advance and commits it to the pending
+		  *	  output latch only after the current eight-pixel slice has completed.
+		  *	- _graphicOutput is independent from screen coordinates. XSCROLL selects
+		  *	  the pixel 0..7 that transfers the pending latch to its active byte, whose
+		  *	  remaining pixels continue in the following VIC-II cycle.
 		  *
 		  *	Relevant raster-cycle rules in this implementation:
 		  * - A Bad Line Condition accepted before cycle 12 leaves idle state immediately,
@@ -1086,6 +1105,33 @@ namespace COMMODORE
 		  *	  the cycle-58 decision. */
 		struct VICGraphicInfo
 		{
+			/** Persistent output side of the graphics sequencer. \n
+				A g-access first fills the staged fields. At the end of the current VIC-II
+				cycle they replace the pending input latch, and XSCROLL can transfer them
+				to the active eight-pixel shift data only in the following cycle. The
+				active data can therefore span two consecutive drawing slices. */
+			struct GraphicOutputSequencer
+			{
+				GraphicOutputSequencer ()
+					: _data (MCHEmul::UByte::_0),
+					  _screenCode (MCHEmul::UByte::_0),
+					  _colorData (MCHEmul::UByte::_0),
+					  _pendingData (MCHEmul::UByte::_0),
+					  _pendingScreenCode (MCHEmul::UByte::_0),
+					  _pendingColorData (MCHEmul::UByte::_0),
+					  _stagedData (MCHEmul::UByte::_0),
+					  _stagedScreenCode (MCHEmul::UByte::_0),
+					  _stagedColorData (MCHEmul::UByte::_0),
+					  _pixel (0), _active (false), _pending (false), _staged (false)
+							{ }
+
+				MCHEmul::UByte _data, _screenCode, _colorData;
+				MCHEmul::UByte _pendingData, _pendingScreenCode, _pendingColorData;
+				MCHEmul::UByte _stagedData, _stagedScreenCode, _stagedColorData;
+				unsigned char _pixel;
+				bool _active, _pending, _staged;
+			};
+
 			VICGraphicInfo ()
 				: _VCBASE (0), _VC (0),
 				  _RC (0),
@@ -1101,6 +1147,7 @@ namespace COMMODORE
 				  _colorData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _screenCodeDrawData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
 				  _colorDrawData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
+				  _graphicOutput (),
 				  _lastScreenCodeDataRead (MCHEmul::UByte::_0),
 				  _lastGraphicDataRead (MCHEmul::UByte::_0),
 				  _lastColorDataRead (MCHEmul::UByte::_0)
@@ -1113,7 +1160,8 @@ namespace COMMODORE
 			void emptyGraphicData ()
 							{ _graphicData			= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
 							  _screenCodeDrawData	= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
-							  _colorDrawData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0); }
+							  _colorDrawData		= std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0);
+							  _graphicOutput		= GraphicOutputSequencer (); }
 
 
 			/** 
@@ -1166,9 +1214,11 @@ namespace COMMODORE
 			mutable MCHEmul::UBytes _screenCodeData;
 			mutable MCHEmul::UBytes _graphicData; 
 			mutable MCHEmul::UBytes _colorData;
-			/** Video Matrix and Color RAM data aligned with _graphicData for drawing. */
+			/** Video Matrix and Color RAM data aligned with each fetched graphics byte. */
 			mutable MCHEmul::UBytes _screenCodeDrawData;
 			mutable MCHEmul::UBytes _colorDrawData;
+			/** Current, pending and freshly staged data used by the pixel stream. */
+			GraphicOutputSequencer _graphicOutput;
 			/** The last info read. */
 			mutable MCHEmul::UByte _lastScreenCodeDataRead;
 			mutable MCHEmul::UByte _lastGraphicDataRead;
@@ -1296,8 +1346,8 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatBadLineStateAtCurrentCycle ()
 	{
-		const bool previousBadLineCondition = _badLineConditionActive,
-			previousCAccessActive = _badLineCAccessActive;
+		const bool previousBadLineCondition = _badLineConditionActive;
+		const bool previousCAccessActive = _badLineCAccessActive;
 		const bool idleAtCycleStart = idleStateActive ();
 		const unsigned short previousCAccessStartCycle = _badLineCAccessStartCycle;
 
@@ -1723,6 +1773,7 @@ namespace COMMODORE
 		if (gAccess)
 		{
 			readGraphicalInfo ();
+			stageGraphicOutputData ();
 
 			// Record the counters and buffer index used by the completed g-access
 			// before advancing them for the following graphics cycle.
@@ -1822,6 +1873,8 @@ namespace COMMODORE
 	{
 		_vicGraphicInfo._VLMI = 0;
 		_vicGraphicInfo._GAccessIndex = 0;
+		_vicGraphicInfo._graphicOutput =
+			VICGraphicInfo::GraphicOutputSequencer ();
 	}
 
 	// ---
@@ -1843,6 +1896,68 @@ namespace COMMODORE
 		}
 
 		_vicGraphicInfo._GAccessIndex++;
+	}
+
+	// ---
+	inline void VICII::stageGraphicOutputData ()
+	{
+		const size_t gAI = graphicAccessIndex ();
+		VICGraphicInfo::GraphicOutputSequencer& output =
+			_vicGraphicInfo._graphicOutput;
+
+		output._stagedData = _vicGraphicInfo._graphicData [gAI];
+		output._stagedScreenCode = _vicGraphicInfo._screenCodeDrawData [gAI];
+		output._stagedColorData = _vicGraphicInfo._colorDrawData [gAI];
+		output._staged = true;
+	}
+
+	// ---
+	inline void VICII::commitGraphicOutputData ()
+	{
+		VICGraphicInfo::GraphicOutputSequencer& output =
+			_vicGraphicInfo._graphicOutput;
+
+		if (!output._staged)
+			return;
+
+		// The input latch is replaced only after the complete current slice. This
+		// makes g-accesses 16..55 feed output cycles 17..56 respectively.
+		output._pendingData = output._stagedData;
+		output._pendingScreenCode = output._stagedScreenCode;
+		output._pendingColorData = output._stagedColorData;
+		output._pending = true;
+		output._staged = false;
+	}
+
+	// ---
+	inline bool VICII::prepareGraphicOutputPixel (unsigned char xS, size_t p)
+	{
+		VICGraphicInfo::GraphicOutputSequencer& output =
+			_vicGraphicInfo._graphicOutput;
+
+		// A missed reload is deliberately retained only until the following
+		// g-access replaces the single hardware input latch.
+		if (output._pending && p == (size_t) xS)
+		{
+			output._data = output._pendingData;
+			output._screenCode = output._pendingScreenCode;
+			output._colorData = output._pendingColorData;
+			output._pixel = 0;
+			output._active = true;
+			output._pending = false;
+		}
+
+		return (output._active);
+	}
+
+	// ---
+	inline void VICII::advanceGraphicOutputPixel ()
+	{
+		VICGraphicInfo::GraphicOutputSequencer& output =
+			_vicGraphicInfo._graphicOutput;
+
+		if (output._active && ++output._pixel == 8)
+			output._active = false;
 	}
 
 	// ---

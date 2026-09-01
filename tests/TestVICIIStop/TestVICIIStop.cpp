@@ -986,6 +986,84 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
+	/** Verifies the complete output-cycle delay of every g-access and that
+		XSCROLL reloads the preceding cycle's pending input latch. */
+	bool testGraphicOutputSequencer ()
+	{
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		bool result = true;
+		// The forty g-accesses in cycles 16..55 must appear in output cycles
+		// 17..56. This catches any same-cycle consumption at the pre-display slice.
+		for (unsigned short cycle = 16; cycle <= 56; cycle++)
+		{
+			if (cycle <= 55)
+			{
+				this -> _vicGraphicInfo._GAccessIndex = cycle - 16;
+				this -> _vicGraphicInfo._graphicData [cycle - 16] =
+					MCHEmul::UByte ((unsigned char) (cycle - 16));
+				this -> stageGraphicOutputData ();
+			}
+
+			for (size_t i = 0; i < 8; i++)
+			{
+				const bool active = this -> prepareGraphicOutputPixel (0, i);
+				result &= active == (cycle >= 17);
+				if (active)
+					result &= this -> _vicGraphicInfo._graphicOutput._data.value () ==
+						(unsigned char) (cycle - 17) &&
+						this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) i;
+				this -> advanceGraphicOutputPixel ();
+			}
+
+			this -> commitGraphicOutputData ();
+		}
+
+		// With XSCROLL=4, one active byte spans two slices while the current
+		// g-access waits until the end of the slice before replacing the input latch.
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _vicGraphicInfo._graphicData [0] = MCHEmul::UByte (0xaa);
+		this -> stageGraphicOutputData ();
+		for (size_t i = 0; i < 8; i++)
+		{
+			result &= !this -> prepareGraphicOutputPixel (4, i);
+			this -> advanceGraphicOutputPixel ();
+		}
+		this -> commitGraphicOutputData ();
+
+		this -> _vicGraphicInfo._GAccessIndex = 1;
+		this -> _vicGraphicInfo._graphicData [1] = MCHEmul::UByte (0x55);
+		this -> stageGraphicOutputData ();
+		for (size_t i = 0; i < 8; i++)
+		{
+			const bool active = this -> prepareGraphicOutputPixel (4, i);
+			result &= active == (i >= 4);
+			if (active)
+				result &= this -> _vicGraphicInfo._graphicOutput._data.value () == 0xaa &&
+					this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) (i - 4);
+			this -> advanceGraphicOutputPixel ();
+		}
+		this -> commitGraphicOutputData ();
+
+		this -> _vicGraphicInfo._GAccessIndex = 2;
+		this -> _vicGraphicInfo._graphicData [2] = MCHEmul::UByte (0x33);
+		this -> stageGraphicOutputData ();
+		for (size_t i = 0; i < 8; i++)
+		{
+			result &= this -> prepareGraphicOutputPixel (4, i);
+			result &= this -> _vicGraphicInfo._graphicOutput._data.value () ==
+				(i < 4 ? 0xaa : 0x55);
+			result &= this -> _vicGraphicInfo._graphicOutput._pixel ==
+				(unsigned char) (i < 4 ? i + 4 : i - 4);
+			this -> advanceGraphicOutputPixel ();
+		}
+		this -> commitGraphicOutputData ();
+
+		std::cout << "VIC-II graphics output sequencer | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
 	unsigned short currentRasterLine () const
 							{ return (this -> _raster.currentLine ()); }
 
@@ -1100,6 +1178,7 @@ int main ()
 	result &= vicii.testPredictedSpriteDMAStartMasks ();
 	result &= vicii.testGraphicAccessPipelineWindows ();
 	result &= vicii.testLateBadLineCPUStopWindow ();
+	result &= vicii.testGraphicOutputSequencer ();
 
 	// YSCROLL=2: line 50 is a bad line and neither line 49 nor 51 is.
 	vicii.advanceFromRasterLine (49, 2);
