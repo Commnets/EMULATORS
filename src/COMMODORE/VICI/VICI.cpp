@@ -308,9 +308,7 @@ void COMMODORE::VICI::CPUAboutToExecute
 {
 	assert (dt != nullptr);
 
-	const unsigned int positions =
-		dt -> _instruction -> clockCyclesToExecute
-			(dt -> _cpu, dt -> _memory, dt -> _address);
+	const unsigned int positions = dt -> _clockCycles;
 
 	_VICIRegisters -> setNumberPositionsNextInstruction (positions);
 

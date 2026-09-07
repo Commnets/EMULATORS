@@ -211,9 +211,7 @@ void COMMODORE::TED::CPUAboutToExecute
 {
 	assert (dt != nullptr);
 
-	const unsigned int cpuCycles =
-		dt -> _instruction -> clockCyclesToExecute
-			(dt -> _cpu, dt -> _memory, dt -> _address);
+	const unsigned int cpuCycles = dt -> _clockCycles;
 	const unsigned int positions =
 		cpuCycles >> (inSingleClockMode () ? 0 : 1);
 

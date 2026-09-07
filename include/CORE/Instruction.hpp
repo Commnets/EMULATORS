@@ -31,29 +31,39 @@ namespace MCHEmul
 	class Instruction;
 	class InstructionDefined;
 
-	/** Context notified immediately before a CPU instruction starts. \n
-		The instruction, CPU and memory pointers are not owned by this structure
-		and remain valid while the synchronous event is being processed. \n
-		The instruction address is copied because the Program Counter can change
-		as soon as instruction execution starts. \n
-		No instruction side effect has taken place when this context is created. */
+	/** Context shared by the CPU when notifying events related to an instruction. \n
+		The CPU creates one instance and reuses it for every instruction, both
+		before execution and after successful completion. \n
+		Event temporarily shares ownership of the context through shared_ptr, but
+		observers must not retain it after processEvent returns because its contents
+		are updated for the following instruction and its CPU and memory references
+		are non-owning. \n
+		The CPU and memory references remain stable after CPU::setMemoryRef. \n
+		The instruction, its starting address and its predicted intrinsic clock
+		cycles are updated immediately before _CPU::_CPUTOEXECUTEINSTRUCTION is
+		emitted. \n
+		When CPU::_CPUINSTRUCTIONEXECUTED is emitted, the same context is reused and
+		the instruction already contains its updated ExecutionData; _clockCycles
+		continues to contain the pre-execution prediction, not the final result. */
 	struct InstructionContextEventData final : public Event::Data
 	{
-		InstructionContextEventData (Instruction* i, const Address& a, CPU* c, Memory* m)
-			: _instruction (i), _address (a), _cpu (c), _memory (m)
+		InstructionContextEventData (CPU* c)
+			: _instruction (nullptr), _address (), _clockCycles (0),
+			  _cpu (c), _memory (nullptr)
 		{
-			assert (_instruction != nullptr);
 			assert (_cpu != nullptr);
-			assert (_memory != nullptr);
 		}
 
-		/** Instruction about to be executed. It is not owned. */
+		/** Instruction related to the current notification. It is not owned. */
 		Instruction* _instruction;
-		/** Copy of the Program Counter address where the instruction starts. */
+		/** Copy of the Program Counter address where the instruction started. */
 		Address _address;
-		/** CPU that will execute the instruction. It is not owned. */
+		/** Intrinsic clock cycles predicted before execution, including conditional
+			instruction cycles but excluding external CPU stop cycles. */
+		unsigned int _clockCycles;
+		/** CPU executing the instruction. It is not owned and never changes. */
 		CPU* _cpu;
-		/** Memory context used by the instruction. It is not owned. */
+		/** Memory used by the CPU. It is not owned and is set by CPU::setMemoryRef. */
 		Memory* _memory;
 	};
 

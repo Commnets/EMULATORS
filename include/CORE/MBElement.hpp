@@ -76,7 +76,8 @@ namespace MCHEmul
 		inline Wire* wires (int id); 
 
 		// Assigning a tick counter...
-		/** It can be nullptr. */
+		/** Assigns a non-owning reference to a derived tick counter. \n
+			The counter owner has to keep its storage and lifetime stable while it is assigned. */
 		void assignTicksCounter (TicksCounterDelayed& tc)
 							{ _ticksCounter = &tc; }
 		const TicksCounterDelayed* ticksCounter () const

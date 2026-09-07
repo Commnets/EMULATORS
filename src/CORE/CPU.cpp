@@ -60,6 +60,10 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _programCounter (a.numberBytes ()), 
 	  _memory (nullptr), 
 	  _interruptSystem (nullptr),
+	  _instructionEventContextData
+		(std::make_shared <MCHEmul::InstructionContextEventData> (this)),
+	  _interruptEventContextData
+		(std::make_shared <MCHEmul::InterruptContextEventData> (this)),
 	  // When neither buses nor wires are used, these variable must be set from instruction execution!
 	  _lastINOUTAddress (), _lastINOUTData (),
 	  // Info while running!
@@ -94,6 +98,19 @@ MCHEmul::CPU::~CPU ()
 		delete (i.second);
 
 	delete (_interruptSystem);
+}
+
+// ---
+void MCHEmul::CPU::setMemoryRef (MCHEmul::Memory* m)
+{
+	assert (m != nullptr);
+
+	_memory = m;
+
+	// Both contexts keep the same non-owned memory reference for the complete
+	// CPU lifetime, avoiding repeated writes in the transaction hot paths.
+	_instructionEventContextData -> _memory = m;
+	_interruptEventContextData -> _memory = m;
 }
 
 // ---
@@ -395,11 +412,10 @@ bool MCHEmul::CPU::executeNextInterruptRequest_PerCycle (unsigned int& e)
 
 						// Notify the launch transaction before acknowledge or
 						// interrupt execution changes any CPU-visible state.
+						_interruptEventContextData -> _interrupt = interr;
 						notify (MCHEmul::Event
 							(_CPUTOEXECUTEINTERRUPT, 0 /** No sense. */,
-							 std::shared_ptr <MCHEmul::Event::Data> (
-								new MCHEmul::InterruptContextEventData
-									(interr, this, _memory))));
+							 _interruptEventContextData));
 
 						aknowledgeInterrupt (iR);
 
@@ -510,11 +526,10 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 
 				// The full launch sequence will be executed atomically after
 				// this synchronous notification.
+				_interruptEventContextData -> _interrupt = _currentInterrupt;
 				notify (MCHEmul::Event
 					(_CPUTOEXECUTEINTERRUPT, 0 /** No sense. */,
-					 std::shared_ptr <MCHEmul::Event::Data> (
-						new MCHEmul::InterruptContextEventData
-							(_currentInterrupt, this, _memory))));
+					 _interruptEventContextData));
 
 				// The acknowledge has to be issued!
 				aknowledgeInterrupt (iR);
@@ -571,23 +586,26 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		if (nInst < _rowInstructions.size () && 
 			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
 		{
+			_instructionEventContextData -> _instruction = _currentInstruction;
+			_instructionEventContextData -> _address = _programCounter.asAddress ();
+
 			// Predict every intrinsic cycle before the first one is consumed.
 			// Instructions not yet providing a contextual prediction still
 			// return their nominal duration.
-			_clockCyclesCurrentInstruction =
+			_instructionEventContextData -> _clockCycles =
 				_currentInstruction -> clockCyclesToExecute
-					(this, _memory, _programCounter.asAddress ());
+					(this, _memory, _instructionEventContextData -> _address);
+			_clockCyclesCurrentInstruction =
+				_instructionEventContextData -> _clockCycles;
 			_cyclesPendingExecution = _clockCyclesCurrentInstruction;
 
 			_IFDEBUG debugInstructionAboutToExecute
-				(_currentInstruction, programCounter ().asAddress (),
+				(_currentInstruction, _instructionEventContextData -> _address,
 				 _cyclesPendingExecution);
 
 			// Notify the instruction context before its first intrinsic cycle is consumed.
 			notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
-				std::shared_ptr <MCHEmul::Event::Data> (
-					new MCHEmul::InstructionContextEventData (
-						_currentInstruction, programCounter ().asAddress (), this, _memory))));
+				_instructionEventContextData));
 		}
 		else
 		{
@@ -636,9 +654,10 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 
 			_lastState = _state; // After one instruction executed, the last state was also running...
 
-			// Once the instruction's been executed, the total cycles dedicated is notified...
+			// The context still identifies the instruction and starting address selected
+			// before execution. Its ExecutionData has now been updated by execute ().
 			notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
-				std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_lastInstruction))));
+				_instructionEventContextData));
 
 			_IFDEBUG debugInstructionExecuted (sdd);
 		}
@@ -683,17 +702,24 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		sdd = MCHEmul::removeAll0 (_programCounter.asString ()) + "(Stack "
 			+ std::to_string (memoryRef () -> stack () -> position ()) + ")"; }
 
+	_instructionEventContextData -> _instruction = inst;
+	_instructionEventContextData -> _address = _programCounter.asAddress ();
+	_instructionEventContextData -> _clockCycles = 0;
+	// Full execution does not otherwise need a prediction. Calculate it only when
+	// an observer or deep debug will consume it, and share that single result.
+	if (!_observers.empty () || deepDebugActive ())
+		_instructionEventContextData -> _clockCycles =
+			inst -> clockCyclesToExecute
+				(this, _memory, _instructionEventContextData -> _address);
+
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...
 	_IFDEBUG debugInstructionAboutToExecute
-		(inst, programCounter ().asAddress (),
-		 inst -> clockCyclesToExecute
-			(this, _memory, programCounter ().asAddress ()));
+		(inst, _instructionEventContextData -> _address,
+		 _instructionEventContextData -> _clockCycles);
 
 	notify (MCHEmul::Event (_CPUTOEXECUTEINSTRUCTION, 0 /** No sense. */,
-		std::shared_ptr <MCHEmul::Event::Data> (
-			new MCHEmul::InstructionContextEventData (
-				inst, programCounter ().asAddress (), this, _memory))));
+		_instructionEventContextData));
 
 	// Finally executed the instruction...
 	// This method returns true when everything ok and false if not...
@@ -709,9 +735,10 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 		// After one instruction executed, the last state was also running...
 		_lastState = _state; 
 
-		// Once the instruction's been executed, the total cycles dedicated is notified...
+		// The context still identifies the instruction and starting address selected
+		// before execution. Its ExecutionData has now been updated by execute ().
 		notify (MCHEmul::Event (_CPUINSTRUCTIONEXECUTED, 0 /** No sense. */,
-			std::shared_ptr <MCHEmul::Event::Data> (new MCHEmul::CPU::EventData (_lastInstruction))));
+			_instructionEventContextData));
 
 		_IFDEBUG debugInstructionExecuted (sdd);
 	}

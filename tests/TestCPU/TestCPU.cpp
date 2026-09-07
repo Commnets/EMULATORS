@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
+#include <chrono>
 #include <iostream>
+#include <limits>
 
 #include <CORE/incs.hpp>
 
@@ -407,30 +409,153 @@ void testChrono ()
 
 void testClicks ()
 {
-	MCHEmul::_NOW = 
-		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
-	MCHEmul::_MILLISECONDSPAST = MCHEmul::ClockDurationType (0);
+	MCHEmul::TicksCounter t0;
+	assert (t0.ticks () == 0);
+	assert (t0.lastTicks () == 0);
+	assert (t0.elapsedTicks () == 0);
 
-	// Ticks counter...
-	MCHEmul::TicksCounter t;
-	for (unsigned int i = 0; i < 1e6; i++)
-		t.count (1);
-	std::cout << t << std::endl;
+	MCHEmul::TicksCounter ti (20);
+	assert (ti.ticks () == 20);
+	assert (ti.lastTicks () == 20);
+	assert (ti.elapsedTicks () == 0);
 
-	// Ticks counter delayed
-	MCHEmul::TicksCounterDelayed td (3);
-	for (unsigned int i = 0; i < 1e6; i++)
-		td.count (4);
-	std::cout << td << std::endl;
+	ti.count (5);
+	assert (ti.ticks () == 25);
+	assert (ti.elapsedTicks () == 5);
 
-	MCHEmul::ClockTime n = 
-		std::chrono::time_point_cast <MCHEmul::ClockDurationType> (MCHEmul::ClockType::now ());
-	MCHEmul::_MILLISECONDSPAST = n - MCHEmul::_NOW;
-	std::cout << MCHEmul::_MILLISECONDSPAST.count () << std::endl;
-	MCHEmul::_NOW = n;
+	ti.count (0);
+	assert (ti.elapsedTicks () == 0);
 
-	std::string a;
-	std::cout << ":"; std::cin >> a; 
+	MCHEmul::TicksCounter tw (std::numeric_limits <unsigned int>::max ());
+	tw.count (1);
+	assert (tw.ticks () == 0);
+	assert (tw.elapsedTicks () == 1);
+
+	MCHEmul::TicksCounter tp (std::numeric_limits <unsigned int>::max ());
+	tp.startPartialCounter ();
+	tp.count (2);
+	assert (tp.elapsedTicks () == 2);
+	assert (tp.endPartialCounter () == 2);
+	assert (!tp.partialCounterOn ());
+
+	tp.startPartialCounter ();
+	tp.count (7);
+	tp.reset ();
+	assert (tp.ticks () == 0);
+	assert (tp.lastTicks () == 0);
+	assert (tp.elapsedTicks () == 0);
+	assert (!tp.partialCounterOn ());
+
+	MCHEmul::TicksCounterDelayed td1 (1);
+	td1.count (5);
+	assert (td1.ticks () == 5);
+	assert (td1.elapsedTicks () == 5);
+
+	td1.count (0);
+	assert (td1.elapsedTicks () == 0);
+
+	MCHEmul::TicksCounterDelayed td3 (3);
+	td3.count (1);
+	assert (td3.ticks () == 0);
+	assert (td3.elapsedTicks () == 0);
+	td3.count (1);
+	assert (td3.ticks () == 0);
+	assert (td3.elapsedTicks () == 0);
+	td3.count (1);
+	assert (td3.ticks () == 1);
+	assert (td3.elapsedTicks () == 1);
+
+	MCHEmul::TicksCounterDelayed tdb (3);
+	tdb.count (2);
+	assert (tdb.elapsedTicks () == 0);
+	tdb.count (4);
+	assert (tdb.ticks () == 2);
+	assert (tdb.elapsedTicks () == 2);
+
+	MCHEmul::TicksCounterDelayed tdl (60000);
+	tdl.count (50000);
+	assert (tdl.ticks () == 0);
+	tdl.count (50000);
+	assert (tdl.ticks () == 1);
+	assert (tdl.elapsedTicks () == 1);
+	tdl.count (20000);
+	assert (tdl.ticks () == 2);
+	assert (tdl.elapsedTicks () == 1);
+
+	MCHEmul::TicksCounterDelayed tdc (3);
+	tdc.count (5);
+	assert (tdc.ticks () == 1);
+	tdc.setNumberRequestsToWait (4);
+	assert (tdc.numberRequestsToWait () == 4);
+	tdc.count (3);
+	assert (tdc.ticks () == 1);
+	assert (tdc.elapsedTicks () == 0);
+	tdc.count (1);
+	assert (tdc.ticks () == 2);
+	assert (tdc.elapsedTicks () == 1);
+
+	tdc.reset ();
+	assert (tdc.numberRequestsToWait () == 4);
+	assert (tdc.ticks () == 0);
+	assert (tdc.lastTicks () == 0);
+	assert (tdc.elapsedTicks () == 0);
+
+	MCHEmul::Clock c (1000000);
+	assert (c.ticksCounters ().empty ());
+	c.setTicksCounters ({ MCHEmul::TicksCounterDelayed (1),
+		MCHEmul::TicksCounterDelayed (2), MCHEmul::TicksCounterDelayed (8) });
+
+	c.countCycles (16);
+	assert (c.ticksCounter (0).ticks () == 16);
+	assert (c.ticksCounter (0).elapsedTicks () == 16);
+	assert (c.ticksCounter (1).ticks () == 8);
+	assert (c.ticksCounter (1).elapsedTicks () == 8);
+	assert (c.ticksCounter (2).ticks () == 2);
+	assert (c.ticksCounter (2).elapsedTicks () == 2);
+
+	c.countCycles (0);
+	assert (c.ticksCounter (0).elapsedTicks () == 0);
+	assert (c.ticksCounter (1).elapsedTicks () == 0);
+	assert (c.ticksCounter (2).elapsedTicks () == 0);
+
+	c.start ();
+	assert (c.ticksCounter (0).ticks () == 0);
+	assert (c.ticksCounter (0).numberRequestsToWait () == 1);
+	assert (c.ticksCounter (1).ticks () == 0);
+	assert (c.ticksCounter (1).numberRequestsToWait () == 2);
+	assert (c.ticksCounter (2).ticks () == 0);
+	assert (c.ticksCounter (2).numberRequestsToWait () == 8);
+
+	c.setFactor (0.5f);
+	assert (c.factor () == 0.5f);
+
+	MCHEmul::Clock pacedClock (1000);
+	std::chrono::time_point <std::chrono::steady_clock> pacingStart =
+		std::chrono::steady_clock::now ();
+	pacedClock.countCycles (100);
+	assert (pacedClock.tooQuick ());
+	while (pacedClock.tooQuick ())
+		pacedClock.countCycles (0);
+	long long pacingElapsed = std::chrono::duration_cast <std::chrono::milliseconds>
+		(std::chrono::steady_clock::now () - pacingStart).count ();
+	assert (pacingElapsed >= 90);
+	assert (pacingElapsed < 2000);
+
+	MCHEmul::Clock measuredClock (1000);
+	std::chrono::time_point <std::chrono::steady_clock> measurementStart =
+		std::chrono::steady_clock::now ();
+	while (std::chrono::duration_cast <std::chrono::milliseconds>
+		(std::chrono::steady_clock::now () - measurementStart).count () < 1200)
+	{
+		if (measuredClock.tooQuick ())
+			measuredClock.countCycles (0);
+		else
+			measuredClock.countCycles (1);
+	}
+	assert (measuredClock.realCyclesPerSecond () >= 800);
+	assert (measuredClock.realCyclesPerSecond () <= 1200);
+
+	std::cout << "Clock and ticks counters tests passed" << std::endl;
 }
 
 int _tmain (int argc, _TCHAR *argv [])

@@ -834,7 +834,8 @@ namespace COMMODORE
 
 		// Optional event visualization.
 		/** To draw debug/event markers if _drawOtherEvents is active. */
-		void drawOtherEvents (unsigned short cav, unsigned short rv);
+		void drawOtherEvents
+			(unsigned short cav, unsigned short rv, size_t visiblePixels);
 
 		// --------------------------------------------------------------------
 		// Memory reads performed by the raster-cycle pipeline.
@@ -1286,10 +1287,39 @@ namespace COMMODORE
 			associated to the movement of the raster line. */
 		struct EventsStatus
 		{
+			/** Main-border transition waiting for its complete marker area. \n
+				A physical comparator can coincide with the final pixel represented by
+				the current DrawContext. The event remains pending until every pixel covered
+				by its marker has been rendered, preventing a later slice from overwriting it. */
+			struct MainBorderEvent
+			{
+				MainBorderEvent ()
+					: _pending (false), _borderActive (false),
+					  _column (0), _row (0)
+								{ }
+
+				/** Whether the marker is waiting to be drawn. */
+				bool _pending;
+				/** Main-border flip-flop state produced by the transition. */
+				bool _borderActive;
+				/** Exact visible output column of the comparator. */
+				unsigned short _column;
+				/** Visible output row where the transition occurred. */
+				unsigned short _row;
+			};
+
+			EventsStatus ()
+				: _ffVBorderChange (false),
+				  _mainBorderEvent (),
+				  _badLine (0),
+				  _lightPenPositionLatched (false),
+				  _lightPenPositionChanged (false)
+								{ }
+
 			/** When the vertical-border flip-flop changes. */
 			MCHEmul::Pulse _ffVBorderChange;
-			/** When the main-border flip-flop changes. */
-			MCHEmul::Pulse _ffMBorderChange;
+			/** Main-border transition retained until its output slice is drawn. */
+			MainBorderEvent _mainBorderEvent;
 			/** The bad line to hightlight. */
 			unsigned short _badLine;
 			// Managing the lightpen related events...
@@ -2184,6 +2214,16 @@ namespace COMMODORE
 					(7 - outputPixel, _vicGraphicInfo._ffVBorder);
 			}
 
+			if (mainBorderBefore != _vicGraphicInfo._ffMBorder)
+			{
+				EventsStatus::MainBorderEvent& event =
+					_eventStatus._mainBorderEvent;
+				event._pending = true;
+				event._borderActive = _vicGraphicInfo._ffMBorder;
+				event._column = _raster.columnInVisibleZone (column);
+				event._row = dC._RR;
+			}
+
 			if (mainBorderBefore != _vicGraphicInfo._ffMBorder ||
 				verticalBorderBefore != _vicGraphicInfo._ffVBorder)
 				_vicGraphicInfo._ffMBorderBegin =
@@ -2193,8 +2233,7 @@ namespace COMMODORE
 				column = 0;
 		}
 
-		// These pulses retain the final flip-flop state for event debugging.
-		_eventStatus._ffMBorderChange.set (_vicGraphicInfo._ffMBorder);
+		// This pulse retains the final vertical flip-flop state for event debugging.
 		_eventStatus._ffVBorderChange.set (_vicGraphicInfo._ffVBorder);
 	}
 

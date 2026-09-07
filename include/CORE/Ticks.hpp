@@ -16,6 +16,8 @@
 #define __MCHEMUL_TICKS__
 
 #include <assert.h>
+#include <string>
+#include <vector>
 #include <CORE/InfoStructure.hpp>
 
 namespace MCHEmul
@@ -28,9 +30,9 @@ namespace MCHEmul
 		/** The number of initial tick is optional. */
 		TicksCounter (unsigned int nT = 0)
 			: _ticks (nT),
-			  _lastTicks (0),
+			  _lastTicks (nT),
 			  _countingTemporal (false),
-			  _latchedTicks (0)
+			  _latchedTicks (nT)
 							{ }
 		
 		unsigned int ticks () const
@@ -38,10 +40,7 @@ namespace MCHEmul
 		unsigned int lastTicks () const
 							{ return (_lastTicks); }
 		unsigned int elapsedTicks () const
-							{ return ((_lastTicks > _ticks) // Above the limit!
-								? (unsigned int) ((unsigned long long) _ticks + 
-									std::numeric_limits <unsigned long long>::max () - (unsigned long long) _lastTicks)
-								: _ticks - _lastTicks); }
+							{ return (_ticks - _lastTicks); }
 
 		inline unsigned int count (unsigned int nT);
 							
@@ -102,10 +101,7 @@ namespace MCHEmul
 		
 		_countingTemporal = false;
 		
-		return ((_latchedTicks > _ticks) 
-			? (unsigned int) ((unsigned long long) _ticks + 
-				std::numeric_limits <unsigned long long>::max () - (unsigned long long) _latchedTicks)
-			: _ticks - _latchedTicks);
+		return (_ticks - _latchedTicks);
 	}
 	
 	// ---
@@ -116,8 +112,9 @@ namespace MCHEmul
 		_countingTemporal = false;
 	}
 	
-	/** This a special type of tick counter. \n
-		A tick is only counted after X number of requests. */
+	/** This is a special type of tick counter. \n
+		A derived tick is counted after receiving a configured number of reference ticks. \n
+		Requests not completing a derived tick are kept for the following count invocation. */
 	class TicksCounterDelayed final
 	{
 		public:
@@ -140,9 +137,9 @@ namespace MCHEmul
 		unsigned int elapsedTicks () const
 							{ return (_ticks.elapsedTicks ()); }
 
-		/** To count requests, that it is not the same than ticks. \n
-			The number of ticks equivalent will actually depend on the number of requests 
-			to wait before counting 1 single tick. */
+		/** Counts ticks received from the reference clock. \n
+			The returned value is the total number of derived ticks. \n
+			The method elapsedTicks returns the derived ticks produced by this invocation. */
 		inline unsigned int count (unsigned int nR);
 							
 		/** To start to count partial ticks. */
@@ -167,7 +164,7 @@ namespace MCHEmul
 		TicksCounter _ticks;
 		
 		// Implementation
-		mutable unsigned short _requestsLeft;
+		unsigned short _requestsLeft;
 	};
 	
 	using TicksCountersDelayed = std::vector <TicksCounterDelayed>;
@@ -175,30 +172,30 @@ namespace MCHEmul
 	// ---
 	inline void TicksCounterDelayed::setNumberRequestsToWait (unsigned short nC)
 	{
+		assert (nC != 0);
+
 		_numberRequestsToWait = nC;
 		
-		// But the number of current ticks is not reset...
-
+		// Changing the divisor starts a new reference-clock phase,
+		// but it does not reset the derived ticks already counted.
 		_requestsLeft = 0;
 	}
 	
 	// ---
 	inline unsigned int TicksCounterDelayed::count (unsigned int nC)
 	{
-		unsigned int result = 
-			_ticks.count ((unsigned int) (nC / _numberRequestsToWait));
-		if ((_requestsLeft += (nC % _numberRequestsToWait)) >= _numberRequestsToWait)
-		{
-			result = _ticks.count (1);
-			
-			_requestsLeft -= _numberRequestsToWait;
-		}
-		
-		return (result);
+		unsigned long long requests =
+			(unsigned long long) _requestsLeft + (unsigned long long) nC;
+
+		_requestsLeft = (unsigned short)
+			(requests % (unsigned long long) _numberRequestsToWait);
+
+		return (_ticks.count ((unsigned int)
+			(requests / (unsigned long long) _numberRequestsToWait)));
 	}
 	
 	// ---
-	void TicksCounterDelayed::reset ()
+	inline void TicksCounterDelayed::reset ()
 	{
 		_ticks.reset ();
 		

@@ -59,24 +59,14 @@ namespace MCHEmul
 	class CPU : public MotherboardElement, public Notifier, public DebugableClass
 	{
 		public:
-		/** Generic structure for CPU notifications that only need one pointer. \n
-			The context sent before an instruction starts is represented by
-			InstructionContextEventData instead. */
-		struct EventData final : public Event::Data
-		{
-			EventData (void* d)
-				: _data (d)
-							{ }
-
-			// It will be one thing ot another attending to the type of event launched!
-			void* _data;
-		};
-
-		/** Events emitted immediately before a CPU transaction starts. \n
-			Their data is created before the instruction or accepted interrupt
-			produces any side effect. */
+		/** Emitted immediately before an instruction starts. \n
+			Its data is the reusable InstructionContextEventData retained by the CPU. */
 		static const unsigned int _CPUTOEXECUTEINSTRUCTION = 130;
+		/** Emitted after an instruction has completed successfully. \n
+			It reuses the InstructionContextEventData emitted before execution. */
 		static const unsigned int _CPUINSTRUCTIONEXECUTED  = 131;
+		/** Emitted immediately before an accepted interrupt starts. \n
+			Its data is the reusable InterruptContextEventData retained by the CPU. */
 		static const unsigned int _CPUTOEXECUTEINTERRUPT   = 132;
 
 		// States of the CPU
@@ -328,10 +318,10 @@ namespace MCHEmul
 		const Instruction* currentInstruction () const
 							{ return (_currentInstruction); }
 
-		/** The CPU is not the owner of the memory, but the computer (just to keep all in the same place)
-			A reference is here given to simplify the execution of transactions. */
-		void setMemoryRef (Memory* m)
-							{ _memory = m; }
+		/** The CPU is not the owner of the memory, but the computer (just to keep all in the same place). \n
+			A reference is here given to simplify the execution of transactions and
+			is also assigned to the reusable event contexts. */
+		void setMemoryRef (Memory* m);
 		const Memory* memoryRef () const
 							{ return (_memory); }
 		Memory* memoryRef () 
@@ -551,6 +541,10 @@ namespace MCHEmul
 		/** The Interrupt System. 
 			Defined as mutable because it could be created in a const method. */
 		mutable CPUInterruptSystem* _interruptSystem;
+		/** Context retained and reused for every instruction notification. */
+		std::shared_ptr <InstructionContextEventData> _instructionEventContextData;
+		/** Context retained and reused for every interrupt notification. */
+		std::shared_ptr <InterruptContextEventData> _interruptEventContextData;
 
 		// The current situation of the CPU...
 		/** Last INOUT data used. 

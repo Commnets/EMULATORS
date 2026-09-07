@@ -28,26 +28,28 @@ namespace MCHEmul
 	class Memory;
 	class CPUInterrupt;
 
-	/** Context notified immediately before an accepted CPU interrupt starts. \n
-		The interrupt, CPU and memory pointers are not owned by this structure
-		and remain valid while the synchronous event is being processed. \n
-		The event is emitted only after the interrupt has been accepted, but
-		before its acknowledge or launch sequence produces any side effect. */
+	/** Context shared by the CPU when notifying an accepted interrupt. \n
+		The CPU creates one instance and reuses it for every interrupt. \n
+		Event temporarily shares ownership of the context through shared_ptr, but
+		observers must not retain it after processEvent returns because its contents
+		are updated for the following interrupt and its CPU and memory references
+		are non-owning. \n
+		The CPU and memory references remain stable after CPU::setMemoryRef. \n
+		The interrupt reference is updated after the request has been accepted and
+		before acknowledge or launch produces any side effect. */
 	struct InterruptContextEventData final : public Event::Data
 	{
-		InterruptContextEventData (CPUInterrupt* i, CPU* c, Memory* m)
-			: _interrupt (i), _cpu (c), _memory (m)
+		InterruptContextEventData (CPU* c)
+			: _interrupt (nullptr), _cpu (c), _memory (nullptr)
 		{
-			assert (_interrupt != nullptr);
 			assert (_cpu != nullptr);
-			assert (_memory != nullptr);
 		}
 
-		/** Interrupt whose launch sequence is about to start. It is not owned. */
+		/** Interrupt related to the current notification. It is not owned. */
 		CPUInterrupt* _interrupt;
-		/** CPU that accepted the interrupt. It is not owned. */
+		/** CPU accepting the interrupt. It is not owned and never changes. */
 		CPU* _cpu;
-		/** Memory context used during interrupt launch. It is not owned. */
+		/** Memory used by the CPU. It is not owned and is set by CPU::setMemoryRef. */
 		Memory* _memory;
 	};
 

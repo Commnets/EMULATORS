@@ -75,7 +75,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo (),
-	  _eventStatus { false, false, false, false, false }
+	  _eventStatus ()
 {
 	// At this point the color RAM can be nullptr, 
 	// but never when the VIC starts to work!
@@ -175,7 +175,7 @@ bool COMMODORE::VICII::initialize ()
 	_pendingCPUStopPrediction = CPUStopPrediction ();
 	_pendingRegisterWrites.clear ();
 
-	_eventStatus = { false, false, false, false, false };
+	_eventStatus = EventsStatus ();
 
 	return (true);
 }
@@ -187,9 +187,9 @@ void COMMODORE::VICII::CPUAboutToExecute (const MCHEmul::InstructionContextEvent
 
 	const MCHEmul::InstructionDefined* instruction =
 		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
-	unsigned int clockCycles = instruction -> clockCyclesToExecute
-		(dt -> _cpu, dt -> _memory, dt -> _address);
-	size_t cycleStructure = (size_t) (clockCycles - instruction -> clockCycles ());
+	const unsigned int clockCycles = dt -> _clockCycles;
+	const size_t cycleStructure =
+		(size_t) (clockCycles - instruction -> clockCycles ());
 
 	prepareCPUStopPrediction
 		(&instruction -> cycleStructure (cycleStructure),
@@ -1387,7 +1387,7 @@ void COMMODORE::VICII::drawVisibleZone
 
 	// If it activated to draw other events that happen during the interation of the VICII...
 	if (_drawOtherEvents)
-		drawOtherEvents (dC._RCA, dC._RR);
+		drawOtherEvents (dC._RCA, dC._RR, visiblePixels);
 }
 
 // ---
@@ -2119,7 +2119,8 @@ void COMMODORE::VICII::detectCollisions
 }
 
 // ---
-void COMMODORE::VICII::drawOtherEvents (unsigned short cv, unsigned short rv)
+void COMMODORE::VICII::drawOtherEvents
+	(unsigned short cv, unsigned short rv, size_t visiblePixels)
 {
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
@@ -2127,13 +2128,35 @@ void COMMODORE::VICII::drawOtherEvents (unsigned short cv, unsigned short rv)
 		cEvent = 32; // Auxiliar. Light cyan
 	if (_eventStatus._ffVBorderChange.negativeEdge ()) 
 		cEvent = 33; // Auxiliar. Light yellow
-	if (_eventStatus._ffMBorderChange.positiveEdge ())
-		cEvent = 34; // The main indication for the border (when activated). Light orange
-	if (_eventStatus._ffMBorderChange.negativeEdge ())
-		cEvent = 35; // The main indication for the border (when dsactivated). Light purple
 	if (cEvent != std::numeric_limits <unsigned int>::max ())
 		screenMemory () -> setHorizontalLine // Draw at least two pixels when the events has happpened...
 			(_vicGraphicInfo._ffMBorderBegin, _raster.vData ().currentVisiblePosition (), 2, cEvent);
+
+	// A main-border comparator can belong to the following aligned output
+	// slice. Draw its marker only after that slice has rendered all video layers.
+	EventsStatus::MainBorderEvent& mainBorderEvent =
+		_eventStatus._mainBorderEvent;
+	if (mainBorderEvent._pending)
+	{
+		if (mainBorderEvent._row != rv)
+			mainBorderEvent._pending = false;
+		else
+		{
+			// The marker is two pixels wide. It can begin at the last pixel of the
+			// current slice, so wait until its final pixel has also been rendered.
+			const size_t lastMarkerColumn =
+				(size_t) mainBorderEvent._column + 1;
+
+			if (lastMarkerColumn >= (size_t) cv &&
+				lastMarkerColumn < ((size_t) cv + visiblePixels))
+			{
+				screenMemory () -> setHorizontalLine
+					(mainBorderEvent._column, mainBorderEvent._row, 2,
+					 mainBorderEvent._borderActive ? 34 : 35);
+				mainBorderEvent._pending = false;
+			}
+		}
+	}
 
 	// Draw the accepted bad-line condition event...
 	// This marks the raster line where a Bad Line Condition was first accepted,

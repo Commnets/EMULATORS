@@ -37,34 +37,24 @@ namespace MCHEmul
 		  * @param f	A factor to affect the number of clocks. \n
 		  *				It can be used to temporaly affcet the speed of the clock. *
 		  */
-		Clock (unsigned int cS, double f = 1.0)
-			: _cyclesPerSecond (cS),
-			  _realCyclesPerSecond (0),
-			  _factor (f),
-			  _ticks ({ TicksCounterDelayed (1) }),
-			  _tooQuick (false),
-			  _realCyclesPerSecondTmp (0), 
-			  _realCyclesPerSecondCalculated (false),
-			  _iClock ()
-							{ assert (_cyclesPerSecond > 0); }
+		Clock (unsigned int cS, double f = 1.0);
 
 		/** To change the factor. */
 		double factor () const
 							{ return (_factor); }
-		void setFactor (double f)
-							{ _factor = f; }
+		void setFactor (double f);
 
-		/** To manage the ticks. */
+		/** To manage the ticks. \n
+			Replacing the collection invalidates references previously obtained from it. \n
+			The collection has to be configured before assigning its counters to motherboard elements. */
 		const TicksCountersDelayed& ticksCounters () const
 							{ return (_ticks); }
 		void setTicksCounters (const TicksCountersDelayed& tC)
 							{ _ticks = tC; }
 		void setTicksCounters (TicksCountersDelayed&& tC)
 							{ _ticks = std::move (tC); }
-		const TicksCounterDelayed& ticksCounter (size_t t = 0) const
-							{ return (_ticks [t]); }
-		TicksCounterDelayed& ticksCounter (size_t t = 0)
-							{ return (_ticks [t]); }
+		inline const TicksCounterDelayed& ticksCounter (size_t t = 0) const;
+		inline TicksCounterDelayed& ticksCounter (size_t t = 0);
 
 		unsigned int cyclesPerSecond () const
 							{ return (_cyclesPerSecond); }
@@ -82,6 +72,20 @@ namespace MCHEmul
 		std::string asString () const;
 
 		private:
+		static const unsigned int _ADJUSTMENTSPERSECOND = 1000;
+		static const unsigned short _REQUESTSBETWEENTIMECHECKS = 32;
+
+		void actualizeCyclesPerAdjustment ();
+		void actualizeMeasurement
+			(const std::chrono::time_point <std::chrono::steady_clock>& n);
+		/** Completes the current speed adjustment. \n
+			Ordinary host-side latency preserves the scheduled clock phase. \n
+			A delay of at least one complete adjustment period resets that phase,
+			preventing an uncontrolled attempt to recover elapsed host time. */
+		void finishAdjustment
+			(const std::chrono::time_point <std::chrono::steady_clock>& n);
+
+		private:
 		unsigned int _cyclesPerSecond;
 		unsigned int _realCyclesPerSecond;
 		TicksCountersDelayed _ticks;
@@ -89,62 +93,29 @@ namespace MCHEmul
 		bool _tooQuick;
 
 		// Implementation
-		unsigned int _realCyclesPerSecondTmp;
-		bool _realCyclesPerSecondCalculated;
+		unsigned long long _realCyclesPerSecondTmp;
+		unsigned int _cyclesPerAdjustment;
+		unsigned long long _cyclesSinceLastAdjustment;
+		unsigned short _requestsSinceLastTimeCheck;
 		std::chrono::time_point <std::chrono::steady_clock> _iClock;
+		std::chrono::time_point <std::chrono::steady_clock> _adjustmentClock;
+		std::chrono::time_point <std::chrono::steady_clock> _resumeClock;
 	};
 
 	// ---
-	inline void MCHEmul::Clock::start ()
+	inline const MCHEmul::TicksCounterDelayed& MCHEmul::Clock::ticksCounter (size_t t) const
 	{
-		_tooQuick = false;
+		assert (t < _ticks.size ());
 
-		_realCyclesPerSecond = 0;
-
-		_realCyclesPerSecondTmp = 0;
-
-		_realCyclesPerSecondCalculated = false;
-
-		_iClock = std::chrono::steady_clock ().now ();
+		return (_ticks [t]);
 	}
 
 	// ---
-	inline void Clock::countCycles (unsigned int cC)
+	inline MCHEmul::TicksCounterDelayed& MCHEmul::Clock::ticksCounter (size_t t)
 	{
-		// The time lasted from the last calculation (in nanoseconds) of the speed.
-		// The variable iClock keeps always the last moment when the speed was calculated...
-		long long elapsed = (std::chrono::steady_clock::now () - _iClock).count ();
+		assert (t < _ticks.size ());
 
-		// If the real speed has already been calculated
-		// Then it is latched in a variable accesible from outside
-		// and starts back again the counter.
-		// Otherwise keep counting cycles until one second has lasted.
-		if (_realCyclesPerSecondCalculated)
-		{
-			_realCyclesPerSecond = _realCyclesPerSecondTmp;
-
-			_iClock = std::chrono::steady_clock::now ();
-
-			_realCyclesPerSecondTmp = 0;
-
-			_realCyclesPerSecondCalculated = false;
-		}
-		else
-		{
-			if (elapsed < _NANOSECOND)
-			{ 
-				_realCyclesPerSecondTmp += cC;
-
-				for (auto& i : _ticks)
-					i.count (cC); // Affect the delayed ticks!
-			}
-			else 
-				_realCyclesPerSecondCalculated = true;
-		}
-
-		// To stimate whether the clock goes or not too quick attending the last data...
-		// Some tolerance is taking into account (2,5% estimated)
-		_tooQuick = (_realCyclesPerSecondTmp * _NANOSECOND) > (_cyclesPerSecond * (elapsed * _factor));
+		return (_ticks [t]);
 	}
 }
 
