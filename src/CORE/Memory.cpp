@@ -473,6 +473,33 @@ std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address&
 }
 
 // ---
+void MCHEmul::MemoryView::fillValuesIn
+	(const MCHEmul::Address& a, MCHEmul::UBytes& result) const
+{
+	for (size_t i = 0; i < result.size (); i++)
+	{
+		MCHEmul::Address cA = a.next (i);
+
+		MCHEmul::PhysicalStorageSubset* fS = nullptr;
+		int dtT = _minAddress.distanceWith (cA);
+		if (dtT >= 0 && (size_t) dtT < _numPositions)
+		{
+			const MCHEmul::PhysicalStorageSubsetsList& pL =
+				_memPositions [(size_t) dtT]._storages;
+			for (size_t j = 0; j < pL.size () && fS == nullptr; j++)
+				if (pL [j] -> active () && pL [j] -> activeForReading ())
+					fS = pL [j];
+		}
+
+		size_t pos = (fS != nullptr)
+			? (size_t) (cA - fS -> initialAddress ())
+			: 0;
+		result [i] = (fS != nullptr && pos < fS -> size ())
+			? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+	}
+}
+
+// ---
 void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCHEmul::UByte>& v, bool f)
 { 
 	for (size_t i = 0; i < v.size (); i++)

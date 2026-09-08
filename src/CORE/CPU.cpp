@@ -578,11 +578,8 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 	// The current CPU iteration will also consume its first cycle.
 	if (_currentInstruction == nullptr)
 	{
-		unsigned int nInst = 
-			MCHEmul::UInt (
-				_memory -> values (
-					programCounter ().asAddress (), architecture ().instructionLength ()), 
-				architecture ().bigEndian ()).asUnsignedInt ();
+		unsigned int nInst =
+			instructionCodeAt (_memory, programCounter ().asAddress ());
 		if (nInst < _rowInstructions.size () && 
 			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
 		{
@@ -679,11 +676,8 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
-	unsigned int nInst = 
-		MCHEmul::UInt (
-			_memory -> values (
-				programCounter ().asAddress (), architecture ().instructionLength ()), 
-			architecture ().bigEndian ()).asUnsignedInt ();
+	unsigned int nInst =
+		instructionCodeAt (_memory, programCounter ().asAddress ());
 	// If the instruction doesn't exist according with what is indicated in the memory of 
 	// the computer, and an error is generated...
 	MCHEmul::Instruction* inst = nullptr;
@@ -765,11 +759,7 @@ MCHEmul::Instruction* MCHEmul::CPU::instructionAt
 			m != nullptr);
 
 	MCHEmul::Instruction* inst = nullptr;
-	unsigned int nInst = 
-		MCHEmul::UInt (
-			m -> values (
-				addr, c -> architecture ().instructionLength ()), 
-			c -> architecture ().bigEndian ()).asUnsignedInt ();
+	unsigned int nInst = c -> instructionCodeAt (m, addr);
 	if (nInst >= c -> _rowInstructions.size () ||
 		(inst = c -> _rowInstructions [nInst]) == nullptr)
 		return (nullptr); // Not possible to define the instruction...

@@ -616,7 +616,11 @@ void MCHEmul::CPUSpeedCommand::executeImpl (MCHEmul::CommandExecuter* cE, MCHEmu
 		return;
 
 	rst.add ("SPEED",	c -> realCyclesPerSecond ());
+	rst.add ("PSPEED",	((double) c -> realCyclesPerSecond () / 
+			(double) c -> clock ().cyclesPerSecond ()) * 100.0f);
 	rst.add ("HERTZS",	c -> screen () -> realHertzs ());
+	rst.add ("PHERTZS", ((double) c -> screen () -> realHertzs () / 
+			(double) c -> screen () -> hertzs ()) * 100.0f);
 }
 
 // ---

@@ -353,7 +353,8 @@ namespace FZ80
 		virtual const MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
 			const MCHEmul::Address& addr) const override
 							{ // The code is given by the second byte next to program counter in the memory...
-							  return (_rawInstructions [size_t (m -> values (addr, 2)[1].value ())]); }
+							  return (_rawInstructions
+								[(size_t) m -> value (addr.next (1)).value ()]); }
 	};
 
 	/** Instruction code in the fourth byte in memory next to program counter location. 
@@ -375,7 +376,8 @@ namespace FZ80
 		virtual MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
 			const MCHEmul::Address& addr) const override
 							{ // The code is given by the second byte next to program counter in the memory...
-							  return (_rawInstructions [size_t (m -> values (addr, 4)[3].value ())]); }
+							  return (_rawInstructions
+								[(size_t) m -> value (addr.next (3)).value ()]); }
 	};
 }
 

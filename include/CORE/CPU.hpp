@@ -504,6 +504,11 @@ namespace MCHEmul
 		virtual CPUInterruptSystem* createInterruptSystem () const = 0;
 
 		private:
+		/** Reads the instruction code at an address. \n
+			The usual one-byte code avoids temporary containers; architectures
+			with longer codes retain the generic UInt-based decoding. */
+		inline unsigned int instructionCodeAt (Memory* m, const Address& a) const;
+
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
@@ -653,6 +658,17 @@ namespace MCHEmul
 					? nLI - _cyclesLastInstructionOverlappedStopRequest
 					: 0; // If this situation an error has happened.... 
 		}
+	}
+
+	// ---
+	inline unsigned int CPU::instructionCodeAt (Memory* m, const Address& a) const
+	{
+		if (_architecture.instructionLength () == 1)
+			return ((unsigned int) m -> value (a).value ());
+
+		return (UInt
+			(m -> values (a, _architecture.instructionLength ()),
+			 _architecture.bigEndian ()).asUnsignedInt ());
 	}
 }
 

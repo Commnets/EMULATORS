@@ -72,6 +72,13 @@ MCHEmul::InstructionDefined::InstructionDefined (unsigned int c, unsigned int mp
 	assert (_memoryPositions > 0 && _clockCycles > 0); 
 	assert (_iTemplate != ""); 
 
+	// This fixed-size execution buffer is reused to avoid allocating parameters
+	// every time the instruction is decoded or executed.
+	_lastExecutionData._parameters =
+		MCHEmul::UBytes
+			(std::vector <MCHEmul::UByte>
+				(_memoryPositions, MCHEmul::UByte::_0));
+
 	_busCycleDatas.reserve (_cycleStructures.size ());
 	for (const auto& i : _cycleStructures)
 		_busCycleDatas.emplace_back (i);
@@ -173,7 +180,7 @@ bool MCHEmul::InstructionDefined::defineInstructionFrom
 {
 	assert (m != nullptr);
 
-	_lastExecutionData._parameters = m -> values (addr, _memoryPositions /** fix number. */);
+	m -> fillValuesIn (addr, _lastExecutionData._parameters);
 
 	return (true);
 }
@@ -261,8 +268,8 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 
 	// Gets the data that the instruction occupies
 	// before updating the Program Counter...
-	_lastExecutionData._parameters = 
-		_lastExecutionData._memory -> values (pc -> asAddress (), _memoryPositions);
+	_lastExecutionData._memory -> fillValuesIn
+		(pc -> asAddress (), _lastExecutionData._parameters);
 	_lastExecutionData._programCounter = *pc;
 
 	// Then, the Program Counter is moved to the next instruction...

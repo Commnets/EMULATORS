@@ -261,6 +261,19 @@ Prefer this order when creating a class:
 
 Use `final` for closed concrete classes. Use `virtual ... override` when overriding. Delete default construction, copy, assignment, or move operations when the existing ownership/lifecycle pattern requires it.
 
+## Method Definition Order
+
+For each class, define its methods in the same relative order in which they are declared. Apply this rule consistently to:
+
+- Constructors and destructors.
+- Overloads of the same method.
+- Out-of-class `inline` definitions placed in the header.
+- Non-trivial definitions placed in the `.cpp` file.
+
+When introducing a method into an existing class, locate the declarations immediately before and after it and place the new definition in the equivalent position among their definitions. Do not append a new definition at the end merely because that is convenient.
+
+Methods defined directly inside the class already occupy their declaration position and do not require a second ordering step. Preserve unrelated pre-existing order when the current task does not authorize a broader cleanup.
+
 ## Constructors And Ownership
 
 Initialize all members in initializer lists and keep member order consistent with declarations:

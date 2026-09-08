@@ -206,7 +206,9 @@ namespace MCHEmul
 							{ return (_lastExecutionData._programCounter); }
 		const UBytes& parameters () const
 							{ return (_lastExecutionData._parameters); }
-		/** Very rare. Used from ByCodeLine. */
+		/** Very rare. Used from ByteCodeLine. \n
+			The received data must contain the complete encoding and have the exact
+			size of the concrete instruction represented. */
 		void setParameters (const UBytes& prms) const
 							{ _lastExecutionData._parameters = prms;}
 		const Address& INOUTAddress () const

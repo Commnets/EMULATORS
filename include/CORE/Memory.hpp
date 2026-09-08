@@ -500,6 +500,9 @@ namespace MCHEmul
 		void set (const Address& a, const UByte& d, bool f = false); 
 		UBytes values (const Address& a, size_t nB) const
 							{ return (UBytes (bytes (a, nB))); }
+		/** Fills an existing byte container without changing its size or capacity. \n
+			The destination size determines the number of consecutive bytes read. */
+		void fillValuesIn (const Address& a, UBytes& result) const;
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ set (a, v.bytes (), f); }
 		std::vector <UByte> bytes (const Address& a, size_t nB) const;
@@ -841,6 +844,12 @@ namespace MCHEmul
 		UBytes values (const Address& a, size_t nB) const
 							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_READ, nB }); 
 							  return (_activeView -> values (a, nB)); }
+		/** Fills an existing byte container and records one aggregate read. \n
+			The destination size determines the number of consecutive bytes read. */
+		void fillValuesIn (const Address& a, UBytes& result) const
+							{ _tracker.addAccess
+								(MemoryAccess { a, MemoryAccess::Type::_READ, result.size () });
+							  _activeView -> fillValuesIn (a, result); }
 		void set (const Address& a, const UBytes& v, bool f = false)
 							{ _tracker.addAccess (MemoryAccess { a, MemoryAccess::Type::_WRITE, v.size () });
 							  _activeView -> set (a, v, f); }
