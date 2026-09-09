@@ -1282,6 +1282,10 @@ namespace COMMODORE
 		};
 
 		VICSpriteInfo _vicSpriteInfo [8];
+		/** Sprites whose display state is active in the current raster line. */
+		unsigned char _displayActiveSpritesMask;
+		/** Display-active sprites whose horizontal comparator has started output. */
+		unsigned char _drawingSpritesMask;
 
 		/** The events that can be drawn
 			associated to the movement of the raster line. */
@@ -1355,12 +1359,20 @@ namespace COMMODORE
 		oS._spriteMulticolorMask	= 0;
 		oS._spriteDoubleWidthMask	= 0;
 		oS._spritePriorityMask		= 0;
+
+		// Most raster slices have no active sprite. Avoid every sprite-register
+		// query in that common path; inactive entries are never consumed.
+		if (_displayActiveSpritesMask == 0)
+			return;
+
 		oS._spriteSharedColors [0]	= _VICIIRegisters -> spriteSharedColor (0);
 		oS._spriteSharedColors [1]	= _VICIIRegisters -> spriteSharedColor (1);
 
 		for (size_t i = 0; i < 8; i++)
 		{
 			const unsigned char spriteMask = (unsigned char) (0x01 << i);
+			if ((_displayActiveSpritesMask & spriteMask) == 0)
+				continue;
 
 			if (_VICIIRegisters -> spriteMulticolorMode (i))
 				oS._spriteMulticolorMask |= spriteMask;
@@ -1681,6 +1693,7 @@ namespace COMMODORE
 				_vicSpriteInfo [i]._MC = 0;
 				_vicSpriteInfo [i]._graphicsLineSprites = MCHEmul::UBytes::_E;
 				_vicSpriteInfo [i]._drawing = false;
+				_drawingSpritesMask &= (unsigned char) ~(0x01 << i);
 
 				// Starting DMA for a Y-expanded sprite resets the expansion flip-flop.
 				if (_VICIIRegisters -> spriteDoubleHeight (i))
@@ -1727,13 +1740,18 @@ namespace COMMODORE
 	// ---
 	inline void VICII::treatSpriteDisplayStartCycle ()
 	{
+		_displayActiveSpritesMask = 0;
+
 		for (size_t i = 0; i < 8; i++)
 		{
+			const unsigned char spriteMask = (unsigned char) (0x01 << i);
+
 			if (!_vicSpriteInfo [i]._DMAActive)
 			{
 				// Display is switched off at cycle 58 after DMA has already
 				// finished, not at cycle 16 when MCBASE reaches 63.
 				_vicSpriteInfo [i]._displayActive = false;
+				_drawingSpritesMask &= (unsigned char) ~spriteMask;
 
 				continue;
 			}
@@ -1747,11 +1765,15 @@ namespace COMMODORE
 				_vicSpriteInfo [i]._displayActive = true;
 				_vicSpriteInfo [i]._drawing = false;
 				_vicSpriteInfo [i]._xS = 0;
+				_drawingSpritesMask &= (unsigned char) ~spriteMask;
 				_vicSpriteInfo [i]._expansionY =
 					_VICIIRegisters -> spriteDoubleHeight (i);
 
 				_IFDEBUG debugSpriteDrawToStart (i);
 			}
+
+			if (_vicSpriteInfo [i]._displayActive)
+				_displayActiveSpritesMask |= spriteMask;
 		}
 	}
 
@@ -1761,11 +1783,17 @@ namespace COMMODORE
 	{
 		assert (firstPixel < lastPixel && lastPixel <= _raster.step ());
 
+		// Only sprites still waiting for their X comparator need to be examined.
+		const unsigned char pendingSpritesMask = _displayActiveSpritesMask &
+			(unsigned char) ~_drawingSpritesMask;
+		if (pendingSpritesMask == 0)
+			return;
+
 		const unsigned short pixelsPerRasterLine = _cyclesPerRasterLine << 3;
 		for (size_t i = 0; i < 8; i++)
 		{
-			if (!_vicSpriteInfo [i]._displayActive ||
-				_vicSpriteInfo [i]._drawing)
+			const unsigned char spriteMask = (unsigned char) (0x01 << i);
+			if ((pendingSpritesMask & spriteMask) == 0)
 				continue;
 
 			unsigned short x = _VICIIRegisters -> spriteXCoord (i) + 4,
@@ -1778,6 +1806,7 @@ namespace COMMODORE
 			{
 				_vicSpriteInfo [i]._drawing = true;
 				_vicSpriteInfo [i]._xS = x;
+				_drawingSpritesMask |= spriteMask;
 
 				_IFDEBUG debugDrawSpriteAt
 					(i, x, _vicGraphicInfo._ROW);
@@ -2387,6 +2416,7 @@ namespace COMMODORE
 
 			// New sprite data starts a new 24-pixel shift sequence for this raster line.
 			_vicSpriteInfo [nS]._drawing = false;
+			_drawingSpritesMask &= (unsigned char) ~(0x01 << nS);
 
 			result = true;
 		}

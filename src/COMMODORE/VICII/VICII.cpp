@@ -75,6 +75,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
 	  _vicGraphicInfo (),
 	  _vicSpriteInfo (),
+	  _displayActiveSpritesMask (0), _drawingSpritesMask (0),
 	  _eventStatus ()
 {
 	// At this point the color RAM can be nullptr, 
@@ -163,6 +164,7 @@ bool COMMODORE::VICII::initialize ()
 		(_vicGraphicInfo._ROW, _cycleInRasterLine);
 	_VICIIRegisters -> setNumberPositionsToInstructionEffect (0);
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
+	_displayActiveSpritesMask = _drawingSpritesMask = 0;
 
 	// Window construction is delayed until initialize () so the concrete PAL
 	// or NTSC sprite timing method is available through virtual dispatch.
@@ -1452,10 +1454,14 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions
 
 	// The info about the sprites is moved into this variable too...
 	MCHEmul::UByte sCF = MCHEmul::UByte::_0; // to know whether there were at least one sprite drawn!
-	for (int i = 7; i >= 0; i--)
+	if (_drawingSpritesMask != 0)
 	{
-		if (_vicSpriteInfo [(size_t) i]._displayActive)
+		// Descending order preserves sprite 0 as the highest visual priority.
+		for (int i = 7; i >= 0; i--)
 		{
+			if ((_drawingSpritesMask & (unsigned char) (0x01 << i)) == 0)
+				continue;
+
 			colGraphics._collisionSpritesData [(size_t) i] = 
 				drawSpriteOver ((size_t) i, dC, colGraphics._spriteColor,
 					colGraphics._spriteColorOwner);
@@ -1810,8 +1816,9 @@ MCHEmul::UByte COMMODORE::VICII::drawSpriteOver
 	(size_t spr, const COMMODORE::VICII::DrawContext& dC, unsigned int* d, size_t* dO)
 {
 	MCHEmul::UByte result = MCHEmul::UByte::_0;
-	if (!_vicSpriteInfo [spr]._drawing ||
-		_vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
+	// The caller already filters by the cached drawing mask. The buffer can
+	// still be empty after DMA ends, so that independent condition remains.
+	if (_vicSpriteInfo [spr]._graphicsLineSprites.size () == 0)
 		return (result);
 
 	const bool outputTransition = dC.outputChangesDuringSlice ();
