@@ -1326,40 +1326,84 @@ void COMMODORE::VICII::treatRasterBusCycle ()
 void COMMODORE::VICII::drawVisibleZone
 	(MCHEmul::CPU* cpu, const COMMODORE::VICII::DrawContext& dC)
 {
-	// A slice can cross either horizontal comparator. Determine whether every
-	// visible pixel is covered without deriving the answer from the final
-	// flip-flop state, which describes only the last pixel of the slice.
 	size_t visiblePixels;
 	visiblePixels = (dC._RCA + 8) >= _raster.visibleColumns ()
 		? (size_t) (_raster.visibleColumns () - dC._RCA) : 8;
-	bool borderCoversEntireSlice = true;
-	for (size_t i = 0; i < visiblePixels && borderCoversEntireSlice; i++)
-		borderCoversEntireSlice = dC.mainBorderAtPixel (i);
 
-	drawOutputStateLine (dC, (size_t) dC._RCA, (size_t) dC._RR,
-		visiblePixels, borderCoversEntireSlice);
+	// Only the high bits belonging to visible pixels participate in the
+	// classification. The final raster slice can contain fewer than eight.
+	const unsigned char visibleMask =
+		(unsigned char) (0xff << (8 - visiblePixels));
+	const unsigned char mainBorderMask =
+		dC._mainBorderData.value () & visibleMask;
 
-	// The priority-multiplexer output is only copied when some part of the
-	// current slice is not covered by the main border.
-	drawGraphicsSpritesAndDetectCollisions
-		(dC, !borderCoversEntireSlice);
+	DrawContext::MainBorderCoverage mainBorderCoverage =
+		DrawContext::MainBorderCoverage::_MIXED;
+	if (mainBorderMask == 0)
+		mainBorderCoverage = DrawContext::MainBorderCoverage::_EMPTY;
+	else if (mainBorderMask == visibleMask)
+		mainBorderCoverage = DrawContext::MainBorderCoverage::_FULL;
 
-	// The main border is the final and highest-priority video layer. Draw each
-	// contiguous span so a transition in either half-cycle retains its exact
-	// pixel position and the corresponding before/after border color.
-	for (size_t i = 0; !borderCoversEntireSlice && i < visiblePixels; )
+	switch (mainBorderCoverage)
 	{
-		if (!dC.mainBorderAtPixel (i))
-		{
-			i++;
+		case DrawContext::MainBorderCoverage::_EMPTY:
+			{
+				drawOutputStateLine
+					(dC, (size_t) dC._RCA, (size_t) dC._RR,
+					 visiblePixels, false);
 
-			continue;
-		}
+				drawGraphicsSpritesAndDetectCollisions (dC, true);
+			}
 
-		const size_t firstBorderPixel = i;
-		while (i < visiblePixels && dC.mainBorderAtPixel (i)) i++;
-		drawOutputStateLine (dC, (size_t) dC._RCA + firstBorderPixel,
-			(size_t) dC._RR, i - firstBorderPixel, true);
+			break;
+
+		case DrawContext::MainBorderCoverage::_FULL:
+			{
+				drawOutputStateLine
+					(dC, (size_t) dC._RCA, (size_t) dC._RR,
+					 visiblePixels, true);
+
+				// A full main border hides the priority-multiplexer output. Without
+				// drawing sprites there are no observable collision results, so only
+				// the persistent graphics sequencer has to advance.
+				if (_drawingSpritesMask == 0)
+					advanceGraphicOutputForHiddenSlice (dC);
+				else
+					drawGraphicsSpritesAndDetectCollisions (dC, false);
+			}
+
+			break;
+
+		case DrawContext::MainBorderCoverage::_MIXED:
+			{
+				drawOutputStateLine
+					(dC, (size_t) dC._RCA, (size_t) dC._RR,
+					 visiblePixels, false);
+
+				drawGraphicsSpritesAndDetectCollisions (dC, true);
+
+				// The main border is the final and highest-priority video layer.
+				// Only mixed slices require locating and repainting covered spans.
+				for (size_t i = 0; i < visiblePixels; )
+				{
+					if (!dC.mainBorderAtPixel (i))
+					{
+						i++;
+
+						continue;
+					}
+
+					const size_t firstBorderPixel = i;
+					while (i < visiblePixels &&
+						dC.mainBorderAtPixel (i)) i++;
+
+					drawOutputStateLine
+						(dC, (size_t) dC._RCA + firstBorderPixel,
+						 (size_t) dC._RR, i - firstBorderPixel, true);
+				}
+			}
+
+			break;
 	}
 
 	// If there were requested to draw the position where the Raster Interrupt is generated...
@@ -1576,6 +1620,42 @@ void COMMODORE::VICII::drawGraphics
 		default:
 			assert (false); // Not possible...the code shouldn't pass over this point!
 			break;
+	}
+}
+
+// ---
+void COMMODORE::VICII::advanceGraphicOutputForHiddenSlice
+	(const COMMODORE::VICII::DrawContext& dC)
+{
+	const bool outputTransition = dC.outputChangesDuringSlice ();
+	const size_t firstLimit = outputTransition
+		? DrawContext::_FIRSTPIXELAFTERCPUWRITE : 8;
+
+	// Keep the same deep-debug information produced by the complete path.
+	_IFDEBUG debugDrawPixelAt
+		(dC._RCA, (int) dC._RCA - (int) dC._ICD,
+		 dC._beforeCPUWrite._horizontalScroll, 0, firstLimit);
+
+	for (size_t i = 0; i < firstLimit; i++)
+	{
+		prepareGraphicOutputPixel
+			(dC._beforeCPUWrite._horizontalScroll, i);
+		advanceGraphicOutputPixel ();
+	}
+
+	if (!outputTransition)
+		return;
+
+	_IFDEBUG debugDrawPixelAt
+		(dC._RCA, (int) dC._RCA - (int) dC._ICD,
+		 dC._afterCPUWrite._horizontalScroll,
+		 DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8);
+
+	for (size_t i = DrawContext::_FIRSTPIXELAFTERCPUWRITE; i < 8; i++)
+	{
+		prepareGraphicOutputPixel
+			(dC._afterCPUWrite._horizontalScroll, i);
+		advanceGraphicOutputPixel ();
 	}
 }
 

@@ -353,6 +353,14 @@ namespace COMMODORE
 				4..7 belong to the CPU phase represented by phi2. */
 			static const size_t _FIRSTPIXELAFTERCPUWRITE = 4;
 
+			/** Main-border coverage of the visible pixels in the current output slice. */
+			enum class MainBorderCoverage
+			{
+				_EMPTY,
+				_FULL,
+				_MIXED
+			};
+
 			/** Register-derived and internal values which can affect final pixel composition. \n
 				Fetched graphics, matrix, color-RAM and sprite data remain in VICGraphicInfo. */
 			struct OutputState
@@ -780,6 +788,12 @@ namespace COMMODORE
 			@param result	Shared result receiving this interval. */
 		void drawGraphics (const DrawContext& dC, const DrawContext::OutputState& oS,
 			size_t fP, size_t lP, DrawResult& result);
+		/** Advances the persistent graphics output sequencer for a slice completely
+			covered by the main border and without drawing sprites. \n
+			The XSCROLL state effective in each VIC-II phase is still observed, but
+			no colors or collision data are calculated because they cannot produce
+			an observable result in this case. */
+		void advanceGraphicOutputForHiddenSlice (const DrawContext& dC);
 
 		// Character and bitmap drawing modes.
 		/** Draws a monochrome character interval into the shared result. */
