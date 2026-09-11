@@ -16,6 +16,29 @@ struct ExpectedPrediction final
 	std::vector <unsigned int> _writeEffectPositions;
 };
 
+/** One current-behavior checkpoint and its independently derived VIC-II target. */
+struct BadLineScenario final
+{
+	std::string _name;
+	unsigned short _startCycle;
+	bool _startedFromIdle;
+	bool _legacySequenceActive;
+	unsigned short _legacyFirstReportedCAccessCycle;
+	unsigned short _legacyFirstEffectiveCAccessCycle;
+	unsigned short _targetFirstCAccessCycle;
+	unsigned short _targetFirstValidCAccessCycle;
+	unsigned short _targetFirstValidGAccessCycle;
+};
+
+/** Timing summary observed without performing a VIC-II memory access. */
+struct BadLineScenarioObservation final
+{
+	unsigned short _firstBACycle;
+	unsigned short _firstAECCycle;
+	unsigned short _firstReportedCAccessCycle;
+	unsigned short _firstEffectiveCAccessCycle;
+};
+
 /** Exposes only the pure timing calculation required by this theoretical test. */
 template <class VICIIType>
 class TestVICII final : public VICIIType
@@ -942,6 +965,218 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
+	/** Characterizes the current late-badline scheduling separately from the
+		independently derived VIC-II target. Target differences are reported but do
+		not fail this legacy baseline until the corresponding behavior is changed. */
+	bool testBadLineScenarioMatrix ()
+	{
+		const BadLineScenario scenarios [] =
+		{
+			{ "start 12", 12, false, true, 15, 15, 15, 15, 16 },
+			{ "start 13", 13, true,  true, 15, 15, 15, 16, 17 },
+			{ "start 14", 14, true,  true, 15, 15, 15, 17, 18 },
+			{ "start 15 idle", 15, true,  true, 16, 16, 15, 18, 19 },
+			{ "Taboo 16 display", 16, false, true, 16, 16, 16, 19, 20 },
+			{ "10000Members 18 idle", 18, true, true, 19, 19, 18, 21, 22 },
+			{ "10000Members 19 idle", 19, true, true, 20, 20, 19, 22, 23 },
+			{ "LetsScrollitB 22 idle", 22, true, true, 23, 23, 22, 25, 26 },
+			{ "LetsScrollitB 34 display", 34, false, true, 34, 34, 34, 37, 38 },
+			{ "LetsScrollitB 35 display", 35, false, true, 35, 35, 35, 38, 39 },
+			{ "Nameless 44 idle", 44, true, true, 45, 45, 44, 47, 48 },
+			{ "Taboo 48 display", 48, false, true, 48, 48, 48, 51, 52 },
+			{ "Nameless 48 idle", 48, true, true, 49, 49, 48, 51, 52 },
+			{ "LetsScrollitA 50 idle", 50, true, true, 51, 51, 50, 53, 54 },
+			{ "LetsScrollitB 54 display", 54, false, true, 54, 54, 54, 0, 0 },
+			{ "start 54 idle", 54, true, true, 55, 0, 54, 0, 0 },
+			{ "start 55", 55, true, false, 0, 0, 0, 0, 0 },
+			{ "start 57", 57, true, false, 0, 0, 0, 0, 0 }
+		};
+		bool result = true;
+
+		for (const auto& scenario : scenarios)
+		{
+			this -> _badLineConditionActive = scenario._legacySequenceActive;
+			this -> _badLineCAccessActive = scenario._legacySequenceActive;
+			this -> _badLineCAccessStartedFromIdle = scenario._startedFromIdle;
+			this -> _badLineCAccessAllowedThisLine = scenario._legacySequenceActive;
+			this -> _badLineCAccessStartCycle = scenario._legacySequenceActive
+				? scenario._startCycle : 0;
+			this -> _badLineInvalidCAccessCycles =
+				(scenario._legacySequenceActive && scenario._startCycle >= 14) ? 3 : 0;
+			this -> _cycleInRasterLine = scenario._startCycle;
+			this -> _currentSpriteDMAMask = 0;
+			this -> _nextSpriteDMAMask = 0;
+
+			BadLineScenarioObservation observation = { 0, 0, 0, 0 };
+			if (scenario._legacySequenceActive)
+			{
+				this -> actualizeCPUStopWindowsAfterBadLineChange ();
+				CPUStopWindow activeWindow;
+				if (CPUStopWindowAt
+					((CPURasterCycle) scenario._startCycle,
+					 *this -> _currentCPUStopWindows,
+					 *this -> _nextCPUStopWindows, activeWindow))
+				{
+					observation._firstBACycle =
+						(unsigned short) activeWindow._firstBACycle;
+					observation._firstAECCycle =
+						(unsigned short) activeWindow._firstAECCycle;
+				}
+			}
+
+			observation._firstReportedCAccessCycle = firstBadLineCAccessCycle ();
+			for (this -> _cycleInRasterLine = 15;
+				 observation._firstEffectiveCAccessCycle == 0 &&
+				 this -> _cycleInRasterLine <= 54;
+				 this -> _cycleInRasterLine++)
+				if (isBadLineCAccessCycle ())
+					observation._firstEffectiveCAccessCycle = _cycleInRasterLine;
+
+			const unsigned short expectedFirstBA = scenario._legacySequenceActive
+				? scenario._startCycle : 0;
+			const unsigned short expectedFirstAEC = scenario._legacySequenceActive
+				? (unsigned short) (scenario._startCycle + 3) : 0;
+			const bool scenarioResult =
+				observation._firstBACycle == expectedFirstBA &&
+				observation._firstAECCycle == expectedFirstAEC &&
+				observation._firstReportedCAccessCycle ==
+					scenario._legacyFirstReportedCAccessCycle &&
+				observation._firstEffectiveCAccessCycle ==
+					scenario._legacyFirstEffectiveCAccessCycle;
+			result &= scenarioResult;
+
+			std::cout << "Bad-line scenario " << scenario._name
+				<< " | legacy BA/AEC "
+				<< observation._firstBACycle << "/"
+				<< observation._firstAECCycle
+				<< " | legacy first C reported/effective "
+				<< observation._firstReportedCAccessCycle << "/"
+				<< observation._firstEffectiveCAccessCycle
+				<< " | target first/valid C/G "
+				<< scenario._targetFirstCAccessCycle << "/"
+				<< scenario._targetFirstValidCAccessCycle << "/"
+				<< scenario._targetFirstValidGAccessCycle
+				<< " | " << (scenarioResult ? "OK" : "ERROR") << std::endl;
+		}
+
+		this -> _badLineConditionActive = false;
+		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartedFromIdle = false;
+		this -> _badLineCAccessAllowedThisLine = false;
+		this -> _badLineInvalidCAccessCycles = 0;
+		this -> _badLineCAccessStartCycle = 0;
+		this -> _cycleInRasterLine = 1;
+		this -> selectCPUStopWindowsForCurrentAndNextLine ();
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		return (result);
+	}
+
+	/** Records the present latch semantics when a late condition is cleared and
+		the cycle-14 cancellation semantics of an early sequence. */
+	bool testBadLineConditionTransitionBaseline ()
+	{
+		this -> _badLineConditionActive = true;
+		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessStartedFromIdle = true;
+		this -> _badLineCAccessAllowedThisLine = true;
+		this -> _badLineInvalidCAccessCycles = 3;
+		this -> _badLineCAccessStartCycle = 22;
+		this -> _cycleInRasterLine = 22;
+		this -> _currentSpriteDMAMask = 0;
+		this -> _nextSpriteDMAMask = 0;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		this -> _badLineConditionActive = false;
+		this -> _cycleInRasterLine = 26;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+		CPUStopWindow activeWindow;
+		const bool lateSequenceRemainsLatched =
+			this -> _badLineCAccessActive &&
+			isBadLineCAccessCycle () &&
+			CPUStopWindowAt
+				(26, *this -> _currentCPUStopWindows,
+				 *this -> _nextCPUStopWindows, activeWindow) &&
+			activeWindow._firstBACycle == 22 &&
+			activeWindow._lastCycle == 54;
+
+		this -> _badLineConditionActive = true;
+		this -> _cycleInRasterLine = 30;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+		const bool reactivationKeepsOriginalSequence =
+			firstBadLineCAccessCycle () == 23 &&
+			isBadLineCAccessCycle ();
+
+		this -> _badLineConditionActive = false;
+		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessStartedFromIdle = true;
+		this -> _badLineCAccessAllowedThisLine = false;
+		this -> _badLineInvalidCAccessCycles = 0;
+		this -> _badLineCAccessStartCycle = 13;
+		this -> _cycleInRasterLine = 14;
+		this -> treatGraphicFetchStartCycle ();
+		const bool earlySequenceCancelledAt14 =
+			!this -> _badLineCAccessActive &&
+			!this -> _badLineCAccessAllowedThisLine &&
+			firstBadLineCAccessCycle () == 0;
+		const bool result = lateSequenceRemainsLatched &&
+			reactivationKeepsOriginalSequence && earlySequenceCancelledAt14;
+
+		this -> _badLineConditionActive = false;
+		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartedFromIdle = false;
+		this -> _badLineCAccessAllowedThisLine = false;
+		this -> _badLineInvalidCAccessCycles = 0;
+		this -> _badLineCAccessStartCycle = 0;
+		this -> _cycleInRasterLine = 1;
+		this -> actualizeCPUStopWindowsAfterBadLineChange ();
+
+		std::cout << "Bad-line condition transition baseline | late latch "
+			<< lateSequenceRemainsLatched << ", reactivation "
+			<< reactivationKeepsOriginalSequence << ", early cancellation "
+			<< earlySequenceCancelledAt14 << " | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
+	/** Verifies that adjacent sprite and badline BA windows retain one continuous
+		AEC history, while a real BA-high gap keeps both intervals independent. */
+	bool testBadLineSpriteWindowCompositionBaseline ()
+	{
+		CPUStopWindows continuous =
+		{
+			CPUStopWindow (30, 33, 33, false, 0x01),
+			CPUStopWindow (34, 37, 54, true, 0x00)
+		};
+		this -> mergeCPUStopWindows (continuous);
+		const bool continuousResult =
+			continuous.size () == 1 &&
+			continuous [0]._firstBACycle == 30 &&
+			continuous [0]._firstAECCycle == 33 &&
+			continuous [0]._lastCycle == 54 &&
+			continuous [0]._badLineSource &&
+			continuous [0]._spriteSourceMask == 0x01;
+
+		CPUStopWindows separated =
+		{
+			CPUStopWindow (30, 33, 32, false, 0x01),
+			CPUStopWindow (34, 37, 54, true, 0x00)
+		};
+		this -> mergeCPUStopWindows (separated);
+		const bool separatedResult =
+			separated.size () == 2 &&
+			separated [0]._firstBACycle == 30 &&
+			separated [1]._firstBACycle == 34;
+		const bool result = continuousResult && separatedResult;
+
+		std::cout << "Bad-line/sprite window composition baseline | continuous "
+			<< continuousResult << ", separated " << separatedResult << " | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
 	/** Verifies that a late bad-line sequence starting from idle requests BA when
 		it is recognized, attempts its first c-access one cycle later and makes AEC
 		effective after the complete three-cycle BA warning. */
@@ -1342,6 +1577,9 @@ int main ()
 	result &= vicii.testProjectedSpriteDMAMask ();
 	result &= vicii.testPredictedSpriteDMAStartMasks ();
 	result &= vicii.testGraphicAccessPipelineWindows ();
+	result &= vicii.testBadLineScenarioMatrix ();
+	result &= vicii.testBadLineConditionTransitionBaseline ();
+	result &= vicii.testBadLineSpriteWindowCompositionBaseline ();
 	result &= vicii.testLateBadLineCPUStopWindow ();
 	result &= vicii.testLateBadLineFromIdleCounterProgression ();
 	result &= vicii.testGraphicOutputSequencer ();
