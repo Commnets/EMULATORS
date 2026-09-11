@@ -909,11 +909,26 @@ class TestVICII final : public VICIIType
 		this -> _badLineCAccessStartedFromIdle = false;
 		this -> _cycleInRasterLine = 36;
 		const bool firstActiveLateCAccess = this -> isBadLineCAccessCycle ();
+
+		this -> _badLineCAccessStartedFromIdle = true;
+		this -> _badLineCAccessStartCycle = 22;
+		this -> _cycleInRasterLine = 22;
+		const bool letsScrollItBeforeCAccess = !this -> isBadLineCAccessCycle ();
+		this -> _cycleInRasterLine = 23;
+		const bool letsScrollItFirstCAccess = this -> isBadLineCAccessCycle ();
+
+		this -> _badLineCAccessStartCycle = 44;
+		this -> _cycleInRasterLine = 44;
+		const bool membersBeforeCAccess = !this -> isBadLineCAccessCycle ();
+		this -> _cycleInRasterLine = 45;
+		const bool membersFirstCAccess = this -> isBadLineCAccessCycle ();
 		const bool result =
 			beforePipeline && firstCAccess && firstSharedCycle &&
 			lastSharedCycle && lastGAccess &&
 			beforeLateCAccess && firstLateCAccess &&
-			firstActiveLateCAccess;
+			firstActiveLateCAccess &&
+			letsScrollItBeforeCAccess && letsScrollItFirstCAccess &&
+			membersBeforeCAccess && membersFirstCAccess;
 
 		this -> _badLineCAccessActive = false;
 		this -> _badLineCAccessStartedFromIdle = false;
@@ -986,8 +1001,69 @@ class TestVICII final : public VICIIType
 		return (result);
 	}
 
+	/** Verifies the 10000Members late-badline counter progression independently
+		from memory contents and pixel composition. */
+	bool testLateBadLineFromIdleCounterProgression ()
+	{
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _vicGraphicInfo._VCBASE = 0;
+		this -> _vicGraphicInfo._VC = 0;
+		this -> _vicGraphicInfo._VLMI = 0;
+		this -> _vicGraphicInfo._GAccessIndex = 28;
+		this -> _vicGraphicInfo._RC = 7;
+		this -> enterIdleState ();
+
+		this -> _badLineConditionActive = true;
+		this -> _badLineCAccessActive = true;
+		this -> _badLineCAccessStartedFromIdle = true;
+		this -> _badLineCAccessAllowedThisLine = true;
+		this -> _badLineCAccessStartCycle = 44;
+		this -> _badLineInvalidCAccessCycles = 3;
+
+		this -> _cycleInRasterLine = 44;
+		bool result = !this -> isBadLineCAccessCycle ();
+		this -> advanceGraphicAccessCounters ();
+
+		this -> _cycleInRasterLine = 45;
+		result &= this -> isBadLineCAccessCycle ();
+		this -> advanceGraphicAccessCounters ();
+		this -> enterScreenState ();
+
+		for (this -> _cycleInRasterLine = 46;
+			 this -> _cycleInRasterLine <= 55;
+			 this -> _cycleInRasterLine++)
+			this -> advanceGraphicAccessCounters ();
+
+		result &=
+			this -> _vicGraphicInfo._VC == 10 &&
+			this -> _vicGraphicInfo._VLMI == 10 &&
+			this -> _vicGraphicInfo._GAccessIndex == 40;
+
+		this -> _cycleInRasterLine = 58;
+		this -> treatGraphicRowEndCycle ();
+		result &= this -> _vicGraphicInfo._VCBASE == 10;
+
+		this -> _badLineConditionActive = false;
+		this -> _badLineCAccessActive = false;
+		this -> _badLineCAccessStartedFromIdle = false;
+		this -> _badLineCAccessAllowedThisLine = false;
+		this -> _badLineCAccessStartCycle = 0;
+		this -> _badLineInvalidCAccessCycles = 0;
+		this -> _vicGraphicInfo._VCBASE = 0;
+		this -> _vicGraphicInfo._VC = 0;
+		this -> _vicGraphicInfo._RC = 0;
+		this -> enterIdleState ();
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _cycleInRasterLine = 1;
+
+		std::cout << "Late bad-line counter progression | "
+			<< (result ? "OK" : "ERROR") << std::endl;
+
+		return (result);
+	}
+
 	/** Verifies the complete output-cycle delay of every g-access and that
-		XSCROLL reloads the preceding cycle's pending input latch. */
+		XSCROLL reloads the preceding cycle's complete data/code/color triplet. */
 	bool testGraphicOutputSequencer ()
 	{
 		this -> resetGraphicAccessCountersForCurrentLine ();
@@ -1001,6 +1077,10 @@ class TestVICII final : public VICIIType
 				this -> _vicGraphicInfo._GAccessIndex = cycle - 16;
 				this -> _vicGraphicInfo._graphicData [cycle - 16] =
 					MCHEmul::UByte ((unsigned char) (cycle - 16));
+				this -> _vicGraphicInfo._screenCodeDrawData [cycle - 16] =
+					MCHEmul::UByte ((unsigned char) (0x80 + cycle - 16));
+				this -> _vicGraphicInfo._colorDrawData [cycle - 16] =
+					MCHEmul::UByte ((unsigned char) (0x40 + cycle - 16));
 				this -> stageGraphicOutputData ();
 			}
 
@@ -1011,6 +1091,10 @@ class TestVICII final : public VICIIType
 				if (active)
 					result &= this -> _vicGraphicInfo._graphicOutput._data.value () ==
 						(unsigned char) (cycle - 17) &&
+						this -> _vicGraphicInfo._graphicOutput._screenCode.value () ==
+							(unsigned char) (0x80 + cycle - 17) &&
+						this -> _vicGraphicInfo._graphicOutput._colorData.value () ==
+							(unsigned char) (0x40 + cycle - 17) &&
 						this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) i;
 				this -> advanceGraphicOutputPixel ();
 			}
@@ -1022,6 +1106,8 @@ class TestVICII final : public VICIIType
 		// g-access waits until the end of the slice before replacing the input latch.
 		this -> resetGraphicAccessCountersForCurrentLine ();
 		this -> _vicGraphicInfo._graphicData [0] = MCHEmul::UByte (0xaa);
+		this -> _vicGraphicInfo._screenCodeDrawData [0] = MCHEmul::UByte (0xa1);
+		this -> _vicGraphicInfo._colorDrawData [0] = MCHEmul::UByte (0x01);
 		this -> stageGraphicOutputData ();
 		for (size_t i = 0; i < 8; i++)
 		{
@@ -1032,6 +1118,8 @@ class TestVICII final : public VICIIType
 
 		this -> _vicGraphicInfo._GAccessIndex = 1;
 		this -> _vicGraphicInfo._graphicData [1] = MCHEmul::UByte (0x55);
+		this -> _vicGraphicInfo._screenCodeDrawData [1] = MCHEmul::UByte (0xb2);
+		this -> _vicGraphicInfo._colorDrawData [1] = MCHEmul::UByte (0x02);
 		this -> stageGraphicOutputData ();
 		for (size_t i = 0; i < 8; i++)
 		{
@@ -1039,6 +1127,8 @@ class TestVICII final : public VICIIType
 			result &= active == (i >= 4);
 			if (active)
 				result &= this -> _vicGraphicInfo._graphicOutput._data.value () == 0xaa &&
+					this -> _vicGraphicInfo._graphicOutput._screenCode.value () == 0xa1 &&
+					this -> _vicGraphicInfo._graphicOutput._colorData.value () == 0x01 &&
 					this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) (i - 4);
 			this -> advanceGraphicOutputPixel ();
 		}
@@ -1046,17 +1136,92 @@ class TestVICII final : public VICIIType
 
 		this -> _vicGraphicInfo._GAccessIndex = 2;
 		this -> _vicGraphicInfo._graphicData [2] = MCHEmul::UByte (0x33);
+		this -> _vicGraphicInfo._screenCodeDrawData [2] = MCHEmul::UByte (0xc3);
+		this -> _vicGraphicInfo._colorDrawData [2] = MCHEmul::UByte (0x03);
 		this -> stageGraphicOutputData ();
 		for (size_t i = 0; i < 8; i++)
 		{
 			result &= this -> prepareGraphicOutputPixel (4, i);
 			result &= this -> _vicGraphicInfo._graphicOutput._data.value () ==
 				(i < 4 ? 0xaa : 0x55);
+			result &= this -> _vicGraphicInfo._graphicOutput._screenCode.value () ==
+				(i < 4 ? 0xa1 : 0xb2);
+			result &= this -> _vicGraphicInfo._graphicOutput._colorData.value () ==
+				(i < 4 ? 0x01 : 0x02);
 			result &= this -> _vicGraphicInfo._graphicOutput._pixel ==
 				(unsigned char) (i < 4 ? i + 4 : i - 4);
 			this -> advanceGraphicOutputPixel ();
 		}
 		this -> commitGraphicOutputData ();
+
+		// A visual write can move the XSCROLL comparator between the two
+		// four-pixel spans. Reload exactly once when the new comparator is still
+		// ahead, and retain the pending latch when it has already been missed.
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _vicGraphicInfo._graphicData [0] = MCHEmul::UByte (0x11);
+		this -> _vicGraphicInfo._screenCodeDrawData [0] = MCHEmul::UByte (0xa1);
+		this -> _vicGraphicInfo._colorDrawData [0] = MCHEmul::UByte (0x01);
+		this -> stageGraphicOutputData ();
+		this -> commitGraphicOutputData ();
+		for (size_t i = 0; i < 4; i++)
+		{
+			result &= !this -> prepareGraphicOutputPixel (6, i);
+			this -> advanceGraphicOutputPixel ();
+		}
+		for (size_t i = 4; i < 8; i++)
+		{
+			const bool active = this -> prepareGraphicOutputPixel (4, i);
+			result &= active;
+			if (active)
+				result &= this -> _vicGraphicInfo._graphicOutput._data.value () == 0x11 &&
+					this -> _vicGraphicInfo._graphicOutput._screenCode.value () == 0xa1 &&
+					this -> _vicGraphicInfo._graphicOutput._colorData.value () == 0x01 &&
+					this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) (i - 4);
+			this -> advanceGraphicOutputPixel ();
+		}
+		result &= !this -> _vicGraphicInfo._graphicOutput._pending;
+
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _vicGraphicInfo._graphicData [0] = MCHEmul::UByte (0x22);
+		this -> _vicGraphicInfo._screenCodeDrawData [0] = MCHEmul::UByte (0xb2);
+		this -> _vicGraphicInfo._colorDrawData [0] = MCHEmul::UByte (0x02);
+		this -> stageGraphicOutputData ();
+		this -> commitGraphicOutputData ();
+		for (size_t i = 0; i < 4; i++)
+		{
+			result &= !this -> prepareGraphicOutputPixel (6, i);
+			this -> advanceGraphicOutputPixel ();
+		}
+		for (size_t i = 4; i < 8; i++)
+		{
+			result &= !this -> prepareGraphicOutputPixel (2, i);
+			this -> advanceGraphicOutputPixel ();
+		}
+		result &= this -> _vicGraphicInfo._graphicOutput._pending &&
+			!this -> _vicGraphicInfo._graphicOutput._active;
+
+		this -> resetGraphicAccessCountersForCurrentLine ();
+		this -> _vicGraphicInfo._graphicData [0] = MCHEmul::UByte (0x33);
+		this -> _vicGraphicInfo._screenCodeDrawData [0] = MCHEmul::UByte (0xc3);
+		this -> _vicGraphicInfo._colorDrawData [0] = MCHEmul::UByte (0x03);
+		this -> stageGraphicOutputData ();
+		this -> commitGraphicOutputData ();
+		for (size_t i = 0; i < 4; i++)
+		{
+			const bool active = this -> prepareGraphicOutputPixel (2, i);
+			result &= active == (i >= 2);
+			this -> advanceGraphicOutputPixel ();
+		}
+		for (size_t i = 4; i < 8; i++)
+		{
+			result &= this -> prepareGraphicOutputPixel (6, i);
+			result &= this -> _vicGraphicInfo._graphicOutput._data.value () == 0x33 &&
+				this -> _vicGraphicInfo._graphicOutput._screenCode.value () == 0xc3 &&
+				this -> _vicGraphicInfo._graphicOutput._colorData.value () == 0x03 &&
+				this -> _vicGraphicInfo._graphicOutput._pixel == (unsigned char) (i - 2);
+			this -> advanceGraphicOutputPixel ();
+		}
+		result &= !this -> _vicGraphicInfo._graphicOutput._pending;
 
 		std::cout << "VIC-II graphics output sequencer | "
 			<< (result ? "OK" : "ERROR") << std::endl;
@@ -1178,6 +1343,7 @@ int main ()
 	result &= vicii.testPredictedSpriteDMAStartMasks ();
 	result &= vicii.testGraphicAccessPipelineWindows ();
 	result &= vicii.testLateBadLineCPUStopWindow ();
+	result &= vicii.testLateBadLineFromIdleCounterProgression ();
 	result &= vicii.testGraphicOutputSequencer ();
 
 	// YSCROLL=2: line 50 is a bad line and neither line 49 nor 51 is.

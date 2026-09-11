@@ -22,6 +22,7 @@ Use this skill to audit whether EMULATORS simulates the VIC-II as a timing-sensi
 3. When changing C++ code, also use `$emulators-framework-cpp-style`.
 4. Decide whether the code path is PAL, NTSC, or model-agnostic before asserting exact line/cycle counts.
 5. Treat cycle placement, register side effects, and bus ownership as user-visible behavior. Demos and tests depend on these details.
+6. When changing the `VICIIEVENTS` overlay, its event meanings, or its colors, update the `;CVICIIEVENTS` legend in the canonical `projects/COMMODORE/Commodore.fmt`. Do not edit distributed formatter copies directly; regenerate them through the normal build/distribution workflow when required.
 
 ## Audit Priorities
 

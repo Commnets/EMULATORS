@@ -2209,6 +2209,17 @@ void COMMODORE::VICII::detectCollisions
 void COMMODORE::VICII::drawOtherEvents
 	(unsigned short cv, unsigned short rv, size_t visiblePixels)
 {
+	// Paint the effective, already merged BA interval used by CPU arbitration.
+	// This includes bad-line and sprite-DMA sources, including line wrapping.
+	CPUStopWindow activeWindow;
+	if (_currentCPUStopWindows != nullptr &&
+		_nextCPUStopWindows != nullptr &&
+		CPUStopWindowAt
+			((CPURasterCycle) _cycleInRasterLine,
+			 *_currentCPUStopWindows, *_nextCPUStopWindows, activeWindow))
+		screenMemory () -> setHorizontalLine
+			((size_t) cv, (size_t) rv, visiblePixels, 32); // Light cyan.
+
 	// Draw the border events...
 	unsigned int cEvent = std::numeric_limits <unsigned int>::max ();
 	if (_eventStatus._ffVBorderChange.positiveEdge ()) 
@@ -2245,16 +2256,25 @@ void COMMODORE::VICII::drawOtherEvents
 		}
 	}
 
-	// Draw the accepted bad-line condition event...
-	// This marks the raster line where a Bad Line Condition was first accepted,
-	// not necessarily a line where normal matrix/color c-accesses were performed.
-	if (_eventStatus._badLine != std::numeric_limits <unsigned short>::max ())
+	// Draw the first cycle where the Bad Line Condition was accepted, not
+	// necessarily one where normal matrix/color c-accesses were performed.
+	if (_eventStatus._badLineCycle != 0)
 	{ 
-		if (_raster.vData ().currentVisiblePosition () == _eventStatus._badLine)
-			screenMemory () -> setHorizontalLine 
-				(_raster.hData ().currentVisiblePosition (), _eventStatus._badLine, 2, 36); // in points and draw in auxiliar color...
-		else
-			_eventStatus._badLine = std::numeric_limits <unsigned short>::max ();
+		if (_cycleInRasterLine == _eventStatus._badLineCycle &&
+			visiblePixels > DrawContext::_FIRSTPIXELAFTERCPUWRITE)
+		{
+			// Bad-line recognition occurs after phi1. Mark its phi2 position over BA.
+			screenMemory () -> setHorizontalLine
+				((size_t) cv + DrawContext::_FIRSTPIXELAFTERCPUWRITE,
+				 (size_t) rv,
+				 std::min ((size_t) 3,
+					visiblePixels - DrawContext::_FIRSTPIXELAFTERCPUWRITE),
+				 36); // Light green.
+		}
+
+		// Unlike the previous whole-line highlight, this event represents only
+		// the first cycle in which the Bad Line Condition was accepted.
+		_eventStatus._badLineCycle = 0;
 	}
 
 	// Draw the light pen event...
@@ -2747,17 +2767,31 @@ void COMMODORE::VICII::debugReadingVideoMatrix (bool invalidCAccess)
 }
 
 // ---
-void COMMODORE::VICII::debugReadingGraphics ()
+void COMMODORE::VICII::debugReadingGraphics (const MCHEmul::Address& address)
 {
 	assert (_deepDebugFile != nullptr);
-	
+
+	const size_t gAI = graphicAccessIndex ();
 	_deepDebugFile -> writeLineData (std::string ("Reading Graphics [") +
+		"Address=$" + MCHEmul::removeAll0 (address.asString
+			(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
 		"Data=" + _vicGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"Screen=" + _vicGraphicInfo._screenCodeDrawData [gAI].asString
+			(MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"Color=" + _vicGraphicInfo._colorDrawData [gAI].asString
+			(MCHEmul::UByte::OutputFormat::_HEXA) + "," +
 		"GAccessIndex=" + std::to_string (_vicGraphicInfo._GAccessIndex) + "," +
 		"VLMI=" + std::to_string (_vicGraphicInfo._VLMI) + "," +
 		"VC=" + std::to_string (_vicGraphicInfo._VC) + "," +
 		"RC=" + std::to_string ((unsigned int) _vicGraphicInfo._RC) + "," +
-		"Idle=" + std::to_string (_vicGraphicInfo._idleState) + "]");
+		"Idle=" + std::to_string (_vicGraphicInfo._idleState) + "," +
+		"Mode=" + std::to_string ((unsigned int) _VICIIRegisters -> graphicModeActive ()) + "," +
+		"CharacterBase=$" + MCHEmul::removeAll0
+			(_VICIIRegisters -> charDataMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+		"BitmapBase=$" + MCHEmul::removeAll0
+			(_VICIIRegisters -> bitmapMemory ().asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "]");
 }
 
 // ---
@@ -2769,6 +2803,8 @@ void COMMODORE::VICII::debugDrawPixelAt
 
 	const VICGraphicInfo::GraphicOutputSequencer& output =
 		_vicGraphicInfo._graphicOutput;
+	const bool reloadInSpan = output._pending &&
+		(size_t) xS >= fP && (size_t) xS < lP;
 	_deepDebugFile -> writeLineData (std::string ("Drawing pixels [") +
 		"Raster=" + std::to_string (cav) + "," +
 		"FirstPixel=" + std::to_string (fP) + "," +
@@ -2777,10 +2813,21 @@ void COMMODORE::VICII::debugDrawPixelAt
 		"OutputPixel=" + std::to_string (cb + (int) fP) + "," +
 		"ShiftActive=" + std::to_string (output._active) + "," +
 		"ShiftPixel=" + std::to_string ((unsigned int) output._pixel) + "," +
+		"OutputData=" + output._data.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"OutputScreen=" + output._screenCode.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"OutputColor=" + output._colorData.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
 		"PendingReload=" + std::to_string (output._pending) + "," +
+		"PendingData=" + output._pendingData.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"PendingScreen=" + output._pendingScreenCode.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"PendingColor=" + output._pendingColorData.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
 		"StagedAccess=" + std::to_string (output._staged) + "," +
-		"ReloadInSpan=" + std::to_string (output._pending &&
-			(size_t) xS >= fP && (size_t) xS < lP) + "]");
+		"StagedData=" + output._stagedData.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"StagedScreen=" + output._stagedScreenCode.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"StagedColor=" + output._stagedColorData.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
+		"ReloadInSpan=" + std::to_string (reloadInSpan) + "," +
+		"ReloadPixel=" + (reloadInSpan
+			? std::to_string ((unsigned int) xS)
+			: std::string ("-")) + "]");
 }
 
 // ---

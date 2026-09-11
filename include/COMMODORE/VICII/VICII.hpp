@@ -865,7 +865,7 @@ namespace COMMODORE
 			Video Matrix / Color RAM, or from idle-state fixed addresses. \n
 			_VC determines the real VIC-II memory position when needed.
 			_GAccessIndex determines the emulator-side 40-byte buffer position. */
-		inline void readGraphicalInfo ();
+		inline MCHEmul::Address readGraphicalInfo ();
 
 		// Sprite data.
 		/** Legacy helper not used by the raster pipeline. \n
@@ -914,7 +914,7 @@ namespace COMMODORE
 		void debugReadingVideoMatrix (bool invalidCAccess);
 		/** Records the data and the counters used by the completed g-access.
 			It must be called before advancing VC, VLMI and GAccessIndex. */
-		void debugReadingGraphics ();
+		void debugReadingGraphics (const MCHEmul::Address& address);
 		/** Records the raster position and persistent graphics-sequencer state before
 			one output span consumes it. \n
 			A steady slice emits pixels 0..7 in one record; a visual CPU write emits
@@ -1329,7 +1329,7 @@ namespace COMMODORE
 			EventsStatus ()
 				: _ffVBorderChange (false),
 				  _mainBorderEvent (),
-				  _badLine (0),
+				  _badLineCycle (0),
 				  _lightPenPositionLatched (false),
 				  _lightPenPositionChanged (false)
 								{ }
@@ -1338,8 +1338,9 @@ namespace COMMODORE
 			MCHEmul::Pulse _ffVBorderChange;
 			/** Main-border transition retained until its output slice is drawn. */
 			MainBorderEvent _mainBorderEvent;
-			/** The bad line to hightlight. */
-			unsigned short _badLine;
+			/** Raster cycle where the Bad Line Condition was first accepted. \n
+				0 means that no marker is pending. */
+			unsigned short _badLineCycle;
 			// Managing the lightpen related events...
 			/** A lightpen position has been latched. */
 			bool _lightPenPositionLatched;
@@ -1440,8 +1441,7 @@ namespace COMMODORE
 			if (!lateDMAFromIdle)
 				enterScreenState ();
 
-			_eventStatus._badLine =
-				_raster.vData ().currentVisiblePosition ();
+			_eventStatus._badLineCycle = _cycleInRasterLine;
 
 			_IFDEBUG debugBadLine ();
 		}
@@ -1845,12 +1845,12 @@ namespace COMMODORE
 
 		if (gAccess)
 		{
-			readGraphicalInfo ();
+			const MCHEmul::Address graphicsAddress = readGraphicalInfo ();
 			stageGraphicOutputData ();
 
 			// Record the counters and buffer index used by the completed g-access
 			// before advancing them for the following graphics cycle.
-			_IFDEBUG debugReadingGraphics ();
+			_IFDEBUG debugReadingGraphics (graphicsAddress);
 
 			advanceGraphicAccessCounters ();
 		}
@@ -2335,12 +2335,13 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void VICII::readGraphicalInfo ()
+	inline MCHEmul::Address VICII::readGraphicalInfo ()
 	{
 		// _GAccessIndex selects the emulator-side 40-byte graphics buffer slot
 		// being filled in this graphics access cycle.
 		const size_t gAI = graphicAccessIndex ();
 		const unsigned short vC = _vicGraphicInfo._VC & _VCMASK;
+		MCHEmul::Address graphicsAddress;
 
 		// In idle state, the VIC-II reads from a fixed address depending on the
 		// active bank and graphic mode. The fetched byte is stored in the graphics
@@ -2350,12 +2351,15 @@ namespace COMMODORE
 			_vicGraphicInfo._screenCodeDrawData [gAI] = MCHEmul::UByte::_0;
 			_vicGraphicInfo._colorDrawData [gAI] = MCHEmul::UByte::_0;
 
+			graphicsAddress =
+				_VICIIRegisters -> graphicExtendedColorTextModeActive ()
+					? _MEMORYPOSIDLE1 + (bank () << 14)
+					: _MEMORYPOSIDLE2 + (bank () << 14);
+
 			_vicGraphicInfo._lastGraphicDataRead =
 				_lastVICDataRead =
-				_vicGraphicInfo._graphicData [gAI] = 
-					_VICIIRegisters -> graphicExtendedColorTextModeActive () 
-						? memoryRef () -> value (_MEMORYPOSIDLE1 + (bank () << 14))
-						: memoryRef () -> value (_MEMORYPOSIDLE2 + (bank () << 14));
+					_vicGraphicInfo._graphicData [gAI] =
+						memoryRef () -> value (graphicsAddress);
 		}
 		// In display state, VMLI selects the logical matrix/color entry while
 		// GAccessIndex selects the horizontal output slot receiving that entry.
@@ -2369,23 +2373,28 @@ namespace COMMODORE
 			_vicGraphicInfo._colorDrawData [gAI] =
 				_vicGraphicInfo._colorData [vMLI];
 
+			// In invalid bitmap modes, bits 6 and 7 of the VC position are not
+			// taken into account when forming the bitmap address.
+			graphicsAddress = _VICIIRegisters -> textMode ()
+				? _VICIIRegisters -> charDataMemory () +
+					(((size_t) screenCodeData.value () &
+						((_VICIIRegisters -> graphicExtendedColorTextModeActive () ||
+						  _VICIIRegisters -> invalidGraphicMode ()) ? 0x3f : 0xff))
+						/** In extended-background mode or invalid text mode,
+							there are only 64 possible characters. */ << 3) +
+					_vicGraphicInfo._RC
+				: _VICIIRegisters -> bitmapMemory () +
+					(((size_t) (vC &
+						(_VICIIRegisters -> invalidGraphicMode () ? 0x033f : _VCMASK))) << 3) +
+					(size_t) _vicGraphicInfo._RC;
+
 			_vicGraphicInfo._lastGraphicDataRead =
 				_lastVICDataRead =
-				_vicGraphicInfo._graphicData [gAI] = _VICIIRegisters -> textMode () 
-					? memoryRef () -> value (_VICIIRegisters -> charDataMemory () + 
-						(((size_t) screenCodeData.value () &
-							((_VICIIRegisters -> graphicExtendedColorTextModeActive () ||
-							  _VICIIRegisters -> invalidGraphicMode ()) ? 0x3f : 0xff))
-							/** In extended-background mode or invalid text mode,
-								there are only 64 possible characters. */ << 3) + _vicGraphicInfo._RC)
-					: memoryRef () -> value (_VICIIRegisters -> bitmapMemory () +
-						(((size_t) (vC & 
-							(_VICIIRegisters -> invalidGraphicMode () ? 0x033f : _VCMASK))) << 3) +
-						(size_t) _vicGraphicInfo._RC);
+					_vicGraphicInfo._graphicData [gAI] =
+						memoryRef () -> value (graphicsAddress);
 		}
 
-		// In invalid bitmap modes, bits 6 and 7 of the VC position are not taken
-		// into account when forming the bitmap address.
+		return (graphicsAddress);
 	}
 
 	// ---
