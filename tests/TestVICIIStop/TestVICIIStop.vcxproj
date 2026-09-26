@@ -85,6 +85,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="TestVICIIStop.cpp" />
+    <ClCompile Include="VICIIGraphicReference.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="VICIIGraphicReference.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />

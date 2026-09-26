@@ -172,6 +172,8 @@ Condition:@BadlineCondition@
 Detected:@BadlineDetected@
 BA Requested:@BadlineBARequested@
 BA Cycle:@BadlineBARequestCycle@
+BA Prefetch Cycles:@BAPrefetchCycles@
+C Access Data Valid:@CAccessDataValid@
 First CAccess:@BadlineFirstCAccessCycle@
 CAccess:@BadlineCAccess@
 CAccess Started From Idle:@BadlineCAccessStartedFromIdle@

@@ -1,0 +1,44 @@
+// Captured frame 2: absolute 51069444..51070514.
+// The identical captured RAM is shared; these are stimulus differences, not expected pixels.
+fixture._scenario._name = "10000Members S5 captured bitmap/VSP frame 2";
+fixture._scenario._initialD016 = 213;
+fixture._scenario._initialMatrix = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 209, 219 } };
+fixture._scenario._initialColors = { { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 11, 11, 11, 11, 11, 0, 0, 0, 0, 0, 0, 0, 6, 12, 12 } };
+for (GraphicReplayCycle& captured : fixture._cycles)
+	captured._absoluteCycle += 19656;
+fixture._cycles [123] = { 51069567, 51, 61, 13, false, false, 0, 0, 0, 0, 0, 0, 0, false, { { 61, 22, 211 } } };
+fixture._cycles [166] = { 51069610, 52, 41, 8, true, false, 24848, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [171] = { 51069615, 52, 46, 8, true, false, 24888, 0, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [178] = { 51069622, 52, 53, 0, true, false, 24944, 192, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [179] = { 51069623, 52, 54, 0, true, false, 24952, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [180] = { 51069624, 52, 55, 12, true, false, 24960, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [229] = { 51069673, 53, 41, 12, true, false, 24849, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [234] = { 51069678, 53, 46, 12, true, false, 24889, 3, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [241] = { 51069685, 53, 53, 12, true, false, 24945, 144, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [242] = { 51069686, 53, 54, 12, true, false, 24953, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [243] = { 51069687, 53, 55, 12, true, false, 24961, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [292] = { 51069736, 54, 41, 12, true, false, 24850, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [297] = { 51069741, 54, 46, 12, true, false, 24890, 0, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [304] = { 51069748, 54, 53, 12, true, false, 24946, 164, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [305] = { 51069749, 54, 54, 12, true, false, 24954, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [306] = { 51069750, 54, 55, 12, true, false, 24962, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [355] = { 51069799, 55, 41, 12, true, false, 24851, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [360] = { 51069804, 55, 46, 12, true, false, 24891, 12, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [367] = { 51069811, 55, 53, 12, true, false, 24947, 171, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [368] = { 51069812, 55, 54, 12, true, false, 24955, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [369] = { 51069813, 55, 55, 12, true, false, 24963, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [418] = { 51069862, 56, 41, 13, true, false, 24852, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [423] = { 51069867, 56, 46, 13, true, false, 24892, 48, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [430] = { 51069874, 56, 53, 8, true, false, 24948, 169, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [431] = { 51069875, 56, 54, 10, true, false, 24956, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [432] = { 51069876, 56, 55, 10, true, false, 24964, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [481] = { 51069925, 57, 41, 12, true, false, 24853, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [486] = { 51069930, 57, 46, 12, true, false, 24893, 48, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [493] = { 51069937, 57, 53, 12, true, false, 24949, 170, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [494] = { 51069938, 57, 54, 0, true, false, 24957, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [495] = { 51069939, 57, 55, 0, true, false, 24965, 0, 219, 12, 0, 0, 0, false, {  } };
+fixture._cycles [544] = { 51069988, 58, 41, 8, true, false, 24854, 0, 0, 11, 0, 0, 0, false, {  } };
+fixture._cycles [549] = { 51069993, 58, 46, 8, true, false, 24894, 12, 0, 0, 0, 0, 0, false, {  } };
+fixture._cycles [556] = { 51070000, 58, 53, 0, true, false, 24950, 170, 0, 6, 0, 0, 0, false, {  } };
+fixture._cycles [557] = { 51070001, 58, 54, 9, true, false, 24958, 0, 209, 12, 0, 0, 0, false, {  } };
+fixture._cycles [558] = { 51070002, 58, 55, 9, true, false, 24966, 0, 219, 12, 0, 0, 0, false, {  } };

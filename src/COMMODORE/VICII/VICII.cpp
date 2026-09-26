@@ -55,6 +55,7 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _cpuStopWindowSets (),
 	  _currentCPUStopWindows (nullptr), _nextCPUStopWindows (nullptr),
 	  _adjustedCurrentCPUStopWindows (),
+	  _BAPrefetchCycles (_BA_PREFETCH_RESET_VALUE),
 	  _spriteDMAStateMask (0),
 	  _currentSpriteDMAMask (0), _nextSpriteDMAMask (0),
 	  _pendingCPUTransaction (), _pendingCPUStopPrediction (),
@@ -68,7 +69,6 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 	  _badLineCAccessActive (false),
 	  _badLineCAccessStartedFromIdle (false),
 	  _badLineCAccessAllowedThisLine (false),
-	  _badLineInvalidCAccessCycles (0),
 	  _badLineInvalidColorData (MCHEmul::UByte::_0),
 	  _badLineCAccessStartCycle (0),
 	  _lastVBlankEntered (false),
@@ -136,6 +136,7 @@ bool COMMODORE::VICII::initialize ()
 
 	_lastVICDataRead = MCHEmul::UByte::_0;
 	_cpuOpcodeLowNibble = MCHEmul::UByte::_0;
+	_BAPrefetchCycles = _BA_PREFETCH_RESET_VALUE;
 
 	_DENSeenAtLine30 = false;
 	_badLineAlreadyDetectedThisLine = false;
@@ -146,7 +147,6 @@ bool COMMODORE::VICII::initialize ()
 	_badLineCAccessActive = false;
 	_badLineCAccessStartedFromIdle = false;
 	_badLineCAccessAllowedThisLine = false;
-	_badLineInvalidCAccessCycles = 0;
 	_badLineInvalidColorData = MCHEmul::UByte::_0;
 	_badLineCAccessStartCycle = 0;
 
@@ -295,22 +295,16 @@ void COMMODORE::VICII::simulateRasterCycle
 	// their resulting state is visible in the following cycle snapshot.
 	_IFDEBUG debugVICIICycle (cpu, i);
 
-	// Phase 2: evaluate DMA and CPU-bus arbitration.
-	// This includes:
-	// - latching whether DEN has been seen at raster line $30,
-	// - evaluating the current bad-line condition,
-	// - entering display state immediately for an accepted condition, including
-	//   an early condition before cycle 12; only a late transition from idle is
-	//   deferred until its first effective c-access cycle has completed,
-	// - latching a c-access sequence if the condition appears inside
-	//   the c-access start window. Cycle-14 sequences are validated there;
-	//   later sequences are handled as DMA-delay/VSP-like c-access attempts.
+	// Phase 2: evaluate the bad-line condition and decide sprite DMA before
+	// updating the shared BA/AEC state. A CPU register write belonging to this
+	// cycle is applied later and can therefore affect these decisions only in the
+	// following VIC-II cycle.
 	treatBadLineStateAtCurrentCycle ();
 
 	if (_cycleInRasterLine == 55 || _cycleInRasterLine == 56)
 	{
-		// Sprite DMA is decided before BA/RDY arbitration. Sprite 0 data is
-		// fetched at cycle 58, so cycle 55 must already request the BA lead.
+		// Sprite 0 data is fetched at cycle 58, so cycle 55 must already
+		// request the BA lead.
 		treatSpriteDMAStartAtCurrentCycle ();
 
 		const unsigned char spriteStateMask = spriteDMAMask ();
@@ -333,26 +327,26 @@ void COMMODORE::VICII::simulateRasterCycle
 		}
 	}
 
+	// Cycle 14 validates the normal/early c-access interval using the register
+	// state that was already visible at the beginning of this VIC-II cycle.
+	if (_cycleInRasterLine == 14)
+		treatGraphicFetchStartCycle ();
+
+	// The effective merged BA state, regardless of whether a bad line or sprite
+	// DMA owns it, determines whether the current c-access can receive valid data.
+	updateBAPrefetchStateAtCurrentCycle ();
+
 	// A CPU stop prediction is exceptional. Avoid entering the out-of-line
 	// requester during ordinary VIC-II cycles.
 	if (_pendingCPUStopPrediction._stopRequired)
 		requestPredictedCPUStopIfNeeded (cpu, cC);
 
-	// Phase 3: execute VIC-II bus activity and capture pre-write output state.
-	// In shared graphics cycles, the phi1 g-access first consumes the matrix/color
-	// entry prepared previously, advances VC/VLMI and then the phi2 c-access
-	// prepares the following entry. Every access observes the register values
-	// effective before the CPU write of cC.
+	// Phase 3: execute all VIC-II bus activity before applying the CPU register
+	// write of this cycle. In shared graphics cycles, the g-access consumes the
+	// entry prepared previously and the following c-access prepares the next one.
 	treatRasterBusCycle ();
-
-	// On the first effective c-access cycle of a late sequence latched from idle,
-	// phi1 still makes an idle g-access before phi2 performs the c-access. Enter
-	// display state after both phases so the following g-access consumes matrix slot 0.
-	if (_badLineCAccessActive &&
-		_badLineCAccessStartCycle > 14 &&
-		_cycleInRasterLine == firstBadLineCAccessCycle () &&
-		idleStateActive ())
-		enterScreenState ();
+	treatGraphicAccessCycle ();
+	finishBadLineBusCycle ();
 
 	// Cycle 16 can advance MCBASE and terminate DMA after the early sprite
 	// slots have already occurred. Keep the current-line slot mask intact,
@@ -399,8 +393,8 @@ void COMMODORE::VICII::simulateRasterCycle
 		(0, DrawContext::_FIRSTPIXELAFTERCPUWRITE);
 
 	// Phase 4: apply the CPU register write belonging to this absolute cycle.
-	// The VIC-II memory accesses performed in phi1 have therefore observed
-	// the register value that was active at the beginning of cC.
+	// Every VIC-II memory access of cC has therefore observed the register value
+	// that was active at the beginning of the cycle.
 	bool horizontalDisplayZoneChanged = false, registerWriteApplied = false;
 	if (!_pendingRegisterWrites.empty ())
 		registerWriteApplied = executePendingRegisterWriteAt
@@ -492,7 +486,8 @@ MCHEmul::InfoStructure COMMODORE::VICII::getInfoStructure () const
 	result.add ("BadlineCAccessStartedFromIdle",
 		std::string (_badLineCAccessStartedFromIdle ? "YES" : "NO"));
 	result.add ("BadlineCAccessAllowed",		std::string (_badLineCAccessAllowedThisLine ? "YES" : "NO"));
-	result.add ("BadlineInvalidCAccessCycles",	_badLineInvalidCAccessCycles);
+	result.add ("BAPrefetchCycles",				(unsigned int) (_BAPrefetchCycles));
+	result.add ("CAccessDataValid",				std::string (cAccessDataValidAtCurrentCycle () ? "YES" : "NO"));
 	result.add ("BadlineCAccessStartCycle",		_badLineCAccessStartCycle);
 	result.add ("Cycle",						_cycleInRasterLine);
 	result.add ("LastVICDataRead",				_lastVICDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA));
@@ -962,7 +957,7 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 		return;
 
 	// The immutable set remains usable while the condition follows the normal
-	// cycle-12 start. Only a late or aborted sequence needs the reusable copy.
+	// cycle-12 start. Only a late or cancelled interval needs the reusable copy.
 	if ((_badLineConditionActive &&
 		 _cycleInRasterLine < _BADLINE_START_FIRST_CYCLE) ||
 		(_badLineCAccessActive &&
@@ -973,15 +968,13 @@ void COMMODORE::VICII::actualizeCPUStopWindowsAfterBadLineChange ()
 	{
 		_adjustedCurrentCPUStopWindows = *noBadLineWindows;
 
-		// Once a c-access sequence has started, clearing the instantaneous Bad
-		// Line Condition does not retroactively release its already committed BA
-		// interval. An aborted cycle-12/13 sequence is cleared at cycle 14 by the
-		// existing graphics-fetch state machine and therefore adds no interval.
-		//
-		// A sequence latched after cycle 14 starts its BA lead in the recognition
+		// The bad-line contribution exists only while the instantaneous Bad Line
+		// Condition remains active. A later rising edge starts a new BA interval;
+		// sprite DMA can nevertheless keep the merged BA signal continuously low.
+		// An interval started after cycle 14 begins its BA lead in the recognition
 		// cycle. Its first attempted c-access occurs there if display is active, or
-		// in the following cycle if the sequence starts from idle. AEC always becomes
-		// effective three cycles after BA, preserving the complete warning interval.
+		// after the idle g-access in the same cycle if the interval starts from idle.
+		// AEC becomes effective three cycles after BA, preserving the warning interval.
 		if (_badLineCAccessActive && firstBACycle != 0 &&
 			firstBACycle <= _BADLINE_START_LAST_CYCLE)
 		{
@@ -1278,16 +1271,8 @@ void COMMODORE::VICII::treatRasterBusCycle ()
 
 			break;
 
-		// In raster cycle 14 the graphics information moves...
-		case 14:
-			{
-				treatGraphicFetchStartCycle ();
-			}
-
-			break;
-
 		// Sprite MCBASE is advanced in two steps. The graphic c/g access for
-		// these cycles is still handled later by treatGraphicAccessCycle().
+		// these cycles is coordinated separately by simulateRasterCycle().
 		case 15:
 			{
 				treatSpriteCounterCycle15 ();
@@ -1318,8 +1303,6 @@ void COMMODORE::VICII::treatRasterBusCycle ()
 		default:
 			break;
 	}
-
-	treatGraphicAccessCycle ();
 }
 
 // ---
@@ -1447,7 +1430,7 @@ void COMMODORE::VICII::drawOutputStateLine
 	assert (p >= (size_t) dC._RCA && (p + n) <= ((size_t) dC._RCA + 8));
 
 	const size_t transitionPosition =
-		(size_t) dC._RCA + DrawContext::_FIRSTPIXELAFTERCPUWRITE;
+		(size_t) dC._RCA + dC.firstOutputPixelAfterCPUWrite ();
 
 	// Most cycles have no visual write and retain the previous single call.
 	if (!dC.outputChangesDuringSlice () || p + n <= transitionPosition)
@@ -1489,12 +1472,12 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions
 	COMMODORE::VICII::DrawResult colGraphics;
 	const bool outputTransition = dC.outputChangesDuringSlice ();
 	const size_t firstLimit = outputTransition
-		? DrawContext::_FIRSTPIXELAFTERCPUWRITE : 8;
+		? dC.firstOutputPixelAfterCPUWrite () : 8;
 
 	drawGraphics (dC, dC._beforeCPUWrite, 0, firstLimit, colGraphics);
 	if (outputTransition)
-		drawGraphics (dC, dC._afterCPUWrite,
-			DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8, colGraphics);
+		drawGraphics
+			(dC, dC._afterCPUWrite, firstLimit, 8, colGraphics);
 
 	// The info about the sprites is moved into this variable too...
 	MCHEmul::UByte sCF = MCHEmul::UByte::_0; // to know whether there were at least one sprite drawn!
@@ -1523,8 +1506,8 @@ void COMMODORE::VICII::drawGraphicsSpritesAndDetectCollisions
 	{
 		drawResultToScreen (colGraphics, dC, dC._beforeCPUWrite, 0, firstLimit);
 		if (outputTransition)
-			drawResultToScreen (colGraphics, dC, dC._afterCPUWrite,
-				DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8);
+			drawResultToScreen
+				(colGraphics, dC, dC._afterCPUWrite, firstLimit, 8);
 	}
 
 	// ...and the collisions are also detected...
@@ -1629,7 +1612,7 @@ void COMMODORE::VICII::advanceGraphicOutputForHiddenSlice
 {
 	const bool outputTransition = dC.outputChangesDuringSlice ();
 	const size_t firstLimit = outputTransition
-		? DrawContext::_FIRSTPIXELAFTERCPUWRITE : 8;
+		? dC.firstOutputPixelAfterCPUWrite () : 8;
 
 	// Keep the same deep-debug information produced by the complete path.
 	_IFDEBUG debugDrawPixelAt
@@ -1648,10 +1631,9 @@ void COMMODORE::VICII::advanceGraphicOutputForHiddenSlice
 
 	_IFDEBUG debugDrawPixelAt
 		(dC._RCA, (int) dC._RCA - (int) dC._ICD,
-		 dC._afterCPUWrite._horizontalScroll,
-		 DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8);
+		 dC._afterCPUWrite._horizontalScroll, firstLimit, 8);
 
-	for (size_t i = DrawContext::_FIRSTPIXELAFTERCPUWRITE; i < 8; i++)
+	for (size_t i = firstLimit; i < 8; i++)
 	{
 		prepareGraphicOutputPixel
 			(dC._afterCPUWrite._horizontalScroll, i);
@@ -1903,7 +1885,7 @@ MCHEmul::UByte COMMODORE::VICII::drawSpriteOver
 
 	const bool outputTransition = dC.outputChangesDuringSlice ();
 	const size_t firstLimit = outputTransition
-		? DrawContext::_FIRSTPIXELAFTERCPUWRITE : 8;
+		? dC.firstOutputPixelAfterCPUWrite () : 8;
 	const unsigned short column = _raster.currentColumn (), row = _vicGraphicInfo._ROW;
 
 	if (((dC._beforeCPUWrite._spriteMulticolorMask >> spr) & 0x01) != 0)
@@ -1917,10 +1899,10 @@ MCHEmul::UByte COMMODORE::VICII::drawSpriteOver
 	{
 		if (((dC._afterCPUWrite._spriteMulticolorMask >> spr) & 0x01) != 0)
 			drawMultiColorSpriteOver (column, row, spr, dC._afterCPUWrite,
-				DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8, d, dO, result);
+				firstLimit, 8, d, dO, result);
 		else
 			drawMonoColorSpriteOver (column, row, spr, dC._afterCPUWrite,
-				DrawContext::_FIRSTPIXELAFTERCPUWRITE, 8, d, dO, result);
+				firstLimit, 8, d, dO, result);
 	}
 
 	return (result);
@@ -2639,12 +2621,15 @@ void COMMODORE::VICII::debugVICIICycle
 			"BadlineCAccessStartedFromIdle=" +
 				std::to_string (_badLineCAccessStartedFromIdle) + "," +
 			"BadlineCAccessAllowed=" + std::to_string (_badLineCAccessAllowedThisLine) + "," +
-			"BadlineInvalidCAccessCycles=" + std::to_string (_badLineInvalidCAccessCycles) + "," +
 			"BadlineCAccessStartCycle=" + std::to_string (_badLineCAccessStartCycle) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
 		  { "CPU bus ownership",
 			"BALow=" + std::to_string (baLow) + "," +
 			"AECLow=" + std::to_string (aecLow) + "," +
+			"BAPrefetchCycles=" +
+				std::to_string ((unsigned int) (_BAPrefetchCycles)) + "," +
+			"CAccessDataValid=" +
+				std::to_string (cAccessDataValidAtCurrentCycle ()) + "," +
 			activeWindowData + "," +
 			"CurrentWindows=" +
 				std::to_string (_currentCPUStopWindows -> size ()) + "," +

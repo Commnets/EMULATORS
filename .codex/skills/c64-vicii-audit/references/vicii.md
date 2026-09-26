@@ -64,6 +64,8 @@ A badline condition exists when, at the relevant cycle boundary:
 
 Badlines are not simply "every eighth line"; mid-frame writes to $D011 can create or suppress them. Correct emulation must model the condition at cycle granularity for FLD, FLI, linecrunch, and VSP-style effects.
 
+In the EMULATORS recovered-cycle pipeline, all VIC-II bus activity assigned to absolute cycle N observes the register state present at the beginning of that cycle. A CPU write to $D011 recorded in cycle N occurs after badline evaluation, BA calculation, and the g/c memory accesses of N, so it can change those decisions only from VIC-II cycle N+1. Pixel and border comparators may have their own sub-cycle output alignment; never use that output phase to move badline or memory-bus activity across the CPU write.
+
 Important consequences:
 
 - At cycle 14, VC is loaded from VCBASE; if the badline condition is present there, RC resets to 0.
