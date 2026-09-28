@@ -257,9 +257,55 @@ Prefer this order when creating a class:
 5. `getInfoStructure () const` for `InfoClass` derivatives.
 6. `protected:` hooks and helpers.
 7. `private:` implementation helpers.
-8. Data members, with short Doxygen comments where helpful.
+8. Debug methods (`private` by default, `protected` when called from derived classes), grouped last among method declarations between two `//-----` comment lines.
+9. Data members, with short Doxygen comments where helpful.
 
 Use `final` for closed concrete classes. Use `virtual ... override` when overriding. Delete default construction, copy, assignment, or move operations when the existing ownership/lifecycle pattern requires it.
+
+## Conceptual Method Groups And Debug Placement
+
+Keep every conceptual group of methods together. Within the class declaration in the `.hpp`, consecutive method declarations and short in-class definitions belonging to the same group have no blank lines between them. Method documentation may remain directly attached to its declaration without introducing blank lines inside the group. Use one blank line between different conceptual groups.
+
+This compact layout applies to declarations and in-class definitions only. Out-of-class implementations retain a blank line between methods, both for `inline` implementations in the header and for implementations in the `.cpp`; keep the normal `// ---` method separators.
+
+Debug methods are `private` by default. Declare a debug method `protected` when a derived class needs to invoke it; do not make it `public`. When the group contains both access levels, use explicit access labels inside the same `//-----` block and keep methods with the same access level together. Put all their declarations together as the final method group of the class, before the data members. Put all their implementations together after the other implementations of that same class, preserving declaration order. This means the end of that class's methods, not necessarily the end of a file containing several classes.
+
+Enclose the debug group with an opening and a closing comment line written exactly as `//-----`, both in the header declaration group and around its implementations. Use no blank lines between the debug declarations; retain the usual spacing between their implementations.
+
+```cpp
+	public:
+	bool active () const
+							{ return (_active); }
+	void setActive (bool a)
+							{ _active = a; }
+
+	private:
+	//-----
+	void debugCycle (MCHEmul::CPU* cpu);
+	/** Reports a port read without consuming event flags. */
+	void debugPortRead (unsigned short address) const;
+	//-----
+
+	bool _active;
+```
+
+Implementation layout (bodies omitted in this placement example):
+
+```cpp
+//-----
+// ---
+void Example::debugCycle (MCHEmul::CPU* cpu)
+{
+	// Diagnostic implementation.
+}
+
+// ---
+void Example::debugPortRead (unsigned short address) const
+{
+	// Diagnostic implementation.
+}
+//-----
+```
 
 ## Method Definition Order
 

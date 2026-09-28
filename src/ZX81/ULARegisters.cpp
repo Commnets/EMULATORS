@@ -4,6 +4,7 @@
 ZX81::ULARegisters::ULARegisters (ZX81::Type t)
 	: MCHEmul::InfoClass ("ULARegisters"),
 	  _type (t),
+	  _NTSC (false), // The right ULA constructor later will assign the right value...
 	  _MICSignalChanged (false), // It is an OBool...
 	  _EARSignalChanged (false), // It is an OBool...
 	  _INTack (false), _INTackClock (0),
@@ -40,7 +41,9 @@ void ZX81::ULARegisters::initializeInternalValues ()
 {
 	_NMIGenerator = false;
 
-	_NTSC = false;
+	// Notice that _NTSC is not initialized back here 
+	// As this method is invoked from initialize (when e.g. the computer is reset)
+	// It must kept the value that was assigned during contruction always...
 
 	_inVSync = true;
 	_syncOutputWhite = true;

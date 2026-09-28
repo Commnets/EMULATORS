@@ -23,6 +23,7 @@
 namespace ZX81
 {
 	class MemoryVideoCode;
+	class PortManager;
 
 	/** 
 		The chip that takes care of anything around the graphics in ZX81. \n
@@ -115,6 +116,7 @@ namespace ZX81
 	{
 		public:
 		friend MemoryVideoCode;
+		friend PortManager;
 
 		static const unsigned int _ID = 210;
 
@@ -211,12 +213,23 @@ namespace ZX81
 			This is the way the ULA builds up where the info to load is. */
 		bool readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt);
 
+		private:
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugULACycle (MCHEmul::CPU* cpu, unsigned int i);
+		/** Logs the returned port value and the state after the read. \n
+			The timestamp is the last CPU cycle processed by the ULA. \n
+			It is not the exact I/O sampling cycle. */
+		void debugPortRead (unsigned short ab, unsigned char id,
+			const MCHEmul::UByte& v, bool ms) const;
+		/** Reports both causes and the actual counter transition. \n
+			CPU registers describe the available simulation context. */
+		void debugLineAdvance (MCHEmul::CPU* cpu, unsigned int i,
+			bool eH, bool rE, unsigned short hB, unsigned short vB,
+			unsigned char lB) const;
 		// -----
 
 		protected:

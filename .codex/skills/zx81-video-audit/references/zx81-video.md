@@ -124,3 +124,18 @@ Pseudo-hi-res relies on manipulating line-counter/INT behavior. True hi-res soft
 - ZX81 ROM archive, [unimproved versus improved differences](https://k1.spdns.de/Vintage/Sinclair/80/Sinclair%20ZX81/ROMs/zx81%20version%202%20%27improved%27%20rom%20differences.htm)
 
 Use Internet sources as research aids, not as copied content. Record the access date when adding new facts to this reference.
+## Port FE Readback and Regression Checks
+
+Verified 2026-09-26; bit numbering is D0 through D7.
+
+- D0-D4: keyboard columns, active low.
+- D5: unused, normally read as 1.
+- D6: television-standard selection, 1 for 50 Hz and 0 for 60 Hz.
+- D7: cassette input. Do not describe it as a dedicated readable VSYNC-status bit. Reading the port can change sync state as a side effect; that is distinct from its returned data bits.
+- Do not import the ZX Spectrum EAR-on-D6 mapping into ZX80/ZX81.
+
+Evidence: [Andy Rea's ZX81 ULA replacement](https://oldcomputer.info/8bit/zx81/ULA/ula.htm), section "Port $FE input group", explicitly maps tape input to bit 7 and UK/US selection to bit 6. [Sinclair ZX specifications](https://k1.spdns.de/Develop/Projects/zxsp/Info/nocash%20Sinclair%20ZX%20Specs.html), section "ZX80/ZX81 I/O Ports", gives the same readback map for both machines.
+
+Independent firmware check in the repository images: `emulators/ZX81Commons/bios/zx80.rom` at 0x0232 and `zx81_3.rom` at 0x038B contain `DB FE 17` (`IN A,(FE); RLA`) in their cassette sampling loops, followed by carry-dependent control flow. RLA transfers the original D7 into carry. These addresses are evidence for those inspected images, not invariants for every ROM revision.
+
+When moving EAR from an incorrect D6 assignment to D7, check the whole returned byte: this also stops overwriting the configured D6 standard selection. Compare ROM control flow and video timing before and after. A missing cursor alone does not establish whether execution stopped, video generation failed, or the output was cropped. Do not prescribe a fixed crop shift from the ROM margin difference alone: establish actual output positions and line events first, and label any exploratory crop change as diagnostic rather than a proven repair.

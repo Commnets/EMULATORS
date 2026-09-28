@@ -101,11 +101,18 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 
 		// Any read to the port FE put the MIC signal low...
 		_ULARegisters -> setMICSignal (false);
+
+		// Fix the signal used to define whether 
+		// it is a PAL (1 = 50Hz refresh) or a NTSC (0 = 60Hz refresh) system...
+		result.setBit (6, !_ULARegisters -> NTSC ());
 		// ...and gets the status of the EAR signal in the bit 6!
-		result.setBit (6, _ULARegisters -> EARSignal ());
+		result.setBit (7, _ULARegisters -> EARSignal ());
 	}
 	else
 		result = _ULA -> lastVRAMByteRead ();
+
+	_IFDEBUGINELEMENT (_ULA)
+		_ULA -> debugPortRead (ab, id, result, ms);
 
 	return (result);
 }

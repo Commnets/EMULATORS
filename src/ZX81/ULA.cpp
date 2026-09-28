@@ -67,12 +67,13 @@
 	After all being said, the only behaviour that could be use is the second one. */
 /** 32 lines border up/down/left/right by default in both PAL & NTSC. */
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
-	(0, 22 /** +22 starts visible. */, 22 /** = starts screen. */, 245 /** +16+192+16 (24 char lines * 8) end screen. */,
-	 245 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
+	(0, 46 /** 30 + 16 starts visible. */, 46 /** = starts screen. */, 269 /** +16+192+16 (24 char lines * 8) end screen. */,
+	 269 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
 	(0, 125 /** +128 starts visible. */, 125 /** = starts screen, */, 413 /** +19+256+14 (32 chars * 8) end screen. */,
 	 413 /** = end visible part. */, 413 /** = retrace. */, 413 /** = end. */, 414 /** total. */, 0, 0);
-const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 15, 15, 246, 246, 261, 261, 262, 0, 0);
+// const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 15, 15, 246, 246, 261, 261, 262, 0, 0);
+const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 22, 22, 245, 245, 261, 261, 262, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 125, 125, 413, 413, 413, 413, 414, 0, 0);
 
 // ---
@@ -193,14 +194,24 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		// The HSYNC signal can come from outside the ULA (from the INTack signal) or
 		// from the internal raster data (when the NMI interrupts are active) at the end of the line.
 		bool eH = _ULARegisters -> INTack (_lastCPUCycles + (i >> 1));
-		if (_raster.hData ().add (1) || eH)
+		// Preserve the horizontal position before add() can wrap it.
+		unsigned short hB = _raster.hData ().currentPositionAtBase0 ();
+		bool rE = _raster.hData ().add (1);
+		if (rE || eH)
 		{
+			// Before taking actions...
+			unsigned short vB = _raster.vData ().currentPositionAtBase0 ();
+			unsigned char lB = _ULARegisters -> LINECNTRL ();
+
 			// the HSYNC happens...
 			_raster.vData ().add (1);
 			// ..and just in case horizontal raster is set back to 0...
 			_raster.hData ().initialize ();
 			// ...the LINECTRL register is incremented...
 			_ULARegisters -> incLINECTRL ();
+
+			_IFDEBUG debugLineAdvance (cpu, i, eH, rE, hB, vB, lB);
+
 			// If the change of line was because of the external HSYNC signal,
 			// the raster line has to be completed...
 			if (eH && iV && (x + 1) < _raster.visibleColumns ())
@@ -382,6 +393,79 @@ void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 			"NMI=" + std::string ((_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF")) + "," +
 			"ZONE=" + std::string ((_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK")) + "," + 
 			"LNCTRL=" +	std::to_string (_ULARegisters -> LINECNTRL ()) } });
+}
+
+// ---
+void ZX81::ULA::debugPortRead (unsigned short ab, unsigned char id,
+	const MCHEmul::UByte& v, bool ms) const
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), _lastCPUCycles, "Port Read",
+		{ { "Raster position",
+			"Column=" + std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+			"Row=" + std::to_string (_raster.currentLineAtBase0 ()) },
+		  { "Port",
+			"Access=" + std::string (ms ? "READ" : "PEEK") + "," +
+			"Address=" + std::to_string (ab) + "," +
+			"ID=" + std::to_string (id) + "," +
+			"Data=" + std::to_string (v.value ()) + "," +
+			"D6=" + std::to_string (v.bit (6)) + "," +
+			"D7=" + std::to_string (v.bit (7)) },
+		  { "Internal status",
+			"NTSC=" + std::to_string (_ULARegisters -> NTSC ()) + "," +
+			"EAR=" + std::to_string (_ULARegisters -> EARSignal ()) + "," +
+			"MIC=" + std::to_string (_ULARegisters -> MICSignal ()) + "," +
+			"VSYNC=" + std::to_string (_ULARegisters -> inVSync ()) + "," +
+			"LNCTRL=" + std::to_string (_ULARegisters -> LINECNTRL ()) + "," +
+			"LNBlocked=" + std::to_string (_ULARegisters -> LINECTRLBlocked ()) },
+		  { "Timing",
+			"Reference=LastULASimulatedCPUClock,State=AfterRead" } });
+}
+
+// ---
+void ZX81::ULA::debugLineAdvance (MCHEmul::CPU* cpu, unsigned int i,
+	bool eH, bool rE, unsigned short hB, unsigned short vB,
+	unsigned char lB) const
+{
+	assert (_deepDebugFile != nullptr);
+
+	const FZ80::CZ80* z80 = static_cast <const FZ80::CZ80*> (cpu);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), _lastCPUCycles + (i >> 1), "Line Advance",
+		{ { "Raster position",
+			"HBefore=" + std::to_string (hB) + "," +
+			"VBefore=" + std::to_string (vB) + "," +
+			"HAfter=" + std::to_string
+				(_raster.hData ().currentPositionAtBase0 ()) + "," +
+			"VAfter=" + std::to_string
+				(_raster.vData ().currentPositionAtBase0 ()) },
+		  { "Cause",
+			"ExternalSync=" + std::to_string (eH) + "," +
+			"RasterEnd=" + std::to_string (rE) + "," +
+			"INTackClock=" + (eH
+				? std::to_string (_ULARegisters -> INTackClock ())
+				: std::string ("NA")) },
+		  { "Internal status",
+			"Model=" + std::to_string (static_cast <int> (_type)) + "," +
+			"LNBefore=" + std::to_string (lB) + "," +
+			"LNAfter=" + std::to_string (_ULARegisters -> LINECNTRL ()) + "," +
+			"LNBlocked=" + std::to_string (_ULARegisters -> LINECTRLBlocked ()) + "," +
+			"VSYNC=" + std::to_string (_ULARegisters -> inVSync ()) + "," +
+			"NMIGenerator=" + std::to_string (_ULARegisters -> NMIGenerator ()) },
+		  { "CPU context",
+			"PC=" + std::to_string
+				(cpu -> programCounter ().internalRepresentation ()) + "," +
+			"I=" + std::to_string (z80 -> iRegister ().values () [0].value ()) + "," +
+			"R=" + std::to_string (z80 -> rRegister ().values () [0].value ()) + "," +
+			"HALT=" + std::to_string (z80 -> haltActive ()) + "," +
+			"IFF1=" + std::to_string (z80 -> IFF1 ()) },
+		  { "Timing",
+			"PixelPhase=" + std::to_string (i & 1) + "," +
+			"CPUClock=" + std::to_string (cpu -> clockCycles ()) + "," +
+			"State=AfterLineAdvance,CPUState=SimulationContext" } });
 }
 
 // ---

@@ -5,14 +5,102 @@
   "output": "docs/ZX81Data/ZX80_ZX81_DEBUG_File_Format.docx",
   "models": "ZX80 and the PAL/NTSC ZX81 variants supported by the ZX81 executable.",
   "cpu": "Zilog Z80.",
-  "components": [["210","ULA","Raster, NMI generator, sync zone, and line counter"],["100/101","Datasette","Tape port and load simulation"],["102","Thermal printer","Simulated printing trap"],["Memory","ZX80/ZX81 map","Applied Set for selected subsets"]],
-  "records": [
-    {"name":"ULA — Info Cycle","producer":"src/ZX81/ULA.cpp :: debugULACycle","fields":"Raster position (zero-based column and line); Internal status: NMI=NMI_ON|NMI_OFF, ZONE=WHITE|BLACK, and LNCTRL.","timing":"_lastCPUCycles + (i >> 1). Two internal positions correspond to one CPU cycle.","events":"The snapshot method adds no event line."},
-    {"name":"ZX81DN — Datasette trap executed","producer":"src/ZX81/Datasette.cpp :: debugSimulation","fields":"ZX81DN header, CPU cycle, and the literal Datasette trap executed.","timing":"Emitted when tape-routine simulation is applied.","events":"Contains no additional attributes."},
-    {"name":"ZX81PRT — Printer trap executed","producer":"src/ZX81/StdPrinter.cpp :: debugSimulation","fields":"ZX81PRT header, CPU cycle, and the literal Printer trap executed.","timing":"Emitted when the printer routine is intercepted.","events":"The device manages printed content; this header confirms the trap."}
+  "components": [
+    [
+      "210",
+      "ULA",
+      "Raster, sync, line counter, video shift register, and port read results"
+    ],
+    [
+      "100/101",
+      "Datasette",
+      "Tape port and load simulation"
+    ],
+    [
+      "102",
+      "Thermal printer",
+      "Simulated printing trap"
+    ],
+    [
+      "Memory",
+      "ZX80/ZX81 map",
+      "Applied Set for selected subsets"
+    ]
   ],
-  "example": ["CPU     12000       Info Cycle","                    Last 4 cycles","                    PC:$02a0(Stack 255) HALT","ULA     12000       Info Cycle","                    Raster position     :180,64","                    Internal status     :NMI=NMI_ON,ZONE=WHITE,LNCTRL=3","ZX81DN  12004       Datasette trap executed","+"],
-  "example_note": "Schematic example based on the current producers; values are illustrative.",
-  "limitations": ["ZX80 and ZX81 share one document because the executable and ULA class parameterise the type.","The ULA derives its cycle from _lastCPUCycles and i>>1; it must not be replaced with cpu.clockCycles()-i.","A tape or printer trap describes firmware simulation, not an electrical signal."],
-  "watched_sources": ["src/ZX81/ZX81.cpp","src/ZX81/ULA.cpp","src/ZX81/Datasette.cpp","src/ZX81/StdPrinter.cpp"]
+  "records": [
+    {
+      "name": "ULA — Info Cycle",
+      "producer": "src/ZX81/ULA.cpp :: debugULACycle",
+      "fields": "Raster position: zero-based column and line. Internal status: NMI=NMI_ON|NMI_OFF, ZONE=WHITE|BLACK, LNCTRL (0-7), LNBlocked and VSYNC (0/1). Video shift: Original and Current (decimal bytes), Inverse (0/1). Timing: PixelPhase (0/1), CPUClock (CPU T-states), State=BeforePixel.",
+      "timing": "_lastCPUCycles + (i >> 1). PixelPhase distinguishes the two pixels per CPU T-state. The snapshot precedes pixel shifting and raster advance. CPUClock is the CPU execution endpoint while the ULA processes pending cycles; it is not a per-pixel CPU snapshot.",
+      "events": "The snapshot method adds no event line."
+    },
+    {
+      "name": "ULA — Port Read",
+      "producer": "src/ZX81/ULA.cpp :: debugPortRead, called by src/ZX81/PortManager.cpp :: getValue",
+      "fields": "Raster position: Column and Row (zero-based). Port: Access=READ|PEEK, Address (full 16-bit address), ID (port selector), Data (returned byte), D6 and D7. Internal status: NTSC, EAR, MIC, VSYNC, LNCTRL and LNBlocked. Timing: Reference=LastULASimulatedCPUClock, State=AfterRead. All numbers are decimal; flags are 0/1.",
+      "timing": "Emitted at the end of every getValue call, including odd ports and PEEK, only when ULA deep debug is active. Header time is _lastCPUCycles: the last CPU cycle processed by the ULA, not the exact I/O sample time. State is observed after the read side effects.",
+      "events": "For even ports D6 preserves the regional selection and D7 carries EAR. With no keys pressed, PAL returns 127 or 255 for EAR=0 or 1; NTSC returns 63 or 191. Odd-port data comes from lastVRAMByteRead and has no such bit interpretation. PEEK identifies monitor inspection and must not be counted as an executed IN instruction."
+    },
+    {
+      "name": "ULA — Line Advance",
+      "producer": "src/ZX81/ULA.cpp :: debugLineAdvance, called by ULA::simulate",
+      "fields": "Raster position: HBefore, VBefore, HAfter, VAfter (zero-based). Cause: ExternalSync (eH), RasterEnd (horizontal add result), INTackClock (CPU cycle when eH=1, otherwise NA). Internal status: Model (0=ZX80, 1=ZX811, 2=ZX812, 3=ZX813), LNBefore, LNAfter, LNBlocked, VSYNC, NMIGenerator. CPU context: PC, I, R, HALT, IFF1. Timing: PixelPhase, CPUClock, State=AfterLineAdvance, CPUState=SimulationContext. All numeric values, including PC, are decimal; flags are 0/1.",
+      "timing": "Emitted only with ULA deep debug active, once per line-advance block when eH or RasterEnd is true. Header cycle is _lastCPUCycles + (i >> 1); PixelPhase is i & 1. HBefore precedes horizontal add(1); VBefore and LNBefore precede counter updates. Emission follows incLINECTRL, before screen filling and any NMI request. CPUClock and registers are the available CPU execution context, not reconstructed historical state at that pixel.",
+      "events": "Both cause flags are independent: 1/1 means coincidence in the same pixel iteration. A RasterEnd-only record followed shortly by an ExternalSync-only record demonstrates two separate raster advances; compare LNBefore/LNAfter to determine whether the character counter also advanced twice. ExternalSync is the existing modeled INTack event, not proof of a physical HSYNC. INTack() and horizontal add(1) are each evaluated once; logging neither consumes nor recreates them."
+    },
+    {
+      "name": "ZX81DN — Datasette trap executed",
+      "producer": "src/ZX81/Datasette.cpp :: debugSimulation",
+      "fields": "ZX81DN header, CPU cycle, and the literal Datasette trap executed.",
+      "timing": "Emitted when tape-routine simulation is applied.",
+      "events": "Contains no additional attributes."
+    },
+    {
+      "name": "ZX81PRT — Printer trap executed",
+      "producer": "src/ZX81/StdPrinter.cpp :: debugSimulation",
+      "fields": "ZX81PRT header, CPU cycle, and the literal Printer trap executed.",
+      "timing": "Emitted when the printer routine is intercepted.",
+      "events": "The device manages printed content; this header confirms the trap."
+    }
+  ],
+  "example": [
+    "ULA     12000       Port Read",
+    "                    Raster position     :Column=0,Row=0",
+    "                    Port                :Access=READ,Address=32766,ID=254,Data=127,D6=1,D7=0",
+    "                    Internal status     :NTSC=0,EAR=0,MIC=0,VSYNC=1,LNCTRL=0,LNBlocked=1",
+    "                    Timing              :Reference=LastULASimulatedCPUClock,State=AfterRead",
+    "ULA     12000       Info Cycle",
+    "                    Raster position     :0,0",
+    "                    Internal status     :NMI=NMI_OFF,ZONE=BLACK,LNCTRL=0,LNBlocked=1,VSYNC=1",
+    "                    Video shift         :Original=0,Current=0,Inverse=0",
+    "                    Timing              :PixelPhase=0,CPUClock=12011,State=BeforePixel",
+    "+",
+    "ULA     12207       Line Advance",
+    "                    Raster position     :HBefore=413,VBefore=100,HAfter=0,VAfter=101",
+    "                    Cause               :ExternalSync=0,RasterEnd=1,INTackClock=NA",
+    "                    Internal status     :Model=0,LNBefore=3,LNAfter=4,LNBlocked=0,VSYNC=0,NMIGenerator=0",
+    "                    CPU context         :PC=49152,I=14,R=127,HALT=1,IFF1=1",
+    "                    Timing              :PixelPhase=1,CPUClock=12208,State=AfterLineAdvance,CPUState=SimulationContext",
+    "+"
+  ],
+  "example_note": "Schematic independent examples based on current producers; values are illustrative, not a captured execution trace.",
+  "limitations": [
+    "ZX80 and ZX81 share one document because the executable and ULA class parameterise the type.",
+    "The ULA derives its cycle from _lastCPUCycles and i>>1; it must not be replaced with cpu.clockCycles()-i.",
+    "A tape or printer trap describes firmware simulation, not an electrical signal.",
+    "Port Read timestamps cannot measure exact I/O or VSYNC pulse widths. The record shows post-read state and cannot reconstruct the raster before an IN reset.",
+    "A zero Current shift byte does not prove that all eight pixels have shifted out. These fields do not identify rejected character loads or actual INT acknowledgement.",
+    "PEEK currently still has side effects in PortManager, including MIC updates. Logging reports existing behavior without changing it. Debug methods use non-consuming state getters.",
+    "Line Advance establishes modeled causes and actual counter changes, but does not by itself prove a visual defect or the electrical timing of HSYNC. Correlate events with the image and distinguish CPU execution context from the ULA pixel timestamp."
+  ],
+  "watched_sources": [
+    "src/ZX81/ZX81.cpp",
+    "src/ZX81/ULA.cpp",
+    "src/ZX81/Datasette.cpp",
+    "src/ZX81/StdPrinter.cpp",
+    "src/ZX81/PortManager.cpp",
+    "include/ZX81/ULA.hpp",
+    "include/ZX81/ULARegisters.hpp"
+  ]
 }
