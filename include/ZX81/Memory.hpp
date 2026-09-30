@@ -27,8 +27,9 @@ namespace ZX81
 	  * The location D_FILE with the bit 7 on is where the CPU "executes" the video info.
 	  * D_FILE is usually at some position in the range 0x4000 - onwards.
 	  * This class is to mirror from C000 - onwards that previous position, 
-	  * but returning "0" (= NOP) always the bit 6 of the operation is not set.
-	  * When it is set the normal opcode is returned.
+	  * During an opcode FETCH, it returns "0" (= NOP) when bit 6 is clear.
+	  * Operand, data and inspection reads preserve the original byte.
+	  * Opcodes with bit 6 set are also returned unchanged.
 	  * This mirror class will be only visible from the CPU. */
 	class MemoryVideoCode final : public MCHEmul::MirrorPhysicalStorageSubset
 	{

@@ -405,8 +405,10 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 	if (c -> lastInstruction () != nullptr)
 		_lastExecutionData = c -> lastInstruction () -> lastExecutionData ();
 
-	MCHEmul::Instruction* sI = 
-		const_cast <MCHEmul::Instruction*> (selectInstruction (m, pc -> asAddress ())); // To select the instruction...
+	// Execution may require a fetch-qualified read; inspection uses selectInstruction.
+	MCHEmul::Instruction* sI =
+		const_cast <MCHEmul::Instruction*>
+			(selectInstructionForExecution (c, m, pc -> asAddress ()));
 	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))
 		_lastExecutionData = (_lastInstruction = sI) -> lastExecutionData (); // Not std::move because info can be used in other levels...
 

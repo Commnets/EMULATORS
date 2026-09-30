@@ -451,6 +451,8 @@ Keep the intermediate when it avoids recalculating a non-trivial operation, is u
 
 ## Error Handling And Validation
 
+- Do not use exception-based control flow in EMULATORS C++ proposals or implementations: no `try`, `catch`, or `throw`. Follow the existing return-value and error-state conventions. For temporary modes such as opcode FETCH, save the previous value, perform the operation, and restore the saved value before returning; cover any early-return paths and explain the required scope in a comment.
+
 - Use `assert` at meaningful contract boundaries and for invariants whose violation would otherwise permit unsafe indexing, invalid ownership, corruption, or an impossible hardware/framework state.
 - Do not repeat with an `assert` a relational guarantee already established by the caller, constructor, type, selected container element, or immediately preceding control flow. Avoid routine checks such as `a >= b` immediately before a trusted internal `a - b`, or checking an alternative index derived from a class invariant on every hot-path invocation. State the invariant in a concise nearby comment instead.
 - Do not introduce local variables solely to make such redundant assertions possible. Prefer the direct expression when it is used once.

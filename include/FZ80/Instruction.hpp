@@ -346,8 +346,10 @@ namespace FZ80
 		virtual bool execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 			MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc) final override;
 	
+		/** Uses the selected instruction rather than decoding the parameter buffer again. \n
+			The original opcode byte can differ from the byte supplied during FETCH. */
 		virtual std::string asString () const override
-							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [1].value ())] -> asString ()); }
+							{ return (MCHEmul::InstructionUndefined::asString ()); }
 
 		private:
 		virtual const MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
@@ -355,6 +357,13 @@ namespace FZ80
 							{ // The code is given by the second byte next to program counter in the memory...
 							  return (_rawInstructions
 								[(size_t) m -> value (addr.next (1)).value ()]); }
+		/** The byte following this prefix is read in another Z80 M1 cycle. \n
+			Quite similar than the previous one, but putting the CPU in fetch. */
+		virtual const MCHEmul::Instruction* selectInstructionForExecution
+			(MCHEmul::CPU* c, MCHEmul::Memory* m,
+			 const MCHEmul::Address& addr) const override
+							{ return (_rawInstructions
+								[(size_t) c -> fetchInstructionCodeAt (m, addr.next (1))]); }
 	};
 
 	/** Instruction code in the fourth byte in memory next to program counter location. 
@@ -373,9 +382,10 @@ namespace FZ80
 							{ return (_rawInstructions [size_t (_lastExecutionData._parameters [3].value ())] -> asString ()); }
 
 		private:
+		// In DD/FD CB d op, the final opcode is an ordinary memory read, not M1.
 		virtual MCHEmul::Instruction* selectInstruction (MCHEmul::Memory* m, 
 			const MCHEmul::Address& addr) const override
-							{ // The code is given by the second byte next to program counter in the memory...
+							{ // The code is given by the fourth byte next to program counter in the memory...
 							  return (_rawInstructions
 								[(size_t) m -> value (addr.next (3)).value ()]); }
 	};

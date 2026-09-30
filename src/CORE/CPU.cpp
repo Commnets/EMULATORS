@@ -70,6 +70,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
+	  _fetchingInstructionCode (false),
 	  _debugLimitsInit (a.numberBytes (), 0), _debugLimitsEnd (a.longestAddressPossible ()), // To debug...
 	  _error (_NOERROR),
 	  // Only when executing a instruction/interrupt per cycle...
@@ -191,6 +192,7 @@ bool MCHEmul::CPU::initialize ()
 	_lastINOUTData = { };
 
 	_state = _lastState = MCHEmul::CPU::_EXECUTINGINSTRUCTION;
+	_fetchingInstructionCode = false;
 
 	_clockCycles = _lastCPUClockCycles = 0;
 
@@ -578,8 +580,9 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 	// The current CPU iteration will also consume its first cycle.
 	if (_currentInstruction == nullptr)
 	{
+		// This access obtains the opcode for execution, so memory must see FETCH.
 		unsigned int nInst =
-			instructionCodeAt (_memory, programCounter ().asAddress ());
+			fetchInstructionCodeAt (_memory, programCounter ().asAddress ());
 		if (nInst < _rowInstructions.size () && 
 			(_currentInstruction = _rowInstructions [nInst]) != nullptr)
 		{
@@ -676,8 +679,9 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
+	// This access obtains the opcode for execution, so memory must see FETCH.
 	unsigned int nInst =
-		instructionCodeAt (_memory, programCounter ().asAddress ());
+		fetchInstructionCodeAt (_memory, programCounter ().asAddress ());
 	// If the instruction doesn't exist according with what is indicated in the memory of 
 	// the computer, and an error is generated...
 	MCHEmul::Instruction* inst = nullptr;
@@ -759,6 +763,7 @@ MCHEmul::Instruction* MCHEmul::CPU::instructionAt
 			m != nullptr);
 
 	MCHEmul::Instruction* inst = nullptr;
+	// Inspection must not trigger the side effects of an execution opcode fetch.
 	unsigned int nInst = c -> instructionCodeAt (m, addr);
 	if (nInst >= c -> _rowInstructions.size () ||
 		(inst = c -> _rowInstructions [nInst]) == nullptr)

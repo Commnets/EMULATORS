@@ -208,6 +208,14 @@ namespace MCHEmul
 		unsigned int lastState () const
 							{ return (_lastState); }
 
+		/** Identifies an instruction-code read performed for execution. \n
+			Operand reads and instruction inspection must leave this flag inactive. */
+		bool fetchingInstructionCode () const
+							{ return (_fetchingInstructionCode); }
+		/** Limits FETCH to the memory access, restoring the previous state afterwards. \n
+			This allows memory devices to distinguish opcode reads from ordinary reads. */
+		inline unsigned int fetchInstructionCodeAt (Memory* m, const Address& a);
+
 		// Related with the state stopped...
 		/** To get a reference to the stop status. */
 		const StopStatusData& stopStatusData () const
@@ -567,6 +575,8 @@ namespace MCHEmul
 		unsigned int _lastCPUClockCycles;
 		/** The last state. */
 		unsigned int _lastState;
+		/** Temporary access qualifier, independent of the CPU running/stopped state. */
+		bool _fetchingInstructionCode;
 
 		/** Limits in the memory to debug. */
 		Address _debugLimitsInit, _debugLimitsEnd;
@@ -658,6 +668,22 @@ namespace MCHEmul
 					? nLI - _cyclesLastInstructionOverlappedStopRequest
 					: 0; // If this situation an error has happened.... 
 		}
+	}
+
+	// ---
+	inline unsigned int CPU::fetchInstructionCodeAt (Memory* m, const Address& a)
+	{
+		// Memory devices must see FETCH only while obtaining the instruction code.
+		bool previousFetch = _fetchingInstructionCode;
+		_fetchingInstructionCode = true;
+
+		unsigned int result = instructionCodeAt (m, a);
+
+		// Restore before decoding, 
+		// notifying observers or reading instruction operands.
+		_fetchingInstructionCode = previousFetch;
+
+		return (result);
 	}
 
 	// ---

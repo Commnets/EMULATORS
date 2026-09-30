@@ -497,6 +497,11 @@ namespace MCHEmul
 			it is needed to select first the right instruction to execute. \n 
 			This method has to be redefined to follow the right processes of the CPU emulated. */
 		virtual const Instruction* selectInstruction (Memory* m, const Address& a) const = 0;
+		/** Separates execution accesses from instruction inspection. \n
+			Derived classes override this when selection requires an opcode fetch. */
+		virtual const Instruction* selectInstructionForExecution
+			(CPU* c, Memory* m, const Address& a) const
+							{ return (selectInstruction (m, a)); }
 
 		protected:
 		Instructions _instructions;

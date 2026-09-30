@@ -9,14 +9,16 @@ const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 { 
 	_lastValueRead = MCHEmul::MirrorPhysicalStorageSubset::readValue (nB);
 	
-	if (_cpu != nullptr && 
+	// Operand, data and inspection reads must preserve the byte without loading the ULA.
+	if (_cpu != nullptr &&
+		_cpu -> fetchingInstructionCode () &&
 		_cpu -> programCounter ().internalRepresentation () >= 0xc000 &&
-		!_lastValueRead.bit (6)) // When the counter is above 0xc000 and the info read has not the bit 6 set, 
-								 // it is transalated into a HALT
+		!_lastValueRead.bit (6))
 	{
-		// The value is passed to the ULA...
+		// The ULA receives the original character, including its inverse-video bit.
 		_ula -> readCharData (_cpu, _lastValueRead);
 
+		// The CPU receives NOP (0x00), while the character remains available to the ULA.
 		_lastValueRead = MCHEmul::UByte::_0;
 	}
 
