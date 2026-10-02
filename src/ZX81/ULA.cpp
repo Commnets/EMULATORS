@@ -358,24 +358,29 @@ bool ZX81::ULA::readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt)
 {
 	MCHEmul::MemoryView* oV = memoryRef () -> activeView ();
 
-	// The information is looked for always from the point of view of the ULA!
-	// That0s the reason to remember what the origina view was before changing it...
+	// Pattern reads must use the ULA memory view.
 	memoryRef () -> setActiveView (_ULAView);
 
-	bool result = false;
+	MCHEmul::Address a (2,
+		((unsigned int) (static_cast <FZ80::CZ80*> (cpu) ->
+			iRegister ().values () [0].value ()) << 8) |
+		((unsigned int) (dt.value () & 0b00111111) << 3) |
+		(unsigned int) (_ULARegisters -> LINECNTRL ()));
 
-	// Possible or not?
-	// It wasn't possible is it beacuse it was reading another value before...
-	if ((result = _ULARegisters -> loadSHIFTRegister (
-			memoryRef () -> value (MCHEmul::Address (2,
-				(unsigned int (static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values ()[0].value ()) << 8) |
-				(unsigned int ((dt.value () & 0b00111111) << 3)) |
-				(unsigned int) _ULARegisters -> LINECNTRL ())))))
-		_ULARegisters -> setReverseVideo (dt.bit (7)); // The reverse video depends on the 
-													   // bit 7 of the data received (from video memory)
+	// Keep a copy for the load and its trace, independently of later reads.
+	MCHEmul::UByte pattern = memoryRef () -> value (a);
 
-	// ...then the view is set back to the original one...
+	_IFDEBUG debugCharLoad (cpu, dt, a, pattern, false, false);
+
+	bool result = _ULARegisters -> loadSHIFTRegister (pattern);
+
+	// A rejected load must preserve the polarity of the active pattern.
+	if (result)
+		_ULARegisters -> setReverseVideo (dt.bit (7));
+
 	memoryRef () -> setActiveView (oV -> id ());
+
+	_IFDEBUG debugCharLoad (cpu, dt, a, pattern, true, result);
 
 	return (result);
 }
@@ -392,7 +397,14 @@ void ZX81::ULA::debugULACycle (MCHEmul::CPU* cpu, unsigned int i)
 		  { "Internal status",
 			"NMI=" + std::string ((_ULARegisters -> NMIGenerator () ? "NMI_ON" : "NMI_OFF")) + "," +
 			"ZONE=" + std::string ((_ULARegisters -> syncOutputWhite () ? "WHITE" : "BLACK")) + "," + 
-			"LNCTRL=" +	std::to_string (_ULARegisters -> LINECNTRL ()) } });
+			"LNCTRL=" + std::to_string (_ULARegisters -> LINECNTRL ()) },
+		  { "Shift register",
+			"Data=" + std::to_string (_ULARegisters -> SHIFTRegister ().value ()) + "," +
+			"PendingBits=" + std::to_string (_ULARegisters -> pendingSHIFTBits ()) + "," +
+			"Inverse=" + std::to_string (_ULARegisters -> reverseVideo ()) },
+		  { "Timing",
+			"PixelPhase=" + std::to_string (i & 1) + "," +
+			"State=BeforeShift" } });
 }
 
 // ---
@@ -466,6 +478,47 @@ void ZX81::ULA::debugLineAdvance (MCHEmul::CPU* cpu, unsigned int i,
 			"PixelPhase=" + std::to_string (i & 1) + "," +
 			"CPUClock=" + std::to_string (cpu -> clockCycles ()) + "," +
 			"State=AfterLineAdvance,CPUState=SimulationContext" } });
+}
+
+// ---
+void ZX81::ULA::debugCharLoad (MCHEmul::CPU* cpu,
+	const MCHEmul::UByte& dt, const MCHEmul::Address& a,
+	const MCHEmul::UByte& pattern, bool after, bool accepted) const
+{
+	assert (_deepDebugFile != nullptr);
+
+	const FZ80::CZ80* z80 = static_cast <const FZ80::CZ80*> (cpu);
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), cpu -> clockCycles (), "Character Load",
+		{ { "Raster position",
+			"Column=" + std::to_string (_raster.currentColumnAtBase0 ()) + "," +
+			"Row=" + std::to_string (_raster.currentLineAtBase0 ()) },
+		  { "Timing",
+			"CPUClock=" + std::to_string (cpu -> clockCycles ()) + "," +
+			"ULANextCycle=" + std::to_string (_lastCPUCycles) + "," +
+			"Reference=CPUCallback,RasterState=BeforeCatchUp," +
+			"Stage=" + std::string (after ? "AfterLoad" : "BeforeLoad") },
+		  { "Character",
+			"Code=" + std::to_string (dt.value ()) + "," +
+			"Inverse=" + std::to_string (dt.bit (7)) + "," +
+			"I=" + std::to_string (z80 -> iRegister ().values () [0].value ()) + "," +
+			"LNCTRL=" + std::to_string (_ULARegisters -> LINECNTRL ()) },
+		  { "Pattern",
+			"Address=" + std::to_string (a.value ()) + "," +
+			"Data=" + std::to_string (pattern.value ()) + "," +
+			"Accepted=" + (after
+				? std::to_string (accepted) : std::string ("NA")) },
+		  { "Shift register",
+			"Data=" + std::to_string (_ULARegisters -> SHIFTRegister ().value ()) + "," +
+			"PendingBits=" + std::to_string (_ULARegisters -> pendingSHIFTBits ()) + "," +
+			"Inverse=" + std::to_string (_ULARegisters -> reverseVideo ()) },
+		  { "CPU context",
+			"PC=" + std::to_string
+				(cpu -> programCounter ().internalRepresentation ()) + "," +
+			"FETCH=" + std::to_string (cpu -> fetchingInstructionCode ()) + "," +
+			"Mode=" + std::string
+				(cpu -> ticksCounter () == nullptr ? "Full" : "PerCycle") } });
 }
 
 // ---

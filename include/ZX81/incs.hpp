@@ -20,6 +20,7 @@
 #include <ZX81/ASCIIToCodeConverter.hpp>
 #include <ZX81/CommandBuilder.hpp>
 #include <ZX81/Commands.hpp>
+#include <ZX81/CZ80.hpp>
 #include <ZX81/FileIO.hpp>
 #include <ZX81/IOPBuilder.hpp>
 #include <ZX81/Memory.hpp>

@@ -96,8 +96,10 @@ namespace ZX81
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** In the ZX81 the A6 (address bus is connected with the INT. */
+		/** Samples the active-low INT input connected to address line A6. */
 		virtual void specificComputerCycle () override;
+		/** Removes an obsolete A6 request after a completed CPU transaction. */
+		void removeA6InterruptRequest ();
 
 		// Managing memory configuration...
 		/** To get the configuration. */

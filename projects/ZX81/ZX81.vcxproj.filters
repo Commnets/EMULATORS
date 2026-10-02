@@ -117,6 +117,9 @@
     <ClInclude Include="..\..\include\ZX81\ASCIIToCodeConverter.hpp">
       <Filter>Archivos de encabezado\Foundation</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZX81\CZ80.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\ZX81\CommandBuilder.cpp">
@@ -175,6 +178,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\ZX81\ASCIIToCodeConverter.cpp">
       <Filter>Archivos de origen\Foundation</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZX81\CZ80.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

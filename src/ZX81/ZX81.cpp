@@ -5,8 +5,8 @@
 #include <ZX81/EdgeConnector.hpp>
 #include <ZX81/Cartridge.hpp>
 #include <ZX81/DatasettePort.hpp>
-#include <FZ80/CZ80.hpp>
-#include <FZ80/NMIInterrupt.hpp>
+#include <ZX81/CZ80.hpp>
+#include <FZ80/INTInterrupt.hpp>
 
 // ---
 ZX81::SinclairZX81::SinclairZX81 (
@@ -14,7 +14,7 @@ ZX81::SinclairZX81::SinclairZX81 (
 		ZX81::Memory::Configuration cfg, 
 		ZX81::SinclairZX81::VisualSystem vS, ZX81::Type t)
 	: SINCLAIR::Computer 
-		(new FZ80::CZ80 (0, 
+		(new ZX81::CZ80 (0,
 			{ }), // Some other ports (the ones related with chips) are added later...
 		 ZX81::SinclairZX81::standardChips (vS, t), // The chips can vary depending on the type of model...
 		 new ZX81::Memory (cfg, t), // Depending on the configuration...
@@ -41,6 +41,9 @@ ZX81::SinclairZX81::SinclairZX81 (
 
 	_ula = dynamic_cast <ULA*> (chip (ULA::_ID));
 	assert (_ula != nullptr);
+
+	// Accepted INT responses reach the ULA directly, without CPU observers.
+	static_cast <ZX81::CZ80*> (cpu ()) -> linkToULA (_ula);
 
 	// Assign the ULA to the PortManager...
 	pM -> linkToULA (_ula);
@@ -87,6 +90,8 @@ bool ZX81::SinclairZX81::initialize (bool iM)
 	if (!result)
 		return (false);
 
+	_A6 = MCHEmul::Pulse (false);
+
 	setConfiguration (static_cast <ZX81::Memory*> 
 		(memory ()) -> configuration (), type (), false /** Not restart. */);
 
@@ -131,30 +136,65 @@ void ZX81::SinclairZX81::processEvent (const MCHEmul::Event& evnt, MCHEmul::Noti
 // ---
 void ZX81::SinclairZX81::specificComputerCycle ()
 {
-	_A6.set ((cpu () -> lastINOUTAddress ().value () & 0b01000000) != 0);
+	// Accepted timing limitation: in PerCycle mode, executeNextCycle() may already
+	// have consumed a batch of T-states before this computer-cycle hook is reached.
+	// If that batch crosses several instruction boundaries, the CPU may have started
+	// later instructions before A6 is sampled here or the ULA generates its NMI requests.
+	// These indicators retain only the latest relevant completion, not every boundary.
+	// Earlier INT sampling opportunities cannot be reconstructed, acceptance can be
+	// delayed, and multiple INT acknowledgements can overwrite the ULA's single latch
+	// before it is simulated. Even a batch ending inside the next instruction can
+	// delay the sample of the preceding one. These effects are explicitly accepted
+	// with the current coarse CPU/chip scheduling; this hook does not replay the batch.
+	// Full mode returns after one complete transaction and therefore avoids this
+	// particular loss of intermediate boundaries. Cycle-exact coordination would
+	// require interleaving the CPU and chips before each interrupt decision.
+	ZX81::CZ80* z80 = static_cast <ZX81::CZ80*> (cpu ());
 
-	// If the bit 6 of the address went from 1 to 0...
-	// the INT line of the Z80 should be up (interrupt requested).
-	// However at this point, the ULA cycle hasn't been executed yet (it is just after executing the instruction),
-	// and a NMI requests could be generated and obvioulsy with more priority than this one.
-	// Important ro highlight that the clock cyclycles counter is not updated yet at this position either...
-	// So the INT here is only requested if the ULA were not about to do so later!
-	// In the definition of the ZX81 (machine) is possible to have INT and NMI at the same time...
-	// It is guaranteed by the code!...
-	unsigned int cC = 0;
-	if (_A6.negativeEdge () &&	// From 1 to 0...
-		cpu () -> interrupt (FZ80::INTInterrupt::_ID) -> 
-			canBeExecutedOver (cpu (), cC = cpu () -> clockCycles ()) &&
-		!_ula -> aboutToGenerateNMIAfterCycles (cpu () -> lastCPUClockCycles ()))
-	{ 
-		// The INT is requested...
-		cpu () -> requestInterrupt
+	// Read both indicators explicitly: each access consumes its value.
+	bool instructionCompleted = z80 -> takeInstructionCompleted ();
+	bool interruptCompleted = z80 -> takeInterruptCompleted ();
+
+	// Intermediate cycles must not remove a request still being processed.
+	if (!instructionCompleted && !interruptCompleted)
+		return;
+
+	// NMI may have left an older A6 request pending behind it.
+	// A completed instruction also replaces the previous A6 sample.
+	removeA6InterruptRequest ();
+
+	// An interrupt response does not provide a new end-of-instruction sample.
+	if (!instructionCompleted)
+		return;
+
+	_A6.set ((z80 -> lastINOUTAddress ().value () & 0b01000000) != 0);
+
+	unsigned int cC = z80 -> clockCycles ();
+
+	// INT is active low: continued assertion does not require another falling edge.
+	// The CPU checks eligibility again before accepting the queued request.
+	if (!_A6.value () &&
+		z80 -> interrupt (FZ80::INTInterrupt::_ID) ->
+			canBeExecutedOver (z80, cC) == MCHEmul::CPUInterrupt::_EXECUTIONALLOWED)
+		z80 -> requestInterrupt
 			(FZ80::INTInterrupt::_ID, cC, nullptr, 2);
+}
 
-		// The ULA has to know that the INT is requested, 
-		// ..and also at the time it was (in CPU cycles!),
-		// because the counter of horizontal lines has to be updated when that happen...
-		_ula -> setINTack (cC);
+// ---
+void ZX81::SinclairZX81::removeA6InterruptRequest ()
+{
+	const MCHEmul::CPUInterruptRequests& requests = cpu () -> interruptsRequested ();
+
+	// A6 uses the existing request signature: INT, no source and reason 2.
+	// Reverse traversal preserves the remaining indices when entries are removed.
+	for (size_t i = requests.size (); i > 0; --i)
+	{
+		const MCHEmul::CPUInterruptRequest& request = requests [i - 1];
+
+		if (request.type () == FZ80::INTInterrupt::_ID &&
+			request.from () == nullptr &&
+			request.reason () == 2)
+			cpu () -> removeInterruptRequest (request);
 	}
 }
 

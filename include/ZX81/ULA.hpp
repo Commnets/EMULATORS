@@ -214,7 +214,7 @@ namespace ZX81
 		bool readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt);
 
 		private:
-		// -----
+		//-----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
@@ -230,7 +230,12 @@ namespace ZX81
 		void debugLineAdvance (MCHEmul::CPU* cpu, unsigned int i,
 			bool eH, bool rE, unsigned short hB, unsigned short vB,
 			unsigned char lB) const;
-		// -----
+		/** Logs the current immediate character-pattern load. \n
+			The CPU clock identifies the callback, not a physical refresh edge. */
+		void debugCharLoad (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt,
+			const MCHEmul::Address& a, const MCHEmul::UByte& pattern,
+			bool after, bool accepted) const;
+		//-----
 
 		protected:
 		/** A reference to the ULA registers. */

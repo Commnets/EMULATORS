@@ -92,6 +92,9 @@ namespace ZX81
 							{ return (_SHIFTR); }
 		const MCHEmul::UByte& originalSHIFTRegister () const
 							{ return (_originalSHIFTR); }
+		/** Number of pixels still available in the shift register. */
+		unsigned char pendingSHIFTBits () const
+							{ return (8 - _shiftedBit); }
 		/** Only if the previous SHIFT Register value has all bits shifted out. */
 		inline bool loadSHIFTRegister (const MCHEmul::UByte& sr);
 		/** Shifts the SHIFT Register left. \n
