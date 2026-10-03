@@ -22,15 +22,34 @@ namespace ZX81
 	class SinclairZX81;
 	class ULA;
 
-	/** 
-	  * The video info has to be set from D_FILE location.
-	  * The location D_FILE with the bit 7 on is where the CPU "executes" the video info.
-	  * D_FILE is usually at some position in the range 0x4000 - onwards.
-	  * This class is to mirror from C000 - onwards that previous position, 
-	  * During an opcode FETCH, it returns "0" (= NOP) when bit 6 is clear.
-	  * Operand, data and inspection reads preserve the original byte.
-	  * Opcodes with bit 6 set are also returned unchanged.
-	  * This mirror class will be only visible from the CPU. */
+	/** 16K RAM expansion retaining the framework stack behavior. \n
+	  * Refresh reads represent the hardware capability required by WRX. \n
+	  * Enabling this capability does not activate a video mode by itself. */
+	class RAM16K final : public MCHEmul::Stack
+	{
+		public:
+		RAM16K (int id, MCHEmul::PhysicalStorage* ps, size_t pp,
+			const MCHEmul::Address& iA,
+			const MCHEmul::Stack::Configuration& cfg);
+
+		/** Whether the expansion can supply data during memory refresh. */
+		bool refreshReadEnabled () const
+							{ return (_refreshReadEnabled); }
+		void setRefreshReadEnabled (bool e)
+							{ _refreshReadEnabled = e; }
+
+		private:
+		/** Hardware configuration, preserved across memory initialization. */
+		bool _refreshReadEnabled;
+	};
+
+	/**
+	  * CPU-view mirror for display-code fetches from ROM or RAM. \n
+	  * A qualifying opcode fetch with A15 high and data bit 6 clear
+	  * captures the original byte for video and returns NOP to the CPU. \n
+	  * Operand, data and inspection reads preserve the original byte. \n
+	  * HALT cycles do not capture new characters. \n
+	  * The ULA view uses ordinary mirrors for its pattern reads. */
 	class MemoryVideoCode final : public MCHEmul::MirrorPhysicalStorageSubset
 	{
 		public:
@@ -63,7 +82,8 @@ namespace ZX81
 		enum class Configuration
 		{
 			_NOEXPANDED		= 0,
-			_16KEXPANSION	= 1
+			_16KEXPANSION	= 1,
+			_16KEXPANSIONWRX	= 2
 		};
 
 		// Phisical Storages
@@ -93,6 +113,10 @@ namespace ZX81
 		static const int _RAM1K_V_S_SUBSET			= 142; // From 142 to 156
 		static const int _RAM16K_V_SUBSET			= 157;
 
+		// Upper ROM mirrors with CPU opcode-fetch interception.
+		static const int _ROM_V2_SUBSET = 158;
+		static const int _ROM_V3_SUBSET = 159;
+
 		// Views
 		static const int _CPU_VIEW					= 0;
 		static const int _ULA_VIEW					= 1;
@@ -113,6 +137,10 @@ namespace ZX81
 		Configuration configuration () const
 							{ return (_configuration); }
 		void setConfiguration (Configuration cfg, Type t);
+
+		/** Whether the configured 16K expansion supplies refresh data
+		  * at this address, including its ULA-view mirror. */
+		bool canReadRAM16KDuringRefresh (const MCHEmul::Address& a) const;
 
 		/** To activate the right subsets in the CPU view. */
 		virtual bool initialize () override;
@@ -142,7 +170,7 @@ namespace ZX81
 		ZX81::MemoryVideoCode* _RAM1K_V;
 		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC;
 		std::vector <MCHEmul::MirrorPhysicalStorageSubset*> _RAM15K_UC_S;
-		MCHEmul::Stack* _RAM16K_CS1; // Same, but when RAM_CS == 0
+		ZX81::RAM16K* _RAM16K_CS1; // Same, but when RAM_CS == 0
 		std::vector <ZX81::MemoryVideoCode*> _RAM15K_V;
 		// ...or this one (and their equivalents in the video zone)
 		MCHEmul::MirrorPhysicalStorageSubset* _RAM16K_S;
@@ -151,6 +179,8 @@ namespace ZX81
 		MCHEmul::MirrorPhysicalStorageSubset* _ROM_S2;
 		MCHEmul::MirrorPhysicalStorageSubset* _ROM_S3;
 		MCHEmul::PhysicalStorageSubset* _ROMCS2; // When ROM_CS == 0
+		ZX81::MemoryVideoCode* _ROM_V2;
+		ZX81::MemoryVideoCode* _ROM_V3;
 		// The id of the subset used for the stack...
 		// that will depend on the configuration!
 		int _STACK_SUBSET;

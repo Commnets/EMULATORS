@@ -1,18 +1,32 @@
 #include <ZX81/Memory.hpp>
 #include <ZX81/ULA.hpp>
+#include <FZ80/CZ80.hpp>
 
 MCHEmul::CPU* ZX81::MemoryVideoCode::_cpu = nullptr;
 ZX81::ULA* ZX81::MemoryVideoCode::_ula = nullptr;
+
+// ---
+ZX81::RAM16K::RAM16K (int id, MCHEmul::PhysicalStorage* ps, size_t pp,
+	const MCHEmul::Address& iA,
+	const MCHEmul::Stack::Configuration& cfg)
+	: MCHEmul::Stack (id, ps, pp, iA, 0x4000, cfg),
+	  _refreshReadEnabled (false)
+{
+	// Nothing else...
+}
 
 // ---
 const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 { 
 	_lastValueRead = MCHEmul::MirrorPhysicalStorageSubset::readValue (nB);
 	
-	// Operand, data and inspection reads must preserve the byte without loading the ULA.
+	// Only opcode fetches with A15 high can supply display characters.
+	// Use the accessed address: a prefixed fetch can differ from the initial PC.
+	// Repeated HALT cycles must not capture new characters.
 	if (_cpu != nullptr &&
 		_cpu -> fetchingInstructionCode () &&
-		_cpu -> programCounter ().internalRepresentation () >= 0xc000 &&
+		((initialAddress ().value () + nB) & 0x8000) != 0 &&
+		!static_cast <const FZ80::CZ80*> (_cpu) -> haltActive () &&
 		!_lastValueRead.bit (6))
 	{
 		// The ULA receives the original character, including its inverse-video bit.
@@ -45,6 +59,8 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 	  _ROM_S2 (nullptr),
 	  _ROM_S3 (nullptr),
 	  _ROMCS2 (nullptr), 
+	  _ROM_V2 (nullptr),
+	  _ROM_V3 (nullptr),
 	  _STACK_SUBSET (0)
 {
 	// In the content...
@@ -80,6 +96,9 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 	subset (_ROMSHADOW1_SUBSET) -> fixDefaultValues ();
 	subset (_ROMSHADOW2_SUBSET) -> fixDefaultValues ();
 	subset (_ROMSHADOW3_SUBSET) -> fixDefaultValues ();
+	// Every ROM mirror restores its own defaults when memory is initialized.
+	subset (_ROM_V2_SUBSET) -> fixDefaultValues ();
+	subset (_ROM_V3_SUBSET) -> fixDefaultValues ();
 
 	if (!ok)
 		_error = MCHEmul::_INIT_ERROR;
@@ -99,13 +118,15 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 		_RAM15K_UC_S.emplace_back (dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM1KSHADOW_SUBSET + (int) i))); // 4th from ULA
 	for (size_t i = 1; i <= 15; i++)
 		_RAM15K_V.emplace_back (dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM1K_V_SUBSET + (int) i))); // 4th from CPU
-	_RAM16K_CS1			= dynamic_cast <MCHEmul::Stack*> (subset (_RAM16KCS1_SUBSET)); // 2th RAM_CS = 0
+	_RAM16K_CS1			= dynamic_cast <ZX81::RAM16K*> (subset (_RAM16KCS1_SUBSET)); // 2th RAM_CS = 0
 	_RAM16K_S			= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_RAM16KSHADOW_SUBSET)); // 4th RAM_CS = 0 from ULA
 	_RAM16K_V			= dynamic_cast <ZX81::MemoryVideoCode*> (subset (_RAM16K_V_SUBSET)); // 4th RAM_CS = 0 from CPU
 	// Block 3: ROM
 	_ROM_S2				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_ROMSHADOW2_SUBSET));
 	_ROM_S3				= dynamic_cast <MCHEmul::MirrorPhysicalStorageSubset*> (subset (_ROMSHADOW3_SUBSET));
 	_ROMCS2				= subset (_ROMCS2_SUBSET);
+	_ROM_V2				= dynamic_cast <ZX81::MemoryVideoCode*> (subset (_ROM_V2_SUBSET));
+	_ROM_V3				= dynamic_cast <ZX81::MemoryVideoCode*> (subset (_ROM_V3_SUBSET));
 	assert (
 		_ROM			!= nullptr &&
 		_ROM_S1			!= nullptr &&
@@ -121,7 +142,9 @@ ZX81::Memory::Memory (ZX81::Memory::Configuration cfg, ZX81::Type t)
 		_RAM16K_V		!= nullptr &&
 		_ROM_S2			!= nullptr &&
 		_ROM_S3			!= nullptr &&
-		_ROMCS2			!= nullptr);
+		_ROMCS2			!= nullptr &&
+		_ROM_V2			!= nullptr &&
+		_ROM_V3			!= nullptr);
 
 	// Sets the configuration of the memory...
 	setConfiguration (_configuration, _type);
@@ -135,6 +158,10 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 	_RAM1K -> setNotUsed (false);
 	_RAM16K_CS1 -> setNotUsed (false);
 
+	// Reapply the hardware capability on every configuration change.
+	// Leaving the WRX configuration must disable refresh reads.
+	_RAM16K_CS1 -> setRefreshReadEnabled (false);
+
 	// Attending to the configuration different options are active or not active!
 	switch (_configuration = cfg)
 	{
@@ -145,6 +172,8 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 				_ROM_S1			-> setActive (true);
 				_ROM_S2			-> setActive (true);
 				_ROM_S3			-> setActive (true);
+				_ROM_V2			-> setActive (true);
+				_ROM_V3			-> setActive (true);
 				// ...but not the expansions...
 				_ROMCS1			-> setActive (false);
 				_ROMCS2			-> setActive (false);
@@ -169,10 +198,11 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 			break;
 
 		case ZX81::Memory::Configuration::_16KEXPANSION:
+		case ZX81::Memory::Configuration::_16KEXPANSIONWRX:
 			{
 				// This situation shouldn't happen, just in case...
 				if (t == ZX81::Type::_ZX80)
-					_LOG ("ZX80 doesn't allow _16KEXPANSION configuration");
+					_LOG ("ZX80 doesn't allow 16K expansion configurations");
 				else
 				{
 					// ROMS (shadow or not) are always active
@@ -180,6 +210,8 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 					_ROM_S1			-> setActive (true);
 					_ROM_S2			-> setActive (true);
 					_ROM_S3			-> setActive (true);
+					_ROM_V2			-> setActive (true);
+					_ROM_V3			-> setActive (true);
 					// ...but not the expansions...
 					_ROMCS1			-> setActive (false);
 					_ROMCS2			-> setActive (false);
@@ -193,6 +225,10 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 					for (size_t i = 0; i < 15; _RAM15K_V [i++] -> setActive (false));
 					// ...and expansion active!
 					_RAM16K_CS1		-> setActive (true);
+					// Both expansions share the same address map and stack.
+					// Only the WRX-compatible hardware supplies data during refresh.
+					_RAM16K_CS1		-> setRefreshReadEnabled
+						(cfg == ZX81::Memory::Configuration::_16KEXPANSIONWRX);
 					_RAM16K_S		-> setActive (true);
 					_RAM16K_V		-> setActive (true);
 
@@ -215,6 +251,23 @@ void ZX81::Memory::setConfiguration (ZX81::Memory::Configuration cfg, ZX81::Type
 
 			break;
 	}
+}
+
+// ---
+bool ZX81::Memory::canReadRAM16KDuringRefresh
+	(const MCHEmul::Address& a) const
+{
+	if (!_RAM16K_CS1 -> active () ||
+		!_RAM16K_CS1 -> activeForReading () ||
+		!_RAM16K_CS1 -> refreshReadEnabled ())
+		return (false);
+
+	// The original expansion owns the capability; the ULA mirror shares its storage.
+	// isIn also checks whether each address window is active.
+	int dt = 0;
+	return (_RAM16K_CS1 -> isIn (a, dt) ||
+		(_RAM16K_S -> activeForReading () &&
+		 _RAM16K_S -> isIn (a, dt)));
 }
 
 // ---
@@ -305,13 +358,11 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 	}
 
 	// But these previous 16k could be fully accesible externally when the RAM_CS = 0...
-	MCHEmul::Stack* RAM16S_CS1 = new MCHEmul::Stack
-		(_RAM16KCS1_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000, 
-			MCHEmul::Stack::Configuration (true, false /** Pointing always to the last written. */,
-				true /** No overflow detection. */, -1));												// 16k (When expansion), 
-																										// ...that can behave as stack...
-																										// One or another...
-	RAM16S_CS1 -> setName ("16K RAM");
+	ZX81::RAM16K* RAM16SCS1 = new ZX81::RAM16K
+		(_RAM16KCS1_SUBSET, RAM, 0x4000,
+			MCHEmul::Address ({ 0x00, 0x40 }, false),
+			MCHEmul::Stack::Configuration (true, false, true, -1));
+	RAM16SCS1 -> setName ("16K RAM");
 	// ----- 16k
  
 	// Third block is ROM again
@@ -322,6 +373,13 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 	MCHEmul::MirrorPhysicalStorageSubset* ROMS_S3 = new MCHEmul::MirrorPhysicalStorageSubset
 		(_ROMSHADOW3_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0xa0 }, false));							// 8k. It is a mirror of ROMS (above)
 	ROMS_S3 -> setName ("Basic ROM Mirror 3");
+	// CPU reads share ROM storage; qualifying fetches also supply display characters.
+	ZX81::MemoryVideoCode* romV2 = new ZX81::MemoryVideoCode
+		(_ROM_V2_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0x80 }, false));
+	romV2 -> setName ("Video ROM Mirror 2");
+	ZX81::MemoryVideoCode* romV3 = new ZX81::MemoryVideoCode
+		(_ROM_V3_SUBSET, ROMS, MCHEmul::Address ({ 0x00, 0xa0 }, false));
+	romV3 -> setName ("Video ROM Mirror 3");
 	// Or, when a expansion cartridge is inserted (ROMCS = 0), the hole space can be accesible as ROM....
 	MCHEmul::PhysicalStorageSubset* ROMS_CS2 = new MCHEmul::PhysicalStorageSubset 
 		(_ROMCS2_SUBSET, ROM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x4000);				// 16k. 
@@ -347,7 +405,7 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 
 	// ...but the can be replace by the mirror of the 16k if there was that... (RAM_CS = 0)
 	MCHEmul::MirrorPhysicalStorageSubset* RAM16S_CS1S1 = new MCHEmul::MirrorPhysicalStorageSubset
-		(_RAM16KSHADOW_SUBSET, RAM16S_CS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));					// 16k. It is a mirror of RAM16S_CS1
+		(_RAM16KSHADOW_SUBSET, RAM16SCS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));					// 16k. It is a mirror of RAM16SCS1
 	RAM16S_CS1S1 -> setName ("16K RAM Mirror 1");
 	// ----- 16k
 
@@ -366,9 +424,9 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 				MCHEmul::Address ({ 0x00, 0xc0 + (unsigned char) (i << 2) }, false)));					// 15k. It is a mirror of RAM1S_V
 		TR -> setName ("Video 1K RAM Mirror " + std::to_string (i));
 	}
-	// ...or 16k mirroring RAM16S_CS1 when (RAMCS = 0)
+	// ...or 16k mirroring RAM16SCS1 when (RAMCS = 0)
 	ZX81::MemoryVideoCode* RAM16S_V = new ZX81::MemoryVideoCode
-		(_RAM16K_V_SUBSET, RAM16S_CS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 16k. It is a mirror of RAM16S
+		(_RAM16K_V_SUBSET, RAM16SCS1, MCHEmul::Address ({ 0x00, 0xc0 }, false));						// 16k. It is a mirror of RAM16S
 	RAM16S_V -> setName ("Video 16K RAM");
 	// ----- 16k
 
@@ -395,7 +453,9 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 			{ _RAM1K_S_SUBSET + 12,				RAM1S_S [12] },
 			{ _RAM1K_S_SUBSET + 13,				RAM1S_S [13] },
 			{ _RAM1K_S_SUBSET + 14,				RAM1S_S [14] },
-			{ _RAM16KCS1_SUBSET,				RAM16S_CS1 },
+			{ _RAM16KCS1_SUBSET,				RAM16SCS1 },
+			{ _ROM_V2_SUBSET,					romV2 },
+			{ _ROM_V3_SUBSET,					romV3 },
 			{ _ROMSHADOW2_SUBSET,				ROMS_S2 },
 			{ _ROMSHADOW3_SUBSET,				ROMS_S3 }, 
 			{ _ROMCS2_SUBSET,					ROMS_CS2 }, 
@@ -460,9 +520,9 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 			  { _RAM1K_S_SUBSET + 12,			RAM1S_S [12] },
 			  { _RAM1K_S_SUBSET + 13,			RAM1S_S [13] },
 			  { _RAM1K_S_SUBSET + 14,			RAM1S_S [14] },
-			  { _RAM16KCS1_SUBSET,					RAM16S_CS1 },
-			  { _ROMSHADOW2_SUBSET,				ROMS_S2 }, 
-			  { _ROMSHADOW3_SUBSET,				ROMS_S3 }, 
+			  { _RAM16KCS1_SUBSET,				RAM16SCS1 },
+			  { _ROM_V2_SUBSET,					romV2 },
+			  { _ROM_V3_SUBSET,					romV3 },
 			  { _ROMCS2_SUBSET,					ROMS_CS2 }, 
 			  // From the CPU, this up zone of the memory is viewed as video executable data...
 			  { _RAM1K_V_SUBSET,				RAM1S_V },
@@ -505,7 +565,7 @@ MCHEmul::Memory::Content ZX81::Memory::standardMemoryContent (ZX81::Type t)
 			  { _RAM1K_S_SUBSET + 12,			RAM1S_S [12] },
 			  { _RAM1K_S_SUBSET + 13,			RAM1S_S [13] },
 			  { _RAM1K_S_SUBSET + 14,			RAM1S_S [14] },
-			  { _RAM16KCS1_SUBSET,				RAM16S_CS1 },
+			  { _RAM16KCS1_SUBSET,				RAM16SCS1 },
 			  { _ROMSHADOW2_SUBSET,				ROMS_S2 }, 
 			  { _ROMSHADOW3_SUBSET,				ROMS_S3 }, 
 			  { _ROMCS2_SUBSET,					ROMS_CS2 }, 

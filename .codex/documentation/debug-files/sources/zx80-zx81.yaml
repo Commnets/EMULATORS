@@ -43,6 +43,20 @@
       "events": "For even ports D6 preserves the regional selection and D7 carries EAR. With no keys pressed, PAL returns 127 or 255 for EAR=0 or 1; NTSC returns 63 or 191. Odd-port data comes from lastVRAMByteRead and has no such bit interpretation. PEEK identifies monitor inspection and must not be counted as an executed IN instruction."
     },
     {
+      "name": "ULA — Character Capture",
+      "producer": "src/ZX81/ULA.cpp :: debugCharCapture",
+      "fields": "Character: Code, I. Refresh: R and Address (full 16-bit I:R). Timing: CaptureClock, LoadClock, LoadPhase, DelayPixels, Reference=InitialOpcodeFetch. Numbers are decimal.",
+      "timing": "CaptureClock identifies capture. Refresh.Address preserves I:R before this M1 increments R, including I0 and R7. No increment is anticipated and CPU state is not modified. Earlier prefix increments are already present; prefix timestamps retain the existing approximation.",
+      "events": "Each queued capture retains its own refresh address despite subsequent CPU changes. Capture is independent of RAM configuration; the load later consults the active expansion capability."
+    },
+    {
+      "name": "ULA — Character Load",
+      "producer": "src/ZX81/ULA.cpp :: debugCharLoad",
+      "fields": "Raster position: Column, Row. Character: Code, I, LNCTRL. Refresh: R, Address. Pattern: Source=RAMRefresh|CharacterPath, Address, Data, Accepted (NA before load, 0/1 afterwards). Shift register: Data, PendingBits, Inverse. Timing: CaptureClock, ScheduledClock, ScheduledPhase, ActualClock, ActualPhase, Late, Stage=BeforeLoad|AfterLoad. Numbers are decimal.",
+      "timing": "Header is the actual load clock. Refresh.R is the pre-increment value retained from the captured M1, not the live CPU register at load time. ScheduledPhase and ActualPhase distinguish the two pixels per T-state.",
+      "events": "Refresh.Address retains I:R including I0. Source=RAMRefresh selects this address when the active 16K expansion supports refresh reads, including its ULA-view mirror. Source=CharacterPath retains the previous character-formula address otherwise; it does not necessarily mean ROM. Pattern.Address is the effective address read. This fallback preserves compatibility and does not model an undriven refresh bus. Rejected loads are consumed, not rescheduled."
+    },
+    {
       "name": "ULA — Line Advance",
       "producer": "src/ZX81/ULA.cpp :: debugLineAdvance, called by ULA::simulate",
       "fields": "Raster position: HBefore, VBefore, HAfter, VAfter (zero-based). Cause: ExternalSync (eH), RasterEnd (horizontal add result), INTackClock (CPU cycle when eH=1, otherwise NA). Internal status: Model (0=ZX80, 1=ZX811, 2=ZX812, 3=ZX813), LNBefore, LNAfter, LNBlocked, VSYNC, NMIGenerator. CPU context: PC, I, R, HALT, IFF1. Timing: PixelPhase, CPUClock, State=AfterLineAdvance, CPUState=SimulationContext. All numeric values, including PC, are decimal; flags are 0/1.",

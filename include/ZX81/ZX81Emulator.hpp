@@ -39,7 +39,8 @@ namespace ZX81
 		  *	The basic parameters for any ZX81 emulator are (apart of the ones defined by the parent: \n
 		  *	/n				: To indicate if the visualization system is NTSC. PAL by default. \n
 		  *	/b[COLOR]		: To draw a black box around the writable part of the screen. The color is optional. \n
-		  * /w[CONF]		: To define the configuration of the machine when starting: 0 (unexpanded), 1 (3k), 2 (8k) ,3 (16k) ,4 or more (24k). \n
+		  * /w[CONF]		: Memory configuration: 0 (unexpanded), 1 (16K expansion), 2 (16K expansion with WRX refresh-read capability). \n
+		  *					Ignored for ZX80. \n
 		  * /m[MACHINE]		: To define the type of ROM loaded: 0 (ZX80), 1 (ZX81_1 old), 2 (ZX81_2 rare), 3 (ZX81_3 newest).
 		  * @param cS		: A reference to the communication system. It can be nullptr if no required.
 		  */

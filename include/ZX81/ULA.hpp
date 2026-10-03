@@ -200,6 +200,8 @@ namespace ZX81
 			unsigned int _loadClock;
 			unsigned char _loadPhase;
 			unsigned char _i;
+			/** CPU refresh address for this M1, before its R increment. */
+			unsigned short _refreshAddress;
 			MCHEmul::UByte _code;
 		};
 
@@ -241,7 +243,7 @@ namespace ZX81
 		/** Records the actual pattern load, including late or rejected loads. */
 		void debugCharLoad (const PendingCharacter& ch,
 			unsigned int c, unsigned char p, const MCHEmul::Address& a,
-			const MCHEmul::UByte& pattern, bool after, bool accepted) const;
+			const MCHEmul::UByte& pattern, bool ramRefresh, bool after, bool accepted) const;
 		/** Records logical line synchronization independently of raster wrap. */
 		void debugLineSync (unsigned int c, unsigned char p,
 			bool external, bool internal, bool wasActive, bool applied,

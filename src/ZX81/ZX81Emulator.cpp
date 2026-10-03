@@ -28,7 +28,8 @@ void ZX81::ZX81Emulator::printOutParameters (std::ostream& o) const
 		 "The parameter will be ingnored" << std::endl <<
 		 "ZX81:" << std::endl <<
 		 "0:\tNot expanded" << std::endl <<
-		 "1:\t16K expansion" << std::endl;
+		 "1:\t16K expansion" << std::endl <<
+		 "2:\t16K expansion with refresh-read capability (WRX)" << std::endl;
 	o << "MACHINE allowed under command line /m:" << std::endl << 
 		 "ZX80:\tZX80" << std::endl <<
 		 "ZX811:\tZX81 old rom version" << std::endl <<
@@ -106,7 +107,7 @@ MCHEmul::Computer* ZX81::ZX81Emulator::createComputer () const
 		case ZX81::Type::_ZX813:
 			{
 				unsigned int cM = configurationMode ();
-				if (cM != 0 && cM != 1)
+				if (cM != 0 && cM != 1 && cM != 2)
 				{
 					cM = 0;
 

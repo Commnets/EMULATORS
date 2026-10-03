@@ -401,14 +401,26 @@ void ZX81::ULA::captureCharData (MCHEmul::CPU* cpu,
 		_simulationStarted = true;
 	}
 
-	// This reference describes the initial opcode fetch. Nested prefix fetches
-	// still need their own M1 timestamp. Queuing preserves multiple captures in
-	// a CPU batch, but does not reconstruct intervening memory or port changes.
+	FZ80::CZ80* cZ80 = static_cast <FZ80::CZ80*> (cpu);
+	unsigned char i = cZ80 -> iRegister ().values () [0].value ();
+	unsigned char r = cZ80 -> rRegister ().values () [0].value ();
+
+	// Refresh presents I:R before this M1 increments R.
+	// Capture that address unchanged; anticipating the increment skips
+	// the first WRX pattern byte and reads one byte beyond the intended row.
+	// The CPU remains responsible for updating its own R register.
+	unsigned short refreshAddress = (unsigned short)
+		(((unsigned int) (i) << 8) | (unsigned int) (r));
+
+	// Preserve this M1's refresh address even if the CPU advances before
+	// the ULA consumes the capture. Prefix fetch timestamps retain the
+	// existing approximation; this does not reconstruct intervening bus activity.
 	_pendingCharacters.push_back
 		({ c,
 		   c + (_charLoadDelayPixels >> 1),
 		   (unsigned char) (_charLoadDelayPixels & 1),
-		   static_cast <FZ80::CZ80*> (cpu) -> iRegister ().values () [0].value (),
+		   i,
+		   refreshAddress,
 		   dt });
 
 	_IFDEBUG debugCharCapture (_pendingCharacters.back ());
@@ -429,26 +441,31 @@ void ZX81::ULA::loadPendingCharData (unsigned int c, unsigned char p)
 		MCHEmul::MemoryView* oV = memoryRef () -> activeView ();
 		memoryRef () -> setActiveView (_ULAView);
 
-		// I belongs to the capture; the line counter belongs to this load phase.
-		// For ROM character patterns, video hardware supplies A0-A8:
-		// LINECNTRL supplies A0-A2 and character bits 0-5 supply A3-A8.
-		// Discard I0 so that CPU A8 cannot override character bit 5.
-		// This address formation does not represent RAM-based I:R video fetches.
-		MCHEmul::Address a (2,
-			((unsigned int) (ch._i & 0b11111110) << 8) |
-			((unsigned int) (ch._code.value () & 0b00111111) << 3) |
-			(unsigned int) (_ULARegisters -> LINECNTRL ()));
+		MCHEmul::Address a (2, ch._refreshAddress);
+		bool ramRefresh =
+			static_cast <ZX81::Memory*> (memoryRef ()) ->
+				canReadRAM16KDuringRefresh (a);
+
+		// A refresh-capable expansion receives the captured CPU I:R address.
+		// Otherwise retain the existing character path for compatibility;
+		// this fallback does not model an electrically undriven refresh bus.
+		// In the character path, the ULA supplies A0-A8, including I0's position.
+		if (!ramRefresh)
+			a = MCHEmul::Address (2,
+				((unsigned int) (ch._i & 0b11111110) << 8) |
+				((unsigned int) (ch._code.value () & 0b00111111) << 3) |
+				(unsigned int) (_ULARegisters -> LINECNTRL ()));
 		MCHEmul::UByte pattern = memoryRef () -> value (a);
 
 		memoryRef () -> setActiveView (oV -> id ());
 
-		_IFDEBUG debugCharLoad (ch, c, p, a, pattern, false, false);
+		_IFDEBUG debugCharLoad (ch, c, p, a, pattern, ramRefresh, false, false);
 
 		bool accepted = _ULARegisters -> loadSHIFTRegister (pattern);
 		if (accepted)
 			_ULARegisters -> setReverseVideo (ch._code.bit (7));
 
-		_IFDEBUG debugCharLoad (ch, c, p, a, pattern, true, accepted);
+		_IFDEBUG debugCharLoad (ch, c, p, a, pattern, ramRefresh, true, accepted);
 
 		// A rejected load is reported and consumed, never silently delayed again.
 		_nextPendingCharacter++;
@@ -532,6 +549,9 @@ void ZX81::ULA::debugCharCapture (const PendingCharacter& ch) const
 		{ { "Character",
 			"Code=" + std::to_string (ch._code.value ()) + "," +
 			"I=" + std::to_string (ch._i) },
+		  { "Refresh",
+			"R=" + std::to_string (ch._refreshAddress & 0xff) + "," +
+			"Address=" + std::to_string (ch._refreshAddress) },
 		  { "Timing",
 			"CaptureClock=" + std::to_string (ch._captureClock) + "," +
 			"LoadClock=" + std::to_string (ch._loadClock) + "," +
@@ -543,7 +563,7 @@ void ZX81::ULA::debugCharCapture (const PendingCharacter& ch) const
 // ---
 void ZX81::ULA::debugCharLoad (const PendingCharacter& ch,
 	unsigned int c, unsigned char p, const MCHEmul::Address& a,
-	const MCHEmul::UByte& pattern, bool after, bool accepted) const
+	const MCHEmul::UByte& pattern, bool ramRefresh, bool after, bool accepted) const
 {
 	assert (_deepDebugFile != nullptr);
 
@@ -556,7 +576,12 @@ void ZX81::ULA::debugCharLoad (const PendingCharacter& ch,
 			"Code=" + std::to_string (ch._code.value ()) + "," +
 			"I=" + std::to_string (ch._i) + "," +
 			"LNCTRL=" + std::to_string (_ULARegisters -> LINECNTRL ()) },
+		  { "Refresh",
+			"R=" + std::to_string (ch._refreshAddress & 0xff) + "," +
+			"Address=" + std::to_string (ch._refreshAddress) },
 		  { "Pattern",
+			"Source=" + std::string
+				(ramRefresh ? "RAMRefresh" : "CharacterPath") + "," +
 			"Address=" + std::to_string (a.value ()) + "," +
 			"Data=" + std::to_string (pattern.value ()) + "," +
 			"Accepted=" + (after ? std::to_string (accepted) : std::string ("NA")) },

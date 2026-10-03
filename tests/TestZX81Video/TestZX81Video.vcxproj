@@ -46,7 +46,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ZX81D.lib;CORED.lib;FZ80D.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SINCLAIRD.lib;ZX81D.lib;CORED.lib;FZ80D.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
