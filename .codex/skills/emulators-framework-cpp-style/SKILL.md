@@ -27,6 +27,7 @@ Use the framework's existing idioms deliberately:
 - Preserve the spacing style: `name ()`, `std::vector <T>`, `(unsigned int) (value)`, `_ptr -> method ()`, `return (value);`.
 - Leave exactly one blank line between consecutive structural blocks such as multi-line macro definitions, class, struct or enum definitions, and the next declaration or explanatory block. Do not place the next structure or comment immediately after the closing macro line or `};`, and do not accumulate several blank lines.
 - For conversions between fundamental numeric types, including aliases such as `size_t`, prefer the compact C-style form `(target type) (value)` instead of `static_cast <target type> (value)`. Keep `static_cast`, `const_cast`, `dynamic_cast`, and `reinterpret_cast` when converting pointers, references, class types, enum domains, cv-qualification, or otherwise expressing semantics that a generic C-style cast would obscure.
+- Local variables inside methods always begin with a lowercase letter. Use lower camel case for compound words (`unaVariable`, `unaVariableQueSirve`); for abbreviated multiword names, keep the first initial lowercase and subsequent initials uppercase (`uV`, `uVQS`). This applies to local constants and references as well. Type names retain their separate naming convention.
 - Declare variables of the same type together when their initializers are all
   simple: absent, a literal or constant, or a previously available variable or
   member; for example, `int a = 0, b = previous, c;`. If any initializer is long

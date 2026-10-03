@@ -171,6 +171,7 @@ switch (mode)
 
 - Types/classes: `PascalCase`, often domain-specific: `PhysicalStorageSubset`, `VIAControlLineType2`.
 - Methods/functions: lower camel case, e.g. `getInfoStructure ()`, `setActive ()`, `initializeInternalCounters ()`.
+- Local variables in methods, including constants and references, always start with a lowercase letter. Compound names use lower camel case (`unaVariable`, `unaVariableQueSirve`). Abbreviated multiword names keep the first initial lowercase and subsequent initials uppercase (`uV`, `uVQS`). The declared type may start with uppercase; the variable identifier must not.
 - Member variables: leading underscore, e.g. `_id`, `_activeForReading`, `_wavesPlain`.
 - Constants/statics: leading underscore and uppercase where established, e.g. `_DEFAULTVALUE`, `_GETINFOBYTESLIMIT`.
 - Enums often use leading underscore values: `_RAM`, `_ROM`, `_TRIANGLE`.

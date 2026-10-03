@@ -67,7 +67,8 @@ namespace ZX81
 		virtual void initialize () override;
 
 		private:
-		/** ms = true when is is wanted to modify the internal status. */
+		/** ms = true applies the side effects of an actual port read. \n
+			ms = false inspects the value without changing hardware state or screen event markers. */
 		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;
 
 		private:

@@ -193,6 +193,16 @@ namespace ZX81
 							{ _NMIGeneratorOff = true; }
 
 		protected:
+		/** A display byte awaiting its pattern-load phase. */
+		struct PendingCharacter
+		{
+			unsigned int _captureClock;
+			unsigned int _loadClock;
+			unsigned char _loadPhase;
+			unsigned char _i;
+			MCHEmul::UByte _code;
+		};
+
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
 		/** Invoked from initialize to create the right screen memory. */
@@ -206,12 +216,13 @@ namespace ZX81
 			Returns true when the raster was in the visible zona and false in other circunstance. */
 		bool drawInVisibleZone (MCHEmul::CPU* cpu);
 
-		// Invoked from memory ZX81::MemoryVideoCode::readCharData!
-		/** To load data into the SHIFT Registers after readind char. 
-			This method is invoked from the memory. \n
-			It takes into account the LNCTRL, the character read and the value of the IR register.
-			This is the way the ULA builds up where the info to load is. */
-		bool readCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt);
+		/** Captures a character without changing the active shift register. */
+		void captureCharData (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt);
+		/** Loads pending patterns before shifting the corresponding pixel. */
+		void loadPendingCharData (unsigned int c, unsigned char p);
+
+		/** Restarts raster coordinates and cancels a pending horizontal return. */
+		void restartRaster ();
 
 		private:
 		//-----
@@ -225,16 +236,19 @@ namespace ZX81
 			It is not the exact I/O sampling cycle. */
 		void debugPortRead (unsigned short ab, unsigned char id,
 			const MCHEmul::UByte& v, bool ms) const;
-		/** Reports both causes and the actual counter transition. \n
-			CPU registers describe the available simulation context. */
-		void debugLineAdvance (MCHEmul::CPU* cpu, unsigned int i,
-			bool eH, bool rE, unsigned short hB, unsigned short vB,
-			unsigned char lB) const;
-		/** Logs the current immediate character-pattern load. \n
-			The CPU clock identifies the callback, not a physical refresh edge. */
-		void debugCharLoad (MCHEmul::CPU* cpu, const MCHEmul::UByte& dt,
-			const MCHEmul::Address& a, const MCHEmul::UByte& pattern,
-			bool after, bool accepted) const;
+		/** Records the initial opcode-fetch reference and scheduled load phase. */
+		void debugCharCapture (const PendingCharacter& ch) const;
+		/** Records the actual pattern load, including late or rejected loads. */
+		void debugCharLoad (const PendingCharacter& ch,
+			unsigned int c, unsigned char p, const MCHEmul::Address& a,
+			const MCHEmul::UByte& pattern, bool after, bool accepted) const;
+		/** Records logical line synchronization independently of raster wrap. */
+		void debugLineSync (unsigned int c, unsigned char p,
+			bool external, bool internal, bool wasActive, bool applied,
+			unsigned short hB, unsigned char lB) const;
+		/** Records horizontal wrap and the resulting vertical advance. */
+		void debugLineAdvance (unsigned int c, unsigned char p,
+			unsigned short hB, unsigned short vB) const;
 		//-----
 
 		protected:
@@ -249,7 +263,18 @@ namespace ZX81
 		/** To show or no the main events that affects the visualization. */
 		bool _showEvents;
 
+		// Character capture and delayed pattern load.
+		/** Nominal delay from the initial character M1 to pattern load, in pixels. */
+		const unsigned char _charLoadDelayPixels;
+		std::vector <PendingCharacter> _pendingCharacters;
+		size_t _nextPendingCharacter;
+
+		// Logical synchronization precedes the presentation row's horizontal wrap.
+		const unsigned short _lineSyncPosition;
+		bool _lineSyncActive;
+
 		// Implementation
+		bool _simulationStarted;
 		/** The number of cycles the CPU was executed once the simulated method finishes. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 

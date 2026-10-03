@@ -65,8 +65,9 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 	// Any port with A0 = 0... (FE is the ZX81 common one, but many others will behave similar)...
 	if ((id & 0b00000001) == 0b00000000) // The most typical port is the 254...
 	{ 
-		// Mark the event in the screen...
-		_ULA -> markReadPortFEAction ();
+		// Inspection must not create a hardware-read marker on the screen.
+		if (ms)
+			_ULA -> markReadPortFEAction ();
 
 		result = 0b00100000 | // Bit 5 is always set...
 			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000); // Bit 6 set when 50Hz = PAL = !NTSC...
@@ -94,18 +95,20 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 			{ 
 				_ULARegisters -> setVSync (true);
 
-				// The raster is initialized. Both, the horizontal and the vertical ones...
-				_ULA -> raster ().initialize ();
+				// Restart raster coordinates and cancel any pending horizontal return.
+				_ULA -> restartRaster ();
 			}
 		}
 
-		// Any read to the port FE put the MIC signal low...
-		_ULARegisters -> setMICSignal (false);
+		// Only an actual port read drives MIC low.
+		// Inspection must preserve both MIC and its pending change notification.
+		if (ms)
+			_ULARegisters -> setMICSignal (false);
 
 		// Fix the signal used to define whether 
 		// it is a PAL (1 = 50Hz refresh) or a NTSC (0 = 60Hz refresh) system...
 		result.setBit (6, !_ULARegisters -> NTSC ());
-		// ...and gets the status of the EAR signal in the bit 6!
+		// Cassette input is returned in bit 7.
 		result.setBit (7, _ULARegisters -> EARSignal ());
 	}
 	else
