@@ -70,8 +70,8 @@ namespace ZX81
 		unsigned int INTackClock () const
 							{ return (_INTackClock); }
 
-		// Counting internally from 0 to 7 every HSYNC with an external origin (INT)...
-		unsigned char LINECNTRL () const // From 0 to 8...
+		// Character row: ZX81 HSYNC start or ZX80 coarse logical-line sync, unless blocked.
+		unsigned char LINECNTRL () const // From 0 to 7.
 							{ return (_LINECNTRL); }
 		void setLINECNTRL (unsigned char lc)
 							{ _LINECNTRL = lc; }
@@ -135,7 +135,7 @@ namespace ZX81
 		void setJoystickStatus (JoystickElement jE, bool v)
 							{ _joystickStatus [(size_t) jE] = v; }
 
-		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
+		/** Pattern-bus value for odd-port reads; becomes 0xFF on the first successful pixel shift */
 		const MCHEmul::UByte& lastVRAMByteRead () const
 							{ return (_lastVRAMByteRead); }
 
@@ -146,9 +146,10 @@ namespace ZX81
 		  * The ones from the parent class +
 		  * NTSC			= Attribute: NTSC or PAL?.
 		  * NMIGEN			= Attribute: Whether the NMI generator is or not active. \n
-		  * SYNCWHITE		= Attribute: The ULA is generating a white noise? \n
-		  * LINECNTRL		= Attribute: In which line (every 8) the raster line is in? \n
-		  * CASETTE			= Attribute: The last signal sent to the casette.
+		  * SYNCWHITE		= Attribute: Pattern output enabled; false leaves presentation pixels white. \n
+		  * LINECNTRL		= Attribute: Character-pattern row (0-7), independent of presentation row. \n
+		  * MIC			= Attribute: Cassette output level. \n
+		  * EAR			= Attribute: Cassette input level.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -164,13 +165,13 @@ namespace ZX81
 		bool _NTSC;
 		/** Whether the ULA is or nor doing a VSync. */
 		bool _inVSync;
-		/** When the ULA is in the first zone of the memory a whote nouse is generated,
-			once it enter in the slow / fast zone, the video can be generated. */
+		/** Enables pattern pixels in drawInVisibleZone; false leaves them white. \n
+			This is a presentation gate, not a white-noise generator. */
 		bool _syncOutputWhite;
 		/** The INT ack. Once it is checked becomes false. */
 		MCHEmul::OBool _INTack;
-		/** At the same time it is checked, the value of the clock is kept. 
-			This value makes no sense when the previous one is false, just when it is true. */
+		/** CPU response-start clock recorded by setINTack. \n
+			It survives consumption; the timestamp alone does not indicate a pending event. */
 		unsigned int _INTackClock;
 		/** Something similar is done withe this 3 bits (0-7) internal counter,
 			that is used to determine which line of the character has to be ddrawn
@@ -199,7 +200,8 @@ namespace ZX81
 			-> 4 = fire button pressed. */
 		std::vector <bool> _joystickStatus;
 		/** The last VRAM video READ.
-			It is loaded whith the shift register and put it to oxff when the shift register is emptied. */
+			It receives an accepted pattern load and becomes 0xFF on the first successful
+			pixel shift, not only when all eight pixels have shifted out. */
 		MCHEmul::UByte _lastVRAMByteRead;
 	};
 

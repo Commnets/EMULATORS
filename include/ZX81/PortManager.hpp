@@ -25,24 +25,18 @@ namespace ZX81
 	class ULA;
 
 	// Generic Port to manage all...
-	/**
-	  * Implementation:
-	  * PORT FE or any with A0 = 0: \n
-	  * When reading: \n
-	  *		bits 0 - 4	= keyboard row status. \n
-	  *		bit 5		= not used. Always at true. \n
-	  *		bit 6		= Display refresh rate. 0 = 60Hz, 1 = 50Hz. \n
-	  *		bit 7		= Cassette input. 0 = normal. 1 = pulse. \n
-	  *		If the NMI Generator is off: \n
-	  *		Put the casette signal down. \n
-	  *		Restart the LINCNTR. \n
-	  * ANY PORT:
-	  * When writting: \n
-	  *		Whatever value, enables NMI generator. \n
-	  *		NMIs (Non maskable interrupts) are used during SLOW mode vertical blanking
-	  *		periods to count the number of drawn blank scanlines. \n
-	  *		Put the casette signal up. \n
-	  *		Restart the LINECNTR.
+	/** Shared ZX80/ZX81 port decoding. \n
+	  * Even-port reads return keyboard columns on D0-D4, 1 on D5, PAL/NTSC selection
+	  * on D6 (1 = 50 Hz) and EAR on D7. A8-A15 select keyboard rows, active low. \n
+	  * An actual even-port read drives MIC low. With NMI disabled it also starts
+	  * VSYNC if inactive, restarting presentation and the coarse horizontal phase,
+	  * and blocking LINECNTRL at 0 on ZX80 or 7 on ZX81. PEEK preserves hardware
+	  * state and event markers. Odd-port reads return the ULA pattern-bus value. \n
+	  * Every output ends VSYNC and releases LINECNTRL without resetting its value.
+	  * On ZX81, A1 = 0 disables NMI, then A0 = 0 enables it; enable wins when both
+	  * conditions hold. ZX80 has no NMI generator. Odd-port outputs drive MIC high. \n
+	  * Effects are applied immediately by value/setValue; deferred access timing
+	  * is not implemented. Port-read debug timestamps use the last ULA clock.
 	  */
 	class PortManager final : public FZ80::Z80Port
 	{
@@ -51,9 +45,6 @@ namespace ZX81
 		static const std::string _NAME;
 
 		PortManager (Type t);
-
-		// See that the constructor is private
-		// because it can only be invoked from ULA
 
 		virtual MCHEmul::UByte value (unsigned short ab, unsigned char id) const override
 							{ return (getValue (ab, id, true)); }

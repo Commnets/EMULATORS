@@ -29,7 +29,8 @@ namespace ZX81
 			: FZ80::CZ80 (id, pts),
 			  _ula (nullptr),
 			  _instructionCompleted (false),
-			  _interruptCompleted (false)
+			  _interruptCompleted (false),
+			  _nmiWaitCycles (0)
 							{ }
 
 		/** Non-owning connection established by the computer before execution. */
@@ -46,7 +47,7 @@ namespace ZX81
 		virtual bool initialize () override;
 
 		protected:
-		/** Preserves Z80 acknowledge handling and informs the ULA only for INT. */
+		/** Preserves Z80 acknowledge handling, records INT and times HALT/NMI synchronization. */
 		virtual void aknowledgeInterrupt
 			(const MCHEmul::CPUInterruptRequest& iR) override;
 
@@ -57,11 +58,19 @@ namespace ZX81
 		virtual bool executeNextInstruction_Full (unsigned int& e) override;
 
 		private:
+		//-----
+		/** Records the decision before interrupt execution changes HALT or PC. */
+		void debugNMISynchronization (const MCHEmul::CPUInterruptRequest& iR,
+			bool halted, unsigned int nominalCycles) const;
+		//-----
+
 		/** The computer owns the ULA. */
 		ULA* _ula;
 		/** These indicators describe the latest completed transaction, not an event queue. */
 		MCHEmul::OBool _instructionCompleted;
 		MCHEmul::OBool _interruptCompleted;
+		/** Calculated at acceptance and consumed once by the selected execution mode. */
+		unsigned int _nmiWaitCycles;
 	};
 }
 

@@ -25,92 +25,68 @@ namespace ZX81
 	class MemoryVideoCode;
 	class PortManager;
 
-	/** 
-		The chip that takes care of anything around the graphics in ZX81. \n
-		It is also accountable for reading the status of the keyboard. \n
-		@see GraphicalChip. \n
+	/** Video generation shared by ZX81 and the discrete ZX80 video circuitry. \n
+		CPU clock is 3.25 MHz; the ULA shifts two pixels per CPU T-state. \n
+		The ROM schedules display-file execution and blank intervals; the ULA does not
+		render a framebuffer directly from D_FILE. \n
 		\n
-		How it works! (read carefully) \n
-		Based on: https://problemkaputt.de/zxdocs.htm#zx80zx81ioports (ZX80/ZX81 Video Display Times). \n
-		and on: https://8bit-museum.de/heimcomputer-2/sinclair/sinclair-scans/scans-zx81-video-display-system/ \n
-		and on: http://blog.tynemouthsoftware.co.uk/2023/10/how-the-zx80-generates-video.html \n
-		and on: http://blog.tynemouthsoftware.co.uk/2023/10/how-the-zx81-generates-video.html \n
+		A qualifying opcode fetch with A15 high and data bit 6 clear captures the byte
+		and returns NOP. Operand, data and inspection reads preserve the byte;
+		HALT cycles do not capture characters. \n
+		Each capture retains I:R before this M1 increments R. Pattern loading follows
+		8 pixels later on ZX80 and 7 on ZX81; the previous pattern survives until then. \n
+		With refresh-capable 16K RAM, the captured I:R selects the pattern when it
+		addresses the expansion or its ULA-view mirror. Otherwise the character path
+		combines I bits 7-1, character bits 5-0 and the current LINECNTRL value. \n
+		An accepted load also installs character bit 7 as inverse-video polarity. \n
 		\n
-		General concepts: \n
-		The CPU/ULA speed is the same for either a PAL or a NTSC system. \n
-		There is a pin in the ULA that = 1 (not connected) when NTSC and 0 (connected to ground) when PAL. \n
-		CPU clock = 3,25MHz; 1 cycle CPU = 0,307692us. \n
-		ULA clock = 6,5MHZ; 1 cyle ULA = 0,153846us. \n
-		64us per raster line including Horizontal retrace = 416 cycles ULA (64/0,153846) or 208 cycles CPU (64/0,307692). \n
-		Every ULA cycle a pixel is drawn. \n
-		So 2 pixels are drawn in visible zone per CPU cycle. \n
-		And 8 pixels are drawn in 4 CPU cycles (8 cycles ULA), that it is what a NOP/HALT execution takes. \n
+		ZX81 has a horizontal generator independent of presentation: its compatibility
+		baseline is 414 ULA clocks (207 T), with HSYNC active at counts 32 through 63. \n
+		HSYNC start advances LINECNTRL unless blocked and requests NMI if enabled.
+		Terminal wrap alone creates no HSYNC edge. An accepted CPU INT response
+		schedules a counter reset two T later, distinct from subsequent HSYNC. \n
+		ZX80 retains a coarse logical-line model driven by accepted INT or the
+		presentation-tail position, with duplicate suppression and no NMI generator. \n
 		\n
-		Phases:
-		1.- VSYC: \n
-		Increments the frame counter. \n
-		Reads the keyboard. \n
-		First time the keyboard is read (IN FE,A), the VSYNC signal is sent to the TV. \n
-		Until VSYNC finishes no other intruction to read the keyboard will launch VSYNC again. \n
-		This instruction also put LNCTRL = 0, clamps the video output signal to 0 (drawing always in white), and
-		put the NMI internal ULA generator = false (No NMI generation). \n
-		The internal counter for horizontal cycles (ICFHC) is working (counting from 0 to 207 including = 208). \n
-		... \n
-		Executes OUT FF,A \n
-		release LNCTRL reset. \n
-		put video output signal to normal. \n
-		NMI internal ULA generator = true (NMI generation after internal line counter = 208). \n
-		ICFHC still works...
-		A' will have the base number of blank lines...
+		The presentation raster determines window coordinates and cropping. INT response
+		aligns it to the trailing interval; horizontal wrap advances the presentation
+		row. On ZX81 these actions are separate from hardware-model HSYNC. \n
+		An actual even-port read starts VSYNC when NMI generation is disabled and VSYNC
+		is inactive. Entry restarts presentation and the coarse horizontal phase,
+		blocking LINECNTRL at 0 on ZX80 or 7 on ZX81. Any output ends VSYNC and releases
+		that block. Port decoding controls NMI separately; see PortManager. \n
 		\n
-		2.- TOP Blank lines / App Code: \n
-		When ICFHC = 208 a HSYNC pulse is generated and sent to the TV. \n
-		Also a NMI interrupt is launched and the application code is then executed.
-		The NMI increments a blank line counter (A').
-		When the A' counter = 0, starts the VIDEO DIPLAY routine, and stops the ULA internal NMI generator = false.
+		Port effects remain immediate; CPU/chip execution can be batched and prefix
+		capture clocks retain the initial-fetch approximation. HALT/NMI compensation
+		extends the CPU response, without pin-level WAIT or ordinary-instruction WAIT. \n
+		Keyboard and joystick input is stored in ULARegisters for PortManager;
+		screen event markers are diagnostic overlays. Hardware references and the
+		implementation limits are documented in the ZX80/ZX81 video audit skills. \n
 		\n
-		3.- VIDEO DISPLAY:
-		The register I = 1e (A9 - A12 of the address of char data fixed).
-		The register R = e0...see why later!
-		INT interrupts are allowed (type 1).
-		BC to count down 192 lines (in two blocks B from 24 to 0 = 25 lines, and C from 8 to 1 = 8 per line).
-		Z80 jumps to C0D2 location.
-		How it works: \n
+		The structure of a line is the following: \n
+		-----------------------------------------------------------------------------\n
+		|Zone				|Time aprox	|ULA Cicles (at 6.5?MHz, double than CPU)	|\n
+		|------------------	|-----------|-------------------------------------------|\n
+		|**HSYNC**			|\~4.7?µs	|4.7?µs × 6.5?MHz ? **30.6 ? 31 cycles**		|\n
+		|**Back Porch**		|\~5.7?µs	|5.7?µs × 6.5?MHz ? **37.1 ? 36 cycles**		|\n
+		|**Video Active**	|\~52?µs		|52?µs × 6.5?MHz ? **338 cycles**				|\n
+		|**Front Porch**	|\~1.5?µs	|1.5?µs × 6.5?MHz ? **9.75 ? 9 cycles**		|\n
+		|------------------	|-----------|-------------------------------------------|\n
+		|**TOTAL**			|\~63.9?µs	|**414 cycles** (rounded)					|\n
+		-----------------------------------------------------------------------------\n 
+		Standard PAL requires 312 lines to draw a frame. \n
+		The structure of the frame is the following: \n
+		-----------------------------------------------------------------\n 
+		|Zone							|Lines aprox.	|Time aprox.	|\n
+		|-------------------------------|--------------	|-------------	|\n
+		|**Vertical sync pulse** (VSYNC)|\~5 lines		|\~320?µs		|\n
+		|**Vertical back porch**		|\~25 lines		|\~1.6?ms		|\n
+		|**Zona de imagen activa**		|\~284 lines	|\~18.2?ms		|\n
+		|**Vertical front porch**		|\~3 lines		|\~192?µs		|\n
+		|-------------------------------|--------------	|-------------	|\n
+		|**TOTAL**						|**312 líneas**	|**20?ms**		|\n
+		-----------------------------------------------------------------\n 
 		\n
-		1 loop:
-		CPU read the opcode (whatever), M1 signal is marked as up. \n
-		ULA also does it, and if bit 6 of the opcode = false, put down all bits in data bus, and then CPU read NOP actually. \n
-		But, if bit 6 were not 0, ULA wouldn't do anything, and CPU then would read the normal code. \n
-		the NOP instruction takes 4 cycles. \n
-		In cycles 3 CPU put IR register on the address bus. \n
-		In cycle 4 the ULA forms the address to look for char info = I + OpCode (6 bits) + LNCTRL. \n
-		Bit 7 of the Opcode is to determine whether it will draw as it is or in reverse mode. \n
-		Put the value in the address bus and read the char info. \n
-		The value read is put into the SHIFT REGISTER. \n
-		Register R is incremented (after executing any instruction, and NOP is one of them). \n
-		Move to following OpCode. \n
-		2 loop: \n
-		The value is the SHIFT REGISTER is out in 4 CPU cycles, (ULA cycles at double speed remember!). \n
-		Repeat what was told in loop 1. \n
-		So chars are drawn from loop 2 to 33 (32 at a maximum). \n
-		... \n
-		34 loop (or maybe before). \n
-		HALT is found. \n
-		The SHIFT REGISTER is put to 0, and the video output signal is clapped = 0,
-		R register increments and reaches 82. At this point A6 = 0 and INT is launched. \n
-		INT decrements C and aldo B every 8. \n
-		When INT is launched a HSYNC is also launched, video output signal is then free. \n
-		When B reaches 0 the ULA NMI internal generator = true, and jumps to do the same than TOP blank lines, 
-		but at the BOTTOM. \n
-		... \n
-		4.- BOTTOM Blank lines / App Code: \n
-		Same than above... \n
-		When finishes swiches back NMI = false and back to TOP. \n
-		\n
-		The ULA also read the events comming from the IO keyboard and joystick, 
-		and store the info uinto the ULARegister class for them to be managed from the PortManager. (@see class). \n
-		The joystick movements are also kept as keyboboard to emulate the CURSOR type of joystick. \n
-		The joystick type KEMPSTON is also emulated like press in the keyboard...
 	*/
 	class ULA : public MCHEmul::GraphicalChip
 	{
@@ -120,11 +96,8 @@ namespace ZX81
 
 		static const unsigned int _ID = 210;
 
-		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
-			The ULA constructor receives info over the raster data, the memory view to use,
-			The number of cycles of every raster line (different depending on the ULA version),
-			a reference to the portFE that is used to read the keyboard,
-			and additional attributes. */
+		/** Receives vertical/horizontal presentation geometry, machine type, ULA memory
+			view and attributes. PAL/NTSC subclasses supply the default geometry. */
 		ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, Type t, 
 			int vV, const MCHEmul::Attributes& attrs = { });
 
@@ -142,8 +115,9 @@ namespace ZX81
 		virtual unsigned short numberRows () const override
 							{ return (_raster.visibleLines ()); }
 		/** Always with in the visible screen. */
-		inline void screenPositions (unsigned short& x1, unsigned short& y1, 
-			unsigned short& x2, unsigned short& y2);
+		void screenPositions (unsigned short& x1, unsigned short& y1, 
+			unsigned short& x2, unsigned short& y2)
+							{ _raster.displayPositions (x1, y1, x2, y2); }
 
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
@@ -155,12 +129,15 @@ namespace ZX81
 		void setShowEvents (bool sE)
 							{ _showEvents = sE; }
 
-		/** To inform about the INT ack. \n
-			see @ZX81::SinclairZX81 class for more details. 
-			The method received the clock situation (CPU point of view) when happened. */
+		/** Records CPU INT response start; ZX81 applies the bus delay in simulate. */
 		void setINTack (unsigned int c)
 							{ _ULARegisters -> setINTack (c); }
-		inline bool aboutToGenerateNMIAfterCycles (unsigned int nC);
+		/** Predicts with NMI enable unchanged and no new CPU/port events. */
+		bool aboutToGenerateNMIAfterCycles (unsigned int nC);
+		/** Additional response cycles for the coarse HALT/NMI model. \n
+			The caller identifies a NMI from this ULA accepted while HALTed. */
+		unsigned int haltNMIWaitCycles
+			(unsigned int requestClock, unsigned int acceptanceClock) const;
 
 		virtual bool initialize () override;
 
@@ -174,7 +151,7 @@ namespace ZX81
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		/** To know the last Byte read from the VRAM, usually from the Attribute RAM */
+		/** Pattern-bus value exposed to odd-port reads; see ULARegisters::lastVRAMByteRead */
 		const MCHEmul::UByte& lastVRAMByteRead () const
 							{ return (_ULARegisters -> lastVRAMByteRead ()); }
 
@@ -223,10 +200,21 @@ namespace ZX81
 		/** Loads pending patterns before shifting the corresponding pixel. */
 		void loadPendingCharData (unsigned int c, unsigned char p);
 
-		/** Restarts raster coordinates and cancels a pending horizontal return. */
+		/** Restarts presentation coordinates and the coarse horizontal-generator phase. */
 		void restartRaster ();
 
 		private:
+		/** Processes the bus acknowledge before character loading at this pixel. */
+		void processHorizontalSync (MCHEmul::CPU* cpu, unsigned int c, unsigned char p);
+		/** Advances the generator by one ULA clock, independently of presentation. \n
+			Terminal count only wraps the generator; HSYNC begins at its own phase.*/
+		void advanceHorizontalCounter ()
+							{ if (++_horizontalCounter == _HORIZONTALPERIOD) 
+								_horizontalCounter = 0; }
+
+		/** Restores the initial correspondence with presentation coordinates. */
+		void initializeHorizontalTiming ();
+
 		//-----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
@@ -251,6 +239,10 @@ namespace ZX81
 		/** Records horizontal wrap and the resulting vertical advance. */
 		void debugLineAdvance (unsigned int c, unsigned char p,
 			unsigned short hB, unsigned short vB) const;
+		/** Records generator events separately from presentation row advances. */
+		void debugHorizontalTiming (unsigned int c, unsigned char p,
+			const char* event, const char* cause, unsigned short before,
+			unsigned char lB, bool nmiRequested) const;
 		//-----
 
 		protected:
@@ -271,9 +263,21 @@ namespace ZX81
 		std::vector <PendingCharacter> _pendingCharacters;
 		size_t _nextPendingCharacter;
 
-		// Logical synchronization precedes the presentation row's horizontal wrap.
+		// Presentation alignment; only ZX80 also uses this as logical sync.
 		const unsigned short _lineSyncPosition;
 		bool _lineSyncActive;
+
+		// ZX81 timing baseline: 207 T period and HSYNC at counts 16 through 31.
+		// These values are independent of character-load latency and raster geometry.
+		static const unsigned short _HORIZONTALPERIOD	= 414;
+		static const unsigned short _HSYNCSTART			= 32;
+		static const unsigned short _HSYNCEND			= 64;
+		static const unsigned int _INTACKDELAY			= 2;
+
+		unsigned short _horizontalCounter;
+		bool _hSyncActive;
+		bool _horizontalResetPending;
+		unsigned int _horizontalResetClock;
 
 		// Implementation
 		bool _simulationStarted;
@@ -290,23 +294,6 @@ namespace ZX81
 		unsigned char _LINECNTRLTo0Draw; // Alternative (when 0) to draw the LNCTRL = 1 situation...
 		MCHEmul::OBool _writePort, _readPortFE, _NMIGeneratorOn, _NMIGeneratorOff;
 	};
-
-	// ---
-	inline void ULA::screenPositions (unsigned short& x1, unsigned short& y1, 
-		unsigned short& x2, unsigned short& y2)
-	{
-		_raster.displayPositions (x1, y1, x2, y2);
-	}
-
-	// ---
-	inline bool ULA::aboutToGenerateNMIAfterCycles (unsigned int nC)
-	{
-		bool rP;
-		return (_raster.simulateMoveCycles (nC << 1 /** double cycles in ULA. */, rP) &&
-			_ULARegisters -> NMIGenerator ()); 
-		// It means that in the next execution for nC cycles, 
-		// a NMI interrupt will be generated...
-	}
 
 	/** The version para PAL systems. */
 	class ULA_PAL final : public ULA

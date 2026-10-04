@@ -29,9 +29,9 @@ namespace ZX81
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		/** Macros for the speed.
-			The ZX80/ZX81 manages the video using the CPU, so this is the average speed,
-			because the processor always work at 3.25 MHz. */
+		/** _CLOCK is the CPU clock used by this computer (3.25 MHz). \n
+			_PALCLOCK and _NTSCCLOCK are legacy average-throughput estimates, currently
+			unused by ZX80/ZX81 scheduling; they are not regional CPU clock frequencies. */
 		static const unsigned int _CLOCK		= 3250000;	// 3.25 MHz
 		static const unsigned int _PALCLOCK		= 804600;	// 0.804 MHz
 		static const unsigned int _NTSCCLOCK	= 536400;	// 0.536 MHz
@@ -79,7 +79,7 @@ namespace ZX81
 			In the memory structure of the ZX81 like machines the VARS space follows the D_FILE,
 			And where the VARS starts is located in the VARS variable.
 			D_FILE and VARS variables location itself varies depending on the version of the computer emulated. 
-			We have simulated this under the ULA because it is more or less "graphic", but it could be simple at memory. */
+			This computer-level helper reads a memory snapshot; it does not drive ULA rendering. */
 		inline MCHEmul::UBytes displayFileSnapShot () const;
 		/** To get the characters. */
 		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 

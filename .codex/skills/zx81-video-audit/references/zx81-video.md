@@ -80,7 +80,7 @@ Decode I/O from address bits and bus direction, not only literal port names:
 
 When NMI generation is enabled, the horizontal timing source also produces `/NMI`. External transistor logic uses `/HALT` and `/NMI` to pull `/WAIT` low so the CPU services NMI at the required T-state. A HALTed CPU is treated differently so its current HALT cycle can complete.
 
-Visible rows normally end through `HALT` and maskable INT. Blank rows in SLOW mode use the free-running horizontal counter and NMI. These paths meet at line-reset/HSYNC state; ensure one and only one source advances each line.
+Visible rows normally end through `HALT` and maskable INT. Blank rows in SLOW mode use the free-running horizontal counter and NMI. Keep counter reset, HSYNC edges and presentation wrap distinct when auditing these paths.
 
 NMI has priority over INT in the Z80. Preserve ordering near a shared boundary and validate the actual acknowledge edge.
 
@@ -104,7 +104,7 @@ Pseudo-hi-res relies on manipulating line-counter/INT behavior. True hi-res soft
 - Bit 7 changes polarity without changing the six-bit glyph index.
 - Glyph fetch uses the correct I page and row counter for the selected machine/ROM state.
 - Shift-register load and output remain phase-locked at eight pixels per character.
-- `HALT`/INT and counter/NMI paths cannot both advance the same raster line.
+- Separate accepted INT response, counter reset, HSYNC and presentation wrap; do not count them as interchangeable line-advance events.
 - NMI enable/disable and VSYNC side effects follow decoded I/O aliases.
 - `/WAIT` is asserted only under the modeled NMI/HALT conditions and does not become a generic CPU stall.
 - SLOW mode executes user code only in blank-line windows; FAST mode does not retain a synthetic picture.
@@ -139,3 +139,19 @@ Evidence: [Andy Rea's ZX81 ULA replacement](https://oldcomputer.info/8bit/zx81/U
 Independent firmware check in the repository images: `emulators/ZX81Commons/bios/zx80.rom` at 0x0232 and `zx81_3.rom` at 0x038B contain `DB FE 17` (`IN A,(FE); RLA`) in their cassette sampling loops, followed by carry-dependent control flow. RLA transfers the original D7 into carry. These addresses are evidence for those inspected images, not invariants for every ROM revision.
 
 When moving EAR from an incorrect D6 assignment to D7, check the whole returned byte: this also stops overwriting the configured D6 standard selection. Compare ROM control flow and video timing before and after. A missing cursor alone does not establish whether execution stopped, video generation failed, or the output was cropped. Do not prescribe a fixed crop shift from the ROM margin difference alone: establish actual output positions and line events first, and label any exploratory crop change as diagnostic rather than a proven repair.
+
+## Current EMULATORS Implementation (2026-10-04)
+
+This section describes the implemented approximation, not a claim of pin-level hardware equivalence. Read it alongside `include/src/ZX81` and the maintained debug-format source.
+
+- `MemoryVideoCode` intercepts qualifying opcode fetches with A15 high and bit 6 clear. Operand/data/inspection reads preserve the byte; HALT cycles do not capture characters.
+- Captures retain pre-increment I:R. Pattern loading is delayed by 8 ULA pixels for ZX80 and 7 for ZX81. Prefix timestamps retain the initial-fetch approximation.
+- `/w2` equips ZX81 with refresh-capable 16K RAM. A captured I:R address selecting that RAM or its ULA-view mirror supplies the pattern; other addresses use the character path. This fallback does not model an undriven bus and is not a guarantee of universal WRX compatibility. ZX80 configuration remains unexpanded.
+- ZX81 uses an independent horizontal generator: 414 ULA clocks per period, HSYNC start at 32 and end at 64. Accepted INT response schedules reset two CPU T-states later. HSYNC start advances the unblocked character-row counter and requests NMI when enabled. Counter wrap alone is not HSYNC. The 207-T baseline is a compatibility choice, not a resolution of the 207/208-T hardware question.
+- ZX80 retains its coarse logical-line model: accepted INT or the presentation-tail position updates the character-row counter once per active trailing interval. It has no NMI generator. Do not apply ZX81 generator events to ZX80 logs.
+- Presentation is separate: INT response aligns the horizontal position; horizontal wrap advances the displayed row. `Line Advance` is presentation, `Line Sync` is ZX80, and `INT Response`, `Horizontal Reset`, `HSync Start/End` describe ZX81 timing stages.
+- Port effects remain immediate. An actual even-port read drives MIC low and starts VSYNC when NMI is disabled and VSYNC is inactive. Entry restarts presentation and the coarse generator phase, blocking LINECNTRL at 0 for ZX80 or 7 for ZX81. Any output ends VSYNC and releases the block. ZX81 outputs decode A1-low disable followed by A0-low enable; odd outputs drive MIC high. PEEK preserves hardware state and event markers, although it can produce debug output.
+- A6 is sampled as an active-low INT level after a completed instruction, using the recorded last bus address. Request eligibility and actual CPU acceptance are distinct; the ULA is told the accepted response-start clock directly by `ZX81::CZ80`.
+- PerCycle mode can consume a batch before `specificComputerCycle` and chip simulation. Intermediate boundaries can be lost and the single INT latch can be overwritten. This accepted scheduling limitation is documented in that method.
+- Only ULA-origin NMI accepted during HALT with latency 0..4 T receives the ZX81 response extension of `17 - latency` T. It is phase compensation, not a pin-level WAIT implementation. ZX80 receives no extension; ordinary-instruction WAIT is not modeled.
+- `Port Read` uses the last ULA simulation clock, not the physical I/O sampling instant. Do not derive exact VSYNC widths or a fixed pixel correction from that timestamp alone.

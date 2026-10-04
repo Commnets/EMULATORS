@@ -51,7 +51,7 @@ void ZX81::ULARegisters::initializeInternalValues ()
 	_INTack = false;
 	_INTackClock = 0;
 
-	// To start to count from 0 at the very first INC
+	// ZX81 starts at 7 so its first unblocked increment produces 0; ZX80 starts at 0.
 	_LINECNTRL = (_type == Type::_ZX80) ? 0 : 7; 
 	_LINECNTRLBlocked = true;
 

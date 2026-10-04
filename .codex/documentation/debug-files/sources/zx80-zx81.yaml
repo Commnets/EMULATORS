@@ -31,9 +31,9 @@
     {
       "name": "ULA — Info Cycle",
       "producer": "src/ZX81/ULA.cpp :: debugULACycle",
-      "fields": "Raster position: zero-based column and line. Internal status: NMI=NMI_ON|NMI_OFF, ZONE=WHITE|BLACK, LNCTRL (0-7), LNBlocked and VSYNC (0/1). Video shift: Original and Current (decimal bytes), Inverse (0/1). Timing: PixelPhase (0/1), CPUClock (CPU T-states), State=BeforePixel.",
-      "timing": "_lastCPUCycles + (i >> 1). PixelPhase distinguishes the two pixels per CPU T-state. The snapshot precedes pixel shifting and raster advance. CPUClock is the CPU execution endpoint while the ULA processes pending cycles; it is not a per-pixel CPU snapshot.",
-      "events": "The snapshot method adds no event line."
+      "fields": "Raster position: zero-based column and line. Internal status: NMI=NMI_ON|NMI_OFF, ZONE=WHITE|BLACK, LNCTRL (0-7), LineSyncActive (0/1). Shift register: Data (decimal byte), PendingBits (0-8), Inverse (0/1). Timing: PixelPhase (0/1), State=BeforeShift.",
+      "timing": "Header clock is _lastCPUCycles + (i >> 1), in CPU T-states. PixelPhase distinguishes the two pixels per T-state. The snapshot follows due horizontal-generator events and pattern loads, before pixel shifting and presentation advance. It contains no per-pixel CPU snapshot or CPUClock field.",
+      "events": "ZONE names the syncOutputWhite presentation gate, not a physical sync voltage or noise source. LineSyncActive describes the ZX80 coarse line model; ZX81 hardware timing uses separate generator records."
     },
     {
       "name": "ULA — Port Read",
@@ -59,9 +59,9 @@
     {
       "name": "ULA — Line Advance",
       "producer": "src/ZX81/ULA.cpp :: debugLineAdvance, called by ULA::simulate",
-      "fields": "Raster position: HBefore, VBefore, HAfter, VAfter (zero-based). Cause: ExternalSync (eH), RasterEnd (horizontal add result), INTackClock (CPU cycle when eH=1, otherwise NA). Internal status: Model (0=ZX80, 1=ZX811, 2=ZX812, 3=ZX813), LNBefore, LNAfter, LNBlocked, VSYNC, NMIGenerator. CPU context: PC, I, R, HALT, IFF1. Timing: PixelPhase, CPUClock, State=AfterLineAdvance, CPUState=SimulationContext. All numeric values, including PC, are decimal; flags are 0/1.",
-      "timing": "Emitted only with ULA deep debug active, once per line-advance block when eH or RasterEnd is true. Header cycle is _lastCPUCycles + (i >> 1); PixelPhase is i & 1. HBefore precedes horizontal add(1); VBefore and LNBefore precede counter updates. Emission follows incLINECTRL, before screen filling and any NMI request. CPUClock and registers are the available CPU execution context, not reconstructed historical state at that pixel.",
-      "events": "Both cause flags are independent: 1/1 means coincidence in the same pixel iteration. A RasterEnd-only record followed shortly by an ExternalSync-only record demonstrates two separate raster advances; compare LNBefore/LNAfter to determine whether the character counter also advanced twice. ExternalSync is the existing modeled INTack event, not proof of a physical HSYNC. INTack() and horizontal add(1) are each evaluated once; logging neither consumes nor recreates them."
+      "fields": "Raster position: HBefore,HAfter,VBefore,VAfter. Internal status: LNCTRL,PendingBits. Timing: PixelPhase,State=AfterHorizontalWrap.",
+      "timing": "Emitted after a presentation horizontal wrap and vertical advance. Does not increment LINECTRL or request NMI on ZX81.",
+      "events": "Presentation only. INT response alignment can suppress a coincident wrap. Compare separate hardware generator records."
     },
     {
       "name": "ZX81DN — Datasette trap executed",
@@ -76,26 +76,45 @@
       "fields": "ZX81PRT header, CPU cycle, and the literal Printer trap executed.",
       "timing": "Emitted when the printer routine is intercepted.",
       "events": "The device manages printed content; this header confirms the trap."
+    },
+    {
+      "name": "ULA — Line Sync",
+      "producer": "src/ZX81/ULA.cpp :: debugLineSync",
+      "fields": "Raster position: HBefore,HAfter,Row. Cause: ExternalSync,InternalSync,AlreadyActive,Applied,INTackClock. Internal status: LNBefore,LNAfter,LNBlocked,NMIGenerator,PendingBits. Timing: PixelPhase,TailPixels,State=AfterLineSync.",
+      "timing": "ZX80 only; retains the existing coarse line model.",
+      "events": "Not a ZX81 hardware sync record."
+    },
+    {
+      "name": "ULA — INT Response / Horizontal Reset / HSync Start / HSync End",
+      "producer": "src/ZX81/ULA.cpp :: debugHorizontalTiming",
+      "fields": "Generator: Before,After (ULA clocks),HSync,ResetPending. Raster position: Column,Row. Internal status: LNBefore,LNAfter,LNBlocked,NMIGenerator,NMIRequested. Timing: PixelPhase,Cause,ResponseClock,ResetClock,State=AfterEvent. Flags 0/1; numeric fields decimal.",
+      "timing": "ZX81 only. Baseline period 414 ULA clocks; start at 32, end at 64. INT Response schedules reset two CPU T-states later at phase 0. Reset wins over a simultaneous sync edge. HSync Start updates LINECTRL before character load and may request NMI. HSync End may also be caused by INT acknowledgement. InitializationOrVSync has only the last simulated ULA clock reference, not an exact bus time; ResponseClock/ResetClock are not applicable to that cause.",
+      "events": "Causes: CPUResponse,INTAcknowledge,Counter,InitializationOrVSync. ResponseClock is the CPU response-start timestamp, not /IORQ. Generator wraps independently of raster; terminal wrap creates no sync edge. HALT/NMI response compensation is reported separately by CPU NMI Synchronization; ordinary-instruction WAIT remains unmodeled. Initial counter 4 corresponds to presentation H=0; this preserves the existing coarse VSYNC restart and text-coordinate mapping. 207 T is the compatibility baseline, not a resolution of the 207/208 T hardware question."
+    },
+    {
+      "name": "CPU — NMI Synchronization",
+      "producer": "src/ZX81/CZ80.cpp :: debugNMISynchronization",
+      "fields": "Request: RequestClock,AcceptanceClock. Synchronization: HALTBefore,Latency,AdditionalCycles. Model: Reference=HALT4T,Applied,Reason. Timing: NominalCycles,TotalCycles,State=BeforeResponseExecution. All clocks/durations are CPU T-states; flags are 0/1.",
+      "timing": "Emitted by CPU deep debug at acceptance of NMI from the linked ULA with reason 1, before generic interrupt execution changes HALT or PC. The generic transaction record still reports the nominal 11 T. Full mode extends the elapsed response duration; PerCycle mode extends remaining response cycles once.",
+      "events": "HALTed ZX81 with latency 0..4 receives 17-Latency additional cycles, the coarse four-T phase compensation compared with picozx81. NotHalted,LatencyOutsideModel,ModelNotSupported record exclusions, not proof of zero physical WAIT. PhaseCompensation identifies application. No ordinary-instruction WAIT, exact pin-level WAIT, or CPU/chip batch interleaving is implemented. ZX80 receives no additional cycles."
     }
   ],
   "example": [
     "ULA     12000       Port Read",
     "                    Raster position     :Column=0,Row=0",
     "                    Port                :Access=READ,Address=32766,ID=254,Data=127,D6=1,D7=0",
-    "                    Internal status     :NTSC=0,EAR=0,MIC=0,VSYNC=1,LNCTRL=0,LNBlocked=1",
+    "                    Internal status     :NTSC=0,EAR=0,MIC=0,VSYNC=1,LNCTRL=7,LNBlocked=1",
     "                    Timing              :Reference=LastULASimulatedCPUClock,State=AfterRead",
     "ULA     12000       Info Cycle",
     "                    Raster position     :0,0",
-    "                    Internal status     :NMI=NMI_OFF,ZONE=BLACK,LNCTRL=0,LNBlocked=1,VSYNC=1",
-    "                    Video shift         :Original=0,Current=0,Inverse=0",
-    "                    Timing              :PixelPhase=0,CPUClock=12011,State=BeforePixel",
+    "                    Internal status     :NMI=NMI_OFF,ZONE=BLACK,LNCTRL=7,LineSyncActive=0",
+    "                    Shift register      :Data=0,PendingBits=0,Inverse=0",
+    "                    Timing              :PixelPhase=0,State=BeforeShift",
     "+",
     "ULA     12207       Line Advance",
-    "                    Raster position     :HBefore=413,VBefore=100,HAfter=0,VAfter=101",
-    "                    Cause               :ExternalSync=0,RasterEnd=1,INTackClock=NA",
-    "                    Internal status     :Model=0,LNBefore=3,LNAfter=4,LNBlocked=0,VSYNC=0,NMIGenerator=0",
-    "                    CPU context         :PC=49152,I=14,R=127,HALT=1,IFF1=1",
-    "                    Timing              :PixelPhase=1,CPUClock=12208,State=AfterLineAdvance,CPUState=SimulationContext",
+    "                    Raster position     :HBefore=413,HAfter=0,VBefore=100,VAfter=101",
+    "                    Internal status     :LNCTRL=3,PendingBits=0",
+    "                    Timing              :PixelPhase=1,State=AfterHorizontalWrap",
     "+"
   ],
   "example_note": "Schematic independent examples based on current producers; values are illustrative, not a captured execution trace.",
@@ -103,10 +122,12 @@
     "ZX80 and ZX81 share one document because the executable and ULA class parameterise the type.",
     "The ULA derives its cycle from _lastCPUCycles and i>>1; it must not be replaced with cpu.clockCycles()-i.",
     "A tape or printer trap describes firmware simulation, not an electrical signal.",
-    "Port Read timestamps cannot measure exact I/O or VSYNC pulse widths. The record shows post-read state and cannot reconstruct the raster before an IN reset.",
-    "A zero Current shift byte does not prove that all eight pixels have shifted out. These fields do not identify rejected character loads or actual INT acknowledgement.",
-    "PEEK currently still has side effects in PortManager, including MIC updates. Logging reports existing behavior without changing it. Debug methods use non-consuming state getters.",
-    "Line Advance establishes modeled causes and actual counter changes, but does not by itself prove a visual defect or the electrical timing of HSYNC. Correlate events with the image and distinguish CPU execution context from the ULA pixel timestamp."
+    "Port effects remain immediate. Port Read timestamps cannot measure exact I/O or VSYNC pulse widths: they use the last simulated ULA clock. The record shows post-read state and cannot reconstruct the raster before an IN reset.",
+    "A zero Shift register Data byte does not prove that all pixels have shifted out; consult PendingBits. Character Load reports rejected loads; INT Response and Horizontal Reset identify distinct timing stages.",
+    "PEEK preserves hardware state, MIC change notifications and screen event markers. It can emit a Port Read debug record, which is not an executed IN. Debug methods use non-consuming state getters.",
+    "Line Advance reports presentation only. Use HSync Start and Horizontal Reset for ZX81 hardware-model timing; Line Sync is ZX80 only.",
+    "PerCycle execution can batch several CPU boundaries before chips run. INT sampling/acceptance and the single acknowledgement latch therefore retain the documented coarse-scheduling limits.",
+    "HALT/NMI compensation is a response-duration approximation; ordinary-instruction WAIT and exact pin-level WAIT remain unmodeled. Prefix character-capture timestamps retain the initial-fetch approximation."
   ],
   "watched_sources": [
     "src/ZX81/ZX81.cpp",
@@ -115,6 +136,8 @@
     "src/ZX81/StdPrinter.cpp",
     "src/ZX81/PortManager.cpp",
     "include/ZX81/ULA.hpp",
-    "include/ZX81/ULARegisters.hpp"
+    "include/ZX81/ULARegisters.hpp",
+    "src/ZX81/CZ80.cpp",
+    "include/ZX81/CZ80.hpp"
   ]
 }

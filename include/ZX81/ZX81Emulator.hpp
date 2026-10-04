@@ -65,7 +65,7 @@ namespace ZX81
 		inline unsigned int configurationMode () const; // Not expanded by default!
 
 		/** To know which is the type of computer to be emulated: 
-			0 = ZX81(1), 1 = ZX81(2), 2 = ZX81(3). */
+			Type::_ZX80 = 0, Type::_ZX811 = 1, Type::_ZX812 = 2, Type::_ZX813 = 3. */
 		Type emulatedComputer () const;
 
 		/** To add the peripherals linked to the computer, according to the parameters. */

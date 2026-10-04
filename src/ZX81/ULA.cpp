@@ -1,4 +1,4 @@
-﻿#include <ZX81/ULA.hpp>
+#include <ZX81/ULA.hpp>
 #include <ZX81/ULARegisters.hpp>
 #include <ZX81/ZX81.hpp>
 #include <ZX81/OSIO.hpp>
@@ -6,73 +6,24 @@
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
-/** Standard PAL requires 64us to draw a line. \n
-	ULA runs in parallel with CPU and runs at double speed than the CPU. \n
-	CPU runs at 3,25Mhz and ULA runs at 6,50Mhz. \n
-	CPU need 207 cycles (CPU type) to draw a line, so ULA needs 414 cycles (ULA type). \n
-	The structure of a line is the following: \n
-	-----------------------------------------------------------------------------\n
-	|Zone				|Time aprox	|ULA Cicles (at 6.5 MHz, double than CPU)	|\n
-	|------------------	|-----------|-------------------------------------------|\n
-	|**HSYNC**			|\~4.7 µs	|4.7 µs × 6.5 MHz ≈ **30.6 → 31 cycles**		|\n
-	|**Back Porch**		|\~5.7 µs	|5.7 µs × 6.5 MHz ≈ **37.1 → 36 cycles**		|\n
-	|**Video Active**	|\~52 µs		|52 µs × 6.5 MHz ≈ **338 cycles**				|\n
-	|**Front Porch**	|\~1.5 µs	|1.5 µs × 6.5 MHz ≈ **9.75 → 9 cycles**		|\n
-	|------------------	|-----------|-------------------------------------------|\n
-	|**TOTAL**			|\~63.9 µs	|**414 cycles** (rounded)					|\n
-	-----------------------------------------------------------------------------\n 
-	Standard PAL requires 312 lines to draw a frame. \n
-	The structure of the frame is the following: \n
-	-----------------------------------------------------------------\n 
-	|Zone							|Lines aprox.	|Time aprox.	|\n
-	|-------------------------------|--------------	|-------------	|\n
-	|**Vertical sync pulse** (VSYNC)|\~5 lines		|\~320 µs		|\n
-	|**Vertical back porch**		|\~25 lines		|\~1.6 ms		|\n
-	|**Zona de imagen activa**		|\~284 lines	|\~18.2 ms		|\n
-	|**Vertical front porch**		|\~3 lines		|\~192 µs		|\n
-	|-------------------------------|--------------	|-------------	|\n
-	|**TOTAL**						|**312 líneas**	|**20 ms**		|\n
-	-----------------------------------------------------------------\n 
-	\n
-	Where the border and the drawing zone that is seen is the phisical screen is actually, 
-	cannot be defined in advance!, like happens in e.g. VICII (C64). \n
-	It is really the software and the CPU the ones building up the screen: \n
-	---
-	When the address bus connected to ULA have bit 14 set (1) and bit 15 reset (0),
-	the ULA will know that the CPU is accesing the video memory. \n
-	Then uses the info at the data bus to load the shift register and start to shift it left (see below). \n
-	Just after loading that info the ULA put back "0" in the data bus (unless the bit 6 of the data is on)
-	to "confuse" the CPU that will execute a NOP operation. \n
-	Take a look to ZX81::MemoryVideoCode class. \n
-	If the bit 6 is set, the ULA doesn't change the value in the data bus (usually equivalent to HALT), \n
-	The value read is used (together with the LINECNTRL register) to build up 
-	the address where to read the value to load in the shift register. \n
-	Then every clock (ULAwise) the register shifts one position left and draws a pixel according to the value shifted. \n
-	When the shift ends, there won't be more pixels to draw until another byte were loaded. \n
-	So, the drawing zone will start where the CPU starts to "run" things in the video memory.
-	---
-	In which line starts the drawing is not directly controlled actually! \n
-	What it is really controlled is when the VSYNC starts only. \n
-	It starts when the port FE is read. This is the zone of the ROM called VSYC Routine. \n
-	When that happens a signal is sent to ULA to reset the vertical raster,
-	LINECTRL is set to 0 and "locked" temporally. \n
-	That routine VSYNC finishes, a OUT port FD is sent to activate (in ULA) the NMI interrupts. \n
-	This port also indicates that the VSYNC zone has finishes and LINENCTRL is unlocked to count. \n
-	----
-	In MCHEmul, raster is thought to be "linked" to the different zones of a screen (border, drawing, etc.),
-	And also used to draw the window that content the whole simulation. \n
-	The only important value is where the visible parts starts because 
-	it has to be aligned with the INT routine that draws the screen. \n
-	142 "cycles" is enough to left a 8 width pixels border. \n
-	After all being said, the only behaviour that could be use is the second one. */
-/** 32 lines border up/down/left/right by default in both PAL & NTSC. */
+/** Presentation geometry, not a broadcast-standard porch specification. \n
+	The horizontal raster has 414 positions; visible columns span 125..413
+	(289 pixels). PAL has 312 rows with visible rows 46..269 (224 rows); NTSC has
+	262 rows with visible rows 22..245 (224 rows). Endpoints are inclusive. \n
+	ROM execution and the character pipeline determine actual image placement.
+	Delayed pattern loading and the trailing interval preserve presentation alignment. \n
+	ZX81's separate generator uses a 207-T compatibility baseline and HSYNC at ULA
+	counts 32..63. Crop bounds do not specify HSYNC or physical porch durations;
+	414 clocks at 6.5 MHz are not exactly 64 microseconds. \n
+	An actual even-port read starts VSYNC when NMI is disabled; any output ends it.
+	A1-low output disables ZX81 NMI, then A0-low enables it. ZX80 has no NMI generator.
+	See PortManager for decoding and side effects. */
 const MCHEmul::RasterData ZX81::ULA_PAL::_VRASTERDATA
-	(0, 46 /** 30 + 16 starts visible. */, 46 /** = starts screen. */, 269 /** +16+192+16 (24 char lines * 8) end screen. */,
-	 269 /** = end visible part. */, 311 /** +26 retrace. */, 311 /** = end. */, 312 /* total */, 0, 0);
+	(0, 46 /** First visible row. */, 46 /** = starts screen. */, 269 /** Last screen row, inclusive. */,
+	 269 /** = end visible part. */, 311 /** Vertical retrace position. */, 311 /** = end. */, 312 /* total */, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_PAL::_HRASTERDATA
-	(0, 125 /** +128 starts visible. */, 125 /** = starts screen, */, 413 /** +19+256+14 (32 chars * 8) end screen. */,
+	(0, 125 /** First visible column. */, 125 /** = starts screen, */, 413 /** Last screen column, inclusive. */,
 	 413 /** = end visible part. */, 413 /** = retrace. */, 413 /** = end. */, 414 /** total. */, 0, 0);
-// const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 15, 15, 246, 246, 261, 261, 262, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_NTSC::_VRASTERDATA (0, 22, 22, 245, 245, 261, 261, 262, 0, 0);
 const MCHEmul::RasterData ZX81::ULA_NTSC::_HRASTERDATA (0, 125, 125, 413, 413, 413, 413, 414, 0, 0);
 
@@ -92,8 +43,12 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, ZX
 	  _charLoadDelayPixels (t == ZX81::Type::_ZX80 ? 8 : 7),
 	  _pendingCharacters (),
 	  _nextPendingCharacter (0),
-	  _lineSyncPosition (hd.totalPositions () - _charLoadDelayPixels - 1),
+	  _lineSyncPosition (hd.totalPositions () - (t == ZX81::Type::_ZX80 ? 8 : 7) - 1),
 	  _lineSyncActive (false),
+	  _horizontalCounter (4),
+	  _hSyncActive (false),
+	  _horizontalResetPending (false),
+	  _horizontalResetClock (0),
 	  _simulationStarted (false),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
@@ -113,6 +68,44 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, ZX
 ZX81::ULA::~ULA ()
 {
 	SDL_FreeFormat (_format);
+}
+
+// ---
+bool ZX81::ULA::aboutToGenerateNMIAfterCycles (unsigned int nC)
+{
+	if (_type == ZX81::Type::_ZX80 || !_ULARegisters -> NMIGenerator () || nC == 0)
+		return (false);
+
+	unsigned int pixels = nC << 1;
+	unsigned int distance = (_HSYNCSTART + _HORIZONTALPERIOD - _horizontalCounter) % _HORIZONTALPERIOD;
+	if (!_horizontalResetPending)
+		return (distance < pixels);
+
+	// The stored counter describes the next pixel, at _lastCPUCycles phase zero.
+	// A reset wins over a sync edge at exactly the same instant.
+	unsigned int resetDistance = (_horizontalResetClock - _lastCPUCycles) << 1;
+	return ((distance < pixels && distance < resetDistance) ||
+		(resetDistance < pixels && _HSYNCSTART < (pixels - resetDistance)));
+}
+
+// ---
+unsigned int ZX81::ULA::haltNMIWaitCycles
+	(unsigned int requestClock, unsigned int acceptanceClock) const
+{
+	if (_type == ZX81::Type::_ZX80)
+		return (0);
+
+	unsigned int elapsed = acceptanceClock - requestClock;
+	// Only a boundary of the four-T HALT cycle is covered. Larger latencies
+	// can result from CPU/chip batching and need a more detailed bus model.
+	if (elapsed > 4)
+		return (0);
+
+	// Picozx81's four-T phase compensation: 14 + 3 - elapsed.
+	// This extends the effective response; it is not a 17-T HSYNC pulse
+	// or a pin-level WAIT simulation. Ordinary instructions remain outside
+	// this approximation, which must not depend on the game or raster crop.
+	return (17 - elapsed);
 }
 
 // ---
@@ -165,6 +158,19 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 	{
 		unsigned int c = _lastCPUCycles + (i >> 1);
 		unsigned char p = (unsigned char) (i & 1);
+		bool eH = _ULARegisters -> INTack (c);
+		if (_type != ZX81::Type::_ZX80)
+		{
+			if (eH)
+			{
+				_horizontalResetPending = true;
+				_horizontalResetClock = c + _INTACKDELAY;
+				_IFDEBUG debugHorizontalTiming (c, p, "INT Response", "CPUResponse",
+					_horizontalCounter, _ULARegisters -> LINECNTRL (), false);
+			}
+			processHorizontalSync (cpu, c, p);
+		}
+
 		// A due load precedes this pixel's shift; the old pattern survives until then.
 		loadPendingCharData (c, p);
 
@@ -208,7 +214,6 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		unsigned short hB = _raster.hData ().currentPositionAtBase0 ();
 		unsigned short vB = _raster.vData ().currentPositionAtBase0 ();
 
-		bool eH = _ULARegisters -> INTack (c);
 		bool internalSync = (hB == _lineSyncPosition);
 		bool wasActive = _lineSyncActive;
 		bool rE = _raster.hData ().add (1);
@@ -220,7 +225,8 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 				_screenMemory -> setHorizontalLine
 					(x + 1, y, _raster.visibleColumns () - (x + 1), 1);
 
-			// INT acceptance starts the tail interval, not the next presentation row.
+			// Presentation alignment preserves the existing text coordinates.
+			// On ZX81 this does not reset the hardware counter or start HSYNC.
 			// Do not derive hardware events from retrace flags produced by this jump.
 			_raster.hData ().add
 				((int) (_lineSyncPosition + 1) -
@@ -230,7 +236,7 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 			rE = false;
 		}
 
-		if (eH || internalSync)
+		if (_type == ZX81::Type::_ZX80 && (eH || internalSync))
 		{
 			unsigned char lB = _ULARegisters -> LINECNTRL ();
 			bool applied = !wasActive;
@@ -255,14 +261,17 @@ bool ZX81::ULA::simulate (MCHEmul::CPU* cpu)
 		if (rE)
 		{
 			// add() already wrapped horizontally. Logical line state was updated
-			// at sync; only the presentation row advances at this later instant.
+			// separately at sync; this wrap advances only the presentation row.
 			_raster.vData ().add (1);
 			_lineSyncActive = false;
 
 			_IFDEBUG debugLineAdvance (c, p, hB, vB);
 		}
 
-		// Notice that the VSYNC doesn't happen here as it is the port output the one launching that...
+		if (_type != ZX81::Type::_ZX80)
+			advanceHorizontalCounter ();
+
+		// VSYNC starts on a qualifying port read and ends on output; PortManager applies both.
 		// (@see ZX81::PortManager class)
 
 		// If the status of the casette signal has changed, it has to be notified...
@@ -485,6 +494,69 @@ void ZX81::ULA::restartRaster ()
 	_raster.initialize ();
 
 	_lineSyncActive = false;
+
+	initializeHorizontalTiming ();
+}
+
+// ---
+void ZX81::ULA::processHorizontalSync (MCHEmul::CPU* cpu, unsigned int c, unsigned char p)
+{
+	if (_horizontalResetPending && c == _horizontalResetClock && p == 0)
+	{
+		unsigned short before = _horizontalCounter;
+		_horizontalResetPending = false;
+		// A bus acknowledge restarts the generator, not the sync pulse.
+		if (_hSyncActive)
+		{
+			_hSyncActive = false;
+
+			_IFDEBUG debugHorizontalTiming (c, p, "HSync End", "INTAcknowledge",
+				before, _ULARegisters -> LINECNTRL (), false);
+		}
+
+		_horizontalCounter = 0;
+
+		_IFDEBUG debugHorizontalTiming (c, p, "Horizontal Reset", "INTAcknowledge",
+			before, _ULARegisters -> LINECNTRL (), false);
+	}
+
+	if (_horizontalCounter == _HSYNCSTART)
+	{
+		unsigned char lB = _ULARegisters -> LINECNTRL ();
+		_hSyncActive = true;
+		_ULARegisters -> incLINECTRL ();
+		bool nmiRequested = _ULARegisters -> NMIGenerator ();
+		if (nmiRequested)
+			cpu -> requestInterrupt (FZ80::NMIInterrupt::_ID, c, this, 1);
+
+		_IFDEBUG debugHorizontalTiming (c, p, "HSync Start", "Counter",
+			_horizontalCounter, lB, nmiRequested);
+	}
+	else
+	if (_horizontalCounter == _HSYNCEND)
+	{
+		_hSyncActive = false;
+
+		_IFDEBUG debugHorizontalTiming (c, p, "HSync End", "Counter",
+			_horizontalCounter, _ULARegisters -> LINECNTRL (), false);
+	}
+}
+
+// ---
+void ZX81::ULA::initializeHorizontalTiming ()
+{
+	unsigned short before = _horizontalCounter;
+	// Presentation H=406 denotes response start; H=410 denotes bus acknowledge.
+	// Thus presentation H=0 corresponds to generator count 4, not zero.
+	// Keep the coarse VSYNC restart: exact I/O timing and pin-level WAIT are
+	// not modeled. HALT/NMI compensation is separate; this is not an INT edge.
+	_horizontalCounter = 4;
+	_hSyncActive = false;
+	_horizontalResetPending = false;
+	_horizontalResetClock = 0;
+	if (_type != ZX81::Type::_ZX80)
+		_IFDEBUG debugHorizontalTiming (_lastCPUCycles, 0, "Horizontal Reset",
+			"InitializationOrVSync", before, _ULARegisters -> LINECNTRL (), false);
 }
 
 // ---
@@ -650,6 +722,35 @@ void ZX81::ULA::debugLineAdvance (unsigned int c, unsigned char p,
 		  { "Timing",
 			"PixelPhase=" + std::to_string (p) + "," +
 			"State=AfterHorizontalWrap" } });
+}
+
+// ---
+void ZX81::ULA::debugHorizontalTiming (unsigned int c, unsigned char p,
+	const char* event, const char* cause, unsigned short before,
+	unsigned char lB, bool nmiRequested) const
+{
+	assert (_deepDebugFile != nullptr);
+	_deepDebugFile -> writeCompleteLine (className (), c, event,
+		{ { "Generator",
+			"Before=" + std::to_string (before) + "," +
+			"After=" + std::to_string (_horizontalCounter) + "," +
+			"HSync=" + std::to_string (_hSyncActive) + "," +
+			"ResetPending=" + std::to_string (_horizontalResetPending) },
+		  { "Raster position",
+			"Column=" + std::to_string (_raster.hData ().currentPositionAtBase0 ()) + "," +
+			"Row=" + std::to_string (_raster.vData ().currentPositionAtBase0 ()) },
+		  { "Internal status",
+			"LNBefore=" + std::to_string (lB) + "," +
+			"LNAfter=" + std::to_string (_ULARegisters -> LINECNTRL ()) + "," +
+			"LNBlocked=" + std::to_string (_ULARegisters -> LINECTRLBlocked ()) + "," +
+			"NMIGenerator=" + std::to_string (_ULARegisters -> NMIGenerator ()) + "," +
+			"NMIRequested=" + std::to_string (nmiRequested) },
+		  { "Timing",
+			"PixelPhase=" + std::to_string (p) + "," +
+			"Cause=" + std::string (cause) + "," +
+			"ResponseClock=" + std::to_string (_ULARegisters -> INTackClock ()) + "," +
+			"ResetClock=" + std::to_string (_horizontalResetClock) + "," +
+			"State=AfterEvent" } });
 }
 
 // ---

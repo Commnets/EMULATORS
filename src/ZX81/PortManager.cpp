@@ -73,7 +73,7 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 			(_ULARegisters -> NTSC () ? 0b00000000 : 0b01000000); // Bit 6 set when 50Hz = PAL = !NTSC...
 
 		MCHEmul::UByte pR = MCHEmul::UByte::_FF;
-		// What row to read is determined by the value of the register B...
+		// A8-A15 select rows; the CPU register supplying them depends on the instruction.
 		MCHEmul::UByte bVal = (unsigned char) ((ab & 0xff00) >> 8);
 		// If no row is selected...
 		if (bVal.value () != MCHEmul::UByte::_FF)
@@ -95,7 +95,7 @@ MCHEmul::UByte ZX81::PortManager::getValue (unsigned short ab, unsigned char id,
 			{ 
 				_ULARegisters -> setVSync (true);
 
-				// Restart raster coordinates and cancel any pending horizontal return.
+				// Restart presentation coordinates and the coarse horizontal-generator phase.
 				_ULA -> restartRaster ();
 			}
 		}

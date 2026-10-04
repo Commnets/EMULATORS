@@ -123,9 +123,8 @@ namespace ZX81
 
 		/** The constructor receives the posible memory configuration
 			and also the type of machine (indicated by the type of ROM): \n
-			0 = ZX81 type 0 (with the error SQR (25)). \n
-			1 = ZX81 type 1 (without the error SQR (25)). very rare. \n
-			2 = ZX81 type 2 (the newest). */
+			Type::_ZX80 = 0, Type::_ZX811 = 1, Type::_ZX812 = 2, Type::_ZX813 = 3. \n
+			The ZX81 selectors identify ROM variants, not ULA silicon revisions. */
 		Memory (Configuration cfg, Type t);
 
 		/** Gets the type. */
