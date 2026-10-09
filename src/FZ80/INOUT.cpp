@@ -1,6 +1,20 @@
 #include <FZ80/INOUT.hpp>
 
 // ---
+void FZ80::IN_General::completePortRead
+	(const MCHEmul::UByte& v, const FZ80::Z80Port::Access::ReadContext& rC)
+{
+	// The destination was selected before the port read.
+	// In particular, reading into B or C must not change the port address.
+	if (rC._destination != nullptr)
+		rC._destination -> set ({ v });
+
+	// IN A,(n) preserves flags; register and flags-only IN (C) update them.
+	if (rC._affectFlags)
+		affectFlags (v);
+}
+
+// ---
 _INST_IMPL (FZ80::IN_A)
 {
 	assert (parameters ().size () == 2);
@@ -73,63 +87,80 @@ _INST_IMPL (FZ80::IN_FFromC)
 }
 
 // ---
+void FZ80::INBlock_General::completePortRead
+	(const MCHEmul::UByte& v, const FZ80::Z80Port::Access::ReadContext& rC)
+{
+	// HL may already have advanced during preparation.
+	// Store the input byte at the original, captured destination.
+	memory () -> set (MCHEmul::Address (2, rC._memoryAddress), v);
+
+	// Preserve the existing block-input flag calculation using the saved
+	// decremented B and direction-adjusted C, not the live CPU registers.
+	unsigned short sum =
+		(unsigned short) rC._cAdjusted + (unsigned short) v.value ();
+	bool carry = sum > 0x00ff;
+	unsigned char parity =
+		(unsigned char) ((sum & 0x0007) ^ rC._bAfter);
+
+	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
+
+	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, carry);
+	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, v.bit (7));
+	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG,
+		(MCHEmul::UByte (parity).numberBitsOn () % 2) == 0);
+	st.setBitStatus (FZ80::CZ80::_BIT3FLAG,
+		MCHEmul::UByte (rC._bAfter).bit (3));
+	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, carry);
+	st.setBitStatus (FZ80::CZ80::_BIT5FLAG,
+		MCHEmul::UByte (rC._bAfter).bit (5));
+	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rC._bAfter == 0);
+	st.setBitStatus (FZ80::CZ80::_SIGNFLAG,
+		MCHEmul::UByte (rC._bAfter).bit (7));
+}
+
+// ---
 bool FZ80::INBlock_General::executeWith (int a)
 {
 	assert (a == 1 || a == -1);
 
-	// The registers involved...
-	MCHEmul::Register& rB		= registerB ();
-	unsigned char rBA			= rB.values ()[0].value ();
-	MCHEmul::Register& rC		= registerC ();
-	unsigned short rCA			= (unsigned short) rC.values ()[0].value ();
-	MCHEmul::Register& rH		= registerH ();
-	MCHEmul::Register& rL		= registerL ();
+	MCHEmul::Register& rB = registerB ();
+	unsigned char rBA = rB.values ()[0].value ();
+	unsigned char rCA = registerC ().values ()[0].value ();
+	MCHEmul::Address hlA = addressHL ();
 
-	MCHEmul::StatusRegister& st = cpu () -> statusRegister ();
-
-	MCHEmul::Address hlA = addressHL (); // Target...
-	MCHEmul::UByte vR = MCHEmul::UByte::_0;
-	// The value of the component BC is pushed into the address bus...
+	// INI/IND present the original BC before decrementing B.
 	_lastExecutionData._INOUTAddress = addressBC ();
 	unsigned short ab =
 		(unsigned short) _lastExecutionData._INOUTAddress.value ();
-	// ...and then the value read from the port is pushed into the memory...
-	prepareIOAccess (ab, (unsigned char) rCA, _IOSTARTCYCLE, false);
+	prepareIOAccess (ab, rCA, _IOSTARTCYCLE, false);
 	setIOAccessClockCycle (_IOACCESSCYCLE);
-	vR = static_cast <CZ80*> (cpu ()) ->
-		portValue (ab, (unsigned char) rCA);
-	// The internal register RW used later in BIT instructions...
-	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
+
+	// Save everything completion needs before advancing the CPU registers.
+	// The byte and its dependent flags/memory write are produced only on release.
+	Z80Port::Access access;
+	access._type = Z80Port::Access::Type::_READ;
+	access._clockCycle = IOAccessClockCycle ();
+	access._address = ab;
+	access._instruction = this;
+	access._readContext._memoryAddress = (unsigned short) hlA.value ();
+	access._readContext._bAfter = (unsigned char) (rBA - 1);
+	access._readContext._cAdjusted = (unsigned char) (rCA + a);
+	if (!static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access))
+		return (false);
+
+	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister
 		((unsigned char) ((ab + 1) >> 8));
-	// The final write to (HL) is the last bus access made by INI/IND.
-	memory () -> set (hlA, vR);
+
+	// Keep the final memory-bus address available to machine-level INT sampling,
+	// even though completePortRead will perform the actual memory write later.
 	_lastExecutionData._INOUTAddress = hlA;
-
-	// Moves to the next position 
-	// or the previous (depending on the value of a...
 	hlA = (a > 0) ? (hlA + 1) : (hlA - 1);
-	// The number of elements to move is decremented into 1, 
-	// and _b becomes true if data data is 0
-	_b0 = (rBA -= 1) == 0;
-	rCA = (a > 0) ? (rCA + 1) : (rCA - 1);
+	rBA = access._readContext._bAfter;
 
-	// How the flags are affected...
-	// http://www.z80.info/zip/z80-documented.pdf (section 4.3)
-	bool ec = ((rCA & 0x00ff) + (unsigned short) vR.value ()) > 0x00ff;
-	unsigned char pc = (unsigned char) ((((rCA & 0x00ff) + 
-		(unsigned short) vR.value ()) & 0x0007) ^ (unsigned short) rBA);
-	st.setBitStatus (FZ80::CZ80::_CARRYFLAG, ec);
-	st.setBitStatus (FZ80::CZ80::_NEGATIVEFLAG, vR.bit (7));
-	st.setBitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG, (MCHEmul::UByte (pc).numberBitsOn () % 2) == 0x00);
-	st.setBitStatus (FZ80::CZ80::_BIT3FLAG, MCHEmul::UByte (rBA).bit (3));
-	st.setBitStatus (FZ80::CZ80::_HALFCARRYFLAG, ec);
-	st.setBitStatus (FZ80::CZ80::_BIT5FLAG, MCHEmul::UByte (rBA).bit (5));
-	st.setBitStatus (FZ80::CZ80::_ZEROFLAG, rBA == 0);
-	st.setBitStatus (FZ80::CZ80::_SIGNFLAG, MCHEmul::UByte (rBA).bit (7));
-	
-	// Restore the new content into the registers...
+	// Repetition and its additional cycles depend on B, not on the input byte.
+	_b0 = rBA == 0;
 	rB.set ({ rBA });
-	rH.set ({ hlA.bytes ()[0] }); rL.set ( { hlA.bytes ()[1] });
+	registerH ().set ({ hlA.bytes ()[0] }); registerL ().set ({ hlA.bytes ()[1] });
 
 	return (true);
 }
@@ -277,9 +308,18 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 	// The internal register RW used later in BIT instructions...
 	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
 		((unsigned char) ((ab + 1) >> 8));
-	// ...and then the value read from memory is pushed into the port...
 	prepareIOAccess (ab, rCA, _IOSTARTCYCLE);
-	static_cast <CZ80*> (cpu ()) -> setPortValue (ab, rCA, vR);
+	setIOAccessClockCycle (_IOACCESSCYCLE);
+
+	// OUTI/OUTD use decremented B in the port address. Capture the memory byte
+	// now; releasing the output must not reread memory after HL has advanced.
+	Z80Port::Access access;
+	access._type = Z80Port::Access::Type::_WRITE;
+	access._clockCycle = IOAccessClockCycle ();
+	access._address = ab;
+	access._value = vR;
+	if (!static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access))
+		return (false);
 
 	// Moves to the next position 
 	// or the previous (depending on the value of a...

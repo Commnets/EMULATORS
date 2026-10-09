@@ -35,8 +35,9 @@ namespace ZX81
 	  * Every output ends VSYNC and releases LINECNTRL without resetting its value.
 	  * On ZX81, A1 = 0 disables NMI, then A0 = 0 enables it; enable wins when both
 	  * conditions hold. ZX80 has no NMI generator. Odd-port outputs drive MIC high. \n
-	  * Effects are applied immediately by value/setValue; deferred access timing
-	  * is not implemented. Port-read debug timestamps use the last ULA clock.
+	  * The CPU releases prepared IN/OUT accesses at transaction boundaries, invoking
+	  * value/setValue here. This is not exact intra-instruction I/O timing.
+	  * Port-read debug timestamps still use the last ULA simulation clock.
 	  */
 	class PortManager final : public FZ80::Z80Port
 	{

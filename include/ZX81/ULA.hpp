@@ -56,9 +56,12 @@ namespace ZX81
 		blocking LINECNTRL at 0 on ZX80 or 7 on ZX81. Any output ends VSYNC and releases
 		that block. Port decoding controls NMI separately; see PortManager. \n
 		\n
-		Port effects remain immediate; CPU/chip execution can be batched and prefix
-		capture clocks retain the initial-fetch approximation. HALT/NMI compensation
+		CPU port accesses are released at transaction boundaries; chip execution can
+		be batched. Prefix captures use nominal M1 offsets; per-cycle delivery
+		can still occur after their attributed times. HALT/NMI compensation
 		extends the CPU response, without pin-level WAIT or ordinary-instruction WAIT. \n
+		In PerCycle mode, prefixed captures can arrive after their scheduled load;
+		the ULA does not replay previously simulated pixels or state transitions. \n
 		Keyboard and joystick input is stored in ULARegisters for PortManager;
 		screen event markers are diagnostic overlays. Hardware references and the
 		implementation limits are documented in the ZX80/ZX81 video audit skills. \n
@@ -226,8 +229,9 @@ namespace ZX81
 			It is not the exact I/O sampling cycle. */
 		void debugPortRead (unsigned short ab, unsigned char id,
 			const MCHEmul::UByte& v, bool ms) const;
-		/** Records the initial opcode-fetch reference and scheduled load phase. */
-		void debugCharCapture (const PendingCharacter& ch) const;
+		/** Logs the logical fetch time and the CPU clock when it was reported. */
+		void debugCharCapture
+			(const PendingCharacter& ch, unsigned int observedClock) const;
 		/** Records the actual pattern load, including late or rejected loads. */
 		void debugCharLoad (const PendingCharacter& ch,
 			unsigned int c, unsigned char p, const MCHEmul::Address& a,
@@ -258,7 +262,7 @@ namespace ZX81
 		bool _showEvents;
 
 		// Character capture and delayed pattern load.
-		/** Nominal delay from the initial character M1 to pattern load, in pixels. */
+		/** Nominal delay from the character-capturing M1 to pattern load, in pixels. */
 		const unsigned char _charLoadDelayPixels;
 		std::vector <PendingCharacter> _pendingCharacters;
 		size_t _nextPendingCharacter;

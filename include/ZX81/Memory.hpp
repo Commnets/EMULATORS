@@ -46,7 +46,9 @@ namespace ZX81
 	/**
 	  * CPU-view mirror for display-code fetches from ROM or RAM. \n
 	  * A qualifying opcode fetch with A15 high and data bit 6 clear
-	  * captures the original byte for video and returns NOP to the CPU. \n
+	  * captures the original byte for video and returns 0x00 to the CPU. \n
+	  * An initial 0x00 opcode selects NOP; after a prefix, its meaning
+	  * depends on the active instruction decoding table. \n
 	  * Operand, data and inspection reads preserve the original byte. \n
 	  * HALT cycles do not capture new characters. \n
 	  * The ULA view uses ordinary mirrors for its pattern reads. */

@@ -77,6 +77,12 @@ unsigned int ZXSPECTRUM::PortManager::additionalClockCyclesForIO
 unsigned int ZXSPECTRUM::PortManager::IOAccessClockCycle () const
 {
 	assert (cpu () != nullptr);
+
+	// Buffered input is released after currentInstruction has been cleared.
+	// The pending record retains the original access time, including contention.
+	if (cpu () -> hasPendingPortAccess ())
+		return (cpu () -> pendingPortAccess ()._clockCycle);
+
 	assert (cpu () -> currentInstruction () != nullptr);
 
 	const FZ80::Instruction* i =

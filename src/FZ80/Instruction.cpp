@@ -1,6 +1,15 @@
 #include <FZ80/Instruction.hpp>
 
 // ---
+void FZ80::Instruction::completePortRead
+	(const MCHEmul::UByte& v, const FZ80::Z80Port::Access::ReadContext& rC)
+{
+	// Only input instruction families may own a pending port read.
+	// Reaching this implementation indicates an invalid scheduling contract.
+	assert (false);
+}
+
+// ---
 bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {

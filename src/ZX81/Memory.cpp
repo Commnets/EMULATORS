@@ -32,7 +32,8 @@ const MCHEmul::UByte& ZX81::MemoryVideoCode::readValue (size_t nB) const
 		// The ULA receives the original character, including its inverse-video bit.
 		_ula -> captureCharData (_cpu, _lastValueRead);
 
-		// The CPU receives NOP (0x00), while the character remains available to the ULA.
+		// Supply 0x00 while retaining the original character for video.
+		// It selects NOP only when decoded as an unprefixed opcode.
 		_lastValueRead = MCHEmul::UByte::_0;
 	}
 

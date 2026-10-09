@@ -87,10 +87,9 @@ bool MCHEmul::Computer::NextCommandAction::execute (MCHEmul::Computer* c)
 {
 	c -> _status = MCHEmul::Computer::_STATUSRUNNING;
 
-	// When the execution is done step by step...
-	// ...flusing the memory is better to trace what happens (if configured)
-	// Otherwise misunderstandings could happen...
-	c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
+	// Expose completed buffered effects to the debugger through the CPU.
+	// Force preserves the previous direct memory-flush behavior.
+	c -> cpu () -> executeBufferedCommands (true);
 
 	return (true);
 }
@@ -113,7 +112,8 @@ bool MCHEmul::Computer::NextStackCommandAction::execute (MCHEmul::Computer* c)
 				? MCHEmul::Computer::_STATUSSTOPPED
 				: MCHEmul::Computer::_STATUSRUNNING;
 
-	c -> memory () -> configuration ().executeMemorySetCommandsBuffered ();
+	// Use the same release path as ordinary stepping.
+	c -> cpu () -> executeBufferedCommands (true);
 
 	return (c -> _status == MCHEmul::Computer::_STATUSRUNNING);
 }
@@ -472,12 +472,13 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 	// ...but some specific action when executed could set another value.
 	if (!executeActionAtPC (a))
 	{
-		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+		// Make buffered effects visible when the action stops execution.
+		// CPU-specific pending work shares the existing debugger flush path.
+		_cpu -> executeBufferedCommands (true);
 
 		specificComputerCycle (); // Just in case...
 
-		return (true); // It has decided not to execute the cycle, 
-					   // however the memory actions are unbufefred if any! (to trace the program properly)...
+		return (true); // The action stopped execution without executing another cycle.
 	}
 
 	// The CPU is executed only when the computer is stable...

@@ -30,6 +30,12 @@ namespace FZ80
 			: Instruction (c, mp, cc, cS, t)
 							{ }
 
+		/** Installs the input byte and applies the selected flag behavior. \n
+			A null destination represents the flags-only input instruction. */
+		virtual void completePortRead
+			(const MCHEmul::UByte& v,
+			 const Z80Port::Access::ReadContext& rC) override;
+
 		protected:
 		/** Just over A with a port value. Flags are not affected. */
 		inline bool executeAWith (unsigned char np);
@@ -60,10 +66,15 @@ namespace FZ80
 
 		prepareIOAccess (ab, np, _INAIOSTARTCYCLE);
 		setIOAccessClockCycle (_INAIOACCESSCYCLE);
-		registerA ().set ({ static_cast <CZ80*> (cpu ()) -> portValue (ab, np) });
-		// No flags affection...
-		
-		return (true); 
+		// Capture the old A in the port address; install the input only on release.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_READ;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._instruction = this;
+		access._readContext._destination = &registerA ();
+		// The default context preserves flags for IN A,(n).
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// ---
@@ -81,12 +92,16 @@ namespace FZ80
 
 		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
 		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
-		MCHEmul::UByte v =
-			static_cast <CZ80*> (cpu ()) -> portValue (ab, np);
-		r.set ({ v });
-		affectFlags (v);
+		// Keep BC before an input into B or C can replace part of the address.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_READ;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._instruction = this;
+		access._readContext._destination = &r;
+		access._readContext._affectFlags = true;
 
-		return (true);
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// ---
@@ -105,9 +120,15 @@ namespace FZ80
 		// The value is not kept anywhere...(lost)
 		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
 		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
-		affectFlags (static_cast <CZ80*> (cpu ()) -> portValue (ab, np));
+		// The flags-only input still performs a real port read when released.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_READ;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._instruction = this;
+		access._readContext._affectFlags = true;
 
-		return (true);
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// ---
@@ -150,6 +171,12 @@ namespace FZ80
 			  _inExecution (false),
 			  _b0 (false)
 							{ }
+
+		/** Stores the input byte at the original memory destination and updates flags. \n
+			Register progression, repetition and duration are handled during preparation. */
+		virtual void completePortRead
+			(const MCHEmul::UByte& v,
+			 const Z80Port::Access::ReadContext& rC) override;
 
 		protected:
 		static const unsigned int _IOSTARTCYCLE		= 9;
@@ -199,6 +226,9 @@ namespace FZ80
 		private:
 		static const unsigned int _OUTAIOSTARTCYCLE		= 7;
 		static const unsigned int _OUTRCIOSTARTCYCLE	= 8;
+		// Record the final nominal I/O T-state; release remains at a transaction boundary.
+		static const unsigned int _OUTAIOACCESSCYCLE	= 10;
+		static const unsigned int _OUTRCIOACCESSCYCLE	= 11;
 	};
 
 	// ---
@@ -213,11 +243,16 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		prepareIOAccess (ab, np, _OUTAIOSTARTCYCLE);
-		static_cast <CZ80*> (cpu ()) -> setPortValue
-			(ab, np, registerA ().values ()[0]);
-		// No flags impact!
-		
-		return (true);
+		setIOAccessClockCycle (_OUTAIOACCESSCYCLE);
+
+		// Preserve the full port address and output byte until CPU release.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_WRITE;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._value = registerA ().values ()[0];
+
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// ---
@@ -234,11 +269,16 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
-		static_cast <CZ80*> (cpu ()) -> setPortValue
-			(ab, np, r.values ()[0]);
-		// No flags impact...
-		
-		return (true); 
+		setIOAccessClockCycle (_OUTRCIOACCESSCYCLE);
+
+		// Preserve the full port address and output byte until CPU release.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_WRITE;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._value = r.values ()[0];
+
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// ---
@@ -252,14 +292,18 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		// Same behaviour that IN r,(C)
-		// But nothing is written instead...
+		// Undocumented OUT (C),0 writes a zero byte to the captured BC address.
 		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
-		static_cast <CZ80*> (cpu ()) -> setPortValue
-			(ab, np, MCHEmul::UByte::_0);
-		// ..and no impact in flags either!
-		
-		return (true);  
+		setIOAccessClockCycle (_OUTRCIOACCESSCYCLE);
+
+		// Preserve the full port address and output byte until CPU release.
+		Z80Port::Access access;
+		access._type = Z80Port::Access::Type::_WRITE;
+		access._clockCycle = IOAccessClockCycle ();
+		access._address = ab;
+		access._value = MCHEmul::UByte::_0;
+
+		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
 	// To A. Quicker...
@@ -289,6 +333,8 @@ namespace FZ80
 
 		protected:
 		static const unsigned int _IOSTARTCYCLE = 12;
+		// The repeated form retains this access phase before its five extra T-states.
+		static const unsigned int _IOACCESSCYCLE = 15;
 
 		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */

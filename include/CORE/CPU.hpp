@@ -212,9 +212,19 @@ namespace MCHEmul
 			Operand reads and instruction inspection must leave this flag inactive. */
 		bool fetchingInstructionCode () const
 							{ return (_fetchingInstructionCode); }
-		/** Limits FETCH to the memory access, restoring the previous state afterwards. \n
-			This allows memory devices to distinguish opcode reads from ordinary reads. */
-		inline unsigned int fetchInstructionCodeAt (Memory* m, const Address& a);
+		/** Absolute CPU clock at the beginning of the current instruction. \n
+			Retained while its execution consumes subsequent cycles. */
+		unsigned int instructionStartClockCycle () const
+							{ return (_instructionStartClockCycle); }
+		/** Absolute clock attributed to the current instruction-code read. \n
+			Only meaningful while fetchingInstructionCode is true. */
+		unsigned int instructionFetchClockCycle () const
+							{ return (_instructionFetchClockCycle); }
+		/** Limits FETCH and its timing context to the memory access. \n
+			cycleOffset is measured from the instruction start, in CPU cycles. \n
+			It describes the access time without advancing the CPU clock. */
+		inline unsigned int fetchInstructionCodeAt
+			(Memory* m, const Address& a, unsigned int cycleOffset = 0);
 
 		// Related with the state stopped...
 		/** To get a reference to the stop status. */
@@ -404,6 +414,13 @@ namespace MCHEmul
 		  */
 		virtual bool executeNextCycle ();
 
+		/** Executes pending buffered operations without advancing the CPU clock. \n
+			Normal execution respects unbufferCommands. The force parameter preserves
+			the existing debugger behavior of releasing buffered memory writes. \n
+			Derived CPUs may extend this operation to other pending accesses.
+			Force does not authorize completing an instruction still in progress. */
+		virtual void executeBufferedCommands (bool force = false);
+
 		// Controlling the INTERNAL clock
 		/** The number of clockcycles since restarting. */
 		unsigned int clockCycles () const
@@ -448,9 +465,9 @@ namespace MCHEmul
 		// Internal methods to simplify the understanding of the code.
 		// Most of them can be overloaded...take care!
 
-		// Invoked from executeNextCycle
-		/** The first instruction of the method is to free the buffered commands (if any). \n
-			This method must answer true when that instruction can be run and false in other circunstance. */
+		/** Whether normal execution may release buffered memory writes. \n
+			Consulted by executeBufferedCommands unless a debugger flush is forced.
+			This method only decides eligibility; it does not execute commands. */
 		virtual bool unbufferCommands ()
 							{ return (true); }
 
@@ -577,6 +594,10 @@ namespace MCHEmul
 		unsigned int _lastState;
 		/** Temporary access qualifier, independent of the CPU running/stopped state. */
 		bool _fetchingInstructionCode;
+		/** Absolute start clock, retained independently of the execution mode. */
+		unsigned int _instructionStartClockCycle;
+		/** Temporary timestamp exposed during an instruction-code read. */
+		unsigned int _instructionFetchClockCycle;
 
 		/** Limits in the memory to debug. */
 		Address _debugLimitsInit, _debugLimitsEnd;
@@ -671,17 +692,23 @@ namespace MCHEmul
 	}
 
 	// ---
-	inline unsigned int CPU::fetchInstructionCodeAt (Memory* m, const Address& a)
+	inline unsigned int CPU::fetchInstructionCodeAt
+		(Memory* m, const Address& a, unsigned int cycleOffset)
 	{
-		// Memory devices must see FETCH only while obtaining the instruction code.
+		// Expose the access qualifier and its logical time only while reading.
+		// The global CPU clock is not advanced by instruction decoding.
 		bool previousFetch = _fetchingInstructionCode;
+		unsigned int previousFetchClock = _instructionFetchClockCycle;
+
+		_instructionFetchClockCycle =
+			_instructionStartClockCycle + cycleOffset;
 		_fetchingInstructionCode = true;
 
 		unsigned int result = instructionCodeAt (m, a);
 
-		// Restore before decoding, 
-		// notifying observers or reading instruction operands.
+		// Restore the previous context before decoding continues or observers run.
 		_fetchingInstructionCode = previousFetch;
+		_instructionFetchClockCycle = previousFetchClock;
 
 		return (result);
 	}

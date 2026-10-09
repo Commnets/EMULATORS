@@ -401,12 +401,13 @@ bool ZX81::ULA::drawInVisibleZone (MCHEmul::CPU* cpu)
 void ZX81::ULA::captureCharData (MCHEmul::CPU* cpu,
 	const MCHEmul::UByte& dt)
 {
-	unsigned int c = cpu -> clockCycles ();
+	unsigned int c = cpu -> instructionFetchClockCycle ();
 
-	// Preserve the first capture instead of skipping its interval on first simulate().
+	// Start from the instruction origin even when the first captured character
+	// belongs to a later M1. Its load will occur at the timestamp stored below.
 	if (!_simulationStarted)
 	{
-		_lastCPUCycles = c;
+		_lastCPUCycles = cpu -> instructionStartClockCycle ();
 		_simulationStarted = true;
 	}
 
@@ -421,9 +422,16 @@ void ZX81::ULA::captureCharData (MCHEmul::CPU* cpu,
 	unsigned short refreshAddress = (unsigned short)
 		(((unsigned int) (i) << 8) | (unsigned int) (r));
 
-	// Preserve this M1's refresh address even if the CPU advances before
-	// the ULA consumes the capture. Prefix fetch timestamps retain the
-	// existing approximation; this does not reconstruct intervening bus activity.
+	// Preserve this M1's refresh address and logical fetch time.
+	// In Full mode, the capture is queued before the ULA processes the
+	// instruction interval, including the nominal offset of a prefixed fetch.
+	//
+	// In PerCycle mode, a prefixed fetch is reported during final semantic
+	// execution. The ULA may already have processed its scheduled load time.
+	// A past timestamp cannot replay those pixels or restore earlier ULA state;
+	// the pending load is considered when simulation next processes the queue.
+	// CaptureClock is the nominal fetch time; ObservedClock records when the
+	// CPU actually reported it. Their difference is intentional and diagnostic.
 	_pendingCharacters.push_back
 		({ c,
 		   c + (_charLoadDelayPixels >> 1),
@@ -432,7 +440,7 @@ void ZX81::ULA::captureCharData (MCHEmul::CPU* cpu,
 		   refreshAddress,
 		   dt });
 
-	_IFDEBUG debugCharCapture (_pendingCharacters.back ());
+	_IFDEBUG debugCharCapture (_pendingCharacters.back (), cpu -> clockCycles ());
 }
 
 // ---
@@ -458,6 +466,8 @@ void ZX81::ULA::loadPendingCharData (unsigned int c, unsigned char p)
 		// A refresh-capable expansion receives the captured CPU I:R address.
 		// Otherwise retain the existing character path for compatibility;
 		// this fallback does not model an electrically undriven refresh bus.
+		// This compatibility fallback does not guarantee correct output for
+		// software relying on refresh addresses without a responding memory.
 		// In the character path, the ULA supplies A0-A8, including I0's position.
 		if (!ramRefresh)
 			a = MCHEmul::Address (2,
@@ -612,7 +622,8 @@ void ZX81::ULA::debugPortRead (unsigned short ab, unsigned char id,
 }
 
 // ---
-void ZX81::ULA::debugCharCapture (const PendingCharacter& ch) const
+void ZX81::ULA::debugCharCapture
+	(const PendingCharacter& ch, unsigned int observedClock) const
 {
 	assert (_deepDebugFile != nullptr);
 
@@ -626,10 +637,11 @@ void ZX81::ULA::debugCharCapture (const PendingCharacter& ch) const
 			"Address=" + std::to_string (ch._refreshAddress) },
 		  { "Timing",
 			"CaptureClock=" + std::to_string (ch._captureClock) + "," +
+			"ObservedClock=" + std::to_string (observedClock) + "," +
 			"LoadClock=" + std::to_string (ch._loadClock) + "," +
 			"LoadPhase=" + std::to_string (ch._loadPhase) + "," +
 			"DelayPixels=" + std::to_string (_charLoadDelayPixels) + "," +
-			"Reference=InitialOpcodeFetch" } });
+			"Reference=InstructionFetch" } });
 }
 
 // ---

@@ -45,8 +45,8 @@
     {
       "name": "ULA — Character Capture",
       "producer": "src/ZX81/ULA.cpp :: debugCharCapture",
-      "fields": "Character: Code, I. Refresh: R and Address (full 16-bit I:R). Timing: CaptureClock, LoadClock, LoadPhase, DelayPixels, Reference=InitialOpcodeFetch. Numbers are decimal.",
-      "timing": "CaptureClock identifies capture. Refresh.Address preserves I:R before this M1 increments R, including I0 and R7. No increment is anticipated and CPU state is not modified. Earlier prefix increments are already present; prefix timestamps retain the existing approximation.",
+      "fields": "Character: Code, I. Refresh: R and Address (full 16-bit I:R). Timing: CaptureClock, ObservedClock, LoadClock, LoadPhase, DelayPixels, Reference=InstructionFetch. Numbers are decimal.",
+      "timing": "CaptureClock is the logical M1 start; ObservedClock is the CPU clock when capture is reported. They can differ and log emission order need not follow CaptureClock order. Refresh.Address preserves I:R before this M1 increments R, including I0 and R7. No increment is anticipated and CPU state is not modified. Earlier prefix increments are already present. The second M1 is attributed to instruction start + 4 T, excluding WAIT states. PerCycle can report it late; timestamping does not replay already simulated ULA cycles or fix raw-byte cycle prediction.",
       "events": "Each queued capture retains its own refresh address despite subsequent CPU changes. Capture is independent of RAM configuration; the load later consults the active expansion capability."
     },
     {
@@ -122,12 +122,13 @@
     "ZX80 and ZX81 share one document because the executable and ULA class parameterise the type.",
     "The ULA derives its cycle from _lastCPUCycles and i>>1; it must not be replaced with cpu.clockCycles()-i.",
     "A tape or printer trap describes firmware simulation, not an electrical signal.",
-    "Port effects remain immediate. Port Read timestamps cannot measure exact I/O or VSYNC pulse widths: they use the last simulated ULA clock. The record shows post-read state and cannot reconstruct the raster before an IN reset.",
+    "CPU IN/OUT effects are released at transaction boundaries. The saved access clock does not schedule an exact intra-instruction ULA event. Port Read timestamps cannot measure exact I/O or VSYNC pulse widths: they use the last simulated ULA clock. The record shows post-read state and cannot reconstruct the raster before an IN reset.",
     "A zero Shift register Data byte does not prove that all pixels have shifted out; consult PendingBits. Character Load reports rejected loads; INT Response and Horizontal Reset identify distinct timing stages.",
     "PEEK preserves hardware state, MIC change notifications and screen event markers. It can emit a Port Read debug record, which is not an executed IN. Debug methods use non-consuming state getters.",
     "Line Advance reports presentation only. Use HSync Start and Horizontal Reset for ZX81 hardware-model timing; Line Sync is ZX80 only.",
     "PerCycle execution can batch several CPU boundaries before chips run. INT sampling/acceptance and the single acknowledgement latch therefore retain the documented coarse-scheduling limits.",
-    "HALT/NMI compensation is a response-duration approximation; ordinary-instruction WAIT and exact pin-level WAIT remain unmodeled. Prefix character-capture timestamps retain the initial-fetch approximation."
+    "HALT/NMI compensation is a response-duration approximation; ordinary-instruction WAIT and exact pin-level WAIT remain unmodeled. Prefix captures use nominal M1 timestamps; PerCycle still selects later opcodes at execution completion and predicts duration from unmodified bytes.",
+    "Instruction execution records can precede buffered input completion. Destination registers, input-dependent flags and block-input memory writes are completed during CPU buffer release; no dedicated port-release debug record is emitted yet."
   ],
   "watched_sources": [
     "src/ZX81/ZX81.cpp",

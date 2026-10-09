@@ -71,6 +71,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _fetchingInstructionCode (false),
+	  _instructionStartClockCycle (0), _instructionFetchClockCycle (0),
 	  _debugLimitsInit (a.numberBytes (), 0), _debugLimitsEnd (a.longestAddressPossible ()), // To debug...
 	  _error (_NOERROR),
 	  // Only when executing a instruction/interrupt per cycle...
@@ -193,6 +194,7 @@ bool MCHEmul::CPU::initialize ()
 
 	_state = _lastState = MCHEmul::CPU::_EXECUTINGINSTRUCTION;
 	_fetchingInstructionCode = false;
+	_instructionStartClockCycle = _instructionFetchClockCycle = 0;
 
 	_clockCycles = _lastCPUClockCycles = 0;
 
@@ -217,12 +219,9 @@ bool MCHEmul::CPU::executeNextCycle ()
 {
 	memoryRef () -> setCPUView (); // Always...
 
-	// If the memory access were buffered... 
-	// ...this instruction would free all accesses...
-	// but only in the case it was possible...
-	// something that depends on the type of CPU!
-	if (unbufferCommands ())
-		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
+	// Release pending work through the CPU-specific implementation.
+	// Its duration was already accounted for by the originating transaction.
+	executeBufferedCommands ();
 
 	bool result;
 	switch (_state)
@@ -247,6 +246,15 @@ bool MCHEmul::CPU::executeNextCycle ()
 	}
 
 	return (result);
+}
+
+// ---
+void MCHEmul::CPU::executeBufferedCommands (bool force)
+{
+	// Keep the existing memory-release policy during normal execution.
+	// Debugger actions previously flushed memory directly.
+	if (force || unbufferCommands ())
+		MCHEmul::Memory::configuration ().executeMemorySetCommandsBuffered ();
 }
 
 // ---
@@ -321,12 +329,31 @@ bool MCHEmul::CPU::when_ExecutingInstruction ()
 			return (result);
 		};
 
-	bool result = false;
+	bool result = true;
 	if (ticksCounter () == nullptr)
 		result = execFunction (true); // Full...
 	else
+	{
+		bool firstCycle = true;
+
+		// This preserves CPU transaction ordering inside the batch.
+		// Chips are still simulated by Computer after the CPU batch;
+		// this does not provide per-T-state CPU/chip interleaving.
 		for (unsigned int i = ticksCounter () -> elapsedTicks (); i > 0; i--)
-			result = execFunction (false); // Per cycle...
+		{
+			// executeNextCycle already released pending work before the first step.
+			// Within a batch, release it again only between complete transactions,
+			// before another interrupt can be accepted or an opcode fetched.
+			if (!firstCycle &&
+				_currentInstruction == nullptr &&
+				_currentInterrupt == nullptr)
+				executeBufferedCommands ();
+
+			firstCycle = false;
+
+			result &= execFunction (false); // Per cycle...
+		}
+	}
 
 	return (result);
 }
@@ -490,8 +517,11 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 	// To indicate whether the transaction is executed or not...
 	// Nothing to do with the value of the variable e (error), received as a reference!
 	bool result = true; // ...executed if nothing is said against later...
-	_currentInterrupt = getInterruptForRequest (iR);
-	switch (_currentInterrupt -> canBeExecutedOver (this, iR.cycles ()))
+	// Selecting a request does not mean its launch has started.
+	// A rejected or waiting request must not leave _currentInterrupt set:
+	// buffered commands use that pointer to detect an unfinished transaction.
+	CPUInterrupt* interr = getInterruptForRequest (iR);
+	switch (interr -> canBeExecutedOver (this, iR.cycles ()))
 	{
 		// The interrupt can not be executed...
 		case CPUInterrupt::_EXECUTIONNOTALLOWED:
@@ -523,6 +553,10 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 		// Time to execute the interrupt...
 		case CPUInterrupt::_EXECUTIONALLOWED:
 			{
+				// Only an accepted request becomes the current transaction.
+				// Set it before debug and observers inspect the launch.
+				_currentInterrupt = interr;
+
 				_IFDEBUG debugInterruptLaunched ();
 				_IFDEBUG debugInterruptAboutToExecute (_currentInterrupt);
 
@@ -569,6 +603,18 @@ bool MCHEmul::CPU::executeNextInterruptRequest_Full (unsigned int& e)
 }
 
 // ---
+// Per-cycle execution distributes an instruction's predicted duration across
+// CPU steps, but executes its semantic operation only on the final step.
+// It does not reproduce each memory or I/O access at its individual bus cycle.
+//
+// Prediction and execution can decode different bytes when memory transforms
+// execution-qualified opcode fetches but leaves inspection reads unchanged.
+// This can happen with prefixed Z80 instructions in ZX80/ZX81 video memory.
+// A duration adjustment at completion cannot undo chip effects already simulated.
+//
+// CPU steps can also be consumed in batches before Computer simulates the chips.
+// Consequently, per-cycle CPU accounting does not guarantee per-T-state
+// interleaving of CPU, chip and device activity.
 bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 {
 	if (_currentInterrupt != nullptr)
@@ -580,6 +626,9 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 	// The current CPU iteration will also consume its first cycle.
 	if (_currentInstruction == nullptr)
 	{
+		// Set the origin only once; subsequent execution cycles must preserve it.
+		_instructionStartClockCycle = _clockCycles;
+
 		// This access obtains the opcode for execution, so memory must see FETCH.
 		unsigned int nInst =
 			fetchInstructionCodeAt (_memory, programCounter ().asAddress ());
@@ -589,9 +638,11 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			_instructionEventContextData -> _instruction = _currentInstruction;
 			_instructionEventContextData -> _address = _programCounter.asAddress ();
 
-			// Predict every intrinsic cycle before the first one is consumed.
-			// Instructions not yet providing a contextual prediction still
-			// return their nominal duration.
+			// Predict the duration before consuming the instruction's first cycle.
+			// Instructions without a contextual prediction use their nominal duration.
+			// For an undefined instruction, prediction can inspect further opcode
+			// bytes without FETCH qualification. Execution may later obtain different
+			// bytes from memory that transforms opcode fetches.
 			_instructionEventContextData -> _clockCycles =
 				_currentInstruction -> clockCyclesToExecute
 					(this, _memory, _instructionEventContextData -> _address);
@@ -641,9 +692,11 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 		// the rest of the calculations are done.
 		else
 		{
-			// During the staged migration, instructions without a contextual
-			// prediction can still discover cycles when they finally execute.
-			// Only the part not scheduled beforehand is added here.
+			// Account for additional cycles discovered during execution.
+			// This unsigned adjustment assumes the actual duration is not shorter
+			// than the duration already consumed. Overprediction is unsupported:
+			// subtraction can wrap and cannot reverse chip effects already produced.
+			// This is not a general correction mechanism for inaccurate prediction.
 			_lastCPUClockCycles +=
 				_currentInstruction -> totalClockCyclesExecuted () - _clockCyclesCurrentInstruction;
 
@@ -679,6 +732,10 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 
 	// Access the next instruction...
 	// Using the row description of the instructions!
+	// Keep a stable origin for every opcode fetch belonging to this instruction.
+	// Prefix decoding must not use the execution-time global clock as its origin.
+	_instructionStartClockCycle = _clockCycles;
+
 	// This access obtains the opcode for execution, so memory must see FETCH.
 	unsigned int nInst =
 		fetchInstructionCodeAt (_memory, programCounter ().asAddress ());

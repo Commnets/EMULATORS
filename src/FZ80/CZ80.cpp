@@ -44,7 +44,9 @@ FZ80::CZ80::CZ80 (int id, const Z80PortsMap& pts,
 	  _irRegister  ({ &iRegister   (), &rRegister   () }),
 	  _IFF1 (false), _IFF2 (false), _instAfterEIToLaunchINT (0),
 	  _haltActive (false),
-	  _ports (pts), _portsRaw (256, FZ80::Z80PortsPlainList ()) // None...
+	  _ports (pts),
+	  _portsRaw (256, FZ80::Z80PortsPlainList ()),
+	  _pendingAccess ()
 {
 	// The reference to the memory has not set still here...
 	// It is linked to the CPU at computer (class) level!
@@ -88,8 +90,54 @@ void FZ80::CZ80::addPorts (const FZ80::Z80PortsMap& pts)
 }
 
 // ---
+bool FZ80::CZ80::schedulePortAccess (const FZ80::Z80Port::Access& a)
+{
+	// Never overwrite an unfinished transaction: later instructions must not
+	// proceed using a register or memory value whose input is still pending.
+	if (hasPendingPortAccess ())
+		return (false);
+
+	// A read needs an instruction responsible for completing its effects.
+	// An empty or unknown access type cannot become a pending transaction.
+	if (a._type != FZ80::Z80Port::Access::Type::_READ &&
+		a._type != FZ80::Z80Port::Access::Type::_WRITE)
+		return (false);
+	if (a._type == FZ80::Z80Port::Access::Type::_READ &&
+		a._instruction == nullptr)
+		return (false);
+
+	_pendingAccess = a;
+
+	return (true);
+}
+
+// ---
+void FZ80::CZ80::executeBufferedCommands (bool force)
+{
+	// Preserve the existing memory-release behavior and commit writes
+	// that precede the pending port transaction.
+	MCHEmul::CPU::executeBufferedCommands (force);
+
+	// The initial flush of a CPU batch can occur inside an instruction.
+	// Debugger forcing must not complete its port access prematurely.
+	if (!hasPendingPortAccess () ||
+		_currentInstruction != nullptr ||
+		_currentInterrupt != nullptr)
+		return;
+
+	executePendingPortAccess ();
+
+	// Completing a block input can enqueue its write to the original (HL).
+	// Release that write before the next instruction or interrupt starts.
+	MCHEmul::CPU::executeBufferedCommands (force);
+}
+
+// ---
 bool FZ80::CZ80::initialize ()
 {
+	// Reset cancels unfinished port work; it must never replay an old access.
+	clearPendingPortAccess ();
+
 	if (!MCHEmul::CPU::initialize ())
 		return (false);
 
@@ -164,6 +212,60 @@ inline void FZ80::CZ80::assignPorts (const Z80PortsMap& pm)
 	for (unsigned short i = 0; i < 256; i++)
 		for (const auto& j : _portsRaw [(size_t) i])
 			j -> _cpu = this;
+}
+
+// ---
+void FZ80::CZ80::executePendingPortAccess ()
+{
+	if (!hasPendingPortAccess ())
+		return;
+
+	// Derive the routing selector from the captured full address.
+	// Never reconstruct it from registers that preparation may have changed.
+	unsigned char p = (unsigned char) (_pendingAccess._address & 0x00ff);
+
+	switch (_pendingAccess._type)
+	{
+		case FZ80::Z80Port::Access::Type::_READ:
+			{
+				// schedulePortAccess guarantees an input completion owner.
+				assert (_pendingAccess._instruction != nullptr);
+
+				MCHEmul::UByte v =
+					portValue (_pendingAccess._address, p);
+
+				// Complete register, flag or memory effects without reading
+				// the port again or adding instruction cycles.
+				_pendingAccess._instruction -> completePortRead
+					(v, _pendingAccess._readContext);
+			}
+
+			break;
+
+		case FZ80::Z80Port::Access::Type::_WRITE:
+			{
+				// Keep the existing fan-out to every associated port object.
+				setPortValue
+					(_pendingAccess._address, p, _pendingAccess._value);
+			}
+
+			break;
+
+		default:
+			{
+				// Empty accesses were handled above; scheduling rejects
+				// any other unsupported access type.
+				assert (false);
+
+				return;
+			}
+
+			break;
+	}
+
+	// Retain the record throughout completion, then release the slot.
+	// Port handlers and completion methods must not reenter CPU flushing.
+	clearPendingPortAccess ();
 }
 
 // ---

@@ -53,7 +53,16 @@ namespace FZ80
 			  _lastINOUTAccessWasIO (false)
 							{ }
 
-		/** The absolute CPU T-state when the current instruction accessed an input port. */
+		/** Completes the data-dependent effects of a prepared port input. \n
+			The CPU has already read the port. This method must not repeat that
+			access, advance PC or add instruction cycles. \n
+			The context preserves values captured during preparation.
+			Completion must precede reuse of this instruction's execution state. */
+		virtual void completePortRead
+			(const MCHEmul::UByte& v, const Z80Port::Access::ReadContext& rC);
+
+		/** The scheduled absolute CPU T-state of the current port access. \n
+			Buffered execution can apply its effects later at a transaction boundary. */
 		unsigned int IOAccessClockCycle () const
 							{ return (_IOAccessClockCycle); }
 		/** Whether the current instruction executed an I/O machine cycle. */
@@ -277,7 +286,7 @@ namespace FZ80
 			lAIO indicates whether this is the last address-bus access of the instruction. */
 		void prepareIOAccess
 			(unsigned short ab, unsigned char p, unsigned int c, bool lAIO = true);
-		/** Stores the absolute CPU T-state for an input access within the instruction. */
+		/** Stores the scheduled absolute CPU T-state for a port access within the instruction. */
 		void setIOAccessClockCycle (unsigned int c);
 
 		private:
@@ -312,7 +321,7 @@ namespace FZ80
 		/** c = the code that all instructions shared. */
 		InstructionUndefined (unsigned int c, const MCHEmul::Instructions& inst);
 
-		/** The input access T-state copied from the selected prefixed instruction. */
+		/** The scheduled port-access T-state copied from the selected prefixed instruction. */
 		unsigned int IOAccessClockCycle () const
 							{ return (_IOAccessClockCycle); }
 		/** Whether the selected instruction executed an I/O machine cycle. */
@@ -357,13 +366,20 @@ namespace FZ80
 							{ // The code is given by the second byte next to program counter in the memory...
 							  return (_rawInstructions
 								[(size_t) m -> value (addr.next (1)).value ()]); }
-		/** The byte following this prefix is read in another Z80 M1 cycle. \n
-			Quite similar than the previous one, but putting the CPU in fetch. */
+		/** The byte following this prefix is read in a second Z80 M1 cycle. \n
+			Its nominal start is four T-states after the instruction start. \n
+			This offset does not include additional WAIT states. \n
+			In PerCycle mode this read occurs during final semantic execution,
+			although its timestamp identifies the earlier nominal M1. \n
+			Prediction uses the inspection selector, so memory that transforms
+			FETCH reads can change the selected instruction and its duration. \n
+			The timestamp does not move this read to an earlier CPU step. */
 		virtual const MCHEmul::Instruction* selectInstructionForExecution
 			(MCHEmul::CPU* c, MCHEmul::Memory* m,
 			 const MCHEmul::Address& addr) const override
 							{ return (_rawInstructions
-								[(size_t) c -> fetchInstructionCodeAt (m, addr.next (1))]); }
+								[(size_t) c -> fetchInstructionCodeAt
+									(m, addr.next (1), 4)]); }
 	};
 
 	/** Instruction code in the fourth byte in memory next to program counter location. 
