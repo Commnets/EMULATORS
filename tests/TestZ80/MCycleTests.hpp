@@ -28,6 +28,22 @@ namespace FZ80
 		static bool testInstructionMetadata (std::ostream& o);
 		static bool testInstructionMacros (std::ostream& o);
 		static bool testAuxiliaryMacros (std::ostream& o);
+		static bool testPrefixedLD (std::ostream& o);
+		static bool testINCDEC (std::ostream& o);
+		static bool testADDSUB (std::ostream& o);
+		static bool testLogicalCP (std::ostream& o);
+		static bool testALUCTRL (std::ostream& o);
+		static bool testRotations (std::ostream& o);
+		static bool testShifts (std::ostream& o);
+		static bool testBIT (std::ostream& o);
+		static bool testSETRES (std::ostream& o);
+		static bool testSTACK (std::ostream& o);
+		static bool testJUMP (std::ostream& o);
+		static bool testCALL (std::ostream& o);
+		static bool testEX (std::ostream& o);
+		static bool testBlockTransferCompare (std::ostream& o);
+		static bool testSimpleIO (std::ostream& o);
+		static bool testBlockIO (std::ostream& o);
 		static bool check (bool ok, const char* name, std::ostream& o);
 	};
 }

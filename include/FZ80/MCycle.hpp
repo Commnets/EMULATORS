@@ -114,6 +114,14 @@ namespace FZ80
 		{ MCHEmul::CPUCycle::_READ, MCHEmul::CPUCycle::_READ, \
 		  MCHEmul::CPUCycle::_READ, __VA_ARGS__ }, 2, 0)
 
+	/** Extends an ordinary memory write with explicitly declared T-states. \n
+		The byte transfer retains its ordinary position before the extension. \n
+		At least one additional T-state must be supplied. */
+	#define _Z80_MW_EXT(...) FZ80::MCycle ( \
+		FZ80::MCycle::Type::_MEMORYWRITE, \
+		{ MCHEmul::CPUCycle::_WRITE, MCHEmul::CPUCycle::_WRITE, \
+		  MCHEmul::CPUCycle::_WRITE, __VA_ARGS__ }, 2, 0)
+
 	/** Extended fetches remain one M-cycle and perform one opcode read. */
 	#define _Z80_M1_5() _Z80_M1_EXT ( \
 		MCHEmul::CPUCycle::_INTERNAL)
@@ -126,6 +134,10 @@ namespace FZ80
 		MCHEmul::CPUCycle::_INTERNAL)
 
 	#define _Z80_MR5() _Z80_MR_EXT ( \
+		MCHEmul::CPUCycle::_INTERNAL, MCHEmul::CPUCycle::_INTERNAL)
+
+	/** Extended writes retain one byte transfer followed by two internal T-states. */
+	#define _Z80_MW5() _Z80_MW_EXT ( \
 		MCHEmul::CPUCycle::_INTERNAL, MCHEmul::CPUCycle::_INTERNAL)
 
 	/** Describes an independent internal span without a byte transfer. \n

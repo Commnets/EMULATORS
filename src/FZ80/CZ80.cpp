@@ -368,8 +368,6 @@ MCHEmul::Instructions FZ80::CZ80::createInstructions ()
 	EDInstructions [0xED5F]		= new FZ80::LD_AFromR;
 	result [0x7E]				= new FZ80::LD_AFromAddressHL;
 	result [0x0A]				= new FZ80::LD_AFromAddressBC;
-	DDInstructions [0xDD22]		= new FZ80::LD_AddressFromIX;
-	FDInstructions [0xFD22]		= new FZ80::LD_AddressFromIY;
 	result [0x1A]				= new FZ80::LD_AFromAddressDE;
 	DDInstructions [0xDD7E]		= new FZ80::LD_AFromAddressIndexIX;
 	FDInstructions [0xFD7E]		= new FZ80::LD_AFromAddressIndexIY;

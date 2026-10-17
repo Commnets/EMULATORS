@@ -57,17 +57,28 @@ namespace FZ80
 
 	// PUSH
 	// From AF
-	_INSTZ80_FROM (0xF5,	1, 11, { },	"PUSH AF",				PUSH_AF, PUSH_General);
+	_INSTZ80_MC_FROM (0xF5,	1, 11,		"PUSH AF",				PUSH_AF, PUSH_General,
+		_Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
+
 	// From BC
-	_INSTZ80_FROM (0xC5,	1, 11, { },	"PUSH BC",				PUSH_BC, PUSH_General);
+	_INSTZ80_MC_FROM (0xC5,	1, 11,		"PUSH BC",				PUSH_BC, PUSH_General,
+		_Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
+
 	// From DE
-	_INSTZ80_FROM (0xD5,	1, 11, { },	"PUSH DE",				PUSH_DE, PUSH_General);
+	_INSTZ80_MC_FROM (0xD5,	1, 11,		"PUSH DE",				PUSH_DE, PUSH_General,
+		_Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
+
 	// From HL
-	_INSTZ80_FROM (0xE5,	1, 11, { },	"PUSH HL",				PUSH_HL, PUSH_General);
+	_INSTZ80_MC_FROM (0xE5,	1, 11,		"PUSH HL",				PUSH_HL, PUSH_General,
+		_Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
+
 	// From IX
-	_INSTZ80_FROM (0xDDE5,	2, 15, { },	"PUSH IX",				PUSH_IX, PUSH_General);
+	_INSTZ80_MC_FROM (0xDDE5,	2, 15,	"PUSH IX",				PUSH_IX, PUSH_General,
+		_Z80_M1 (), _Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
+
 	// From IY
-	_INSTZ80_FROM (0xFDE5,	2, 15, { },	"PUSH IY",				PUSH_IY, PUSH_General);
+	_INSTZ80_MC_FROM (0xFDE5,	2, 15,	"PUSH IY",				PUSH_IY, PUSH_General,
+		_Z80_M1 (), _Z80_M1_5 (), _Z80_MW3 (), _Z80_MW3 ());
 
 	/** POP_General: To move the content of the stack to a register \n
 		Any version of this instruction doesn't affect to any flag. */
@@ -108,17 +119,29 @@ namespace FZ80
 
 	// POP
 	// To AF
-	_INSTZ80_FROM (0xF1,	1, 10, { },	"POP AF",				POP_AF, POP_General);
+	_INSTZ80_MC_FROM (0xF1,	1, 10,		"POP AF",				POP_AF, POP_General,
+		_Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 	// To BC
-	_INSTZ80_FROM (0xC1,	1, 10, { },	"POP BC",				POP_BC, POP_General);
+	_INSTZ80_MC_FROM (0xC1,	1, 10,		"POP BC",				POP_BC, POP_General,
+		_Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 	// To DE
-	_INSTZ80_FROM (0xD1,	1, 10, { },	"POP DE",				POP_DE, POP_General);
+	_INSTZ80_MC_FROM (0xD1,	1, 10,		"POP DE",				POP_DE, POP_General,
+		_Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 	// To HL
-	_INSTZ80_FROM (0xE1,	1, 10, { },	"POP HL",				POP_HL, POP_General);
+	_INSTZ80_MC_FROM (0xE1,	1, 10,		"POP HL",				POP_HL, POP_General,
+		_Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 	// To IX
-	_INSTZ80_FROM (0xDDE1,	2, 14, { },	"POP IX",				POP_IX, POP_General);
+	_INSTZ80_MC_FROM (0xDDE1,	2, 14,	"POP IX",				POP_IX, POP_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 	// To IY
-	_INSTZ80_FROM (0xFDE1,	2, 14, { },	"POP IY",				POP_IY, POP_General);
+	_INSTZ80_MC_FROM (0xFDE1,	2, 14,	"POP IY",				POP_IY, POP_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MR3 ());
+
 }
 
 #endif

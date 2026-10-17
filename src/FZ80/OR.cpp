@@ -19,7 +19,7 @@ _INST_IMPL (FZ80::U1OR_A)
 // ---
 _INST_IMPL (FZ80::U2OR_A)
 {
-	assert (parameters ().size () == 1);
+	assert (parameters ().size () == 2);
 
 	return (executeWith (registerA ().values ()[0]));
 }

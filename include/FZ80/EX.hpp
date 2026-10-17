@@ -79,15 +79,26 @@ namespace FZ80
 	}
 
 	// AF and AF'
-	_INSTZ80_FROM (0x08,	1, 4, { },	"EX AF,AF'",			EX_AF, EX_General);
+	_INSTZ80_MC_FROM (0x08,	1, 4,		"EX AF,AF'",			EX_AF, EX_General,
+		_Z80_M1 ());
+
 	// DE and HL
-	_INSTZ80_FROM (0xEB,	1, 4, { },	"EX DE,HL",				EX_DEWithHL, EX_General);
+	_INSTZ80_MC_FROM (0xEB,	1, 4,		"EX DE,HL",				EX_DEWithHL, EX_General,
+		_Z80_M1 ());
+
 	// EXX (all)
-	_INSTZ80_FROM (0xD9,	1, 4, { },	"EXX",					EX_X, EX_General);
+	_INSTZ80_MC_FROM (0xD9,	1, 4,		"EXX",					EX_X, EX_General,
+		_Z80_M1 ());
+
 	// With SP
-	_INSTZ80_FROM (0xE3,	1, 19, { },	"EX (SP),HL",			EX_SPWithHL, EX_General);
-	_INSTZ80_FROM (0xDDE3,	2, 23, { },	"EX (SP),IX",			EX_SPWithIX, EX_General);
-	_INSTZ80_FROM (0xFDE3,	2, 23, { },	"EX (SP),IY",			EX_SPWithIY, EX_General);
+	_INSTZ80_MC_FROM (0xE3,	1, 19,		"EX (SP),HL",			EX_SPWithHL, EX_General,
+		_Z80_M1 (), _Z80_MR3 (), _Z80_MR4 (), _Z80_MW3 (), _Z80_MW5 ());
+
+	_INSTZ80_MC_FROM (0xDDE3,	2, 23,	"EX (SP),IX",			EX_SPWithIX, EX_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MR4 (), _Z80_MW3 (), _Z80_MW5 ());
+
+	_INSTZ80_MC_FROM (0xFDE3,	2, 23,	"EX (SP),IY",			EX_SPWithIY, EX_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MR4 (), _Z80_MW3 (), _Z80_MW5 ());
 
 	/** To move a block of data. \n
 		These instructions affects the flags in a similar way than DEC/INC instructions for LDD/LDDR/LDI/LDIR or 
@@ -235,25 +246,46 @@ namespace FZ80
 	}
 
 	// (DE) <- (HL) & Next memory position (HL = HL + 1) & --Counter (BC = BC - 1)
-	_INSTZ80_FROM (0xEDA0,	2, 16, { },	"LDI",					LDI, InstBlock_General);
+	// Repeating instructions describe one iteration: alternative 0 finishes, 1 repeats.
+	_INSTZ80_MC_FROM (0xEDA0,	2, 16,	"LDI",					LDI, InstBlock_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 ());
+
 	// (DE) <- (HL) & Next memory position & Counter-- until BC == 0
 	// 21 Cycles when BC != 0 (_additionalCycles = 5). _FINISH = true when BC == 0
-	_INSTZ80_FROM (0xEDB0,	2, 16, { },	"LDIR",					LDIR, InstBlock_General);
+	_INSTZ80_MCS_FROM (0xEDB0,	2, 16,	"LDIR",					LDIR, InstBlock_General,
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 () },
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 (), _Z80_I5 () });
+
 	// (DE) <- (HL) & Previous memory position (HL = HL - 1) & --Counter
-	_INSTZ80_FROM (0xEDA8,	2, 16, { },	"LDD",					LDD, InstBlock_General);
+	_INSTZ80_MC_FROM (0xEDA8,	2, 16,	"LDD",					LDD, InstBlock_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 ());
+
 	// (DE) <- (HL) & Previous memory position until BC == 0
 	// 21 Cycles when BC != 0 (_additionalCycles = 5). _FINISH = true when BC == 0
-	_INSTZ80_FROM (0xEDB8,	2, 16, { },	"LDDR",					LDDR, InstBlock_General);
+	_INSTZ80_MCS_FROM (0xEDB8,	2, 16,	"LDDR",					LDDR, InstBlock_General,
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 () },
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_MW5 (), _Z80_I5 () });
+
 	// A compared with (HL) & Next memory position (HL = HL + 1) & --Counter (BC = BC - 1)
-	_INSTZ80_FROM (0xEDA1,	2, 16, { }, "CPI",					CPI, InstBlock_General);
+	_INSTZ80_MC_FROM (0xEDA1,	2, 16,	"CPI",					CPI, InstBlock_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 ());
+
 	// A compared with (HL) & Next memory position & --Counter until BC == 0
 	// 21 Cycles when BC != 0 and A != (HL) (_additionalCycles = 5). _FINISH = true when BC == 0 or A == (HL)
-	_INSTZ80_FROM (0xEDB1,	2, 16, { }, "CPIR",					CPIR, InstBlock_General);
+	_INSTZ80_MCS_FROM (0xEDB1,	2, 16,	"CPIR",					CPIR, InstBlock_General,
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 () },
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 (), _Z80_I5 () });
+
 	// A compared with (HL) & Previous memory position& --Counter
-	_INSTZ80_FROM (0xEDA9,	2, 16, { }, "CPD",					CPD, InstBlock_General);
+	_INSTZ80_MC_FROM (0xEDA9,	2, 16,	"CPD",					CPD, InstBlock_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 ());
+
 	// A compared with (HL) & Previous memory position & --Counter until BC == 0
 	// 21 Cycles when BC != 0 and A != (HL) (_additionalCycles = 5). _FINISH = true when BC == 0 or A == (HL)
-	_INSTZ80_FROM (0xEDB9,	2, 16, { }, "CPDR",					CPDR, InstBlock_General);
+	_INSTZ80_MCS_FROM (0xEDB9,	2, 16,	"CPDR",					CPDR, InstBlock_General,
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 () },
+		FZ80::MCyclesStructure { _Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 (), _Z80_I5 () });
+
 }
 
 #endif

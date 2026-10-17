@@ -116,52 +116,112 @@ namespace FZ80
 	}
 
 	// With A
-	_INSTZ80_FROM (0x3D,	1, 4, { },	"DEC A",				DEC_A, DEC_General);
-	_INSTZ80_FROM (0xDD3D,	2, 8, { },	"U1DEC A",				U1DEC_A, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD3D,	2, 8, { },	"U2DEC A",				U2DEC_A, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0x3D,	1, 4,		"DEC A",				DEC_A, DEC_General,
+		_Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD3D,	2, 8,	"U1DEC A",				U1DEC_A, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD3D,	2, 8,	"U2DEC A",				U2DEC_A, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 	// With B
-	_INSTZ80_FROM (0x05,	1, 4, { },	"DEC B",				DEC_B, DEC_General);
-	_INSTZ80_FROM (0xDD05,	2, 8, { },	"U1DEC B",				U1DEC_B, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD05,	2, 8, { },	"U2DEC B",				U2DEC_B, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0x05,	1, 4,		"DEC B",				DEC_B, DEC_General,
+		_Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD05,	2, 8,	"U1DEC B",				U1DEC_B, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD05,	2, 8,	"U2DEC B",				U2DEC_B, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 	// Wit C
-	_INSTZ80_FROM (0x0D,	1, 4, { },	"DEC C",				DEC_C, DEC_General);
-	_INSTZ80_FROM (0xDD0D,	2, 8, { },	"U1DEC C",				U1DEC_C, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD0D,	2, 8, { },	"U2DEC C",				U2DEC_C, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0x0D,	1, 4,		"DEC C",				DEC_C, DEC_General,
+		_Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD0D,	2, 8,	"U1DEC C",				U1DEC_C, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD0D,	2, 8,	"U2DEC C",				U2DEC_C, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 	// Wih D
-	_INSTZ80_FROM (0x15,	1, 4, { },	"DEC D",				DEC_D, DEC_General);
-	_INSTZ80_FROM (0xDD15,	2, 8, { },	"U1DEC D",				U1DEC_D, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD15,	2, 8, { },	"U2DEC D",				U2DEC_D, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0x15,	1, 4,		"DEC D",				DEC_D, DEC_General,
+		_Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD15,	2, 8,	"U1DEC D",				U1DEC_D, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD15,	2, 8,	"U2DEC D",				U2DEC_D, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 	// Wth E
-	_INSTZ80_FROM (0x1D,	1, 4, { },	"DEC E",				DEC_E, DEC_General);
-	_INSTZ80_FROM (0xDD1D,	2, 8, { },	"U1DEC E",				U1DEC_E, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD1D,	2, 8, { },	"U2DEC E",				U2DEC_E, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0x1D,	1, 4,		"DEC E",				DEC_E, DEC_General,
+		_Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD1D,	2, 8,	"U1DEC E",				U1DEC_E, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD1D,	2, 8,	"U2DEC E",				U2DEC_E, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 	// Wih F
-	_INSTZ80_FROM (0x25,	1, 4, { },	"DEC H",				DEC_H, DEC_General);
+	_INSTZ80_MC_FROM (0x25,	1, 4,		"DEC H",				DEC_H, DEC_General,
+		_Z80_M1 ());
+
 	// Wih L
-	_INSTZ80_FROM (0x2D,	1, 4, { },	"DEC L",				DEC_L, DEC_General);
+	_INSTZ80_MC_FROM (0x2D,	1, 4,		"DEC L",				DEC_L, DEC_General,
+		_Z80_M1 ());
+
 	// With (HL)
-	_INSTZ80_FROM (0x35,	1, 11, { },	"DEC (HL)",				DEC_IndirectHL, DEC_General);
+	_INSTZ80_MC_FROM (0x35,	1, 11,		"DEC (HL)",				DEC_IndirectHL, DEC_General,
+		_Z80_M1 (), _Z80_MR4 (), _Z80_MW3 ());
+
 	// With(IX + d)
-	_INSTZ80_FROM (0xDD35, 3, 23, { },	"DEC (IX+[#1])",		DEC_IndirectIndexIX, DEC_General);
+	_INSTZ80_MC_FROM (0xDD35,	3, 23,	"DEC (IX+[#1])",		DEC_IndirectIndexIX, DEC_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 (), _Z80_MR4 (), _Z80_MW3 ());
+
 	// With (IX + d)
-	_INSTZ80_FROM (0xFD35,	3, 23, { },	"DEC (IY+[#1])",		DEC_IndirectIndexIY, DEC_General);
+	_INSTZ80_MC_FROM (0xFD35,	3, 23,	"DEC (IY+[#1])",		DEC_IndirectIndexIY, DEC_General,
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 (), _Z80_I5 (), _Z80_MR4 (), _Z80_MW3 ());
+
 	// With BC
-	_INSTZ80_FROM (0x0B,	1, 6, { },	"DEC BC",				DEC_BC, DEC_General);
+	_INSTZ80_MC_FROM (0x0B,	1, 6,		"DEC BC",				DEC_BC, DEC_General,
+		_Z80_M1_6 ());
+
 	// With DE
-	_INSTZ80_FROM (0x1B,	1, 6, { },	"DEC DE",				DEC_DE, DEC_General);
+	_INSTZ80_MC_FROM (0x1B,	1, 6,		"DEC DE",				DEC_DE, DEC_General,
+		_Z80_M1_6 ());
+
 	// With HL
-	_INSTZ80_FROM (0x2B,	1, 6, { },	"DEC HL",				DEC_HL, DEC_General);
+	_INSTZ80_MC_FROM (0x2B,	1, 6,		"DEC HL",				DEC_HL, DEC_General,
+		_Z80_M1_6 ());
+
 	// With SP
-	_INSTZ80_FROM (0x3B,	1, 6, { },	"DEC SP",				DEC_SP, DEC_General);
+	_INSTZ80_MC_FROM (0x3B,	1, 6,		"DEC SP",				DEC_SP, DEC_General,
+		_Z80_M1_6 ());
+
 	// With IX
-	_INSTZ80_FROM (0xDD2B,	2, 10, { },	"DEC IX",				DEC_IX, DEC_General);
+	_INSTZ80_MC_FROM (0xDD2B,	2, 10,	"DEC IX",				DEC_IX, DEC_General,
+		_Z80_M1 (), _Z80_M1_6 ());
+
 	// With IY
-	_INSTZ80_FROM (0xFD2B,	2, 10, { },	"DEC IY",				DEC_IY, DEC_General);
+	_INSTZ80_MC_FROM (0xFD2B,	2, 10,	"DEC IY",				DEC_IY, DEC_General,
+		_Z80_M1 (), _Z80_M1_6 ());
+
 	// With IXH, IXL, IYH or IYL
-	_INSTZ80_FROM (0xDD25,	2, 8, { },	"DEC IXH",				DEC_IXH, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xDD2D,	2, 8, { },	"DEC IXL",				DEC_IXL, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD25,	2, 8, { },	"DEC IYH",				DEC_IYH, DEC_General);					// Undocumented
-	_INSTZ80_FROM (0xFD2D,	2, 8, { },	"DEC IYL",				DEC_IYL, DEC_General);					// Undocumented
+	_INSTZ80_MC_FROM (0xDD25,	2, 8,	"DEC IXH",				DEC_IXH, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xDD2D,	2, 8,	"DEC IXL",				DEC_IXL, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD25,	2, 8,	"DEC IYH",				DEC_IYH, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
+	_INSTZ80_MC_FROM (0xFD2D,	2, 8,	"DEC IYL",				DEC_IYL, DEC_General,				// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+
 }
 
 #endif

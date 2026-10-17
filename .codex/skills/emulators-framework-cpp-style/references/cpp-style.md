@@ -48,6 +48,37 @@ Headers end with:
 #include <CORE/OtherDependency.hpp>
 ```
 
+## Instruction Declaration Alignment
+
+Repeated CPU instruction declarations are tables expressed as macro calls. Preserve their visual columns in proposed snippets and generated or edited source, including migrations between macro variants.
+
+Use four-column tab stops for these tables. Inspect the user's corrected neighboring declarations and identify three independent anchor columns, counted from one:
+
+1. The opening quote of the semantic instruction text.
+2. The first character of the instruction class name, immediately after that text argument.
+3. The first slash of a trailing documentation comment, when present, such as `// Undocumented`.
+
+The corrected `include/FZ80/LD.hpp` uses columns **41, 65 and 101**, respectively. These are the reference columns for that layout, not universal constants for every CPU family or macro signature. Retain a different established local layout when the surrounding table requires it.
+
+For example, these first lines have the same three anchors despite their different opcode, text and class lengths:
+
+```cpp
+	_INSTZ80_MC_FROM (0x3E,	2, 7,		"LD A,[#1]",			LD_A, LD_General,
+		_Z80_M1 (), _Z80_MR3 ());
+
+	_INSTZ80_MC_FROM (0xDD3E,	3, 11,	"U1LD A,[#1]",			U1LD_A, LD_General,					// Undocumented
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 ());
+
+	_INSTZ80_MC_FROM (0xDD7C,	2, 8,	"LD A,IXH",				LD_AFromIXH, LD_General,			// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+```
+
+Recalculate tab padding separately before each anchor. A longer macro name, a prefixed opcode, a two-digit duration, or a different argument list can change where the next tab lands. Do not apply a blanket extra tab, copy the same number of tabs to every row, or assume that preserving a class column also preserves the semantic text and comment columns. Preserve the reference layout's continuation indentation, spacing and blank-line rhythm as well.
+
+Before completing an edit or presenting a proposal, expand tabs with width four and compare all three anchor columns across the complete affected block, including unchanged declarations interleaved with migrated ones. Count a visual column as `len(line[:anchor].expandtabs(4)) + 1`; raw character indexes and tab counts are not visual columns. Rows without a trailing comment still have to satisfy the first two anchors. Use the corrected reference columns as the expectation, rather than accepting the pre-edit positions as proof of alignment. Check representative long texts, long class names, prefixed opcodes and comments as well as short rows.
+
+If a field cannot fit the established columns, choose a coherent wider layout for the affected block instead of leaving one row displaced. Do not reformat unrelated instruction tables or change semantic strings, opcodes, timing, names or documentation merely to align them.
+
 ## Formatting Rules
 
 - Use the repository's tab-based indentation and align continuation lines like nearby code. Do not replace leading tabs with spaces in patches, examples, or proposed snippets.
