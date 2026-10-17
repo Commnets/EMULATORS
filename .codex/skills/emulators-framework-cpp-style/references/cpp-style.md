@@ -57,6 +57,24 @@ Headers end with:
 - Keep the explicit C++ cast operators when their specific semantics matter: use `static_cast` for pointer, reference, class, or enum conversions; `const_cast` for cv-qualification; `dynamic_cast` for checked polymorphic conversions; and `reinterpret_cast` for intentional representation-level conversions. Do not replace these with a C-style cast merely to shorten the source.
 - Put spaces around pointer arrows: `_memory -> initialize ()`.
 - Wrap return expressions in parentheses: `return (result);`.
+- For multiline braced initializer lists used to construct objects, put the closing `}` immediately after the last element on the same line. Keep any enclosing closing parentheses and the statement terminator with it, such as `lastElement });` or `lastElement };`. Apply the same rule to nested initializer lists; do not leave a separate line containing only their closing delimiters. This is initializer-list formatting, not a change to function, class, enum, or control-flow block braces.
+
+```cpp
+const std::vector <unsigned int> cycles {
+	firstCycle,
+	lastCycle };
+
+const MCHEmul::CycleStructure otherCycles ({
+	MCHEmul::CPUCycle::_READ,
+	MCHEmul::CPUCycle::_INTERNAL });
+
+const FZ80::MCyclesStructures alternatives {
+	FZ80::MCyclesStructure {
+		firstMachineCycle,
+		lastMachineCycle },
+	FZ80::MCyclesStructure {
+		anotherMachineCycle } };
+```
 - Separate consecutive structural blocks with exactly one blank line. This includes multi-line preprocessor macros that define classes or declarations, class/struct/enum definitions, and the declaration or explanatory comment that follows them. The closing macro line or `};` must not run directly into the next block; avoid multiple blank lines as well.
 - Group variables of the same type in a single declaration when every
   initializer is simple. A simple initializer is absent, a literal or constant,
@@ -322,6 +340,20 @@ When introducing a method into an existing class, locate the declarations immedi
 Methods defined directly inside the class already occupy their declaration position and do not require a second ordering step. Preserve unrelated pre-existing order when the current task does not authorize a broader cleanup.
 
 ## Constructors And Ownership
+
+Pass non-trivial input objects and containers by const reference by default. Preserve this convention through forwarding constructors instead of introducing pass-by-value and `std::move` solely to transfer storage. If an object retains an input description, copy it into owned storage during construction; do not retain a reference to a temporary initializer-list-backed argument.
+
+For a constructor defined in a `.cpp` file whose initializer list or delegation performs all the work, document its intentionally empty body:
+
+```cpp
+FZ80::Example::Example (const FZ80::MCyclesStructure& mCS)
+	: _mCycles (mCS)
+{
+	// Nothing else to do...
+}
+```
+
+Compact empty constructors defined in headers may retain their existing form.
 
 Initialize all members in initializer lists and keep member order consistent with declarations:
 

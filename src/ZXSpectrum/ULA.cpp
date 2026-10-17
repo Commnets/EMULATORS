@@ -886,7 +886,7 @@ std::tuple <unsigned int, int> ZXSPECTRUM::ULA::calculateContention
 		}
 	}
 	else
-;		_screenMemoryAccessedFromCPUCycles = { };
+		_screenMemoryAccessedFromCPUCycles = { };
 
 	return (std::tuple <unsigned int, int> (lB, cS));
 }

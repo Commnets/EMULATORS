@@ -28,6 +28,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		RES_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		RES_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		/** With the tested bit and a register. */
@@ -83,6 +91,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: RES_General (c, mp, cc, cS, t)
+							{ }
+		RES_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: RES_General (c, mp, cc, t, mCS)
+							{ }
+		RES_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: RES_General (c, mp, cc, t, mCSs)
 							{ }
 
 		/** The last part of the code is at the end of the byte codes. */

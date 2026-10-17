@@ -28,6 +28,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		CALL_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		CALL_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		inline bool executeBranch (bool a); // Using the parameter 1 and 2 always!
@@ -69,6 +77,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		RST_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		RST_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
 							{ }
 
 		protected:
@@ -116,6 +132,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		RET_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		RET_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
 							{ }
 
 		protected:

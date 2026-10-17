@@ -169,6 +169,7 @@
     <ClCompile Include="..\..\src\FZ80\INTInterrupt.cpp" />
     <ClCompile Include="..\..\src\FZ80\JUMP.cpp" />
     <ClCompile Include="..\..\src\FZ80\LD.cpp" />
+    <ClCompile Include="..\..\src\FZ80\MCycle.cpp" />
     <ClCompile Include="..\..\src\FZ80\NMIInterrupt.cpp" />
     <ClCompile Include="..\..\src\FZ80\OR.cpp" />
     <ClCompile Include="..\..\src\FZ80\RES.cpp" />
@@ -201,6 +202,7 @@
     <ClInclude Include="..\..\include\FZ80\INTInterrupt.hpp" />
     <ClInclude Include="..\..\include\FZ80\JUMP.hpp" />
     <ClInclude Include="..\..\include\FZ80\LD.hpp" />
+    <ClInclude Include="..\..\include\FZ80\MCycle.hpp" />
     <ClInclude Include="..\..\include\FZ80\NMIInterrupt.hpp" />
     <ClInclude Include="..\..\include\FZ80\OR.hpp" />
     <ClInclude Include="..\..\include\FZ80\RES.hpp" />

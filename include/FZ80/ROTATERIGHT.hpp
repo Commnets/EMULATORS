@@ -29,6 +29,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		ROTATERight_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		ROTATERight_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		/** A register. \n
@@ -126,6 +134,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: ROTATERight_General (c, mp, cc, cS, t)
+							{ }
+		ROTATERight_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: ROTATERight_General (c, mp, cc, t, mCS)
+							{ }
+		ROTATERight_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: ROTATERight_General (c, mp, cc, t, mCSs)
 							{ }
 
 		/** The last part of the code is at the end of the byte codes. */

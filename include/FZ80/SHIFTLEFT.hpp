@@ -29,6 +29,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		SHIFTLeft_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		SHIFTLeft_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		/** A register. \n
@@ -105,6 +113,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: SHIFTLeft_General (c, mp, cc, cS, t)
+							{ }
+		SHIFTLeft_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: SHIFTLeft_General (c, mp, cc, t, mCS)
+							{ }
+		SHIFTLeft_Index (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: SHIFTLeft_General (c, mp, cc, t, mCSs)
 							{ }
 
 		/** The last part of the code is at the end of the byte codes. */

@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include "MCycleTests.hpp"
 
 #include <iostream>
 
@@ -6,6 +7,9 @@
 
 int _tmain (int argc, _TCHAR *argv [])
 {
+	if (!FZ80::MCycleTests::run (std::cout))
+		return (1);
+
 	// Notice that the simulation is executed not taking into account any buffering behaviour...
 	// The buffering for the set command at memory level is not activated...
 

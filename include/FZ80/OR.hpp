@@ -29,6 +29,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		OR_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		OR_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		/** And is also done with the value of the accumulator. */

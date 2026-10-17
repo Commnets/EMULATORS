@@ -15,6 +15,7 @@
 #define __FZX80_INCS__
 
 #include <CORE/incs.hpp>
+#include <FZ80/MCycle.hpp>
 #include <FZ80/CZ80.hpp>
 #include <FZ80/Instructions.hpp>
 #include <FZ80/TestElements.hpp>

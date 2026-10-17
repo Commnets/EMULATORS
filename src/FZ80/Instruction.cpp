@@ -1,6 +1,76 @@
 #include <FZ80/Instruction.hpp>
 
 // ---
+FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+	const MCHEmul::InstructionDefined::CycleStructure& cS, const std::string& t)
+	: MCHEmul::InstructionDefined (c, mp, cc, cS, t, false),
+	  _mCyclesStructures (),
+	  _mCyclesDatas (),
+	  _IOAccessClockCycle (0),
+	  _IOContentionClockCycles (0),
+	  _IOAccessed (false),
+	  _lastINOUTAccessWasIO (false)
+{
+	// Nothing else.
+}
+
+// ---
+FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+	const std::string& t, const FZ80::MCyclesStructure& mCS)
+	: MCHEmul::InstructionDefined (c, mp, cc, toCycleStructure (mCS), t, false),
+	  _mCyclesStructures (1, mCS),
+	  _mCyclesDatas (precalculateMCycles (_mCyclesStructures)),
+	  _IOAccessClockCycle (0),
+	  _IOContentionClockCycles (0),
+	  _IOAccessed (false),
+	  _lastINOUTAccessWasIO (false)
+{
+	// Nothing else.
+}
+
+// ---
+FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+	const std::string& t, const FZ80::MCyclesStructures& mCSs)
+	: MCHEmul::InstructionDefined (c, mp, cc, toCycleStructures (mCSs), t, false),
+	  _mCyclesStructures (mCSs),
+	  _mCyclesDatas (precalculateMCycles (_mCyclesStructures)),
+	  _IOAccessClockCycle (0),
+	  _IOContentionClockCycles (0),
+	  _IOAccessed (false),
+	  _lastINOUTAccessWasIO (false)
+{
+	// Nothing else.
+}
+
+// ---
+MCHEmul::CycleStructure FZ80::Instruction::toCycleStructure (const FZ80::MCyclesStructure& mCS)
+{
+	assert (!mCS.empty ());
+	size_t numberCycles = 0;
+	for (const auto& mC : mCS)
+		numberCycles += mC.numberTCycles ();
+
+	MCHEmul::CycleStructure result;
+	result.reserve (numberCycles);
+	// Concatenate without reinterpreting the generic characteristics. M-cycle
+	// boundaries and sampling points remain in the Z80-specific descriptors.
+	for (const auto& mC : mCS)
+		result.insert (result.end (), mC.tCycles ().begin (), mC.tCycles ().end ());
+	return (result);
+}
+
+// ---
+MCHEmul::CycleStructures FZ80::Instruction::toCycleStructures (const FZ80::MCyclesStructures& mCSs)
+{
+	assert (!mCSs.empty ());
+	MCHEmul::CycleStructures result;
+	result.reserve (mCSs.size ());
+	for (const auto& mCS : mCSs)
+		result.emplace_back (toCycleStructure (mCS));
+	return (result);
+}
+
+// ---
 void FZ80::Instruction::completePortRead
 	(const MCHEmul::UByte& v, const FZ80::Z80Port::Access::ReadContext& rC)
 {
@@ -35,6 +105,16 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	if (_lastExecutionData._INOUTAddress.value () == 0)
 		cpu () -> setLastINOUTAddress (addressIR ()); // This instruction already move the value into the _lastINOUTAddress...
 
+	return (result);
+}
+
+// ---
+FZ80::MCyclesDatas FZ80::Instruction::precalculateMCycles (const FZ80::MCyclesStructures& mCSs)
+{
+	FZ80::MCyclesDatas result;
+	result.reserve (mCSs.size ());
+	for (const auto& mCS : mCSs)
+		result.emplace_back (mCS);
 	return (result);
 }
 

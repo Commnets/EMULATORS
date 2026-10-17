@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <FZ80/CZ80.hpp>
+#include <FZ80/MCycle.hpp>
 
 namespace FZ80
 {
@@ -39,19 +40,89 @@ namespace FZ80
 		virtual bool executeImpl (bool& _FINISH) override; \
 	};
 
+	/**
+	  * Declares an instruction with one complete nominal M-cycle sequence. \n
+	  * _CC remains the expected duration, checked against the sequence at construction. \n
+	  * The trailing arguments are MCycle objects, in execution order.
+	  *
+	  * @param _C  Instruction code.
+	  * @param _M  Number of memory positions occupied.
+	  * @param _CC Expected nominal duration in T-states.
+	  * @param _T  Instruction text template.
+	  * @param _I  Name of the instruction class.
+	  * @param _J  Parent instruction class.
+	  */
+	#define _INSTZ80_MC_FROM(_C, _M, _CC, _T, _I, _J, ...) \
+	class _I final : public _J \
+	{ \
+		public: \
+		_I () \
+			: _J (_C, _M, _CC, _T, \
+				FZ80::MCyclesStructure { __VA_ARGS__ }) { } \
+		protected: \
+		virtual bool executeImpl (bool& _FINISH) override; \
+	};
+
+	/**
+	  * Declares an instruction with alternative complete M-cycle sequences. \n
+	  * Alternative zero is nominal and its duration must equal _CC. \n
+	  * The trailing arguments are MCyclesStructure objects, one per alternative. \n
+	  * Declaring alternatives does not select the runtime execution path.
+	  *
+	  * @param _C  Instruction code.
+	  * @param _M  Number of memory positions occupied.
+	  * @param _CC Expected duration of alternative zero in T-states.
+	  * @param _T  Instruction text template.
+	  * @param _I  Name of the instruction class.
+	  * @param _J  Parent instruction class.
+	  */
+	#define _INSTZ80_MCS_FROM(_C, _M, _CC, _T, _I, _J, ...) \
+	class _I final : public _J \
+	{ \
+		public: \
+		_I () \
+			: _J (_C, _M, _CC, _T, \
+				FZ80::MCyclesStructures { __VA_ARGS__ }) { } \
+		protected: \
+		virtual bool executeImpl (bool& _FINISH) override; \
+	};
+
 	/** The global definition of a Z80 instruction. */
 	class Instruction : public MCHEmul::InstructionDefined
 	{
 		public:
-		Instruction (unsigned int c, unsigned int mp, unsigned int cc, 
-				const MCHEmul::InstructionDefined::CycleStructure& cS, 
-				const std::string& t)
-			: MCHEmul::InstructionDefined (c, mp, cc, cS, t, false),
-			  _IOAccessClockCycle (0),
-			  _IOContentionClockCycles (0),
-			  _IOAccessed (false),
-			  _lastINOUTAccessWasIO (false)
-							{ }
+		/** Compatibility constructor: no Z80 M-cycle description is inferred. */
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+			const MCHEmul::InstructionDefined::CycleStructure& cS, const std::string& t);
+		/** The sequence must be complete, nonempty and have nominal duration cc. */
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS);
+		/** Alternative zero is nominal and must have duration cc. \n
+			All alternatives must be complete and nonempty. */
+		Instruction (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs);
+
+		bool hasMCycles () const
+							{ return (!_mCyclesStructures.empty ()); }
+		size_t numberMCyclesStructures () const
+							{ return (_mCyclesStructures.size ()); }
+		const FZ80::MCyclesStructures& mCyclesStructures () const
+							{ return (_mCyclesStructures); }
+		/** n must identify an existing alternative; no runtime path is selected here. */
+		const FZ80::MCyclesStructure& mCyclesStructure (size_t n = 0) const
+							{ return (_mCyclesStructures [n]); }
+		const FZ80::MCyclesData& mCyclesData (size_t n = 0) const
+							{ return (_mCyclesDatas [n]); }
+		/** tC must be a valid nominal T-state in alternative n, excluding waits. */
+		const FZ80::MCyclePosition& mCyclePositionAt (size_t tC, size_t n = 0) const
+							{ return (_mCyclesDatas [n].positionAt (tC)); }
+		const FZ80::MCycle& mCycleAt (size_t tC, size_t n = 0) const
+							{ return (_mCyclesStructures [n][_mCyclesDatas [n].positionAt (tC)._mCycle]); }
+		inline const FZ80::MCycleData& mCycleDataAt (size_t tC, size_t n = 0) const;
+
+		/** Construction-time conversions preserve the declared T-state characteristics. */
+		static MCHEmul::CycleStructure toCycleStructure (const FZ80::MCyclesStructure& mCS);
+		static MCHEmul::CycleStructures toCycleStructures (const FZ80::MCyclesStructures& mCSs);
 
 		/** Completes the data-dependent effects of a prepared port input. \n
 			The CPU has already read the port. This method must not repeat that
@@ -290,17 +361,31 @@ namespace FZ80
 		void setIOAccessClockCycle (unsigned int c);
 
 		private:
+		/** Build one independent timing descriptor per owned alternative. */
+		static FZ80::MCyclesDatas precalculateMCycles (const FZ80::MCyclesStructures& mCSs);
+
 		/** Converts an instruction-relative T-state into an absolute CPU T-state. */
 		unsigned int instructionClockCycleAt (unsigned int c) const;
 		/** Copies the I/O timing data to the outer prefixed instruction, if any. */
 		void copyIOExecutionDataToCurrentInstruction (MCHEmul::CPU* c = nullptr);
 
 		private:
+		/** Owned descriptions; compatibility-constructed instructions have none. */
+		FZ80::MCyclesStructures _mCyclesStructures;
+		/** Same alternative indexes as _mCyclesStructures. */
+		FZ80::MCyclesDatas _mCyclesDatas;
 		unsigned int _IOAccessClockCycle;
 		unsigned int _IOContentionClockCycles;
 		bool _IOAccessed;
 		bool _lastINOUTAccessWasIO;
 	};
+
+	// ---
+	inline const FZ80::MCycleData& Instruction::mCycleDataAt (size_t tC, size_t n) const
+	{
+		const FZ80::MCyclesData& data = _mCyclesDatas [n];
+		return (data.cycleData (data.positionAt (tC)._mCycle));
+	}
 
 	// ---
 	inline MCHEmul::UBytes Instruction::valueRegisterSP () const

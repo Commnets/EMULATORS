@@ -29,6 +29,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		EX_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		EX_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		protected:
 		/** To exchange the context of two set of registers. \n
@@ -91,6 +99,18 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t),
+			  _inExecution (false),
+			  _bc0 (false)
+							{ }
+		InstBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS),
+			  _inExecution (false),
+			  _bc0 (false)
+							{ }
+		InstBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs),
 			  _inExecution (false),
 			  _bc0 (false)
 							{ }

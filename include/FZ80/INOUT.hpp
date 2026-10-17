@@ -29,6 +29,14 @@ namespace FZ80
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
 							{ }
+		IN_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		IN_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
+							{ }
 
 		/** Installs the input byte and applies the selected flag behavior. \n
 			A null destination represents the flags-only input instruction. */
@@ -171,6 +179,18 @@ namespace FZ80
 			  _inExecution (false),
 			  _b0 (false)
 							{ }
+		INBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
+		INBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
 
 		/** Stores the input byte at the original memory destination and updates flags. \n
 			Register progression, repetition and duration are handled during preparation. */
@@ -213,6 +233,14 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t)
+							{ }
+		OUT_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS)
+							{ }
+		OUT_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs)
 							{ }
 
 		protected:
@@ -327,6 +355,18 @@ namespace FZ80
 				const MCHEmul::InstructionDefined::CycleStructure& cS, 
 				const std::string& t)
 			: Instruction (c, mp, cc, cS, t),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
+		OUTBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructure& mCS)
+			: Instruction (c, mp, cc, t, mCS),
+			  _inExecution (false),
+			  _b0 (false)
+							{ }
+		OUTBlock_General (unsigned int c, unsigned int mp, unsigned int cc,
+			const std::string& t, const FZ80::MCyclesStructures& mCSs)
+			: Instruction (c, mp, cc, t, mCSs),
 			  _inExecution (false),
 			  _b0 (false)
 							{ }

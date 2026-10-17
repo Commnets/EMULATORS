@@ -158,6 +158,10 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="TestZ80.cpp" />
+    <ClCompile Include="MCycleTests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="MCycleTests.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
