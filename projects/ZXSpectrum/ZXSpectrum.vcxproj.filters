@@ -87,6 +87,12 @@
     <ClInclude Include="..\..\include\ZXSpectrum\IOPBuilder.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\ContendedMemory.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\ZXSpectrum\CZ80.hpp">
+      <Filter>Archivos de encabezado\Motherboard</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\ZXSpectrum\Memory.hpp">
       <Filter>Archivos de encabezado\Motherboard</Filter>
     </ClInclude>
@@ -125,6 +131,12 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\ZXSpectrum\ContendedMemory.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ZXSpectrum\CZ80.cpp">
+      <Filter>Archivos de origen\Motherboard</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\ZXSpectrum\Memory.cpp">
       <Filter>Archivos de origen\Motherboard</Filter>
     </ClCompile>

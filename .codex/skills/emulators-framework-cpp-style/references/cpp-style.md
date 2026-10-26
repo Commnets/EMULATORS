@@ -444,6 +444,13 @@ Use uppercase field names. For nested objects, build nested `InfoStructure` valu
 
 ## Inline Methods
 
+Define methods with an empty body directly inside the class, including virtual exits/hooks whose default implementation does nothing. Put the compact `{ }` body on the same line as the method declaration, separated by one space; do not move it to a following aligned line. Omit the `inline` keyword and do not add a separate out-of-class definition. Put any necessary contract documentation above the method rather than expanding the empty body for a comment:
+
+```cpp
+virtual void whenReading (const Address& a, size_t nB) const { }
+virtual void whenWriting (const Address& a, size_t nB) { }
+```
+
 Define extremely short methods whose body is one simple instruction or expression directly with their declaration inside the class. Do not write the `inline` keyword in this case. A direct member access, assignment, or equivalently compact operation is simple:
 
 ```cpp

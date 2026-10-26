@@ -7,7 +7,7 @@
 #include <ZXSpectrum/EdgeConnector.hpp>
 #include <ZXSpectrum/Cartridge.hpp>
 #include <ZXSpectrum/DatasettePort.hpp>
-#include <FZ80/CZ80.hpp>
+#include <ZXSpectrum/CZ80.hpp>
 #include <FZ80/NMIInterrupt.hpp>
 
 // ---
@@ -17,7 +17,7 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (
 		ZXSPECTRUM::SinclairZXSpectrum::VisualSystem vS, 
 		ZXSPECTRUM::Type t, const std::string& lang)
 	: SINCLAIR::Computer 
-		(new FZ80::CZ80 (0, 
+		(new ZXSPECTRUM::CZ80 (0,
 			{ }), // Some other ports (the ones related with chips) are added later...
 		 ZXSPECTRUM::SinclairZXSpectrum::standardChips (vS),
 		 new ZXSPECTRUM::Memory (cfg, t, lang), // Depending on the configuration, the type, and the languaje!
@@ -34,6 +34,9 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (
 	  _type (t),
 	  _ula (nullptr)
 {
+	static_cast <ZXSPECTRUM::Memory*> (memory ()) -> linkToCPU
+		(static_cast <ZXSPECTRUM::CZ80*> (cpu ()));
+
 	// Add the port manager for all ports!
 	ZXSPECTRUM::PortManager* pM = new ZXSPECTRUM::PortManager;
 	FZ80::Z80PortsMap pMps;

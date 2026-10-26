@@ -146,25 +146,37 @@ void FZ80::Instruction::copyIOExecutionDataToCurrentInstruction (MCHEmul::CPU* c
 
 // ---
 void FZ80::Instruction::prepareIOAccess
-	(unsigned short ab, unsigned char p, unsigned int c, bool lAIO)
+	(unsigned short ab, unsigned char p, bool lAIO)
 {
+	assert (hasMCycles ());
+
+	const FZ80::MCyclesData& data = mCyclesData ();
+	assert (data.ioCycles ().size () == 1);
+
+	// Every current I/O instruction performs one port transaction per iteration.
+	// Complete and repeated alternatives share the same I/O timing points.
+	const FZ80::MCycleData& io =
+		data.cycleData (data.ioCycles ()[0]);
+
+	// The machine receives the absolute start of the contention calculation.
+	// It remains responsible for splitting the I/O cycle into hardware phases.
 	_IOContentionClockCycles = static_cast <FZ80::CZ80*> (cpu ()) ->
-		additionalClockCyclesForIO (ab, p, instructionClockCycleAt (c));
+		additionalClockCyclesForIO
+			(ab, p, instructionClockCycleAt
+				((unsigned int) (io._contentionCycle)));
+
+	// Schedule the transfer after the delay imposed by this I/O cycle.
+	// Repeat cycles occur later and must not shift the port access.
+	_IOAccessClockCycle =
+		instructionClockCycleAt ((unsigned int) (io._dataCycle)) +
+			_IOContentionClockCycles;
 
 	_IOAccessed = true;
 	_lastINOUTAccessWasIO = lAIO;
 
 	addAdditionalClockCycles (_IOContentionClockCycles);
 
-	copyIOExecutionDataToCurrentInstruction ();
-}
-
-// ---
-void FZ80::Instruction::setIOAccessClockCycle (unsigned int c)
-{
-	_IOAccessClockCycle =
-		instructionClockCycleAt (c) + _IOContentionClockCycles;
-
+	// Publish the complete timing record to the outer prefixed instruction once.
 	copyIOExecutionDataToCurrentInstruction ();
 }
 

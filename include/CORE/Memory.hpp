@@ -303,6 +303,17 @@ namespace MCHEmul
 							{ return (_deepDebugFile); }
 
 		protected:
+		/** Invoked before reading through the normal access methods. \n
+			Receives the initial address in the subset's address space and the number of bytes. \n
+			The range has already been validated and contains at least one byte. \n
+			This notification does not identify the component requesting the access. */
+		virtual void whenReading (const Address& a, size_t nB) const { }
+		/** Invoked before writing through the normal access methods. \n
+			Receives the initial address in the subset's address space and the number of bytes. \n
+			The range has already been validated and contains at least one byte. \n
+			For buffered writes, notification precedes insertion into the command buffer. */
+		virtual void whenWriting (const Address& a, size_t nB) { }
+
 		/** They could be overeloaded for specific subsets: Chips registers,... 
 			By default, the instructions are transmitted to the physical storage.
 			At this point it must be guaranteed that the byte requested exist in the phisical storage. 

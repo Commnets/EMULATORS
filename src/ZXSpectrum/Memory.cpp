@@ -1,4 +1,5 @@
 #include <ZXSpectrum/Memory.hpp>
+#include <ZXSpectrum/ContendedMemory.hpp>
 
 // ---
 ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg, 
@@ -46,6 +47,13 @@ ZXSPECTRUM::Memory::Memory (ZXSPECTRUM::Memory::Configuration cfg,
 
 	// Sets the configuration of the memory...
 	setConfiguration (_configuration);
+}
+
+// ---
+void ZXSPECTRUM::Memory::linkToCPU (ZXSPECTRUM::CZ80* c)
+{
+	static_cast <ZXSPECTRUM::ContendedMemory*> (_RAM16k) -> linkToCPU (c);
+	static_cast <ZXSPECTRUM::ContendedMemory*> (_RAM48k) -> linkToCPU (c);
 }
 
 // ---
@@ -169,14 +177,14 @@ MCHEmul::Memory::Content ZXSPECTRUM::Memory::standardMemoryContent ()
 		(_ROM48KBASIC_SUBSET, ROM, 0x0000, MCHEmul::Address ({ 0x00, 0x00 }, false), 0x4000);
 	// RAMS: 
 	// 16K version: From 0x4000 to 0x7fff. 16k.
-	MCHEmul::Stack* RAM16k = new MCHEmul::Stack
+	MCHEmul::Stack* RAM16k = new ZXSPECTRUM::ContendedMemory
 		(_RAM16K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0x4000,
 			MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 				false /** No overflow detection. */, -1));
 	MCHEmul::EmptyPhysicalStorageSubset* RAM32k_E = new MCHEmul::EmptyPhysicalStorageSubset
 		(_RAM32KE_SUBSET, MCHEmul::UByte::_0, RAM, 0x8000, MCHEmul::Address ({ 0x00, 0x80 }, false), 0x8000); // When not expanded, the rest is empty...
 	// 48k version: From 0x4000 to 0xffff. 32k.
-	MCHEmul::Stack* RAM48k = new MCHEmul::Stack
+	MCHEmul::Stack* RAM48k = new ZXSPECTRUM::ContendedMemory
 		(_RAM48K_SUBSET, RAM, 0x4000, MCHEmul::Address ({ 0x00, 0x40 }, false), 0xc000,
 			MCHEmul::Stack::Configuration (true, false /** Pointing to the last written. */, 
 				false /** No overflow detection. */, -1));

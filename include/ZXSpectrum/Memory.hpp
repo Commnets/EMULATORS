@@ -19,6 +19,7 @@
 
 namespace ZXSPECTRUM
 {
+	class CZ80;
 	class SinclairZXSpectrum;
 
 	/** The memory itself for the ZXSpectrum. */
@@ -50,6 +51,9 @@ namespace ZXSPECTRUM
 		static const int _ULA_VIEW					= 1;
 
 		Memory (Configuration cfg, Type t, const std::string& lang);
+
+		/** Links both CPU-visible RAM subsets to their non-owning CPU reference. */
+		void linkToCPU (CZ80* c);
 
 		/** Gets the type. */
 		Type type () const

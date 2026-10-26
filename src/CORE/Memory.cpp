@@ -89,6 +89,9 @@ void MCHEmul::PhysicalStorageSubset::set
 
 	if (_physicalStorage -> canBeWriten (f) && isIn (a, dt))
 	{
+		// Notify the request now, even when its application is deferred.
+		whenWriting (a, 1);
+
 		if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (this))
 			MCHEmul::Memory::configuration ().addMemorySetCommand (MCHEmul::SetMemoryCommand (this, dt, d));
 		else
@@ -101,8 +104,14 @@ const MCHEmul::UByte& MCHEmul::PhysicalStorageSubset::value (const MCHEmul::Addr
 { 
 	int dt = 0; 
 
-	return ((_activeForReading && isIn (a, dt))
-		? readValue (dt) : MCHEmul::PhysicalStorage::_DEFAULTVALUE); 
+	if (_activeForReading && isIn (a, dt))
+	{
+		whenReading (a, 1);
+
+		return (readValue (dt));
+	}
+
+	return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 }
 
 // ---
@@ -127,8 +136,10 @@ std::vector <MCHEmul::UByte> MCHEmul::PhysicalStorageSubset::bytes (const MCHEmu
 			// dt is always positive or 0, but the operand compared couldn't, 
 			// and then this logical expression won't match!
 	{
-		// At this place, it is guaranteed that the first position is within the memory
-		// but not necessarily the rest. So the boundaries muct be checked!
+		// The complete range has been validated within this subset.
+		if (nB != 0)
+			whenReading (a, nB);
+
 		for (size_t i = 0; i < nB; i++)
 		{
 			size_t pos = (size_t) dt + i;
@@ -151,6 +162,10 @@ void MCHEmul::PhysicalStorageSubset::set
 			(dt = _initialAddress.distanceWith (a)) <= (int) (_size - v.size ())))
 		// Read the explanations above!
 	{
+		// Notify the complete range before buffering or writing any byte.
+		if (!v.empty ())
+			whenWriting (a, v.size ());
+
 		for (size_t i = 0; i < v.size (); i++)
 		{
 			size_t pos = (size_t) dt + i;
@@ -412,7 +427,10 @@ const MCHEmul::UByte& MCHEmul::MemoryView::value (const MCHEmul::Address& a) con
 
 		// If a valid storage has been found under the address requested...
 		if (fS != nullptr)
+		{
+			fS -> whenReading (a, 1);
 			result = fS -> readValue ((size_t) (a - fS -> initialAddress ())); // ...the value is got!
+		}
 	}
 
 	return (result);
@@ -432,6 +450,9 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const MCHEmul::UByte& 
 		// If a valid storage is under the position requested...
 		if (fS != nullptr)
 		{
+			// Notify the request before buffering or writing the value.
+			fS -> whenWriting (a, 1);
+
 			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
 				MCHEmul::Memory::configuration ().addMemorySetCommand 
 					(MCHEmul::SetMemoryCommand (fS, a - fS -> initialAddress (), d));
@@ -465,8 +486,13 @@ std::vector <MCHEmul::UByte> MCHEmul::MemoryView::bytes (const MCHEmul::Address&
 		size_t pos = (fS != nullptr)
 			? (size_t) (cA - fS -> initialAddress ())
 			: 0;
-		result.emplace_back ((fS != nullptr && pos < fS -> size ())
-			? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+		if (fS != nullptr && pos < fS -> size ())
+		{
+			fS -> whenReading (cA, 1);
+			result.emplace_back (fS -> readValue (pos));
+		}
+		else
+			result.emplace_back (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 	}
 			
 	return (result);
@@ -494,8 +520,13 @@ void MCHEmul::MemoryView::fillValuesIn
 		size_t pos = (fS != nullptr)
 			? (size_t) (cA - fS -> initialAddress ())
 			: 0;
-		result [i] = (fS != nullptr && pos < fS -> size ())
-			? fS -> readValue (pos) : MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+		if (fS != nullptr && pos < fS -> size ())
+		{
+			fS -> whenReading (cA, 1);
+			result [i] = fS -> readValue (pos);
+		}
+		else
+			result [i] = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 	}
 }
 
@@ -521,6 +552,8 @@ void MCHEmul::MemoryView::set (const MCHEmul::Address& a, const std::vector <MCH
 			: 0;
 		if (fS != nullptr && pos < fS -> size ())
 		{
+			fS -> whenWriting (cA, 1);
+
 			if (MCHEmul::Memory::configuration ().bufferMemorySetCommands (fS))
 				MCHEmul::Memory::configuration ().addMemorySetCommand
 					(MCHEmul::SetMemoryCommand (fS, pos, v [i]));

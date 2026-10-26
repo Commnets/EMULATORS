@@ -20,6 +20,8 @@
 #include <ZXSpectrum/ASCIIToCodeConverter.hpp>
 #include <ZXSpectrum/CommandBuilder.hpp>
 #include <ZXSpectrum/Commands.hpp>
+#include <ZXSpectrum/ContendedMemory.hpp>
+#include <ZXSpectrum/CZ80.hpp>
 #include <ZXSpectrum/FileIO.hpp>
 #include <ZXSpectrum/IOPBuilder.hpp>
 #include <ZXSpectrum/Memory.hpp>

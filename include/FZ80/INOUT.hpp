@@ -53,11 +53,6 @@ namespace FZ80
 		inline bool execute0FromC ();
 
 		private:
-		static const unsigned int _INAIOSTARTCYCLE		= 7;
-		static const unsigned int _INAIOACCESSCYCLE		= 10;
-		static const unsigned int _INRCIOSTARTCYCLE		= 8;
-		static const unsigned int _INRCIOACCESSCYCLE	= 11;
-
 		inline void affectFlags (const MCHEmul::UByte& v);
 	};
 
@@ -72,8 +67,7 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np, _INAIOSTARTCYCLE);
-		setIOAccessClockCycle (_INAIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 		// Capture the old A in the port address; install the input only on release.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
@@ -98,8 +92,7 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
-		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 		// Keep BC before an input into B or C can replace part of the address.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
@@ -126,8 +119,7 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		// The value is not kept anywhere...(lost)
-		prepareIOAccess (ab, np, _INRCIOSTARTCYCLE);
-		setIOAccessClockCycle (_INRCIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 		// The flags-only input still performs a real port read when released.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
@@ -216,9 +208,6 @@ namespace FZ80
 			 const Z80Port::Access::ReadContext& rC) override;
 
 		protected:
-		static const unsigned int _IOSTARTCYCLE		= 9;
-		static const unsigned int _IOACCESSCYCLE	= 12;
-
 		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */
 		bool executeWith (int a);
@@ -278,13 +267,6 @@ namespace FZ80
 		inline bool executeWithToC (MCHEmul::Register& r);
 		/** Put 0 in the port pointed by C. */
 		inline bool execute0WithToC ();
-
-		private:
-		static const unsigned int _OUTAIOSTARTCYCLE		= 7;
-		static const unsigned int _OUTRCIOSTARTCYCLE	= 8;
-		// Record the final nominal I/O T-state; release remains at a transaction boundary.
-		static const unsigned int _OUTAIOACCESSCYCLE	= 10;
-		static const unsigned int _OUTRCIOACCESSCYCLE	= 11;
 	};
 
 	// ---
@@ -298,8 +280,7 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np, _OUTAIOSTARTCYCLE);
-		setIOAccessClockCycle (_OUTAIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
@@ -324,8 +305,7 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
-		setIOAccessClockCycle (_OUTRCIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
@@ -349,8 +329,7 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		// Undocumented OUT (C),0 writes a zero byte to the captured BC address.
-		prepareIOAccess (ab, np, _OUTRCIOSTARTCYCLE);
-		setIOAccessClockCycle (_OUTRCIOACCESSCYCLE);
+		prepareIOAccess (ab, np);
 
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
@@ -417,10 +396,6 @@ namespace FZ80
 							{ }
 
 		protected:
-		static const unsigned int _IOSTARTCYCLE = 12;
-		// The repeated form retains this access phase before its five extra T-states.
-		static const unsigned int _IOACCESSCYCLE = 15;
-
 		/** The parameter a indicates the quantity to move up or down. \n
 			It has to be -1 or 1. */
 		bool executeWith (int a);

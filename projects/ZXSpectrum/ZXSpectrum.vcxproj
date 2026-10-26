@@ -23,6 +23,8 @@
     <ClInclude Include="..\..\include\ZXSpectrum\Cartridge.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\CommandBuilder.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Commands.hpp" />
+    <ClInclude Include="..\..\include\ZXSpectrum\ContendedMemory.hpp" />
+    <ClInclude Include="..\..\include\ZXSpectrum\CZ80.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\Datasette.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\DatasettePort.hpp" />
     <ClInclude Include="..\..\include\ZXSpectrum\EdgeConnector.hpp" />
@@ -48,6 +50,8 @@
     <ClCompile Include="..\..\src\ZXSpectrum\Cartridge.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\CommandBuilder.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\Commands.cpp" />
+    <ClCompile Include="..\..\src\ZXSpectrum\ContendedMemory.cpp" />
+    <ClCompile Include="..\..\src\ZXSpectrum\CZ80.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\Datasette.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\DatasettePort.cpp" />
     <ClCompile Include="..\..\src\ZXSpectrum\EdgeConnector.cpp" />

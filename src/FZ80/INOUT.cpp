@@ -132,8 +132,8 @@ bool FZ80::INBlock_General::executeWith (int a)
 	_lastExecutionData._INOUTAddress = addressBC ();
 	unsigned short ab =
 		(unsigned short) _lastExecutionData._INOUTAddress.value ();
-	prepareIOAccess (ab, rCA, _IOSTARTCYCLE, false);
-	setIOAccessClockCycle (_IOACCESSCYCLE);
+	// The memory write follows the port read, so I/O is not the last bus access.
+	prepareIOAccess (ab, rCA, false);
 
 	// Save everything completion needs before advancing the CPU registers.
 	// The byte and its dependent flags/memory write are produced only on release.
@@ -308,8 +308,7 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 	// The internal register RW used later in BIT instructions...
 	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
 		((unsigned char) ((ab + 1) >> 8));
-	prepareIOAccess (ab, rCA, _IOSTARTCYCLE);
-	setIOAccessClockCycle (_IOACCESSCYCLE);
+	prepareIOAccess (ab, rCA);
 
 	// OUTI/OUTD use decremented B in the port address. Capture the memory byte
 	// now; releasing the output must not reread memory after HL has advanced.
