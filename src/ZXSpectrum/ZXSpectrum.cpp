@@ -47,6 +47,8 @@ ZXSPECTRUM::SinclairZXSpectrum::SinclairZXSpectrum (
 	_ula = dynamic_cast <ULA*> (chip (ULA::_ID));
 	assert (_ula != nullptr);
 
+	static_cast <ZXSPECTRUM::CZ80*> (cpu ()) -> linkToULA (_ula);
+
 	// Assign the ULA to the PortManager...
 	pM -> linkToULA (_ula);
 
@@ -118,9 +120,31 @@ bool ZXSPECTRUM::SinclairZXSpectrum::initialize (bool iM)
 // ---
 void ZXSPECTRUM::SinclairZXSpectrum::specificComputerCycle ()
 { 
-	// If the CPU is already stopped, no additional calculus is done
-	if (cpu () -> stopped ())
-		return; // ...and this method ends!
+	ZXSPECTRUM::CZ80* z80 =
+		static_cast <ZXSPECTRUM::CZ80*> (cpu ());
+
+	if (z80 -> stopped ())
+		return;
+
+	// No instruction completed during a partial execution step.
+	if (z80 -> memoryAccessState () !=
+			ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED &&
+		z80 -> memoryAccessState () !=
+			ZXSPECTRUM::CZ80::MemoryAccessState::_PENDING_PORT_COMPLETION)
+		return;
+
+	// An interrupt response must not reconstruct the preceding instruction.
+	if (z80 -> memoryAccessOperation () !=
+		ZXSPECTRUM::CZ80::MemoryAccessOperation::_INSTRUCTION)
+		return;
+
+	if (z80 -> ticksCounter () != nullptr &&
+		z80 -> ticksCounter () -> elapsedTicks () == 0)
+		return;
+
+	// The new path has already evaluated this operation, including zero delays.
+	if (z80 -> memoryContentionHandled ())
+		return;
 
 	// At which T State did happen the first access to the VRAM? (-1 when nC = 0)
 	// The number of TStates is counter from 0 onwards!

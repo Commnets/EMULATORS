@@ -1,0 +1,4 @@
+interface:
+  display_name: "VIC20 VIC-I Audit"
+  short_description: "Audit VIC-I raster, video, memory, sound and inputs"
+  default_prompt: "Use $vic20-vici-audit to compare VIC20 VIC-I behavior with 6560/6561 documentation and cycle-level evidence."

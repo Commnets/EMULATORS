@@ -70,6 +70,7 @@ MCHEmul::CPU::CPU (int id, const MCHEmul::CPUArchitecture& a,
 	  _state (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
 	  _clockCycles (0), _lastCPUClockCycles (0),
 	  _lastState (MCHEmul::CPU::_EXECUTINGINSTRUCTION),
+	  _memoryAccessContext (MemoryAccessContext::_NORMAL),
 	  _fetchingInstructionCode (false),
 	  _instructionStartClockCycle (0), _instructionFetchClockCycle (0),
 	  _debugLimitsInit (a.numberBytes (), 0), _debugLimitsEnd (a.longestAddressPossible ()), // To debug...
@@ -193,6 +194,7 @@ bool MCHEmul::CPU::initialize ()
 	_lastINOUTData = { };
 
 	_state = _lastState = MCHEmul::CPU::_EXECUTINGINSTRUCTION;
+	_memoryAccessContext = MemoryAccessContext::_NORMAL;
 	_fetchingInstructionCode = false;
 	_instructionStartClockCycle = _instructionFetchClockCycle = 0;
 
@@ -643,9 +645,16 @@ bool MCHEmul::CPU::executeNextInstruction_PerCycle (unsigned int& e)
 			// For an undefined instruction, prediction can inspect further opcode
 			// bytes without FETCH qualification. Execution may later obtain different
 			// bytes from memory that transforms opcode fetches.
+			// Prediction can inspect instruction bytes without representing new bus accesses.
+			MemoryAccessContext previousContext = memoryAccessContext ();
+			setMemoryAccessContext (MemoryAccessContext::_INSPECTION);
+
 			_instructionEventContextData -> _clockCycles =
 				_currentInstruction -> clockCyclesToExecute
 					(this, _memory, _instructionEventContextData -> _address);
+
+			setMemoryAccessContext (previousContext);
+
 			_clockCyclesCurrentInstruction =
 				_instructionEventContextData -> _clockCycles;
 			_cyclesPendingExecution = _clockCyclesCurrentInstruction;
@@ -763,9 +772,16 @@ bool MCHEmul::CPU::executeNextInstruction_Full (unsigned int &e)
 	// Full execution does not otherwise need a prediction. Calculate it only when
 	// an observer or deep debug will consume it, and share that single result.
 	if (!_observers.empty () || deepDebugActive ())
+	{
+		MemoryAccessContext previousContext = memoryAccessContext ();
+		setMemoryAccessContext (MemoryAccessContext::_INSPECTION);
+
 		_instructionEventContextData -> _clockCycles =
 			inst -> clockCyclesToExecute
 				(this, _memory, _instructionEventContextData -> _address);
+
+		setMemoryAccessContext (previousContext);
+	}
 
 	// The execution of the instruction is notified
 	// just in case any other part of the computer needed to prepare something...
@@ -819,14 +835,22 @@ MCHEmul::Instruction* MCHEmul::CPU::instructionAt
 	assert (c != nullptr &&
 			m != nullptr);
 
-	MCHEmul::Instruction* inst = nullptr;
-	// Inspection must not trigger the side effects of an execution opcode fetch.
-	unsigned int nInst = c -> instructionCodeAt (m, addr);
-	if (nInst >= c -> _rowInstructions.size () ||
-		(inst = c -> _rowInstructions [nInst]) == nullptr)
-		return (nullptr); // Not possible to define the instruction...
+	MemoryAccessContext previousContext = c -> memoryAccessContext ();
+	c -> setMemoryAccessContext (MemoryAccessContext::_INSPECTION);
 
-	return ((inst -> defineInstructionFrom (m, addr)) ? inst : nullptr);
+	MCHEmul::Instruction* inst = nullptr;
+	// Inspection preserves the existing non-FETCH reads and their returned values.
+	unsigned int nInst = c -> instructionCodeAt (m, addr);
+	if (nInst < c -> _rowInstructions.size ())
+	{
+		inst = c -> _rowInstructions [nInst];
+		if (inst != nullptr && !inst -> defineInstructionFrom (m, addr))
+			inst = nullptr;
+	}
+
+	c -> setMemoryAccessContext (previousContext);
+
+	return (inst);
 }
 
 // ---

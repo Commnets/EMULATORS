@@ -1,0 +1,4 @@
+interface:
+  display_name: "VIC20 VIA Audit"
+  short_description: "Audit VIC20 VIA timers, ports, wiring and interrupts"
+  default_prompt: "Use $vic20-via-audit to compare VIC20 VIA behavior with the NMOS 6522 documentation and board wiring."

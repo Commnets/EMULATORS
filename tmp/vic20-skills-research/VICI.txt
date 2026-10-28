@@ -1,0 +1,785 @@
+
+=== PDF PAGE 1 ===
+commodore
+Ik. mos technology
+NMOS
+950 Rittenhouse Rd., Norristown, PA  19403 • Tel.: 215/666-7950 • TWX: 510/660-4168
+6560/6561 VIDEO INTERFACE CHIP
+GENERAL DESCRIPTION
+The 6560 Video Interface Chip (VIC) is designed for color video graphics applications 
+such as low cost CRT terminals, biomedical monitors, control system displays and arcade or 
+home video games. It provides all of the circuitry necessary for generating color program­
+mable character graphics with high screen resolution. VIC also incorporates sound effects 
+and A/D converters for use in a video game environment.
+FEATURES
+• Fully expandable system with a 16K byte address space
+• System uses industry standard 8 bit wide ROMS and 4 bit wide RAMS
+• Mask programmable sync, generation, NTSC-6560, PAL-6561
+• On-chip color generation (16 colors)
+• Up to 600 independently program­
+mable and movable background 
+locations on a standard TV
+• Screen centering capability
+• Screen grid size up to 192 Horizon­
+tal by 200 Vertical dots
+• Two selectable graphic character 
+sizes
+• On-chip sound system including:
+a) Three independent, program­
+mable tone generators
+b) White noise generator
+c) Amplitude modulator
+• Two on-chip 8 bit AID converters
+• On-chip DMA and address genera­
+tion
+• No CPU wait states or screen hash 
+during screen refresh
+• Interlaced/Non-interlaced switch
+• 16 addressable control registers
+• Light gun/pen for target games
+• 2 modes of color operation
+PIN CONFIGURATION
+6560
+N.C. C I 4 03 VDD
+COMP COLOR C 2 39 □ IN
+SYNC a  LUMIN C 3 38 □ 02 IN
+R/W  C 4 37 3  OPTION (NOTE 1 )
+DBM C 5 36 1 3  Pfl> 2
+D8IO C 6 35 □  P0|
+DB9 C 7 34 3 A 1 3
+DB8 C e 33 3  A |2
+DB7 C 9 32 3  A( |
+DB 6 C 10 3 1 3  A jo
+DBS C 11 30 3  A g
+DB 4 C 1 2 29 3  A e
+DB3 C 1  3 28 3  A 7
+D B 2 C 1  4 27 3  a 6
+D B I  C 1 3 26 3  a 5
+D  BO C 1 6 25 3  a 4
+POT X C 1  7 24 3 a 3
+POT Y C 18 23 3 A 2
+COMP SND C 1  9 22 3  A,
+vS s  C20 2 1 3  Aq
+0 *
+a  c o M w o n n w  c o m p a n y
+2/80
+6 5 6 0 / 6 5 6 1  V ID E O  INTERFACE CHIP
+
+
+=== PDF PAGE 2 ===
+THEORY OF OPERATION
+In order to produce programmable color characters, VIC accesses external memory 
+which can be divided into three areas: character pointers, display characters and color 
+pointers. The character pointer area is a block of bytes in RAM (typically 506 bytes called the 
+Video Matrix) in which each byte points to a particular character to be displayed. The 
+character area consists of a set of 8 or 16 byte blocks (usually called cells) which contain the 
+actual dot patterns to be displayed. These character cells can be located in either RAM or 
+ROM depending on how the objects are to be displayed or moved on the screen. The color 
+pointer area is a block of nybbles in RAM (typically 506-4 bit nybbles called the Color Matrix). 
+The 4 bit color pointers are used to define the color of any character which is to be displayed 
+and to select one of the two color modes.
+It is the task of an external microprocessor to organize the Video Matrix, Color Matrix 
+and Character Cells into the proper format to display the data desired on-screen.
+To understand the operation of VIC more completely, consider the diagram shown in 
+Figure 1. This is a typical Video Matrix, in which 22 characters horizontally by 23 characters 
+vertically are to be displayed, yielding a total of 506 character display locations, with a screen 
+resolution of 176 horizontal by 184 vertical dots. Each one of these character display locations 
+has a corresponding character pointer, or index, which specifies (points at) a character to be 
+displayed in that particular location. In the example shown, rectangle (B,15) has a character 
+index of 2B. This means character number 2B is to be displayed in that rectangle. VIC will 
+fetch the character index value 2B and perform an address computation to locate the desired 
+character to be displayed. The computation is quite simple. If 8 x 8 character cells are 
+selected, the index is left shifted 3 times (multiply by 8)  and the starting address of the 
+character cells, found in VIC Control Register CR5,  is added to the left shifted value. In this 
+case, the character cell starting address is 3400 (in HEX) which is added to the left shifted 
+value of the character index to yield the actual character location in memory of 3558 (in HEX). 
+Note here that the actual character displayed is an eight dot by eight dot matrix which can be 
+stored in either ROM or RAM. Also, the number of times that any particular character can be 
+displayed is unlimited. By using the same character index (2B for example) elsewhere on the 
+grid, the character data will be displayed again. Alternately, through the use of a simple soft­
+ware driver, VIC can be used as a bit mapped display system provided enough RAM is 
+available (approximately 4K bytes of cell RAM).
+V
+N |2 |3 ||0 
+NO. OF ROWS
+TYPICAL VIDEO MATRIX
+(2 3  x 2 2 )
+FIGURE 1
+
+
+=== PDF PAGE 3 ===
+] ORIGIN
+IOOO
+1001
+1002
+1003
+1004
+1005
+1006
+1007
+1008
+1009
+IOOA
+IO O B
+IO O C
+IO O D
+100 E *
+lOOF
+I s 63  X
+q 5
+= > X s 4 q 3
+=x
+c 2
+- > x
+c 1
+^x
+c °
+x
+s j c 6 
+= > Y = > Y • 3y b Y S 2 c l
+^Y
+c 0
+^Y
+G D
+< « >M s M 5 m 4 m 3 m 2 M, M 0
+Ro n 5 n 4 n 3 n 2 N, No D
+r 8 r 7 r 6 r 5 R 4 r 3 r 2 R i
+B v 3 b ; 2 B v b ; ° B e 3 B e 2 Be' B c '°
+L h L h 6 L h L h L h L h 2 L h L h °
+Lv 7 Lv 6 Lv 6 L v Lv" L v l J L  v
+Px7 P ^ r  X P 5r  X Px4 Px3 Px2 Px' P 0
+P 7Y p y6 p y5 Py 4 Py3 P y2 p y Py°
+S | F , 6 F , 5 F , 4 F ,3 F , 2 F,' F i°
+S 2 F 6 ' 2 f 2 5 f 24 f 23 f 22 f 2 ' f 2 °
+^ 3 F 63 F 3 4 F 3 3 F 3 2 F -3 ! F 3 °
+s 4 F  64 F  5 ' 4 F 4 4 F  3 ' 4 F  2r 4 F 4 ' F  0' 4
+C a 3 r . 2
+C A' cA ° A 3 A 2 A  1 A o
+c  3'- B C  2 '“ B
+r  1 r  0B R c  2^  E
+1
+C  1 C 0E
+{bit number)
+SCREEN O RIG IN 
+X-COORDINATE
+SCREEN ORIGIN 
+Y - COORDINATE
+N O . O F VIDEO 
+MATRIX COLUMNS
+N O . OF VIDEO 
+MATRIX ROWS
+RASTER VALUE
+BASE ADDRESS 
+CONTROL
+LIGHT PEN 
+HORIZONTAL
+LIGHT PEN 
+VERTICAL
+POT X  
+POT Y  
+F in(I)
+F 1 N (2)
+F|N (3)
+F, n(4)
+AMPLITUDE
+COLOR
+CONTROL
+M .U. =  NOT USED
+VIC CONTROL REGISTERS
+
+
+=== PDF PAGE 4 ===
+REGISTER DESCRIPTION
+There are sixteen eight-bit control registers within the 6560 which enable the micro­
+processor to control all the operating modes of VIC. The control registers and their functions
+are tabulated and explained below.
+EXPLANATION OF CONTROL REGISTER FUNCTIONS
+CRgi Bits 0-6 determine how far from the left-hand side of the T.V. screen the first column
+of characters will appear. It is used to Horizontally center various sizes of video 
+matrices on-screen. Bit 7 selects interlaced scan mode ( I  = 1 ).
+CR.,: Determines how far from the top of the T.V. screen the first row of characters will
+appear. It is similarly used to vertically center various sizes of video matrices on­
+screen.
+CR2:  Bits 0-6 set the number of columns in the Video Matrix. Bit 7 is part of the Video
+Matrix address found in CR5.
+CR3:  Bits 1-6 set the number of rows in the Video Matrix. Bit 0 is used to select either
+8 x 8 character matrices (D = 0) or 16 x 8 character matrices (D = 1 ). Bit 7 is part of 
+the RASTER value found in CR4 .
+CR4:  Contains the number of the line currently being scanned by the T.V. raster beam.
+CR5:  Bits 0-3 determine the starting address of the character cell space. (Note that these
+bits form bits A13 through A10 of the actual address.) Bits 4-7 (along with Bit 7 of 
+CR2 ) determine the starting address of the Video Matrix (these bits form bits A13 
+through A9 of the actual address).
+CRgi Contains the latched horizontal position of the light gun/pen.
+CR7:  Contains the latched vertical position of the light gun/pen.
+CR8:  Contains the digitized value of POTX.
+CRg: Contains the digitized value of POTY.
+CRA:  Bits 0-6 set the frequency of the first audio oscillator. Bit 7 turns the oscillator on
+(  = 1) or off (  = 0) .
+CRB:  Same as CRA for second audio oscillator.
+CRc:  Same as CRA for third audio oscillator.
+CRD:  Same as CRA,  but sets frequency of noise source.
+CRE:  Bits 0-3 set the volume of the composite audio signal (Note that at least one sound
+generator must be turned on for any sound to be produced). Bits 4-7 contain the 
+Auxiliary color code used in conjunction with the “Multicolor” mode of operation.
+CRF:  Bits 4-7 select 1  of 16 colors for the background common to all characters. (Essen­
+tially, they set the color of the background area within the Video Matrix.) Bits 0-2 
+select 1 of 8 colors for the exterior border area of the screen (all area outside the 
+Video Matrix). Bit 3 determines whether the Video Matrix will be displayed as dif­
+ferent colored characters on a common background color (R = 1)  or inverted (R = 0), 
+that is, all characters will be the same color (the background color in C RF)  while 
+each character’s background will now be a different color, determined by the code 
+in the Color RAM. Note that the R bit has no effect when Multicolor mode is 
+selected and that CRF also functions differently in this mode. Refer to the section 
+called “Operating Modes” for complete information.
+
+
+=== PDF PAGE 5 ===
+COLOR OPERATING MODES
+VIC incorporates two modes of color operation. HI-RES (high resolution) mode and 
+Multicolor mode. Basically, the operating mode affects how the Character Cell information 
+will be translated into dots on the TV screen. The operating mode is determined by the MSB 
+of the color pointer associated with each character location in the Video Matrix. If the MSB of 
+a character’s color pointer is zero, then that character will be displayed in HI-RES mode. Alter­
+nately, if the MSB is one, the character will be displayed in Multicolor mode.
+With HI-RES mode selected, there is a one-to-one correspondence between Character 
+Cell bits and the dots displayed on-screen. That is, all one bits of a character will be displayed 
+in one color, and all zero bits in another color. The foreground color of the character is 
+specified by the remaining 3 bits of the character’s color pointer, while the character’s back­
+ground color is specified by Register F (CRF) .
+With Multicolor mode selected, each TWO bits of a character cell correspond to ONE 
+dot on-screen and the color of that dot is determined by the two-bit code. Unlike HI-RES 
+mode, in which only two colors can be displayed in a single character, Multicolor mode allows 
+four colors per character; however, since two bits of cell data now correspond to a single dot 
+on-screen, the horizontal resolution is half that of the HI-RES mode. That is, each 8x8 
+Character Cell in memory maps onto an 8x4 character on-screen (8 lines of 4 dots each). Note 
+that the amount of memory required for these 8x4 Multicolor characters is the same as that 
+for 8x8 HI-RES characters, the data is simply mapped differently on-screen.
+In Multicolor mode, the two bits which make up a dot select one of four colors for that 
+dot. The four codes created by these two bits tell VIC where to find the color information for 
+the dot. The color of the dot can be either the Background color (in CRF) , the Exterior Border 
+color in (CRF) , the Auxiliary color (in CRE) or the Foreground color (bits 0 thru 2 of the 
+character’s color pointer).
+The Multicolor mode color select codes are:
+00— Background color (CRF)
+01 — Exterior Border color (CRF)
+10— Foreground color (Color RAM)
+11— Auxiliary color (CRE)
+Note that the two-bit code is NOT itself a color code, rather it is a pointer to four different 
+color codes, allowing greater color flexibility, as each code pointed to has either 3 or 4-bit 
+resolution.
+EXAMPLE:
+Given: C Rf = 1F Character Background color is W HITE (1),
+Exterior Border color is YELLO W  (7),
+Invert is not selected (R= 1).
+C R E = 6X Auxiliary color is BLUE (6).
+and a character definition of:
+bit
+76543210 HEX
+byte 0 00011011 1B
+1  00011011 1B
+2 00011011 1B
+3 00011011 1B
+4 00011011 1B
+5 00011011 1B
+6 00011011 1B
+7 00011011 1B
+
+
+=== PDF PAGE 6 ===
+If the color pointer nybble for that character is 0 (0000), then the Foreground color is 
+BLACK (0 ) and HI-RES mode is selected (MSB = 0 ). The character will then appear on-screen 
+as:
+ONE BITS APPEAR IN  FOREGROUND COLOR (BLACK)
+rS ^
+II 1II 1IIIIII 1
+II 1II 1II 1
+-V -* V
+ZERO BITS APPEAR IN BACKGROUND COLOR (WHITE)
+If the color pointer nybble for that character is 8 (1000), then the Foreground color is 
+BLACK (0 ) and Multicolor mode is selected (MSB= 1 ) . The character will then appear on­
+screen as.
+I
+THE 2-BIT 
+CODE IS OO 
+• • •  DOT IS 
+BACKGROUND 
+COLOR (WHITE)
+THE 2-BIT 
+CODE IS 1 0  
+/. DOT IS 
+FOREGROUND 
+COLOR (BLACK) 
+L.
+THE 2-BIT COOE IS  0 1  
+• •  DOT IS BORDER COLOR (YELLOW)
+THE 2-BIT CODE IS II
+DOT IS AUXILIARY COLOR (BLUE)
+(Note that this is given solely as an example and due to color transition limitations of most TV 
+sets, closely spaced dots of different colors will not appear sharply defined on-screen.)
+Since the mode of display for a character is selected by the character's color pointer and 
+each character location on-screen has a unique color pointer, it is possible to freely intermix 
+HI-RES and Multicolor characters. This provides great display flexibility, allowing HI-RES 
+characters for alphanumerics, etc. and Multicolor characters for a wider array of colors 
+available simultaneously.
+EXAMPLE OF VIC CONTROL REGISTER USE
+For simplicity, assume all characters are in the HI-RES mode and the VIC Registers are 
+loaded with the following values:
+REG CONTENTS (HEX)
+CRq 03
+CR,
+CRz
+CR 3
+19
+96
+2E
+BINARY RESULTS
+0/000 0011 Moves Video Matrix over 3 (x4) dot
+widths from the left side of the  
+screen. Interlace is not selected  
+(l =  0).
+0001 1001 Moves Video Matrix down HEX 1 9
+(x 2 ) dot heights from top of screen.
+1 / 0 0 1  0110 Sets HEX 16 (  = 22 base 1 0 ) columns
+in Video Matrix. (Bit 7 is used with  
+CR,)
+X/010 111 /0  Sets 010111 (  = 23 base 1 0 ) rows in
+Video Matrix. 8 x 8  character  
+matrices are selected (D = 0 ).
+
+
+=== PDF PAGE 7 ===
+EXAMPLE OF VIC CONTROL REGISTER USE: (Continued)
+REG CONTENTS (HEX) BINARY RESULTS
+CR 5 Should be set to access the proper memory locations of the specific system. Suppose 
+it is desired to locate the Video Matrix starting at address HEX 0200, and the character 
+matrices starting at address HEX 3400. In order to accomplish this, CR 5 is set:
+c r 5 0D 0000 1101 and bit 7 of CR 2 is set to 1 .
+This would create a 14-bit address of the form : 
+CR. BITS CR, BIT
+-------1
+00 001X XXXXXXXX 
+0 2 0 0
+for the Video Matrix.
+It would also create a 14-bit address of the form : 
+CR5  BITS
+32 10
+1 1  01XX XXXXXXXX 
+3 4 0 0
+for the character matrices.
+c r a 00 0/000 0000 Oscillator 1  is OFF.
+CR b 9A 1 / 0 0 1  1010 Oscillator 2 is ON, with a relative fre­
+quency of 1A.
+CRc 00 0/000 0000 Oscillator 3 is OFF.
+CR d A5 1 / 0 1 0  0101 Noise generator is ON with a relative 
+frequency of 25.
+CR e XF XXXX 1 1 11 Sound effects are set for loudest  
+volume.
+t i ­er
+o
+0E 0000/1/110 The background color common to all
+characters is black ( 0 ) , the border 
+color is dark blue ( 6 )  and each  
+character is displayed in its own col­
+or on the black background (R  = 1 ) .
+These register values will produce a screen with a properly centered Video Matrix of 
+23x22 characters, each character appearing in color on a black background, with a dark blue 
+border surrounding the Video Matrix area. Additionally, the sound effects generator will be 
+producing a pitched oscillation, along with white noise.
+All of these registers can be modified to produce different effects.
+For example:
+I f the number in CRo is increased, the Video Matrix region will shift farther to the right.
+I f the number in CRB  is reduced (leaving bit 7 a one) the frequency of oscillator 2 will go 
+down.
+I f CRF  is changed to 06 (turning R OFF), the border will remain dark blue, but now the 
+Video Matrix will appear as black characters on different colored backgrounds.
+I n  order for VIC to produce a picture on-screen, the number of rows and columns and ap­
+propriate centering values must be loaded into the proper registers.
+
+
+=== PDF PAGE 8 ===
+
+
+=== PDF PAGE 9 ===
+6560 PIN SIGNAL DESCRIPTION
+•  Address Bus— Pins 2 1  thru 34
+The 14 bit address bus (Aq thru A 1 3 )  is bidirectional. During P 02 = 1, the address pins are 
+in the input mode. In this mode the microprocessor can access any of the sixteen VIC Control 
+Registers. The high order pins of the Address Bus (A 8 thru A 1 3 )  act as Chip Select pins in this 
+input mode. A true chip select condition occurs when A 1 3 = A^ = A1 0 = A9 = A8 = 0 and A1 2 = 1 , 
+which equates to a VIC chip select address of 1000 in HEX. The lower order 4 bits of the ad­
+dress bus (Aq thru A 3) are used as the control register select portion of the input address.
+During P 0 1 = 1, the VIC address pins will be in the output mode if data (either Character 
+Pointer or Character Cell) is to be fetched. In this mode, VIC will put out the address of the 
+memory location to be fetched. The address from VIC will be valid 50ns after the rising edge 
+of P 0 1 and remain valid until the rising edge of P 0 2.
+•  Read/Write— Pin 4
+This signal is an input only on the 6560 and controls the flow of data between VIC and 
+the microprocessor. When the RA/V signal is low and the VIC chip select conditions have been 
+satisfied, the microprocessor can write data into the selected VIC Control Register. If the R/W 
+signal is high and the chip select conditions have been met, the microprocessor can read 
+data from the selected VIC Control Register.
+It is important to note that all VIC/microprocessor data transfers can only occur when 
+P 0 2=1. During P 0 V the VIC will be fetching data from memory for display and the RA/V 
+signal must be held high to insure that VIC will not write into any memory location.
+•  Data Bus— Pins 5 thru 16
+The 12 bit data bus of the 6560, DB 0 thru DB1 1 f is divided into two sections. The lower 
+order eight bits, DB 0 thru DB7,  are used both to interface to the microprocessor and fetch data 
+needed for display, while the higher order 4 bits are used exclusively for retrieving color and 
+mode information. The operation of the lower order eight bits (DB 0 thru DB7 )  can also be 
+separated into two categories: microprocessor interface and video data interface. During 
+P 0 2=1, DB 7 thru DB 0 are used exclusively for data transmission between the micro­
+processor and VIC. During P 0 1 = 1, DB7 thru DB 0 are used for fetching display data.
+
+
+=== PDF PAGE 10 ===
+CLOCKS
+1 ) Master Oscillator Clock Inputs—0 A and 0 2,  Pins 39 and 38
+The 6560 requires a 14.31818 MHz (NTSC), TWO Phase Clock. The clock signals must be 
+five (5) volts and non-overlapping. The 6561 requires a 4.436187 MHz clock for PAL standard.
+2 ) System Clocks—P 0 1 and P 0 2,  Pins 35 and 36
+These clocks are the master timing generator for the VIC System. They are five volt, non­
+overlapping 1.02 MHz clocks capable of driving the capacitance of the 6512 microprocessor.
+3 ) Memory Clock—0 M  (Option), Pin 37
+This is a single phase 2.04 MHz clock used when memories in the VIC System require a 
+strobe after the address bus is valid.
+•  Analog to Digital Converters—POTX and POTY, Pins 17 and 18
+These input pins are used to convert potentiometer position into a microprocessor 
+readable 8 bit HEX number. This is accomplished by a simple RC time constant integration 
+technique. The potentiometer is used to charge an external capacitor tied to the pot pin. Refer 
+to application note No.1 (insert).
+•  Composite Sound— Pin 19
+This pin provides the output of the sound synthesizer portion of the 6560 shown in the 
+VIC Block Diagram. It is a high impedance output (approximately 1Kfi) and must be buffered 
+and amplified externally to drive a speaker.
+•  Composite Sync and Luminance— Pin 3
+This pin is an open drain output which provides all the necessary video synchronization 
+and luminance information required by a standard television. Refer to application note No. 1  
+(insert).
+•  Composite Color— Pin 2
+This signal provides the necessary color information required by a standard television to 
+receive a full color picture. The composite color pin is a high impedance output buffer which 
+provides the reference burst signal plus the color encoded phase and amplitude information 
+at the proper 3.579545 MHz frequency. Refer to application note No. 1  (insert).
+
+
+=== PDF PAGE 11 ===
+«  Reset—(Option), Pin 37
+This input signal is used to synchronize the horizontal and vertical sync counter to an ex­
+ternal signal.
+•  Bus Available—(Option), Pin 37
+This output signal indicates the state of VIC with respect to the video memory fetch. The 
+pin will go low 2 ^sec. before VIC performs any memory access and will remain low until the 
+entire screen has been refreshed.
+•  Light Gun/Pen—(Option), Pin 37
+This input signal causes the current dot position being scanned onto the screen to be 
+latched into control registers 6 and 7, upon a negative going edge. This pin would be used in 
+conjunction with a photo detector for use in a “target shoot” type game or for light pen ap­
+plications. Refer to application note No. 1  (insert).
+NOTE 1 
+OPTION ALTERNATIVES
+1) 0 M— 2.0 MHz Clock for Clocked Memories/6560-001
+2) RESET— Reset Horizontal and Vertical counters to Vertical Sync./6560-201
+3) LIGHT PEN — Negative edge triggered latch of raster position/6560-101
+4) BUS AVAILABLE— Pin is low when VIC is displaying data/6560-301
+NOTE 2 
+AVAILABLE BORDER/
+AVAILABLE AUXILIARY/BACKGROUND COLORS CHARACTER COLORS
+0 BLACK 8 ORANGE 0 BLACK
+1 WHITE 9 LIGHT ORANGE 1 WHITE
+2 RED A PINK 2 RED
+3 CYAN B LIGHT CYAN 3 CYAN
+4 MAGENTA C LIGHT MAGENTA 4 MAGENTA
+5 GREEN D LIGHT GREEN 5 GREEN
+6 BLUE E LIGHT BLUE 6 BLUE
+7 YELLOW F LIGHT YELLOW 7 YELLOW
+
+
+=== PDF PAGE 12 ===
+6560 ELECTRICAL SPECIFICATION
+ABSOLUTE MAXIMUM RATINGS COMMENT
+Ambient Temperature under Bias -10° to 80°C 
+Storage Temperature -  65°C to 150°C
+Voltage on any Pin *  -  0.5v to + 7v
+Power Dissipation 1.0W
+‘ With respect to Ground
+Stresses above those listed under “Ab­
+solute Maximum Ratings” may cause 
+permanent damage to the device. This 
+is a stress rating only and functional 
+operation of the device at these or any 
+other conditions above those indicated 
+in the operational sections of this 
+specification is not implied.
+D.C. CHARACTERISTICS TA = 0°C to +50°C, VD D  = 5v ± 5% (unless otherwise specified)
+CHARACTERISTIC MIN. MAX. TYP. UNITS
+Read/Write, Reset (Option), 
+Address and Data-lnput State
+V |l - 0.2 0.4 — Volts
+V,H 2.4 5.6 — Volts
+Input Capacitance — 8.0 5.0 PF
+Input Leakage — 10.0 1.0 mA
+(all outputs in high 
+impedance state)
+Address and Data-Output State
+Vol
+-- 0.4 — Volts
+^OH 2.4 — — Volts
+l0L— Sink current VOL = 0.4 2.4 — — mA
+l0H— Source current V0H = 2.4 200 — —
+Impedance in Three State Condition 1X106 — — Ohms
+Clock Input ( 0 1 and 0 2 Input)
+Frequency — — 14.31818 MHz
+Capacitance — 10.0 — pF
+V|L - 0.2 0.3 — Volts
+V|H 4.5 — 5.0 Volts
+Clock Outputs (P 0 1,  P 0 2 )
+^OL
+— 0.3v — Volts
+lOL @ 0.3 Volts V0L 1.6 — — mA
+V0H ^ d d - - 2 — — Volts
+lOH @ 4.7 Volts V0H 200 — — pA
+Loading — 120.0 — PF
+Frequency — — 1.02 MHz
+
+
+=== PDF PAGE 13 ===
+6560 ELECTRICAL SPECIFICATIONS (Continued)
+CHARACTERISTIC MIN. MAX. TYP. UNITS
+Composite Sound
+Output Impedance — 2000 1000 n
+Max. Current (Sink or Source) — 500 — ^A
+Output Offset Voltage 2.2 2.8 2.5 Volts
+V0H (Max. Amplitude) 3.2 — 3.5 Volts
+V0L (Max. Amplitude) — 1.8 1.5 Volts
+VOH (Min. Amplitude) 2.55 — 2.6 Volts
+V0L (Min. Amplitude) — 2.45 2.4 Volts
+Pot Inputs
+v tr ig g e r (R'sing Edge) 2.2 2.8 2.5 Volts
+Pot Reset
+^OL — 0.2 — Volts
+Iol @ VO| _  = 0.2 500 — —
+Light Pen Input (Option)
+v tr ig g e r (Falling Edge) 2.8 2.2 2.5 Volts
+0 M  (Option)
+OL — 0.4 — Volts
+l0L @ 0.3 Volts V0L 1.6 — — mA
+X
+o>
+Vdd - - 7 — — Volts
+Ioh @ ^ -7 Volts V0H 100 — — nA
+Loading — 60 — PF
+Frequency — — 2.04 MHz
+Bus Available (Option)
+V ol — 0.3 — Volts
+ioL 1.6 — — mA
+V qh 2.4 — — Volts
+^ O H 100 — — mA
+4.75 5.25 5.00 Volts
+'dd — 150 120 mA
+VIC INPUT CLOCKS
+
+
+=== PDF PAGE 14 ===
+-  \
+t 0L2
+J .
+t0H2
+\
+VIC OUTPUT CLOCKS
+________0.4 V
+MICROPROCESSOR READ/WRITE TIMING TO VIC
+VIC READ TIMING FROM MEMORY
+
+
+=== PDF PAGE 15 ===
+VIC SYSTEM TIMING
+VIC INPUT CLOCK TIMING
+CHARACTERISTIC SYMBOL MIN. TYP. MAX. UNITS
+Input Clock Cycle Time Tcyci 69.82 — 69.84 ns
+Clock High Tpwm 20 — — ns
+Clock Low TpWL1 20 — — ns
+Rise and Fall Time Tr,  Tf — — 10 ns
+VIC OUTPUT CLOCK TIMING
+Two MHz Clock Cycle Time TCYC2 480 — 500 ns
+0 M  Clock Output Low "*01.2 200 — 260 ns
+0 M  Clock Output High T o H2 180 — 250 ns
+1MHz /^Processor Clocks Cycle Time T c YC3 960 — 990 ns
+P 0 V P 0 2 Clocks Low T”o L3 380 — 500 ns
+P 0 V P 0 2 Clocks High T<3H3 380 — 500 ns
+Delay Time Between Clocks At ,4v ^CD 5 — 20 ns
+Rise Time, Max. CL T r — — 80 ns
+Fall Time, Max. C L t f — — 40 ns
+MICROPROCESSOR READ/WRITE TIMING TO VIC
+Address Set Up Time "Us 375 — — ns
+Address Hold Time Tah 5 — — ns
+Read Set Up Time Trs 375 — — ns
+Write Set Up Time Tws 275 — — ns
+Data In Set Up Time ^ds 200 — .. ns
+Data Access Time ^acc 350 — — ns
+Data Hold Time ^dh 30 — — ns
+VIC READ TIMING FROM MEMORY
+Time To Valid Address From P 0 1 Tva
+— — 70 ns
+Address Hold Time ^ah 10 — 40 ns
+Data Set Up Time Tdsu 60 — — ns
+Data Hold Time d h 20 — — ns
+COMPOSITE SYNC, COLOR AND LUMINANCE TIMING
+Blanking Period (No Video) BLANKING 10 .0 11 .0 12 .0 MS
+Breeze Way B s .3 .5 .7 v-s
+Color Burst Reference Signal BURST 4.0 5.0 6.0 MS
+Note 1  :The color burst signal is the 3.579545 MHz color phase reference from which all other 
+color information is measured.
+For Example: Full intensity blue is a 3.579545 MHz signal which has a relative delay 
+of 135ns from burst if the burst signal was available throughout the 
+entire HL period.
+
+
+=== PDF PAGE 16 ===
+COMPOSITE SYNC OUTPUT TIMING
+CHARACTERISTIC SYMBOL MIN. TYP. MAX. UNITS
+Horizontal Sync Pulse HS 4.0 5.0 6.0 fiS
+Horizontal Line Period h l 63.0 63.5 64.0 fiS
+One Half Horizontal Line Period ^ L / 2 30.0 31.5 32.5 M S
+Equalization Pulse E 2.0 2.5 3.0 M S
+Equalization Time Period El 188.0 190.5 192.0 M S
+Vertical Sync Period vs 188.0 190.5 192.0 M S
+Vertical Sync to Vertical Sync 
+Time Period Vs to Vs — 16.66 — ms
+Notes:
+a) The number of HL  periods between Vs periods is 262.5 in the interlace mode.
+b ) The number of HL  periods between Vs periods in the non-interlace mode is 262 per 
+frame.
+c) NTSC only.
+COMPOSITE 
+COL Oft
+COMPOSITE 
+SYNC * 
+LUMIN
+FULL 
+INTENSIT Y 
+COLOR
+LOW
+INTENSITY
+COLOR
+" 1
+COMPOSITE SYNC, COLOR AND LUMINANCE
+FRAME ONE
+Hs[«—
+4 - l /2
+mm
+^  I —
+u
+FRAME TWO
+u ~ ^ T W ¥ in n [ u j u m n n r m r
+COMPOSITE SYNC OUTPUT
+
+
+=== PDF PAGE 17 ===
+MINIMUM SYSTEM DESCRIPTION
+A minimum VIC System would consist of a microprocessor, VIC, ROM, RAM and I/O. The 
+basic system includes one (6512), one Video Interface Chip (VIC/6560), one PIA (6520), two 
+1K x 4 static RAMS, two 256 x 4 static RAMS, and one or more program/graphics ROMS (2K x 
+8 or 4K x 8) .
+The tasks involved in a complete game are divided between the n ? and VIC. The ^P con­
+trols the game logic and VIC controls the video display as well as the sound generation.
+SYSTEM COMPONENTS:
+•  6512 Microprocessor
+The 6512 is a member of the 6500 microprocessor family, which has gained wide accep­
+tance in the video game industry. The 6512 architecture and addressing capability are well 
+suited to graphic data manipulation. Details concerning the 6512 may be found in the 6500 
+Hardware Manual. Alternately, a 6502 processor can be used by feeding VIC P 0 2 OUT into 
+the 6502 0 O  IN; however, tri-state buffers must then be added to the data bus as well as the 
+address bus.
+•  6560 Video Interface Chip
+The 6560 is a video display device which reads data that has been formatted by the 
+and supplies the appropriate color graphic signals to the RF modulator. To accomplish this, 
+the 6560 does a transparent D.M.A. of the ^P’s memory space accessing ROM and/or RAM.
+•  6520 Peripheral Interface Adapter
+This chip is used for keyboard scanning and joystick multiplexing.
+«  Resident RAM = 2 (2114 ) and 2 (2111)
+These RAM chips are used as working storage by the /iP and for holding the screen 
+organization and color matrices. They may be modified by the ^P at any time. Note that in 
+order to achieve a full bit-map display, a minimum of 4K bytes of character RAM are 
+necessary.
+•  Program/Graphics ROM(s)
+These chips normally contain the game logic and/or coded graphic data. There is no 
+need for a resident ROM in a minimum system. A cartridge ROM can contain all the relevant 
+information.
+
+
+=== PDF PAGE 18 ===
+VIC MINIMUM SYSTEM
+DATA BUS
+i i i m r r
+CD
+O
+*o
+ROM I*
+23I6
+2K * 8
+UP
+ACCESS
+Aa
+DB7
+O B O
+P « l
+pa2
+a >o «
+w
+«2
+* 1 3  
+r/ w —
+D B E
+Z T ~
+t C
+RESET
+D B 7
+I !  I  ir iT T
+wo
+Ao
+ROM 2*
+23I6
+2K x 8
+uP/VIC
+ACCESS
+*13
+>
+a Q
+Q D
+—
+r~
+to
+cc
+-4
+A ?
+A8
+Q D
+( J )
+CD
+OBO
+C H IP
+SELECT
+6520
+P O R T  A P O R T  B
+1 1 1- - U l
+N- - - - - - V
+V ----
+CMOS
+MUX
+4052
+KEYBOARD I/O
+IHI
+T O  POTS PO, P»2
+V
+J i i L " TAJ ± L l
+A o ror o
+—
+a
+— —
+X X4
+<
+R / W
+cs
+*Note: ROM 1  or ROM 2 is optional, since either can be cartridge loaded. ROM 1  is accessed 
+by the processor only. ROM 2 can be accessed by the processor or VIC.

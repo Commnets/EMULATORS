@@ -266,10 +266,17 @@ bool MCHEmul::InstructionDefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m, 
 	_lastExecutionData._memory = m;
 	_lastExecutionData._stack = stk;
 
-	// Gets the data that the instruction occupies
-	// before updating the Program Counter...
+	MCHEmul::CPU::MemoryAccessContext previousContext =
+		c -> memoryAccessContext ();
+	c -> setMemoryAccessContext
+		(MCHEmul::CPU::MemoryAccessContext::_INSTRUCTION_BYTES);
+
+	// Identify the instruction stream separately from its later data accesses.
 	_lastExecutionData._memory -> fillValuesIn
 		(pc -> asAddress (), _lastExecutionData._parameters);
+
+	c -> setMemoryAccessContext (previousContext);
+
 	_lastExecutionData._programCounter = *pc;
 
 	// Then, the Program Counter is moved to the next instruction...
@@ -405,10 +412,18 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 	if (c -> lastInstruction () != nullptr)
 		_lastExecutionData = c -> lastInstruction () -> lastExecutionData ();
 
-	// Execution may require a fetch-qualified read; inspection uses selectInstruction.
+	MCHEmul::CPU::MemoryAccessContext previousContext =
+		c -> memoryAccessContext ();
+	c -> setMemoryAccessContext
+		(MCHEmul::CPU::MemoryAccessContext::_INSTRUCTION_SELECTION);
+
+	// Preserve execution-qualified selection, including existing FETCH behavior.
 	MCHEmul::Instruction* sI =
 		const_cast <MCHEmul::Instruction*>
 			(selectInstructionForExecution (c, m, pc -> asAddress ()));
+
+	c -> setMemoryAccessContext (previousContext);
+
 	if (sI != nullptr && (result = sI -> execute (c, m, stk, pc)))
 		_lastExecutionData = (_lastInstruction = sI) -> lastExecutionData (); // Not std::move because info can be used in other levels...
 

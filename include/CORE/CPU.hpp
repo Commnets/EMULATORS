@@ -69,6 +69,17 @@ namespace MCHEmul
 			Its data is the reusable InterruptContextEventData retained by the CPU. */
 		static const unsigned int _CPUTOEXECUTEINTERRUPT   = 132;
 
+		/** Purpose of memory accesses within the current software operation. \n
+			This context does not identify a physical bus cycle or its timing. \n
+			It is independent of the instruction-code FETCH qualifier. */
+		enum class MemoryAccessContext
+		{
+			_NORMAL,
+			_INSPECTION,
+			_INSTRUCTION_SELECTION,
+			_INSTRUCTION_BYTES
+		};
+
 		// States of the CPU
 		/** The possible different states of the CPU. 
 			As the CPU can be overloaded, additional states could be added later. */
@@ -207,6 +218,13 @@ namespace MCHEmul
 		/** To get the one before the current one. */
 		unsigned int lastState () const
 							{ return (_lastState); }
+
+		/** Purpose exposed while a classified memory operation is performed. */
+		MemoryAccessContext memoryAccessContext () const
+							{ return (_memoryAccessContext); }
+		/** The caller must restore the previous context after its operation. */
+		void setMemoryAccessContext (MemoryAccessContext c)
+							{ _memoryAccessContext = c; }
 
 		/** Identifies an instruction-code read performed for execution. \n
 			Operand reads and instruction inspection must leave this flag inactive. */
@@ -592,6 +610,8 @@ namespace MCHEmul
 		unsigned int _lastCPUClockCycles;
 		/** The last state. */
 		unsigned int _lastState;
+		/** Temporary purpose qualifier, independent of FETCH and execution state. */
+		MemoryAccessContext _memoryAccessContext;
 		/** Temporary access qualifier, independent of the CPU running/stopped state. */
 		bool _fetchingInstructionCode;
 		/** Absolute start clock, retained independently of the execution mode. */

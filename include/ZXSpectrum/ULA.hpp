@@ -212,6 +212,13 @@ namespace ZXSPECTRUM
 		/** Additional cycles imposed on an I/O machine cycle starting at cC. */
 		unsigned int IOContentionDelayAt
 			(unsigned short ab, unsigned int cC) const;
+		/** Delay for one potentially contended memory access at absolute CPU T-state cC. \n
+			The caller has already checked the memory address range. */
+		unsigned int memoryContentionDelayAt (unsigned int cC) const
+							{ return (contentionDelayAt (cC)); }
+		/** Whether the previous reconstruction still has unresolved accesses. */
+		bool legacyMemoryContentionPending () const
+							{ return (!_screenMemoryAccessedFromCPUCycles.empty ()); }
 		/** Called from Computer specific cycle method,
 			to determine whether the CPU accesed or not to the screen memory. \n
 			This is important to detect contentions and then to whether stop the CPU. */
