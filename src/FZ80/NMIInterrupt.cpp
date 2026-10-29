@@ -2,6 +2,16 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
+FZ80::NMIInterrupt::NMIInterrupt ()
+	: Interrupt (_ID, 11, 1),
+	  _responseMCycles
+		({ _Z80_NMIACK5 (), _Z80_MW3 (), _Z80_MW3 () }),
+	  _responseTiming (_responseMCycles)
+{
+	setClassName ("NMIInterrupt");
+}
+
+// ---
 bool FZ80::NMIInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 {
 	assert (c != nullptr);

@@ -23,7 +23,7 @@ namespace ZXSPECTRUM
 
 	/** Z80 coordinating access recording, nominal timing and Spectrum contention. \n
 		CPU-visible RAM forwards access requests; the CPU filters their context and range. \n
-		Retained bytes are associated with the executed instruction's precalculated M-cycles. \n
+		Retained bytes are associated with precalculated instruction or interrupt-response M-cycles. \n
 		Each calculated wait shifts the phase of subsequent accesses. \n
 		Memory-only instructions consume their accumulated delay as terminal CPU wait. \n
 		Mixed instructions include memory-before, port and memory-after waits in their duration. \n
@@ -31,8 +31,8 @@ namespace ZXSPECTRUM
 		Partially retained, ambiguous data-transfer groups are not assigned contention timing yet. \n
 		Crossing a range boundary does not itself prevent capture of the contained bytes. \n
 		Memory contention is supported in Full mode and PerCycle mode with one tick per call. \n
-		Multi-tick batches and interrupt-response contention remain unsupported. \n
-		Interrupt accesses are recorded, but their timing is not associated or evaluated yet. \n
+		Interrupt timing covers IM1, IM2, NMI and IM0 RST responses. \n
+		Multi-tick batches, other IM0 instructions and recognition/refresh contention remain unsupported. \n
 		Unsupported memory cases have no approximate reconstruction fallback; I/O retains its port-only calculation. */
 	class CZ80 final : public FZ80::CZ80
 	{
@@ -92,7 +92,7 @@ namespace ZXSPECTRUM
 			Type _type;
 			/** Distinguishes instruction-byte loading from execution data transfers. */
 			Origin _origin;
-			/** Zero-based M-cycle index within the associated instruction structure. \n
+			/** Zero-based M-cycle index within the associated instruction or response structure. \n
 				Initialized to FZ80::MCycle::_NOCYCLE until timing association. */
 			size_t _mCycle;
 			/** Nominal contention point, expressed in CPU T-states from operation start. \n
@@ -124,6 +124,10 @@ namespace ZXSPECTRUM
 				Previously allocated collection capacity is reused. */
 			void begin
 				(MemoryAccessOperation o, unsigned short pc, unsigned int cC);
+			/** Retains immutable response timing selected at interrupt acceptance. \n
+				Null identifies an unsupported response; ownership remains with the interrupt. */
+			void setInterruptTiming (const FZ80::MCyclesData* timing)
+							{ _interruptTiming = timing; }
 			/** Enables capture without discarding the current operation's records. */
 			void resumeRecording () { _recording = true; }
 			/** Disables capture without changing records or execution state. */
@@ -157,9 +161,13 @@ namespace ZXSPECTRUM
 			/** Absolute CPU clock at the beginning of the owning operation. \n
 				Expressed in CPU T-states using the CPU clock counter's representation. */
 			unsigned int _startClockCycle;
-			/** M-cycle alternative used to associate this transaction's retained accesses. \n
-				Indexes the executed instruction's precalculated metadata; no structures are copied. \n
-				Invalid until timing association succeeds. */
+			/** Non-owning complete response descriptor selected at interrupt acceptance. \n
+				The interrupt outlives this transaction and never rebuilds the descriptor. \n
+				Null for instructions and unsupported interrupt responses; preserved by finish. */
+			const FZ80::MCyclesData* _interruptTiming;
+			/** Associated instruction alternative, or zero for the captured interrupt descriptor. \n
+				For interrupts, zero identifies _interruptTiming rather than lastInstruction. \n
+				Invalid until complete timing association succeeds. */
 			size_t _mCyclesStructure;
 			/** Whether every retained access has an unambiguous nominal timing. \n
 				Published after complete association; false for unsupported or ambiguous associations. \n
@@ -231,7 +239,8 @@ namespace ZXSPECTRUM
 		bool memoryAccessTimingAvailable () const
 							{ return (_memoryAccessTransaction._timingAvailable); }
 
-		/** Alternative associated with the retained accesses; usable only when timing is available. */
+		/** Associated instruction alternative, or zero for the captured interrupt response. \n
+			Usable only when timing is available; interrupt zero is not an index into lastInstruction. */
 		size_t memoryAccessMCyclesStructure () const
 							{ return (_memoryAccessTransaction._mCyclesStructure); }
 
@@ -282,17 +291,19 @@ namespace ZXSPECTRUM
 			 const FZ80::Z80Port::Access& access, unsigned int cC);
 		/** Resolves the executed instruction without reading or decoding memory. */
 		const FZ80::Instruction* executedInstruction () const;
-		/** Associates retained accesses with a single M-cycle structure. \n
-			Returns false when the operation or its mapping is not supported yet. \n
-			Updates transaction timing metadata without reading memory or changing CPU registers or clocks. */
-		bool associateMemoryAccessTiming ();
-		/** Associates retained accesses without publishing complete timing. \n
-			I/O preparation can precede its deferred memory write. \n
-			The caller may use the validated retained prefix internally; external timing remains unpublished. */
+		/** Associates a completed instruction or interrupt transaction. \n
+			Returns its stable descriptor after publishing complete timing association. \n
+			Returns nullptr for incomplete, unsupported or ambiguous operations. */
+		const FZ80::MCyclesData* associateMemoryAccessTiming ();
+		/** Associates retained accesses with nominal transfer positions. \n
+			instructionBytes is zero for interrupt responses. \n
+			Does not publish timing availability, read memory or advance CPU execution. \n
+			Mixed-I/O preparation can use its validated prefix before a deferred write. */
 		bool associateMemoryAccessTiming
-			(const FZ80::Instruction& instruction, const FZ80::MCyclesData& timing);
-		/** Prepares a terminal wait for supported memory-only instructions. */
-		void prepareMemoryContentionDelay ();
+			(const FZ80::MCyclesData& timing, size_t instructionBytes);
+		/** Prepares terminal memory wait for an associated operation without I/O. \n
+			Mixed instructions already account for their waits during I/O preparation. */
+		void prepareMemoryContentionDelay (const FZ80::MCyclesData& timing);
 		/** Consumes pending wait instead of accepting another CPU operation. */
 		bool consumeMemoryContentionDelay (bool full);
 		/** Starts a transaction using the current CPU program counter and clock. */

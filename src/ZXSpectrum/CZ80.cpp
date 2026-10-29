@@ -1,6 +1,7 @@
 #include <ZXSpectrum/CZ80.hpp>
 #include <ZXSpectrum/ULA.hpp>
 #include <FZ80/Instruction.hpp>
+#include <FZ80/Interrupt.hpp>
 
 // ---
 ZXSPECTRUM::CZ80::MemoryAccessTransaction::MemoryAccessTransaction ()
@@ -8,6 +9,7 @@ ZXSPECTRUM::CZ80::MemoryAccessTransaction::MemoryAccessTransaction ()
 	  _state (MemoryAccessState::_IDLE),
 	  _pc (0),
 	  _startClockCycle (0),
+	  _interruptTiming (nullptr),
 	  _mCyclesStructure (FZ80::Instruction::_NOMCYCLESSTRUCTURE),
 	  _timingAvailable (false),
 	  _contentionHandled (false),
@@ -28,6 +30,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::reset ()
 	_state = MemoryAccessState::_IDLE;
 	_pc = 0;
 	_startClockCycle = 0;
+	_interruptTiming = nullptr;
 	_mCyclesStructure = FZ80::Instruction::_NOMCYCLESSTRUCTURE;
 	_timingAvailable = false;
 	_contentionHandled = false;
@@ -51,6 +54,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::begin
 	_state = MemoryAccessState::_IN_PROGRESS;
 	_pc = pc;
 	_startClockCycle = cC;
+	_interruptTiming = nullptr;
 	_mCyclesStructure = FZ80::Instruction::_NOMCYCLESSTRUCTURE;
 	_timingAvailable = false;
 	_contentionHandled = false;
@@ -244,7 +248,15 @@ void ZXSPECTRUM::CZ80::aknowledgeInterrupt
 	// Preserve the PC and clock before the response changes CPU state.
 	beginMemoryAccessOperation (MemoryAccessOperation::_INTERRUPT);
 
+	// INT acknowledgement captures the byte used to select IM0 response timing.
 	FZ80::CZ80::aknowledgeInterrupt (iR);
+
+	const FZ80::Interrupt* interrupt =
+		dynamic_cast <const FZ80::Interrupt*> (getInterruptForRequest (iR));
+
+	// Retain the descriptor before the core initializes and clears _currentInterrupt.
+	_memoryAccessTransaction.setInterruptTiming
+		(interrupt == nullptr ? nullptr : interrupt -> memoryAccessTiming ());
 }
 
 // ---
@@ -383,7 +395,7 @@ FZ80::CZ80::IOAccessTiming ZXSPECTRUM::CZ80::calculateMemoryAndIOAccessTiming
 			return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
 	}
 
-	if (!associateMemoryAccessTiming (instruction, timing))
+	if (!associateMemoryAccessTiming (timing, instruction.memoryPositions ()))
 		return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
 
 	// The observed prefix must precede I/O; a deferred input write is not yet recorded.
@@ -427,39 +439,46 @@ const FZ80::Instruction* ZXSPECTRUM::CZ80::executedInstruction () const
 }
 
 // ---
-bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
+const FZ80::MCyclesData* ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 {
 	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
 
-	if (transaction._operation != MemoryAccessOperation::_INSTRUCTION ||
-		transaction._state != MemoryAccessState::_COMPLETED)
-		return (false);
+	if (transaction._state != MemoryAccessState::_COMPLETED)
+		return (nullptr);
 
-	const FZ80::Instruction* defined = executedInstruction ();
-	if (defined == nullptr || !defined -> hasMCycles () ||
-		!defined -> hasExecutedMCyclesStructure ())
-		return (false);
+	const FZ80::MCyclesData* timing = nullptr;
+	size_t instructionBytes = 0, structure = 0;
 
-	const FZ80::MCyclesData& timing =
-		defined -> mCyclesData (defined -> executedMCyclesStructure ());
-	if (!associateMemoryAccessTiming (*defined, timing))
-		return (false);
+	if (transaction._operation == MemoryAccessOperation::_INSTRUCTION)
+	{
+		const FZ80::Instruction* defined = executedInstruction ();
+		if (defined == nullptr || !defined -> hasMCycles () ||
+			!defined -> hasExecutedMCyclesStructure ())
+			return (nullptr);
 
-	transaction.setTimingAssociation (defined -> executedMCyclesStructure ());
+		structure = defined -> executedMCyclesStructure ();
+		instructionBytes = defined -> memoryPositions ();
+		timing = &defined -> mCyclesData (structure);
+	}
+	else if (transaction._operation == MemoryAccessOperation::_INTERRUPT)
+		timing = transaction._interruptTiming;
 
-	return (true);
+	if (timing == nullptr || !associateMemoryAccessTiming (*timing, instructionBytes))
+		return (nullptr);
+
+	transaction.setTimingAssociation (structure);
+
+	return (timing);
 }
 
 // ---
 bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming
-	(const FZ80::Instruction& instruction, const FZ80::MCyclesData& timing)
+	(const FZ80::MCyclesData& timing, size_t instructionBytes)
 {
 	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
 
 	const std::vector <size_t>& reads = timing.memoryReads ();
 	const std::vector <size_t>& writes = timing.memoryWrites ();
-
-	size_t instructionBytes = instruction.memoryPositions ();
 
 	// Supported ordinary Z80 sequences obtain their instruction bytes
 	// before performing the remaining memory reads.
@@ -534,7 +553,8 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming
 }
 
 // ---
-void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay ()
+void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay
+	(const FZ80::MCyclesData& timing)
 {
 	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
 
@@ -546,13 +566,7 @@ void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay ()
 	if (ticksCounter () != nullptr && ticksCounter () -> elapsedTicks () != 1)
 		return;
 
-	const FZ80::Instruction* defined = executedInstruction ();
-
-	if (defined == nullptr)
-		return;
-
-	const FZ80::MCyclesData& timing =
-		defined -> mCyclesData (transaction._mCyclesStructure);
+	// Mixed instructions account for their waits during I/O preparation.
 	if (!timing.ioCycles ().empty ())
 		return;
 
@@ -604,6 +618,8 @@ void ZXSPECTRUM::CZ80::finishMemoryAccessOperation (bool failed)
 	if (_memoryAccessTransaction._state != MemoryAccessState::_COMPLETED)
 		return;
 
-	if (associateMemoryAccessTiming ())
-		prepareMemoryContentionDelay ();
+	const FZ80::MCyclesData* timing = associateMemoryAccessTiming ();
+
+	if (timing != nullptr)
+		prepareMemoryContentionDelay (*timing);
 }

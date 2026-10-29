@@ -2,6 +2,38 @@
 #include <FZ80/CZ80.hpp>
 
 // ---
+FZ80::INTInterrupt::INTInterrupt ()
+	: Interrupt (_ID, 0, 0),
+	  _im1MCycles
+		({ _Z80_INTACK7 (), _Z80_MW3 (), _Z80_MW3 () }),
+	  _im2MCycles
+		({ _Z80_INTACK7 (), _Z80_MW3 (), _Z80_MW3 (),
+		   _Z80_MR3 (), _Z80_MR3 () }),
+	  _INTMode (0),
+	  _dataBusValue (MCHEmul::UByte::_FF),
+	  _im1Timing (_im1MCycles),
+	  _im2Timing (_im2MCycles)
+{
+	// IM0 retains its split between launch and injected execution.
+	setCyclesToLaunch (2);
+
+	setClassName ("INTInterrupt");
+}
+
+// ---
+const FZ80::MCyclesData* FZ80::INTInterrupt::memoryAccessTiming () const
+{
+	if (_INTMode == 2)
+		return (&_im2Timing);
+
+	if (_INTMode == 1 ||
+		(_INTMode == 0 && (_dataBusValue.value () & 0xc7) == 0xc7))
+		return (&_im1Timing);
+
+	return (nullptr);
+}
+
+// ---
 void FZ80::INTInterrupt::initialize ()
 {
 	MCHEmul::CPUInterrupt::initialize ();
@@ -41,6 +73,9 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 	c80 -> resetHalt ();
 	c80 -> incrementRegisterR (); // Accepting a INT interruption increments the R register in 1 too...
 
+	// Additional execution belongs only to this response, including after mode changes.
+	_cyclesAfterLaunch = 0;
+
 	bool result = true;
 	// To avoid further INTs until other thing was defined by the programmer...
 	c80 -> setIFF2 (false); 
@@ -51,17 +86,36 @@ bool FZ80::INTInterrupt::executeOverImpl (MCHEmul::CPU* c, unsigned int cC)
 		// If it didn't exist, the method would return false...
 		case 0:
 			{
-				_exeAddress = MCHEmul::Address (); // Not important!
-
 				MCHEmul::UByte nC = _dataBusValue;
-				if (!c -> existsInstruction ((unsigned int) nC.value ()))
-					result = false; // The instruction doesn't exist!
+
+				if ((nC.value () & 0xc7) == 0xc7)
+				{
+					// The opcode came from the acknowledge bus: preserve the return PC.
+					// R has already been incremented once by interrupt acceptance.
+					_exeAddress = c -> programCounter ().asAddress ();
+					c -> memoryRef () -> stack () -> push (_exeAddress.bytes ());
+					c -> programCounter ().setAddress
+						(MCHEmul::Address (2, nC.value () & 0x38));
+					// Launch contributes two cycles; the complete RST response takes thirteen.
+					_cyclesAfterLaunch =
+						(unsigned int) (_im1Timing.numberTCycles ()) - cyclesToLaunch ();
+				}
 				else
 				{
-					MCHEmul::Instruction* inst = c -> instruction ((unsigned int) nC.value ());
-					result = inst -> execute 
-						(c, c -> memoryRef (), c -> memoryRef () -> stack (), &c -> programCounter ());
-					_cyclesAfterLaunch = inst -> clockCyclesExecuted (); // The ones that the instruction took!
+					// Preserve execution of other injected instructions without claiming
+					// support for their interrupt-response contention.
+					_exeAddress = MCHEmul::Address ();
+					if (!c -> existsInstruction ((unsigned int) nC.value ()))
+						result = false;
+					else
+					{
+						MCHEmul::Instruction* inst =
+							c -> instruction ((unsigned int) nC.value ());
+						result = inst -> execute
+							(c, c -> memoryRef (), c -> memoryRef () -> stack (),
+							 &c -> programCounter ());
+						_cyclesAfterLaunch = inst -> clockCyclesExecuted ();
+					}
 				}
 			}
 

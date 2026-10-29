@@ -24,7 +24,7 @@ namespace FZ80
 	struct MCycle final
 	{
 		public:
-		/** A deliberately absent timing point, not an unknown value. */
+		/** No corresponding timing point is declared in this descriptor. */
 		static const size_t _NOCYCLE = 
 			(std::numeric_limits <size_t>::max)();
 
@@ -43,7 +43,7 @@ namespace FZ80
 			dC identifies the data sampling or write point. \n
 			cC identifies the reference point supplied to contention logic. \n
 			rC identifies the beginning of refresh when applicable. \n
-			_NOCYCLE means that the corresponding point is absent. */
+			_NOCYCLE means that no corresponding timing point is declared. */
 		MCycle (Type t, std::initializer_list <unsigned int> cS,
 			size_t dC, size_t cC, size_t rC = _NOCYCLE);
 
@@ -96,6 +96,27 @@ namespace FZ80
 		FZ80::MCycle::Type::_IOWRITE, \
 		{ MCHEmul::CPUCycle::_INTERNAL, MCHEmul::CPUCycle::_WRITE, \
 		  MCHEmul::CPUCycle::_WRITE, MCHEmul::CPUCycle::_WRITE }, 3, 0)
+
+	/** Maskable-interrupt entry before its ordinary memory transfers. \n
+		Generic T-state characteristics are unspecified for this special bus phase. \n
+		No ordinary memory transfer or contention point is declared here. */
+	#define _Z80_INTACK7() FZ80::MCycle ( \
+		FZ80::MCycle::Type::_INTERRUPTACKNOWLEDGE, \
+		{ MCHEmul::CPUCycle::_NOTDEFINED, MCHEmul::CPUCycle::_NOTDEFINED, \
+		  MCHEmul::CPUCycle::_NOTDEFINED, MCHEmul::CPUCycle::_NOTDEFINED, \
+		  MCHEmul::CPUCycle::_NOTDEFINED, MCHEmul::CPUCycle::_NOTDEFINED, \
+		  MCHEmul::CPUCycle::_NOTDEFINED }, \
+		FZ80::MCycle::_NOCYCLE, FZ80::MCycle::_NOCYCLE)
+
+	/** Nonmaskable-interrupt entry before its two stack writes. \n
+		Does not classify the ignored fetch as an ordinary operand read. \n
+		Recognition and refresh contention remain outside this descriptor's scope. */
+	#define _Z80_NMIACK5() FZ80::MCycle ( \
+		FZ80::MCycle::Type::_INTERRUPTACKNOWLEDGE, \
+		{ MCHEmul::CPUCycle::_NOTDEFINED, MCHEmul::CPUCycle::_NOTDEFINED, \
+		  MCHEmul::CPUCycle::_NOTDEFINED, MCHEmul::CPUCycle::_NOTDEFINED, \
+		  MCHEmul::CPUCycle::_NOTDEFINED }, \
+		FZ80::MCycle::_NOCYCLE, FZ80::MCycle::_NOCYCLE)
 
 	/** Extends an ordinary opcode fetch with explicitly declared T-states. \n
 		The opcode sampling and refresh points retain their ordinary positions. \n

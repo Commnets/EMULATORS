@@ -19,6 +19,7 @@
 #include <ZXSpectrum/ZXSpectrum.hpp>
 #include <ZXSpectrum/ULA.hpp>
 #include <FZ80/INTInterrupt.hpp>
+#include <FZ80/NMIInterrupt.hpp>
 #include <CORE/Ticks.hpp>
 #include <SDL.h>
 
@@ -566,6 +567,40 @@ class MixedIOContentionTests final
 	std::string _caseName;
 };
 
+/** Exercises accepted interrupt responses through the production computer and ULA. */
+class InterruptContentionTests final
+{
+	public:
+	InterruptContentionTests () : _checks (0), _failures (0), _caseName () { }
+	int run ();
+
+	private:
+	struct Case
+	{
+		const char* _name;
+		/** -1 selects NMI; otherwise this is the maskable-interrupt mode. */
+		int _mode;
+		unsigned char _bus;
+		unsigned short _sp, _table;
+		int _startOffset;
+		/** Independent literal duration and accumulated memory-wait expectation. */
+		unsigned int _nominal, _delay;
+		bool _handled = true;
+		bool _driven = true;
+	};
+
+	void check (bool ok, const std::string& message);
+	void runCase (const Case& test, bool perCycle, bool pal,
+		ZXSPECTRUM::Memory::Configuration configuration);
+	void checkSelection ();
+	void checkRejected (bool perCycle);
+	void checkModeChanges (bool perCycle);
+
+	// Implementation
+	unsigned int _checks, _failures;
+	std::string _caseName;
+};
+
 /** Tests terminal memory contention independently of instruction timing capture. \n
 	Expected delays are literal vectors, never obtained from the ULA query under test. */
 class MemoryContentionTests final
@@ -1084,6 +1119,293 @@ void MixedIOContentionTests::runCase (const Case& test, bool perCycle, bool pal,
 }
 
 // ---
+int InterruptContentionTests::run ()
+{
+	// For two writes three T-states apart at F: waits are 6 then 5.
+	// IM2 with both groups contained adds two further waits of 5 each.
+	const std::vector <Case> cases (
+		{
+			{ "IM1 stack", 1, 0xff, 0x6202, 0x3000, -7, 13, 11 },
+			{ "IM1 uncontained stack", 1, 0xff, 0x9002, 0x3000, -7, 13, 0 },
+			{ "IM1 zero first wait shifts second", 1, 0xff, 0x6202, 0x3000, -1, 13, 5 },
+			{ "IM1 next phase", 1, 0xff, 0x6202, 0x3000, 0, 13, 4 },
+			{ "IM1 outside display", 1, 0xff, 0x6202, 0x3000, -100, 13, 0 },
+			{ "NMI stack", -1, 0xff, 0x6202, 0x3000, -5, 11, 11 },
+			{ "NMI uncontained stack", -1, 0xff, 0x9002, 0x3000, -5, 11, 0 },
+			{ "IM2 stack only", 2, 0x00, 0x6202, 0x3000, -7, 19, 11 },
+			{ "IM2 table only", 2, 0x00, 0x9002, 0x6100, -13, 19, 11 },
+			{ "IM2 stack and table", 2, 0x00, 0x6202, 0x6100, -7, 19, 21 },
+			{ "IM2 odd table entry", 2, 0xff, 0x6202, 0x61ff, -7, 19, 21 },
+			{ "IM2 no contained access", 2, 0x00, 0x9002, 0x3000, -7, 19, 0 },
+			{ "IM0 undriven RST38", 0, 0xff, 0x6202, 0x3000, -7, 13, 11, true, false },
+			{ "IM0 unsupported NOP", 0, 0x00, 0x6202, 0x3000, -7, 6, 0, false } });
+
+	checkSelection ();
+	for (bool perCycle : { false, true })
+	{
+		checkRejected (perCycle);
+		checkModeChanges (perCycle);
+		for (bool pal : { true, false })
+			for (auto configuration : { ZXSPECTRUM::Memory::Configuration::_48K,
+				ZXSPECTRUM::Memory::Configuration::_16K })
+			{
+				for (const auto& test : cases)
+					if (test._sp < 0x8000 || configuration == ZXSPECTRUM::Memory::Configuration::_48K)
+						runCase (test, perCycle, pal, configuration);
+
+				for (unsigned int vector = 0; vector < 0x40; vector += 8)
+				{
+					const Case test = { "IM0 injected RST", 0, (unsigned char) (0xc7 | vector),
+						0x6202, 0x3000, -7, 13, 11 };
+					runCase (test, perCycle, pal, configuration);
+				}
+			}
+	}
+	std::cout << "\nInterrupt contention checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void InterruptContentionTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: " << _caseName << ": " << message << '\n';
+	}
+}
+
+// ---
+void InterruptContentionTests::runCase (const Case& test, bool perCycle, bool pal,
+	ZXSPECTRUM::Memory::Configuration configuration)
+{
+	_caseName = std::string (test._name) + " [bus=" + std::to_string (test._bus) +
+		(perCycle ? "][PerCycle]" : "][Full]") + (pal ? "[PAL]" : "[NTSC]") +
+		(configuration == ZXSPECTRUM::Memory::Configuration::_16K ? "[16K]" : "[48K]");
+	std::cout << _caseName << '\n';
+	unsigned int failuresBefore = _failures;
+	ContentionMachine machine (configuration, pal);
+	unsigned int startRaster = (unsigned int) ((pal ? 14335 : 10751) + test._startOffset);
+	if (!machine.initialize (startRaster, perCycle))
+	{
+		check (false, "interrupt fixture initialization");
+
+		return;
+	}
+
+	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
+	MCHEmul::Memory& memory = machine.memory ();
+	cpu.executeBufferedCommands (true);
+	cpu.setINTMode ((unsigned char) (test._mode < 0 ? 1 : test._mode));
+	cpu.setIFF1 (true);
+	cpu.setIFF2 (true);
+	cpu.bRegister ().set ({ 0x11 });
+	cpu.rRegister ().set ({ 0x20 });
+	cpu.iRegister ().set ({ (unsigned char) (test._table >> 8) });
+	memory.stack () -> reset ();
+	memory.stack () -> setPosition (test._sp, false);
+	memory.put (MCHEmul::Address (2, test._sp - 2), std::vector <MCHEmul::UByte> { 0xcc, 0xcc });
+	memory.put (MCHEmul::Address (2, test._table), std::vector <MCHEmul::UByte> { 0x00, 0x20 }, true);
+	bool writes = test._mode != 0 || test._handled;
+	unsigned short target = test._mode < 0 ? 0x0066 : test._mode == 2 ? 0x2000 :
+		test._mode == 1 ? 0x0038 : test._handled ? (test._bus & 0x38) : 0x1235;
+	memory.put (MCHEmul::Address (2, target), MCHEmul::UByte (0x04), true);
+	memory.put (MCHEmul::Address (2, 0x1234), MCHEmul::UByte (0), true);
+	cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x1234));
+	unsigned int startClock = cpu.clockCycles ();
+	// Deliberately older than acceptance: request time must not be the timing origin.
+	MCHEmul::UBytes data;
+	if (test._driven)
+		data = MCHEmul::UBytes ({ test._bus });
+	cpu.requestInterrupt (test._mode < 0 ? FZ80::NMIInterrupt::_ID : FZ80::INTInterrupt::_ID,
+		startClock - 20, nullptr, -1, data);
+
+	bool completed = false;
+	for (unsigned int step = 0; step < 32 && !completed; step++)
+	{
+		if (!machine.step ())
+			break;
+		completed = cpu.memoryAccessOperation () == ZXSPECTRUM::CZ80::MemoryAccessOperation::_INTERRUPT &&
+			cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED;
+	}
+	check (completed, "response completes within bound");
+	if (!completed)
+		return;
+	check (cpu.memoryAccessPC () == 0x1234 && cpu.memoryAccessStartClockCycle () == startClock,
+		"response retains PC and acceptance clock");
+	check (cpu.clockCycles () - startClock == test._nominal, "nominal response duration before wait");
+	check (cpu.programCounter ().asAddress ().value () == target, "response reaches expected vector");
+	check (cpu.rRegister ().values ()[0].value () == (test._handled ? 0x21 : 0x22),
+		"supported response increments R exactly once");
+	check (!cpu.IFF1 () && cpu.IFF2 () == (test._mode < 0), "response preserves interrupt flip-flop rules");
+	check (cpu.memoryAccessTimingAvailable () == test._handled && cpu.memoryContentionHandled () == test._handled,
+		"supported response publishes timing and calculated delay");
+	check (cpu.memoryContentionClockCycles () == test._delay &&
+		cpu.pendingMemoryContentionClockCycles () == test._delay &&
+		cpu.includedMemoryContentionClockCycles () == 0, "terminal wait accounting");
+
+	// These are literal bus positions, independent of the descriptors under test.
+	std::vector <ZXSPECTRUM::CZ80::MemoryAccess> expected;
+	using Access = ZXSPECTRUM::CZ80::MemoryAccess;
+	if (writes && test._sp < 0x8000)
+	{
+		expected.push_back ({ (unsigned short) (test._sp - 1), Access::Type::_WRITE, Access::Origin::_DATA,
+			1, test._mode < 0 ? 5U : 7U, test._mode < 0 ? 7U : 9U });
+		expected.push_back ({ (unsigned short) (test._sp - 2), Access::Type::_WRITE, Access::Origin::_DATA,
+			2, test._mode < 0 ? 8U : 10U, test._mode < 0 ? 10U : 12U });
+	}
+	if (test._mode == 2 && test._table >= 0x4000 && test._table < 0x8000)
+	{
+		expected.push_back ({ test._table, Access::Type::_READ, Access::Origin::_DATA, 3, 13, 15 });
+		expected.push_back ({ (unsigned short) (test._table + 1), Access::Type::_READ, Access::Origin::_DATA, 4, 16, 18 });
+	}
+	check (cpu.memoryAccesses ().size () == expected.size (), "retained interrupt transfer count");
+	for (size_t i = 0; i < expected.size () && i < cpu.memoryAccesses ().size (); i++)
+	{
+		const Access& actual = cpu.memoryAccesses ()[i];
+		check (actual._address == expected [i]._address && actual._type == expected [i]._type &&
+			actual._origin == expected [i]._origin && actual._mCycle == expected [i]._mCycle &&
+			actual._contentionCycle == expected [i]._contentionCycle && actual._dataCycle == expected [i]._dataCycle,
+			"literal interrupt transfer " + std::to_string (i));
+	}
+	if (test._handled)
+		check (cpu.memoryAccessMCyclesStructure () == 0, "captured response uses its local structure zero");
+	if (test._delay != 0)
+	{
+		cpu.executeBufferedCommands (true);
+		check (memory.value (MCHEmul::Address (2, test._sp - 2)).value () == 0xcc,
+			"forced release cannot bypass terminal wait");
+	}
+	for (unsigned int wait = 0; cpu.pendingMemoryContentionClockCycles () != 0 && wait < 64; wait++)
+	{
+		unsigned int pending = cpu.pendingMemoryContentionClockCycles ();
+		if (!machine.step ())
+		{
+			check (false, "wait step failed");
+
+			return;
+		}
+		check (cpu.pendingMemoryContentionClockCycles () == (perCycle ? pending - 1 : 0),
+			"wait consumption follows execution mode");
+		check (cpu.programCounter ().asAddress ().value () == target &&
+			cpu.bRegister ().values ()[0].value () == 0x11 && cpu.memoryAccessStartClockCycle () == startClock,
+			"wait does not execute the routine or replace the response");
+		check (memory.value (MCHEmul::Address (2, test._sp - 2)).value () == 0xcc,
+			"return-address write remains buffered through the last wait");
+	}
+	check (cpu.pendingMemoryContentionClockCycles () == 0 &&
+		cpu.clockCycles () - startClock == test._nominal + test._delay, "complete response plus wait duration");
+	check (machine.rasterClocks () == (startRaster + test._nominal + test._delay) % machine.frameClocks (),
+		"ULA advances through response and wait");
+	if (cpu.pendingMemoryContentionClockCycles () != 0)
+		return;
+	cpu.executeBufferedCommands (true);
+	if (writes)
+		check (memory.stack () -> currentAddress ().value () == test._sp - 2 &&
+			memory.value (MCHEmul::Address (2, test._sp - 1)).value () == 0x12 &&
+			memory.value (MCHEmul::Address (2, test._sp - 2)).value () == 0x34,
+			"stack stores the unadvanced return PC in hardware byte order");
+	cpu.executeBufferedCommands (true);
+	check (cpu.memoryAccesses ().size () == expected.size (), "repeated release does not duplicate accesses");
+	check (machine.step (), "first handler instruction executes");
+	for (unsigned int step = 0; cpu.bRegister ().values ()[0].value () == 0x11 && step < 8; step++)
+		if (!machine.step ())
+			break;
+	check (cpu.bRegister ().values ()[0].value () == 0x12 &&
+		cpu.memoryAccessPC () == target && cpu.memoryAccessStartClockCycle () == startClock + test._nominal + test._delay,
+		"first handler instruction starts once, after all waits");
+	if (_failures == failuresBefore)
+		std::cout << "PASS\n";
+}
+
+// ---
+void InterruptContentionTests::checkSelection ()
+{
+	_caseName = "Interrupt timing selection lifetime";
+	FZ80::INTInterrupt interrupt;
+	interrupt.setINTMode (1);
+	const FZ80::MCyclesData* im1 = interrupt.memoryAccessTiming ();
+	interrupt.initialize ();
+	check (im1 != nullptr && interrupt.memoryAccessTiming () == im1 && im1 -> numberTCycles () == 13,
+		"IM1 descriptor survives initialization");
+	interrupt.setINTMode (2);
+	const FZ80::MCyclesData* im2 = interrupt.memoryAccessTiming ();
+	interrupt.setINTMode (0);
+	interrupt.setDataBusValue (MCHEmul::UByte (0));
+	check (interrupt.memoryAccessTiming () == nullptr && im2 != nullptr && im2 -> numberTCycles () == 19,
+		"unsupported IM0 does not invalidate an earlier IM2 descriptor");
+	interrupt.setDataBusValue (MCHEmul::UByte (0xff));
+	check (interrupt.memoryAccessTiming () == im1, "IM0 RST selects the immutable RST-like response");
+}
+
+// ---
+void InterruptContentionTests::checkRejected (bool perCycle)
+{
+	_caseName = perCycle ? "Rejected INT [PerCycle]" : "Rejected INT [Full]";
+	ContentionMachine machine (ZXSPECTRUM::Memory::Configuration::_48K, true);
+	if (!machine.initialize (14200, perCycle))
+	{
+		check (false, "rejected INT fixture initialization");
+
+		return;
+	}
+	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
+	machine.memory ().put (MCHEmul::Address (2, 0x2000), MCHEmul::UByte (0), true);
+	cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x2000));
+	cpu.setIFF1 (false);
+	cpu.requestInterrupt (FZ80::INTInterrupt::_ID, cpu.clockCycles ());
+	check (machine.step (), "rejected INT allows ordinary execution");
+	check (cpu.memoryAccessOperation () == ZXSPECTRUM::CZ80::MemoryAccessOperation::_INSTRUCTION &&
+		cpu.memoryAccessPC () == 0x2000, "rejected request does not create an interrupt transaction");
+}
+
+// ---
+void InterruptContentionTests::checkModeChanges (bool perCycle)
+{
+	_caseName = perCycle ? "Interrupt mode changes [PerCycle]" : "Interrupt mode changes [Full]";
+	ContentionMachine machine (ZXSPECTRUM::Memory::Configuration::_48K, true);
+	if (!machine.initialize (14200, perCycle))
+	{
+		check (false, "mode-change fixture initialization");
+
+		return;
+	}
+	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
+	MCHEmul::Memory& memory = machine.memory ();
+	memory.put (MCHEmul::Address (2, 0x3200), std::vector <MCHEmul::UByte> { 0x00, 0x20 }, true);
+	cpu.iRegister ().set ({ 0x32 });
+	for (unsigned char mode : { 0, 1, 2, 1 })
+	{
+		cpu.executeBufferedCommands (true);
+		cpu.setINTMode (mode);
+		cpu.setIFF1 (true);
+		cpu.setIFF2 (true);
+		memory.stack () -> setPosition (0x6202, false);
+		cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x1234));
+		unsigned int startClock = cpu.clockCycles ();
+		cpu.requestInterrupt (FZ80::INTInterrupt::_ID, startClock, nullptr, -1,
+			MCHEmul::UBytes ({ (unsigned char) (mode == 2 ? 0x00 : 0xff) }));
+		bool completed = false;
+		for (unsigned int step = 0; step < 32 && !completed; step++)
+		{
+			if (!machine.step ())
+				break;
+			completed = cpu.memoryAccessOperation () == ZXSPECTRUM::CZ80::MemoryAccessOperation::_INTERRUPT &&
+				cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED;
+		}
+		check (completed && cpu.clockCycles () - startClock == (mode == 2 ? 19 : 13),
+			"previous IM0 execution does not add cycles to a later response");
+		check (cpu.memoryContentionHandled () && cpu.pendingMemoryContentionClockCycles () == 0,
+			"each mode selects its descriptor in the uncontended display phase");
+		if (!completed || cpu.pendingMemoryContentionClockCycles () != 0)
+			return;
+	}
+	cpu.executeBufferedCommands (true);
+}
+
+// ---
 int MemoryContentionTests::run ()
 {
 	// Dummy video cannot create the production screen's OpenGL surface.
@@ -1174,6 +1496,9 @@ int MemoryContentionTests::run ()
 				}
 			}
 
+	InterruptContentionTests interruptTests;
+	int interruptResult = interruptTests.run ();
+
 	MixedIOContentionTests mixedTests;
 	int mixedResult = mixedTests.run ();
 
@@ -1185,7 +1510,7 @@ int MemoryContentionTests::run ()
 	std::cout << "\nContention checks=" << _checks
 		<< ", failures=" << _failures << '\n';
 
-	return (_failures == 0 && portResult == 0 && mixedResult == 0 ? 0 : 1);
+	return (_failures == 0 && portResult == 0 && mixedResult == 0 && interruptResult == 0 ? 0 : 1);
 }
 
 // ---

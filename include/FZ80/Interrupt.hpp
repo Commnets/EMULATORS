@@ -15,6 +15,7 @@
 #define __FZ80_CZ80INTERRUPT__
 
 #include <CORE/incs.hpp>
+#include <FZ80/MCycle.hpp>
 
 namespace FZ80
 {
@@ -28,6 +29,12 @@ namespace FZ80
 			: MCHEmul::CPUInterrupt (id, cL, pr),
 			  _exeAddress ()
 							{ }
+
+		/** Returns the complete nominal response timing supported by this interrupt. \n
+			The descriptor is owned by the interrupt and remains stable across initialize. \n
+			Returns nullptr for a response without a supported timing description. */
+		virtual const FZ80::MCyclesData* memoryAccessTiming () const
+							{ return (nullptr); }
 
 		/**
 		  *	The name of the fields are: \n

@@ -272,7 +272,11 @@ Current implementation scope:
 - The port descriptor retains its intended transfer timestamp; actual port effects are deferred. Exact intra-instruction CPU/chip interleaving is not provided.
 - External timing consumers require published complete association. Internal mixed-I/O preparation may use a partial association it has just validated.
 - Contained bytes are still recorded when an access range crosses a boundary. Timing association of partially retained, ambiguous data-transfer groups remains unsupported.
-- Memory contention supports Full mode and PerCycle mode with one tick per CPU call. Multi-tick batches and interrupt-response contention remain pending; interrupt accesses are recorded without timing association or delay calculation.
+- Memory contention supports Full mode and PerCycle mode with one tick per CPU call. Multi-tick batches remain pending.
+- Accepted IM1, IM2, NMI and IM0 RST responses capture immutable Z80 response descriptors at acceptance. Stack writes and IM2 table reads are associated without instruction-byte fetches and use the existing cumulative terminal wait.
+- IM0 RST executes directly from the acknowledge byte, preserving the unadvanced return PC and incrementing R only once. Other injected IM0 instructions retain their previous execution path without response-contention timing.
+- Response descriptors describe RAM transfers after the initial 7-T INT or 5-T NMI entry span. Generic T-state characteristics of that span are unspecified; recognition/ignored-fetch and refresh contention are not evaluated.
+- Interrupt timing references survive interrupt initialization and clearing the CPU's current-interrupt pointer. Request time is not used as the response's timing origin.
 - Unsupported memory cases have no approximate reconstruction fallback. Mixed instructions retain the generic port-only calculation when their memory timing cannot be evaluated.
 - Contention event visualization is a diagnostic marker: notifications can coalesce and do not identify every wait's exact intra-instruction T-state.
 

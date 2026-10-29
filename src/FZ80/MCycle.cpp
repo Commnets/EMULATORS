@@ -18,9 +18,11 @@ FZ80::MCycle::MCycle (Type t, std::initializer_list <unsigned int> cS,
 	assert (_contentionCycle == _NOCYCLE || _contentionCycle < _tCycles.size ());
 	assert (_refreshCycle == _NOCYCLE || _refreshCycle < _tCycles.size ());
 
-	// Internal cycles transfer no byte, but their bus address may matter later.
+	// Acknowledge descriptors can omit their special bus-sampling point
+	// without inventing an ordinary memory transfer.
 	assert ((_type == Type::_INTERNAL)
-		? (_dataCycle == _NOCYCLE) : (_dataCycle != _NOCYCLE));
+		? (_dataCycle == _NOCYCLE)
+		: (_type == Type::_INTERRUPTACKNOWLEDGE || _dataCycle != _NOCYCLE));
 
 	// Refresh belongs to M1 rather than representing another memory read.
 	assert (_refreshCycle == _NOCYCLE ||
