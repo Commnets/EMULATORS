@@ -179,9 +179,15 @@ _INST_IMPL (FZ80::INIR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeWith (1); // move up...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _b0) == false) 
-		addAdditionalClockCycles (5); // ...and if not, it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _b0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			addAdditionalClockCycles (5);
+	}
 
 	return (result);
 }
@@ -200,9 +206,15 @@ _INST_IMPL (FZ80::INDR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeWith (-1); // move down...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _b0) == false) 
-		addAdditionalClockCycles (5); // ...and if not it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _b0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			addAdditionalClockCycles (5);
+	}
 
 	return (result);
 }
@@ -360,9 +372,15 @@ _INST_IMPL (FZ80::OTIR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeWith (1); // move up...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _b0) == false) 
-		addAdditionalClockCycles (5); // ...and if not, it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _b0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			addAdditionalClockCycles (5);
+	}
 
 	return (result);
 }
@@ -381,9 +399,15 @@ _INST_IMPL (FZ80::OTDR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeWith (-1); // move down...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _b0) == false) 
-		addAdditionalClockCycles (5); // ...and if not it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _b0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			addAdditionalClockCycles (5);
+	}
 
 	return (result);
 }

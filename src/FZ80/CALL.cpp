@@ -15,7 +15,12 @@ _INST_IMPL (FZ80::CALL_NZ)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -27,7 +32,12 @@ _INST_IMPL (FZ80::CALL_Z)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -39,7 +49,12 @@ _INST_IMPL (FZ80::CALL_NC)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -51,7 +66,12 @@ _INST_IMPL (FZ80::CALL_C)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -63,7 +83,12 @@ _INST_IMPL (FZ80::CALL_PO)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -75,7 +100,12 @@ _INST_IMPL (FZ80::CALL_PE)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -87,7 +117,12 @@ _INST_IMPL (FZ80::CALL_P)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -99,7 +134,12 @@ _INST_IMPL (FZ80::CALL_M)
 	assert (parameters ().size () == 3);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeBranch (true);
 
 	return (result);
@@ -183,7 +223,12 @@ _INST_IMPL (FZ80::RET_NZ)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -195,7 +240,12 @@ _INST_IMPL (FZ80::RET_Z)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -207,7 +257,12 @@ _INST_IMPL (FZ80::RET_NC)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -219,7 +274,12 @@ _INST_IMPL (FZ80::RET_C)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -231,7 +291,12 @@ _INST_IMPL (FZ80::RET_PO)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -243,7 +308,12 @@ _INST_IMPL (FZ80::RET_PE)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_PARITYOVERFLOWFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -255,7 +325,12 @@ _INST_IMPL (FZ80::RET_P)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);
@@ -267,7 +342,12 @@ _INST_IMPL (FZ80::RET_M)
 	assert (parameters ().size () == 1);
 
 	bool result = true;
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_SIGNFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		result = executeReturn (true);
 
 	return (result);

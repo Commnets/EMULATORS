@@ -67,9 +67,15 @@ _INST_IMPL (FZ80::LDIR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeMoveWith (1); // move up...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _bc0) == false) 
-		_additionalCycles = 5; // ...and if not, it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _bc0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			_additionalCycles = 5;
+	}
 
 	return (result);
 }
@@ -88,9 +94,15 @@ _INST_IMPL (FZ80::LDDR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeMoveWith (-1); // move down...
-	// The instruction only finish when reaches the limit...
-	if (result && (_FINISH = _bc0) == false) 
-		_additionalCycles = 5; // ...and if not it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = _bc0;
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			_additionalCycles = 5;
+	}
 
 	return (result);
 }
@@ -109,9 +121,15 @@ _INST_IMPL (FZ80::CPIR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeCompareWith (1); // move up...
-	// The instruction only finish when reaches the limit or A has been found!
-	if (result && (_FINISH = (_bc0 || cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))) == false)
-		_additionalCycles = 5; // ...and if not, it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = (_bc0 || cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG));
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			_additionalCycles = 5;
+	}
 
 	return (result);
 }
@@ -130,9 +148,15 @@ _INST_IMPL (FZ80::CPDR)
 	assert (parameters ().size () == 2);
 
 	bool result = executeCompareWith (-1); // move up...
-	// The instruction only finish when reaches the limit or A has been found!
-	if (result && (_FINISH = (_bc0 || cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))) == false) 
-		_additionalCycles = 5; // ...and if not, it costs 5 additional cycles always!
+	if (result)
+	{
+		_FINISH = (_bc0 || cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG));
+		selectMCyclesStructure (_FINISH ? 0 : 1);
+
+		// Preserve the existing repetition cycles independently of path metadata.
+		if (!_FINISH)
+			_additionalCycles = 5;
+	}
 
 	return (result);
 }

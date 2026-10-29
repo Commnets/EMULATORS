@@ -15,6 +15,7 @@
 #define __ZXSPECTRUM_CZ80__
 
 #include <FZ80/CZ80.hpp>
+#include <FZ80/Instruction.hpp>
 
 namespace ZXSPECTRUM
 {
@@ -118,8 +119,8 @@ namespace ZXSPECTRUM
 				Failure takes precedence over deferred port completion. \n
 				Recorded accesses remain available in every resulting state. */
 			void finish (bool failed, bool pendingPortAccess);
-			/** Publishes whether all retained accesses have usable timing associations. */
-			void setTimingAvailable (bool available) { _timingAvailable = available; }
+			/** Publishes the selected alternative after every retained access was associated. */
+			void setTimingAssociation (size_t n);
 			/** Publishes the calculated contention delay, including a valid zero delay. \n
 				Called once for a supported operation, before consuming its wait. */
 			void setContentionDelay (unsigned int cC);
@@ -139,6 +140,10 @@ namespace ZXSPECTRUM
 			/** Absolute CPU clock at the beginning of the owning operation. \n
 				Expressed in CPU T-states using the CPU clock counter's representation. */
 			unsigned int _startClockCycle;
+			/** M-cycle alternative used to associate this transaction's retained accesses. \n
+				Indexes the executed instruction's precalculated metadata; no structures are copied. \n
+				Invalid until timing association succeeds. */
+			size_t _mCyclesStructure;
 			/** Whether every retained access has an unambiguous nominal timing. \n
 				False during recording and for unsupported or ambiguous associations. \n
 				Individual timing fields must not be consumed while this is false. */
@@ -197,6 +202,10 @@ namespace ZXSPECTRUM
 			This does not mean that contention delays have been calculated. */
 		bool memoryAccessTimingAvailable () const
 							{ return (_memoryAccessTransaction._timingAvailable); }
+
+		/** Alternative associated with the retained accesses; usable only when timing is available. */
+		size_t memoryAccessMCyclesStructure () const
+							{ return (_memoryAccessTransaction._mCyclesStructure); }
 
 		/** Records individual bytes in notification order. \n
 			Only addresses from 0x4000 to 0x7fff are retained. \n

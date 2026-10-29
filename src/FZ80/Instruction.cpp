@@ -6,6 +6,7 @@ FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc
 	: MCHEmul::InstructionDefined (c, mp, cc, cS, t, false),
 	  _mCyclesStructures (),
 	  _mCyclesDatas (),
+	  _executedMCyclesStructure (_NOMCYCLESSTRUCTURE),
 	  _IOAccessClockCycle (0),
 	  _IOContentionClockCycles (0),
 	  _IOAccessed (false),
@@ -20,6 +21,7 @@ FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc
 	: MCHEmul::InstructionDefined (c, mp, cc, toCycleStructure (mCS), t, false),
 	  _mCyclesStructures (1, mCS),
 	  _mCyclesDatas (precalculateMCycles (_mCyclesStructures)),
+	  _executedMCyclesStructure (_NOMCYCLESSTRUCTURE),
 	  _IOAccessClockCycle (0),
 	  _IOContentionClockCycles (0),
 	  _IOAccessed (false),
@@ -34,6 +36,7 @@ FZ80::Instruction::Instruction (unsigned int c, unsigned int mp, unsigned int cc
 	: MCHEmul::InstructionDefined (c, mp, cc, toCycleStructures (mCSs), t, false),
 	  _mCyclesStructures (mCSs),
 	  _mCyclesDatas (precalculateMCycles (_mCyclesStructures)),
+	  _executedMCyclesStructure (_NOMCYCLESSTRUCTURE),
 	  _IOAccessClockCycle (0),
 	  _IOContentionClockCycles (0),
 	  _IOAccessed (false),
@@ -83,6 +86,10 @@ void FZ80::Instruction::completePortRead
 bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	MCHEmul::Stack* stk, MCHEmul::ProgramCounter* pc)
 {
+	// Alternative instructions must not inherit a preceding execution's selection.
+	_executedMCyclesStructure =
+		(numberMCyclesStructures () == 1) ? 0 : _NOMCYCLESSTRUCTURE;
+
 	_lastExecutionData._INOUTAddress = MCHEmul::Address ();
 
 	_IOAccessClockCycle = 0;
@@ -95,6 +102,12 @@ bool FZ80::Instruction::execute (MCHEmul::CPU* c, MCHEmul::Memory* m,
 	static_cast <FZ80::CZ80*> (c) -> incrementRegisterR ();
 
 	bool result = MCHEmul::InstructionDefined::execute (c, m , stk, pc);
+	if (!result)
+		_executedMCyclesStructure = _NOMCYCLESSTRUCTURE;
+	else
+		// A metadata-bearing instruction must identify the path it just executed.
+		assert (!hasMCycles () || hasExecutedMCyclesStructure ());
+
 	static_cast <FZ80::CZ80*> (c) -> setInstructionExecuted (); // Just for the EI...
 
 	// At T4 of the M1 cycle (first machine cycle) 

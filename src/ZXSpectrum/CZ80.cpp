@@ -8,6 +8,7 @@ ZXSPECTRUM::CZ80::MemoryAccessTransaction::MemoryAccessTransaction ()
 	  _state (MemoryAccessState::_IDLE),
 	  _pc (0),
 	  _startClockCycle (0),
+	  _mCyclesStructure (FZ80::Instruction::_NOMCYCLESSTRUCTURE),
 	  _timingAvailable (false),
 	  _contentionHandled (false),
 	  _contentionClockCycles (0),
@@ -26,6 +27,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::reset ()
 	_state = MemoryAccessState::_IDLE;
 	_pc = 0;
 	_startClockCycle = 0;
+	_mCyclesStructure = FZ80::Instruction::_NOMCYCLESSTRUCTURE;
 	_timingAvailable = false;
 	_contentionHandled = false;
 	_contentionClockCycles = 0;
@@ -47,6 +49,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::begin
 	_state = MemoryAccessState::_IN_PROGRESS;
 	_pc = pc;
 	_startClockCycle = cC;
+	_mCyclesStructure = FZ80::Instruction::_NOMCYCLESSTRUCTURE;
 	_timingAvailable = false;
 	_contentionHandled = false;
 	_contentionClockCycles = 0;
@@ -61,6 +64,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::finish
 	(bool failed, bool pendingPortAccess)
 {
 	suspendRecording ();
+	_mCyclesStructure = FZ80::Instruction::_NOMCYCLESSTRUCTURE;
 	_timingAvailable = false;
 
 	if (failed)
@@ -69,6 +73,13 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::finish
 		_state = MemoryAccessState::_PENDING_PORT_COMPLETION;
 	else
 		_state = MemoryAccessState::_COMPLETED;
+}
+
+// ---
+void ZXSPECTRUM::CZ80::MemoryAccessTransaction::setTimingAssociation (size_t n)
+{
+	_mCyclesStructure = n;
+	_timingAvailable = true;
 }
 
 // ---
@@ -338,10 +349,11 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 
 	const FZ80::Instruction* defined = executedInstruction ();
 	if (defined == nullptr || !defined -> hasMCycles () ||
-		defined -> numberMCyclesStructures () != 1)
+		!defined -> hasExecutedMCyclesStructure ())
 		return (false);
 
-	const FZ80::MCyclesData& timing = defined -> mCyclesData ();
+	const FZ80::MCyclesData& timing =
+		defined -> mCyclesData (defined -> executedMCyclesStructure ());
 	const std::vector <size_t>& reads = timing.memoryReads ();
 	const std::vector <size_t>& writes = timing.memoryWrites ();
 
@@ -415,6 +427,8 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 		previousCycle = cycle._dataCycle;
 	}
 
+	transaction.setTimingAssociation (defined -> executedMCyclesStructure ());
+
 	return (true);
 }
 
@@ -436,7 +450,12 @@ void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay ()
 
 	const FZ80::Instruction* defined = executedInstruction ();
 
-	if (defined == nullptr || !defined -> mCyclesData ().ioCycles ().empty ())
+	if (defined == nullptr)
+		return;
+
+	const FZ80::MCyclesData& timing =
+		defined -> mCyclesData (transaction._mCyclesStructure);
+	if (!timing.ioCycles ().empty ())
 		return;
 
 	unsigned int delay = 0;
@@ -484,8 +503,6 @@ void ZXSPECTRUM::CZ80::finishMemoryAccessOperation (bool failed)
 	if (_memoryAccessTransaction._state != MemoryAccessState::_COMPLETED)
 		return;
 
-	_memoryAccessTransaction.setTimingAvailable
-		(associateMemoryAccessTiming ());
-
-	prepareMemoryContentionDelay ();
+	if (associateMemoryAccessTiming ())
+		prepareMemoryContentionDelay ();
 }

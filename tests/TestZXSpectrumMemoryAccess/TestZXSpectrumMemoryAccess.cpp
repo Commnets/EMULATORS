@@ -153,11 +153,11 @@ int MemoryAccessTests::run ()
 				{ { 0x7fff, Type::_READ, Origin::_DATA, 0, 0, 0 } },
 				false, 16, false },
 
-			{ "Alternative structure is not supported yet", 0x5000, 0x6000,
+			{ "Alternative structure is selected", 0x5000, 0x6000,
 				{ 0x20, 0x00 },
-				{ { 0x5000, Type::_READ, Origin::_INSTRUCTION_BYTE, 0, 0, 0 },
-				  { 0x5001, Type::_READ, Origin::_INSTRUCTION_BYTE, 0, 0, 0 } },
-				false, 12, false },
+				{ { 0x5000, Type::_READ, Origin::_INSTRUCTION_BYTE, 0, 0, 2 },
+				  { 0x5001, Type::_READ, Origin::_INSTRUCTION_BYTE, 1, 4, 6 } },
+				true, 12, false },
 
 			{ "INI: deferred memory write", 0x8000, 0x6000,
 				{ 0xed, 0xa2 },
@@ -370,6 +370,9 @@ void MemoryAccessTests::runCase
 			"operation completed");
 		check (cpu.memoryAccessTimingAvailable () == test._timingAvailable,
 			"expected timing availability");
+		check (cpu.memoryAccessMCyclesStructure () ==
+			(test._timingAvailable ? (test._code [0].value () == 0x20 ? 1 : 0)
+				: FZ80::Instruction::_NOMCYCLESSTRUCTURE), "associated alternative index");
 
 		const Accesses& actual = cpu.memoryAccesses ();
 
@@ -482,6 +485,11 @@ class MemoryContentionTests final
 		bool _writes;
 		/** Requests an eligible IM1 response while terminal wait is pending. */
 		bool _interrupt;
+		/** Initial flags and expected selected alternative for conditional cases. */
+		unsigned char _flags = 0;
+		size_t _alternative = 0;
+		/** Prepares a real stack containing the following instruction's address. */
+		bool _stack = false;
 	};
 
 	static void check (bool ok, const std::string& message);
@@ -632,9 +640,22 @@ int MemoryContentionTests::run ()
 				42784, 4, 6, 1, true, true, false, false },
 			{ "After last contention line", 0x5000, 0x3000, { 0x00 },
 				43008, 4, 0, 1, true, true, false, false },
-			// Preserve the exclusions until the later functional blocks are implemented.
-			{ "Alternative stays excluded", 0x5000, 0x3000, { 0x20, 0x00 },
-				0, 12, 0, 2, false, false, false, false },
+			// Alternatives now use their executed path; mixed I/O remains a later block.
+			{ "Taken alternative is handled", 0x5000, 0x3000, { 0x20, 0x00 },
+				0, 12, 10, 2, true, true, false, false, 0x00, 1 },
+			{ "Not-taken JR alternative", 0x5000, 0x3000, { 0x20, 0x00 },
+				0, 7, 10, 2, true, true, false, false, 0x40, 0 },
+			// Return/call targets coincide with the marker, isolating stack bus timing.
+			// CALL waits 6+4+5 for code, then 4+5 for its two stack writes.
+			{ "Taken CALL with contended stack", 0x5000, 0x3000, { 0xc4, 0x03, 0x50 },
+				0, 17, 24, 5, true, true, false, false, 0x00, 1, true },
+			{ "Not-taken CALL", 0x5000, 0x3000, { 0xc4, 0x03, 0x50 },
+				0, 10, 15, 3, true, true, false, false, 0x40, 0, true },
+			// RET waits 6 for code, then 3+5 for its two stack reads.
+			{ "Taken RET with contended stack", 0x5000, 0x3000, { 0xc0 },
+				0, 11, 14, 3, true, true, false, false, 0x00, 1, true },
+			{ "Not-taken RET", 0x5000, 0x3000, { 0xc0 },
+				0, 5, 6, 1, true, true, false, false, 0x40, 0, true },
 			{ "I/O stays excluded", 0x5000, 0x3000, { 0xd3, 0xfe },
 				0, 11, 0, 2, false, true, false, false } });
 
@@ -747,7 +768,7 @@ void MemoryContentionTests::runCase
 	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
 	MCHEmul::Memory& memory = machine.memory ();
 	unsigned int startClock = cpu.clockCycles ();
-	cpu.fRegister ().set ({ 0x00 });
+	cpu.fRegister ().set ({ test._flags });
 	cpu.bRegister ().set ({ 0x11 });
 	cpu.aRegister ().set ({ 0xf0 });
 	cpu.hRegister ().set ({ (unsigned char) (test._hl >> 8) });
@@ -756,6 +777,17 @@ void MemoryContentionTests::runCase
 	memory.put (MCHEmul::Address (2, test._pc), test._code, true);
 	// INC B provides an observable next-instruction effect without another data transfer.
 	memory.put (MCHEmul::Address (2, test._pc + test._code.size ()), MCHEmul::UByte (0x04), true);
+	if (test._stack)
+	{
+		unsigned short returnAddress = (unsigned short) (test._pc + test._code.size ());
+		memory.stack () -> reset ();
+		memory.stack () -> setPosition (0x6202, false);
+		memory.stack () -> push (MCHEmul::UBytes
+			({ (unsigned char) (returnAddress >> 8), (unsigned char) (returnAddress & 0xff) }));
+		cpu.executeBufferedCommands (true);
+		if (test._code [0].value () == 0xc4)
+			memory.stack () -> setPosition (0x6202, false);
+	}
 	cpu.programCounter ().setAddress (MCHEmul::Address (2, test._pc));
 
 	if (!completeOperation (machine))
@@ -785,6 +817,7 @@ void MemoryContentionTests::runCase
 	check (cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED,
 		"execution completed before terminal wait");
 	check (cpu.clockCycles () - startClock == test._cycles, "nominal duration before wait");
+	check (cpu.memoryAccessMCyclesStructure () == test._alternative, "associated execution alternative");
 	check (cpu.memoryContentionClockCycles () == test._delay, "literal expected total wait");
 	check (cpu.pendingMemoryContentionClockCycles () == test._delay, "initial pending wait");
 	check (!machine.ula ().legacyMemoryContentionPending (), "no legacy reconstruction");
@@ -843,7 +876,8 @@ void MemoryContentionTests::runCase
 		check (sameAccesses (cpu.memoryAccesses (), accesses), "access record retained during wait");
 		check (cpu.memoryAccessPC () == test._pc &&
 			cpu.memoryAccessStartClockCycle () == startClock &&
-			cpu.memoryAccessTimingAvailable (), "transaction identity and timing retained");
+			cpu.memoryAccessTimingAvailable () &&
+			cpu.memoryAccessMCyclesStructure () == test._alternative, "transaction identity and timing retained");
 		check (!cpu.recordingMemoryAccesses (), "capture remains suspended during wait");
 		check (cpu.memoryAccessOperation () == ZXSPECTRUM::CZ80::MemoryAccessOperation::_INSTRUCTION,
 			"no interrupt accepted during wait");
@@ -892,6 +926,359 @@ void MemoryContentionTests::runCase
 		std::cout << "PASS\n";
 }
 
+/** Exercises selection invalidation without depending on a hardware execution error. \n
+	Equal-duration alternatives also prevent duration-based inference from passing this test. */
+class AlternativeExecutionProbe final : public FZ80::Instruction
+{
+	public:
+	AlternativeExecutionProbe ()
+		: FZ80::Instruction (0, 1, 4, "NOP",
+			FZ80::MCyclesStructures
+				{ FZ80::MCyclesStructure { _Z80_M1 () },
+				  FZ80::MCyclesStructure { _Z80_M1 () } }),
+		  _success (true) { }
+
+	void setSuccess (bool success) { _success = success; }
+
+	protected:
+	virtual bool executeImpl (bool&) override;
+
+	private:
+	bool _success;
+};
+
+// ---
+bool AlternativeExecutionProbe::executeImpl (bool&)
+{
+	selectMCyclesStructure (1);
+
+	return (_success);
+}
+
+/** Reuses each alternative-bearing instruction across both runtime paths. \n
+	All expected transfer points are literal, independent of selected metadata. */
+class AlternativeSelectionTests final
+{
+	public:
+	static int run ();
+
+	private:
+	enum class Family { _JR, _DJNZ, _CALL, _RET, _MOVE, _COMPARE, _INPUT, _OUTPUT };
+
+	struct Case
+	{
+		const char* _name;
+		Family _family;
+		std::vector <MCHEmul::UByte> _code;
+		/** Flags selecting alternative one and zero, respectively. */
+		unsigned char _takenFlags, _notTakenFlags;
+		/** Literal nominal durations for alternatives zero and one. */
+		unsigned int _cycles0, _cycles1;
+	};
+
+	static void check (bool ok, const std::string& message);
+	static void runCase (const Case& test, bool perCycle);
+	static ZXSPECTRUM::CZ80::MemoryAccesses expectedAccesses
+		(const Case& test, bool alternativeOne);
+	static void checkLifecycle ();
+
+	static unsigned int _checks, _failures;
+	static std::string _caseName;
+};
+
+unsigned int AlternativeSelectionTests::_checks = 0, AlternativeSelectionTests::_failures = 0;
+std::string AlternativeSelectionTests::_caseName;
+
+// ---
+int AlternativeSelectionTests::run ()
+{
+	const std::vector <Case> cases (
+		{
+			{ "JR NZ", Family::_JR, { 0x20, 0x02 }, 0x00, 0x40, 7, 12 },
+			{ "JR Z", Family::_JR, { 0x28, 0x02 }, 0x40, 0x00, 7, 12 },
+			{ "JR NC", Family::_JR, { 0x30, 0x02 }, 0x00, 0x01, 7, 12 },
+			{ "JR C", Family::_JR, { 0x38, 0x02 }, 0x01, 0x00, 7, 12 },
+			{ "DJNZ", Family::_DJNZ, { 0x10, 0x02 }, 0x00, 0x00, 8, 13 },
+			{ "CALL NZ", Family::_CALL, { 0xc4, 0x00, 0x20 }, 0x00, 0x40, 10, 17 },
+			{ "CALL Z", Family::_CALL, { 0xcc, 0x00, 0x20 }, 0x40, 0x00, 10, 17 },
+			{ "CALL NC", Family::_CALL, { 0xd4, 0x00, 0x20 }, 0x00, 0x01, 10, 17 },
+			{ "CALL C", Family::_CALL, { 0xdc, 0x00, 0x20 }, 0x01, 0x00, 10, 17 },
+			{ "CALL PO", Family::_CALL, { 0xe4, 0x00, 0x20 }, 0x00, 0x04, 10, 17 },
+			{ "CALL PE", Family::_CALL, { 0xec, 0x00, 0x20 }, 0x04, 0x00, 10, 17 },
+			{ "CALL P", Family::_CALL, { 0xf4, 0x00, 0x20 }, 0x00, 0x80, 10, 17 },
+			{ "CALL M", Family::_CALL, { 0xfc, 0x00, 0x20 }, 0x80, 0x00, 10, 17 },
+			{ "RET NZ", Family::_RET, { 0xc0 }, 0x00, 0x40, 5, 11 },
+			{ "RET Z", Family::_RET, { 0xc8 }, 0x40, 0x00, 5, 11 },
+			{ "RET NC", Family::_RET, { 0xd0 }, 0x00, 0x01, 5, 11 },
+			{ "RET C", Family::_RET, { 0xd8 }, 0x01, 0x00, 5, 11 },
+			{ "RET PO", Family::_RET, { 0xe0 }, 0x00, 0x04, 5, 11 },
+			{ "RET PE", Family::_RET, { 0xe8 }, 0x04, 0x00, 5, 11 },
+			{ "RET P", Family::_RET, { 0xf0 }, 0x00, 0x80, 5, 11 },
+			{ "RET M", Family::_RET, { 0xf8 }, 0x80, 0x00, 5, 11 },
+			{ "LDIR", Family::_MOVE, { 0xed, 0xb0 }, 0, 0, 16, 21 },
+			{ "LDDR", Family::_MOVE, { 0xed, 0xb8 }, 0, 0, 16, 21 },
+			{ "CPIR", Family::_COMPARE, { 0xed, 0xb1 }, 0, 0, 16, 21 },
+			{ "CPDR", Family::_COMPARE, { 0xed, 0xb9 }, 0, 0, 16, 21 },
+			{ "INIR", Family::_INPUT, { 0xed, 0xb2 }, 0, 0, 16, 21 },
+			{ "INDR", Family::_INPUT, { 0xed, 0xba }, 0, 0, 16, 21 },
+			{ "OTIR", Family::_OUTPUT, { 0xed, 0xb3 }, 0, 0, 16, 21 },
+			{ "OTDR", Family::_OUTPUT, { 0xed, 0xbb }, 0, 0, 16, 21 } });
+
+	for (const auto& test : cases)
+		for (bool perCycle : { false, true })
+			runCase (test, perCycle);
+
+	checkLifecycle ();
+
+	std::cout << "\nAlternative checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void AlternativeSelectionTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: " << _caseName << ": " << message << '\n';
+	}
+}
+
+// ---
+void AlternativeSelectionTests::runCase (const Case& test, bool perCycle)
+{
+	_caseName = std::string (test._name) + (perCycle ? " [PerCycle]" : " [Full]");
+	std::cout << _caseName << '\n';
+	unsigned int failuresBefore = _failures;
+	ZXSPECTRUM::Memory memory
+		(ZXSPECTRUM::Memory::Configuration::_48K, ZXSPECTRUM::Type::_STANDARD, "ENG");
+	MCHEmul::TicksCounterDelayed ticks (1);
+	ZXSPECTRUM::CZ80 cpu (0);
+	cpu.setMemoryRef (&memory);
+	memory.linkToCPU (&cpu);
+	cpu.addPorts ({ { 0x10, new FixedInputPort } });
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (!memory.initialize () || !cpu.initialize ())
+	{
+		check (false, "initialization; check ROM working directory");
+
+		return;
+	}
+
+	if (perCycle)
+		cpu.assignTicksCounter (ticks);
+	cpu.setIFF1 (false);
+	cpu.setIFF2 (false);
+	memory.put (MCHEmul::Address (2, 0x5000), test._code);
+	const FZ80::Instruction* previousLeaf = nullptr;
+
+	// The same object must overwrite its selection in both directions.
+	// Compare also terminates on a match before BC reaches zero (iteration four).
+	unsigned int iterations = test._family == Family::_COMPARE ? 5 : 4;
+	for (unsigned int iteration = 0; iteration < iterations; iteration++)
+	{
+		bool alternativeOne = (iteration & 1) != 0;
+		bool compareMatch = iteration == 4;
+		unsigned char count = alternativeOne || compareMatch ? 2 : 1;
+		cpu.fRegister ().set ({ alternativeOne ? test._takenFlags : test._notTakenFlags });
+		cpu.aRegister ().set ({ (unsigned char) (compareMatch ? 0x20 : 0x30) });
+		cpu.hRegister ().set ({ 0x60 }); cpu.lRegister ().set ({ 0x00 });
+		cpu.dRegister ().set ({ 0x61 }); cpu.eRegister ().set ({ 0x00 });
+		if (test._family == Family::_MOVE || test._family == Family::_COMPARE)
+		{
+			cpu.bRegister ().set ({ 0x00 }); cpu.cRegister ().set ({ count });
+		}
+		else
+		{
+			cpu.bRegister ().set ({ count }); cpu.cRegister ().set ({ 0x10 });
+		}
+		memory.put (MCHEmul::Address (2, 0x6000), MCHEmul::UByte (0x20));
+
+		// A real push marks the stack as used; merely setting SP cannot prepare RET.
+		memory.stack () -> reset ();
+		memory.stack () -> setPosition (0x6202, false);
+		memory.stack () -> push (MCHEmul::UBytes ({ 0x20, 0x00 }));
+		cpu.executeBufferedCommands (true);
+		if (test._family == Family::_CALL)
+			memory.stack () -> setPosition (0x6202, false);
+
+		cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x5000));
+		unsigned int startClock = cpu.clockCycles ();
+		bool completed = false;
+		for (unsigned int step = 0; step < 64 && !completed; step++)
+		{
+			if (perCycle)
+				ticks.count (1);
+			if (!cpu.executeNextCycle ())
+				break;
+			completed = cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED ||
+				cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_PENDING_PORT_COMPLETION;
+		}
+		check (completed && cpu.error () == MCHEmul::_NOERROR, "execution completed within bound");
+		if (!completed || cpu.error () != MCHEmul::_NOERROR)
+			break;
+
+		cpu.executeBufferedCommands (true);
+		const MCHEmul::Instruction* instruction = cpu.lastInstruction ();
+		while (const auto* undefined = dynamic_cast <const MCHEmul::InstructionUndefined*> (instruction))
+			instruction = undefined -> lastInstruction ();
+		const auto* leaf = dynamic_cast <const FZ80::Instruction*> (instruction);
+		check (leaf != nullptr, "executed leaf available");
+		if (leaf == nullptr)
+			break;
+		check (previousLeaf == nullptr || previousLeaf == leaf, "same instruction object reused");
+		previousLeaf = leaf;
+		check (leaf -> hasExecutedMCyclesStructure (), "execution selected an alternative");
+		check (leaf -> executedMCyclesStructure () == (alternativeOne ? 1 : 0), "explicit alternative index");
+		check (cpu.memoryAccessTimingAvailable (), "retained accesses associated");
+		check (cpu.memoryAccessMCyclesStructure () == (alternativeOne ? 1 : 0), "transaction retains alternative");
+		check (cpu.clockCycles () - startClock == (alternativeOne ? test._cycles1 : test._cycles0),
+			"existing duration preserved");
+		cpu.nextInstruction ();
+		check (leaf -> executedMCyclesStructure () == (alternativeOne ? 1 : 0),
+			"instruction inspection preserves selection");
+
+		unsigned int expectedPC = 0x5000 + (unsigned int) test._code.size ();
+		if ((test._family == Family::_CALL || test._family == Family::_RET) && alternativeOne)
+			expectedPC = 0x2000;
+		else if ((test._family == Family::_JR || test._family == Family::_DJNZ) && alternativeOne)
+			expectedPC += 2;
+		else if (alternativeOne && (test._family == Family::_MOVE || test._family == Family::_COMPARE ||
+			test._family == Family::_INPUT || test._family == Family::_OUTPUT))
+			expectedPC = 0x5000;
+		check (cpu.programCounter ().asAddress ().value () == expectedPC, "execution path preserves PC behavior");
+
+		const auto expected = expectedAccesses (test, alternativeOne);
+		const auto& actual = cpu.memoryAccesses ();
+		check (actual.size () == expected.size (), "transfer count for selected path");
+		for (size_t i = 0; i < actual.size () && i < expected.size (); i++)
+			check (actual [i]._address == expected [i]._address && actual [i]._type == expected [i]._type &&
+				actual [i]._origin == expected [i]._origin && actual [i]._mCycle == expected [i]._mCycle &&
+				actual [i]._contentionCycle == expected [i]._contentionCycle &&
+				actual [i]._dataCycle == expected [i]._dataCycle, "literal access " + std::to_string (i));
+	}
+
+	cpu.executeBufferedCommands (true);
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (_failures == failuresBefore)
+		std::cout << "PASS\n";
+}
+
+// ---
+ZXSPECTRUM::CZ80::MemoryAccesses AlternativeSelectionTests::expectedAccesses
+	(const Case& test, bool alternativeOne)
+{
+	using Access = ZXSPECTRUM::CZ80::MemoryAccess;
+	using Type = Access::Type;
+	using Origin = Access::Origin;
+	ZXSPECTRUM::CZ80::MemoryAccesses result
+		{ { 0x5000, Type::_READ, Origin::_INSTRUCTION_BYTE, 0, 0, 2 } };
+	if (test._code.size () >= 2)
+		result.push_back ({ 0x5001, Type::_READ, Origin::_INSTRUCTION_BYTE, 1,
+			test._family == Family::_DJNZ ? 5U : 4U, test._family == Family::_DJNZ ? 7U : 6U });
+	if (test._code.size () == 3)
+		result.push_back ({ 0x5002, Type::_READ, Origin::_INSTRUCTION_BYTE, 2, 7, 9 });
+
+	switch (test._family)
+	{
+		case Family::_CALL:
+			{
+				if (alternativeOne)
+				{
+					result.push_back ({ 0x6201, Type::_WRITE, Origin::_DATA, 3, 11, 13 });
+					result.push_back ({ 0x6200, Type::_WRITE, Origin::_DATA, 4, 14, 16 });
+				}
+			}
+
+			break;
+
+		case Family::_RET:
+			{
+				if (alternativeOne)
+				{
+					result.push_back ({ 0x6200, Type::_READ, Origin::_DATA, 1, 5, 7 });
+					result.push_back ({ 0x6201, Type::_READ, Origin::_DATA, 2, 8, 10 });
+				}
+			}
+
+			break;
+
+		case Family::_MOVE:
+			{
+				result.push_back ({ 0x6000, Type::_READ, Origin::_DATA, 2, 8, 10 });
+				result.push_back ({ 0x6100, Type::_WRITE, Origin::_DATA, 3, 11, 13 });
+			}
+
+			break;
+
+		case Family::_COMPARE:
+			{
+				result.push_back ({ 0x6000, Type::_READ, Origin::_DATA, 2, 8, 10 });
+			}
+
+			break;
+
+		case Family::_INPUT:
+			{
+				result.push_back ({ 0x6000, Type::_WRITE, Origin::_DATA, 3, 13, 15 });
+			}
+
+			break;
+
+		case Family::_OUTPUT:
+			{
+				result.push_back ({ 0x6000, Type::_READ, Origin::_DATA, 2, 9, 11 });
+			}
+
+			break;
+
+		default:
+			break;
+	}
+
+	return (result);
+}
+
+// ---
+void AlternativeSelectionTests::checkLifecycle ()
+{
+	_caseName = "Alternative selection lifecycle";
+	std::cout << _caseName << '\n';
+	unsigned int failuresBefore = _failures;
+	ZXSPECTRUM::Memory memory
+		(ZXSPECTRUM::Memory::Configuration::_48K, ZXSPECTRUM::Type::_STANDARD, "ENG");
+	ZXSPECTRUM::CZ80 cpu (0);
+	cpu.setMemoryRef (&memory);
+	memory.linkToCPU (&cpu);
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (!memory.initialize () || !cpu.initialize ())
+	{
+		check (false, "lifecycle fixture initialization");
+
+		return;
+	}
+	memory.put (MCHEmul::Address (2, 0x5000), MCHEmul::UByte (0x00));
+	AlternativeExecutionProbe instruction;
+	check (!instruction.hasExecutedMCyclesStructure (), "construction has no execution selection");
+
+	for (bool success : { true, false, true })
+	{
+		instruction.setSuccess (success);
+		cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x5000));
+		check (instruction.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()) == success,
+			"probe preserves execution result");
+		check (instruction.hasExecutedMCyclesStructure () == success, "failed execution invalidates selection");
+		check (instruction.executedMCyclesStructure () ==
+			(success ? 1 : FZ80::Instruction::_NOMCYCLESSTRUCTURE), "selection can be published again after failure");
+	}
+
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (_failures == failuresBefore)
+		std::cout << "PASS\n";
+}
+
 int main ()
 {
 	std::cout << std::unitbuf;
@@ -903,9 +1290,10 @@ int main ()
 #endif
 
 	int accessResult = MemoryAccessTests::run ();
+	int alternativeResult = AlternativeSelectionTests::run ();
 	int contentionResult = MemoryContentionTests::run ();
 
-	return (accessResult == 0 && contentionResult == 0 ? 0 : 1);
+	return (accessResult == 0 && alternativeResult == 0 && contentionResult == 0 ? 0 : 1);
 }
 
 // End of the file

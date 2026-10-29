@@ -154,7 +154,12 @@ _INST_IMPL (FZ80::JR_NZ)
 {
 	assert (parameters ().size () == 2);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		executeBranch (true);
 
 	return (true);
@@ -165,7 +170,12 @@ _INST_IMPL (FZ80::JR_Z)
 {
 	assert (parameters ().size () == 2);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_ZEROFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		executeBranch (true);
 
 	return (true);
@@ -176,7 +186,12 @@ _INST_IMPL (FZ80::JR_NC)
 {
 	assert (parameters ().size () == 2);
 
-	if (!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		!cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		executeBranch (true);
 
 	return (true);
@@ -187,7 +202,12 @@ _INST_IMPL (FZ80::JR_C)
 {
 	assert (parameters ().size () == 2);
 
-	if (cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG))
+	bool taken =
+		cpu () -> statusRegister ().bitStatus (FZ80::CZ80::_CARRYFLAG);
+
+	selectMCyclesStructure (taken ? 1 : 0);
+
+	if (taken)
 		executeBranch (true);
 
 	return (true);
@@ -201,6 +221,7 @@ _INST_IMPL (FZ80::DJNZ)
 	unsigned char r = registerB ().values ()[0].value ();
 	bool c = ((r -= 1) == MCHEmul::UByte::_0);
 	registerB ().set ({ r }); // decrement 1 in the register B...
+	selectMCyclesStructure (c ? 0 : 1);
 	if (!c)
 		executeBranch (true);
 
