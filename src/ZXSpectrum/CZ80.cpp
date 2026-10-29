@@ -12,6 +12,7 @@ ZXSPECTRUM::CZ80::MemoryAccessTransaction::MemoryAccessTransaction ()
 	  _timingAvailable (false),
 	  _contentionHandled (false),
 	  _contentionClockCycles (0),
+	  _includedContentionClockCycles (0),
 	  _pendingContentionClockCycles (0),
 	  _recording (false),
 	  _accesses ()
@@ -31,6 +32,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::reset ()
 	_timingAvailable = false;
 	_contentionHandled = false;
 	_contentionClockCycles = 0;
+	_includedContentionClockCycles = 0;
 	_pendingContentionClockCycles = 0;
 	_recording = false;
 
@@ -53,6 +55,7 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::begin
 	_timingAvailable = false;
 	_contentionHandled = false;
 	_contentionClockCycles = 0;
+	_includedContentionClockCycles = 0;
 
 	// A new operation owns a new record, reusing its allocated storage.
 	_accesses.clear ();
@@ -84,12 +87,15 @@ void ZXSPECTRUM::CZ80::MemoryAccessTransaction::setTimingAssociation (size_t n)
 
 // ---
 void ZXSPECTRUM::CZ80::MemoryAccessTransaction::setContentionDelay
-	(unsigned int cC)
+	(unsigned int total, unsigned int included)
 {
-	// A calculated zero delay must also suppress legacy reconstruction.
+	assert (included <= total);
+
+	// A calculated zero delay is also a handled operation.
 	_contentionHandled = true;
-	_contentionClockCycles = cC;
-	_pendingContentionClockCycles = cC;
+	_contentionClockCycles = total;
+	_includedContentionClockCycles = included;
+	_pendingContentionClockCycles = total - included;
 }
 
 // ---
@@ -160,8 +166,8 @@ void ZXSPECTRUM::CZ80::recordMemoryAccess
 		}
 	}
 
-	// When multiple bytes are accessed...
-	// ...it might happen that one is contended and the other is not!
+	// Retain contained bytes even when the requested range crosses a boundary.
+	// Associating a partially retained data-transfer group can still be unsupported.
 	for (size_t i = 0; i < nB; i++)
 	{
 		// The 48K CPU subset also contains RAM outside the contended range.
@@ -171,6 +177,22 @@ void ZXSPECTRUM::CZ80::recordMemoryAccess
 				({ address, t, origin, FZ80::MCycle::_NOCYCLE,
 				   FZ80::MCycle::_NOCYCLE, FZ80::MCycle::_NOCYCLE });
 	}
+}
+
+// ---
+FZ80::CZ80::IOAccessTiming ZXSPECTRUM::CZ80::calculateIOAccessTiming
+	(const FZ80::Instruction& instruction,
+	 const FZ80::Z80Port::Access& access, unsigned int cC)
+{
+	IOAccessTiming result =
+		calculateMemoryAndIOAccessTiming (instruction, access, cC);
+
+	// Report once during preparation, including port-only calculations.
+	if (_ula != nullptr &&
+		(result._memoryBefore != 0 || result._port != 0 || result._memoryAfter != 0))
+		_ula -> notifyContention ();
+
+	return (result);
 }
 
 // ---
@@ -321,21 +343,87 @@ bool ZXSPECTRUM::CZ80::executeNextInstruction_Full
 }
 
 // ---
-const FZ80::Instruction* ZXSPECTRUM::CZ80::executedInstruction () const
+FZ80::CZ80::IOAccessTiming ZXSPECTRUM::CZ80::calculateMemoryAndIOAccessTiming
+	(const FZ80::Instruction& instruction,
+	 const FZ80::Z80Port::Access& access, unsigned int cC)
 {
-	// Resolve the already executed leaf without decoding memory again...
-	const MCHEmul::Instruction* inst = _lastInstruction;
-	while (inst != nullptr)
-	{
-		const MCHEmul::InstructionUndefined* undefined =
-			dynamic_cast <const MCHEmul::InstructionUndefined*> (inst);
-		if (undefined == nullptr)
-			break; // Exit in normal situations, because it has been found!
+	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
 
-		inst = undefined -> lastInstruction ();
+	// Memory timing remains limited to supported single-operation contexts.
+	// The generic calculation still applies the port's own contention.
+	if (_ula == nullptr ||
+		transaction._operation != MemoryAccessOperation::_INSTRUCTION ||
+		transaction._state != MemoryAccessState::_IN_PROGRESS ||
+		transaction._startClockCycle != cC ||
+		(ticksCounter () != nullptr && ticksCounter () -> elapsedTicks () != 1))
+		return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
+
+	const FZ80::MCyclesData& timing =
+		instruction.mCyclesData (instruction.executedMCyclesStructure ());
+	assert (timing.ioCycles ().size () == 1);
+
+	size_t ioIndex = timing.ioCycles ()[0];
+	const FZ80::MCycleData& io = timing.cycleData (ioIndex);
+	const std::vector <size_t>& reads = timing.memoryReads ();
+	const std::vector <size_t>& writes = timing.memoryWrites ();
+
+	// Inputs have only instruction reads and at most one following write.
+	// Outputs have at most one preceding data read and no memory writes.
+	bool input = access._type == FZ80::Z80Port::Access::Type::_READ;
+	if (reads.size () < instruction.memoryPositions () ||
+		(input && (reads.size () != instruction.memoryPositions () || writes.size () > 1)) ||
+		(!input && (!writes.empty () || reads.size () - instruction.memoryPositions () > 1)))
+		return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
+
+	const FZ80::MCycleData* followingWrite = nullptr;
+	if (!writes.empty ())
+	{
+		followingWrite = &timing.cycleData (writes [0]);
+		if (writes [0] <= ioIndex || followingWrite -> _contentionCycle == FZ80::MCycle::_NOCYCLE)
+			return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
 	}
 
-	return (dynamic_cast <const FZ80::Instruction*> (inst));
+	if (!associateMemoryAccessTiming (instruction, timing))
+		return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
+
+	// The observed prefix must precede I/O; a deferred input write is not yet recorded.
+	for (const auto& memoryAccess : transaction._accesses)
+		if (memoryAccess._mCycle >= ioIndex)
+			return (FZ80::CZ80::calculateIOAccessTiming (instruction, access, cC));
+
+	IOAccessTiming result;
+	for (const auto& memoryAccess : transaction._accesses)
+		result._memoryBefore += _ula -> memoryContentionDelayAt
+			(cC + (unsigned int) (memoryAccess._contentionCycle) + result._memoryBefore);
+
+	// Query the port once, after preceding memory waits have shifted its phase.
+	result._port = additionalClockCyclesForIO
+		(access._address, (unsigned char) (access._address & 0x00ff),
+		 cC + (unsigned int) (io._contentionCycle) + result._memoryBefore);
+
+	if (followingWrite != nullptr && (access._readContext._memoryAddress & 0xc000) == 0x4000)
+		// Timing and eventual completion use the same captured destination.
+		result._memoryAfter = _ula -> memoryContentionDelayAt
+			(cC + (unsigned int) (followingWrite -> _contentionCycle) +
+				result._memoryBefore + result._port);
+
+	unsigned int memoryDelay = result._memoryBefore + result._memoryAfter;
+	transaction.setContentionDelay (memoryDelay, memoryDelay);
+
+	return (result);
+}
+
+// ---
+const FZ80::Instruction* ZXSPECTRUM::CZ80::executedInstruction () const
+{
+	const MCHEmul::Instruction* instruction = _lastInstruction;
+
+	const MCHEmul::InstructionUndefined* undefined =
+		dynamic_cast <const MCHEmul::InstructionUndefined*> (instruction);
+	if (undefined != nullptr)
+		instruction = undefined -> lastDefinedInstruction ();
+
+	return (dynamic_cast <const FZ80::Instruction*> (instruction));
 }
 
 // ---
@@ -354,10 +442,24 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 
 	const FZ80::MCyclesData& timing =
 		defined -> mCyclesData (defined -> executedMCyclesStructure ());
+	if (!associateMemoryAccessTiming (*defined, timing))
+		return (false);
+
+	transaction.setTimingAssociation (defined -> executedMCyclesStructure ());
+
+	return (true);
+}
+
+// ---
+bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming
+	(const FZ80::Instruction& instruction, const FZ80::MCyclesData& timing)
+{
+	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
+
 	const std::vector <size_t>& reads = timing.memoryReads ();
 	const std::vector <size_t>& writes = timing.memoryWrites ();
 
-	size_t instructionBytes = defined -> memoryPositions ();
+	size_t instructionBytes = instruction.memoryPositions ();
 
 	// Supported ordinary Z80 sequences obtain their instruction bytes
 	// before performing the remaining memory reads.
@@ -377,6 +479,7 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 
 	// A partially retained group of equal-direction data transfers is ambiguous:
 	// its omitted accesses could precede or follow the retained ones.
+	// Reject its timing association; the recorded bytes remain available without a fallback delay.
 	if ((dataReads != 0 && dataReads != reads.size () - instructionBytes) ||
 		(dataWrites != 0 && dataWrites != writes.size ()))
 		return (false);
@@ -427,8 +530,6 @@ bool ZXSPECTRUM::CZ80::associateMemoryAccessTiming ()
 		previousCycle = cycle._dataCycle;
 	}
 
-	transaction.setTimingAssociation (defined -> executedMCyclesStructure ());
-
 	return (true);
 }
 
@@ -437,14 +538,11 @@ void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay ()
 {
 	MemoryAccessTransaction& transaction = _memoryAccessTransaction;
 
-	if (_ula == nullptr || !transaction._timingAvailable)
+	if (_ula == nullptr || !transaction._timingAvailable ||
+		transaction._contentionHandled)
 		return;
 
-	// Preserve the old path until it has resolved its earlier accesses.
-	if (_ula -> legacyMemoryContentionPending ())
-		return;
-
-	// Mixed batches need a separate policy for combining old and new operations.
+	// Multi-tick batches remain outside the supported memory-timing scope.
 	if (ticksCounter () != nullptr && ticksCounter () -> elapsedTicks () != 1)
 		return;
 
@@ -469,6 +567,9 @@ void ZXSPECTRUM::CZ80::prepareMemoryContentionDelay ()
 	}
 
 	transaction.setContentionDelay (delay);
+
+	if (delay != 0)
+		_ula -> notifyContention ();
 }
 
 // ---

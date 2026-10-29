@@ -135,8 +135,6 @@ ZXSPECTRUM::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& 
 	  _flashFrameCounter (0),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
-	  _screenMemoryAccessedFromCPUCycles { },
-	  _cyclesStopped (0),
 	  _eventStatus ()
 {
 	setClassName ("ULA");
@@ -300,6 +298,15 @@ ZXSPECTRUM::ULA::~ULA ()
 }
 
 // ---
+void ZXSPECTRUM::ULA::setShowEvents (bool sE)
+{
+	_showEvents = sE;
+
+	// Changing visualization mode discards any previously pending marker.
+	_eventStatus._contentedSituation = false;
+}
+
+// ---
 bool ZXSPECTRUM::ULA::initialize ()
 {
 	assert (MCHEmul::GraphicalChip::memoryRef () != nullptr);
@@ -323,11 +330,7 @@ bool ZXSPECTRUM::ULA::initialize ()
 
 	_lastCPUCycles = 0;
 
-	_cyclesStopped = 0;
-
 	_eventStatus = ZXSPECTRUM::ULA::EventsStatus ();
-
-	_screenMemoryAccessedFromCPUCycles = { };
 
 	return (true);
 }
@@ -343,20 +346,12 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		return (true);
 	}
 
-	// Moments (CPU cycles) when the graphics are read!
-	// Bear in mind that the instruction already executed
-	// The ULA has to do the same, detect whether the instruction had had taken longer because contention and how much..
-	// and then stop the CPU after the main cycle!...
-	std::vector <unsigned int> ulaVRAM = { };
-	// Simulate the visulization...
+	// CPU execution already includes the waits consumed during this interval.
 	for (unsigned int i = 
 			((cpu -> clockCycles  () - _lastCPUCycles) << 1 /** ULA cycles = 2 * CPU Cycles. */); 
 			i > 0; i--)
 	{
 		_IFDEBUG debugULACycle (cpu, i);
-
-		if (_cyclesStopped > 0)
-			--_cyclesStopped;
 
 		// Decide whether it is needed to draw or not the events...
 		if (_showEvents)
@@ -382,32 +377,11 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 		// ...Mark also whethe rthe event have to be drawn or not!
 		if (_raster.isInVisibleZone ())
 		{
-			// IMPORTANT NOTE about contention:
-			// This piece of code is to detect the contention and
-			// to introduce the rigth delay in the execution of a instruction already executed!
-			// The method "specificComputerCycle" of the class ZXSPECTRUM::SinclairZXSpectrum 
-			// Set the clock cycles where the contention happened...
-			// Take a loot to it
-
-			// If a graphic info (video/color) has been read...
-			if (readGraphicInfoAndDrawVisibleZone (cpu) &&
-				// ...and it is not already stopped....
-				!cpu -> stopped () &&
-				// ...and the CPU accessed (it did it already!) this space
-				!_screenMemoryAccessedFromCPUCycles.empty ())
-				// Keep when, to introduce later the right delay...
-				// This is the moment where the ULA started to read the VRAM
-				// ...and it takes 4 CPU cycles (8 ULA's)
-				// So as this "simulate" method executes as many times as cycles the last instruction took
-				// this situation can happen several times...
-				// Notice that 3 cycles are substracted, because the ULA detection cycle starts (CLWAIT) T1 never finishes either!
-				ulaVRAM.emplace_back (cpu -> clockCycles () - (i >> 1) - 3);
+			// Graphic fetches and drawing remain independent of CPU contention.
+			readGraphicInfoAndDrawVisibleZone (cpu);
 
 			if (_showEvents)
 				drawEvents ();
-			// IMPORTANT NOTE:
-			// The content situation is calculated later, out of the loop
-			// so if existed it would be drawn in the next execution of this method
 		}
 		// When it is not in a visible zone, nothing is read!
 		else
@@ -433,20 +407,6 @@ bool ZXSPECTRUM::ULA::simulate (MCHEmul::CPU* cpu)
 	// INT is level-sensitive: while /INT remains low, request it as soon as the Z80 can accept it.
 	requestINTIfNeeded (cpu);
 
-	// Now after the execution of the ULA finishes...
-	// ...it is time to calculate any delay...
-	// if the a potential contention could have happened...
-	if (!ulaVRAM.empty ()) 
-	{
-		unsigned int ws = 0;
-		std::tie (ws, _cyclesStopped) = calculateContention (ulaVRAM);
-		if (_cyclesStopped != 0)
-			cpu -> setStop (true, MCHEmul::InstructionDefined::_CYCLEALL, ws, _cyclesStopped);
-
-		// The contention will exist if stop the CPU is needed...
-		_eventStatus._contentedSituation = (_cyclesStopped != 0);
-	}
-
 	// If the MIC output signal changed, a signal to the datasette is send...
 	// ...the datasette would manage that change as a modification in the information written if any...
 	if (_ULARegisters -> MICOutputSignalChanged ()) // After ckecked it, the value returns to false...
@@ -471,6 +431,13 @@ MCHEmul::InfoStructure ZXSPECTRUM::ULA::getInfoStructure () const
 	result.add ("INTCLOCKS",		std::to_string (_INTClocksRemaining));
 
 	return (result);
+}
+
+// ---
+void ZXSPECTRUM::ULA::notifyContention ()
+{
+	if (_showEvents)
+		_eventStatus._contentedSituation = true;
 }
 
 // ---
@@ -840,55 +807,6 @@ void ZXSPECTRUM::ULA::drawEvents ()
 		screenMemory () -> setHorizontalLine // Draw two pixels when the events has happpened...
 			(_raster.hData ().currentVisiblePosition (), _raster.vData ().currentVisiblePosition (), 
 				((_raster.hData ().currentVisiblePosition () + 2) < _raster.hData ().lastVisiblePosition ()) ? 2 : 1, cEvent);
-}
-
-// ---
-std::tuple <unsigned int, int> ZXSPECTRUM::ULA::calculateContention 
-	(const std::vector <unsigned int>& uC) const
-{
-	static const unsigned int ULAWAIT [8] = { 6, 5, 4, 3, 2, 1, 0, 0 };
-
-	int cS = 0;
-	size_t cCP = 0;
-
-	// If the instruction accessed the VRAM before ULA, 
-	// there was no contention possibility....
-	while (cCP < _screenMemoryAccessedFromCPUCycles.size () && // The size first...
-		   _screenMemoryAccessedFromCPUCycles [cCP] < uC [0]) cCP++;
-	// Now, for every access to the ULA that have taken place,
-	// looks for an access to the CPU near (less than 8 clock cycles)
-	// If found:
-	// stop there must be stop cycles added.
-	// As a consequence, the following CPU accesses, if any, 
-	// shouldn't have happened then at the clock cycles they took place.
-	// but the additional stop cycles added after instead...
-	// So, the process is repited with the next CPU access, until all ULA access moments are treated.
-	// If not found go for the next ULA access.
-	unsigned int e = 0;
-	unsigned int lB = 0;
-	for (size_t uCP = 0; 
-			uCP != uC.size () && cCP < _screenMemoryAccessedFromCPUCycles.size (); uCP++)
-		if ((e = ((lB = (_screenMemoryAccessedFromCPUCycles [cCP] + cS)) - uC [uCP])) < 4) 
-			{ cS += ULAWAIT [e]; cCP++; }
-
-	// But if after reviewing the accesses to the ULA, 
-	// there would be still pending CPU accesses to treat...
-	// it would be mean, that those CPU accesses could happen in other ULA access moments
-	// still pending to be tratead maybe later...
-	if (cCP < _screenMemoryAccessedFromCPUCycles.size ())
-	{
-		if (cCP != 0 || cS != 0)
-		{
-			std::vector <unsigned int> cP;
-			for (; cCP < _screenMemoryAccessedFromCPUCycles.size (); 
-				cP.emplace_back (_screenMemoryAccessedFromCPUCycles [cCP++] + cS));
-			_screenMemoryAccessedFromCPUCycles = std::move (cP);
-		}
-	}
-	else
-		_screenMemoryAccessedFromCPUCycles = { };
-
-	return (std::tuple <unsigned int, int> (lB, cS));
 }
 
 // ---

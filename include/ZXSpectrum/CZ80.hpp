@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 18/10/2026 \n
- *	Description: Z80 memory-access recording for Spectrum contention.
+ *	Description: Z80 access recording, timing association and Spectrum contention.
  *	Versions: 1.0 Initial
  */
 
@@ -21,7 +21,19 @@ namespace ZXSPECTRUM
 {
 	class ULA;
 
-	/** Z80 with memory-access recording for Spectrum contention. */
+	/** Z80 coordinating access recording, nominal timing and Spectrum contention. \n
+		CPU-visible RAM forwards access requests; the CPU filters their context and range. \n
+		Retained bytes are associated with the executed instruction's precalculated M-cycles. \n
+		Each calculated wait shifts the phase of subsequent accesses. \n
+		Memory-only instructions consume their accumulated delay as terminal CPU wait. \n
+		Mixed instructions include memory-before, port and memory-after waits in their duration. \n
+		Port effects remain deferred; this does not provide exact intra-instruction chip interleaving. \n
+		Partially retained, ambiguous data-transfer groups are not assigned contention timing yet. \n
+		Crossing a range boundary does not itself prevent capture of the contained bytes. \n
+		Memory contention is supported in Full mode and PerCycle mode with one tick per call. \n
+		Multi-tick batches and interrupt-response contention remain unsupported. \n
+		Interrupt accesses are recorded, but their timing is not associated or evaluated yet. \n
+		Unsupported memory cases have no approximate reconstruction fallback; I/O retains its port-only calculation. */
 	class CZ80 final : public FZ80::CZ80
 	{
 		public:
@@ -55,7 +67,8 @@ namespace ZXSPECTRUM
 
 		/** One requested byte access to potentially contended memory. \n
 			Collection order preserves the order of access notifications. \n
-			Timing fields are valid only when the owning transaction publishes timing availability. */
+			External consumers may use timing fields only after the transaction publishes timing availability. \n
+			Internal mixed-I/O calculation may use the partial association it has just validated. */
 		struct MemoryAccess
 		{
 			enum class Type
@@ -121,13 +134,17 @@ namespace ZXSPECTRUM
 			void finish (bool failed, bool pendingPortAccess);
 			/** Publishes the selected alternative after every retained access was associated. */
 			void setTimingAssociation (size_t n);
-			/** Publishes the calculated contention delay, including a valid zero delay. \n
-				Called once for a supported operation, before consuming its wait. */
-			void setContentionDelay (unsigned int cC);
+			/** Publishes the calculated memory-contention delay, including a valid zero delay. \n
+				total excludes the port's own contention delay, which is accounted for separately. \n
+				included identifies memory-wait T-states already added to instruction duration. \n
+				Only total minus included becomes terminal CPU wait. */
+			void setContentionDelay
+				(unsigned int total, unsigned int included = 0);
 			/** Consumes all pending wait in Full mode, or one T-state in PerCycle mode. \n
 				Returns the number of consumed CPU T-states without advancing its clock. */
 			unsigned int consumeContentionDelay (bool full);
 
+			// Implementation
 			/** Kind of CPU operation owning the record. \n
 				_NONE is used only before an operation has started. */
 			MemoryAccessOperation _operation;
@@ -145,17 +162,22 @@ namespace ZXSPECTRUM
 				Invalid until timing association succeeds. */
 			size_t _mCyclesStructure;
 			/** Whether every retained access has an unambiguous nominal timing. \n
-				False during recording and for unsupported or ambiguous associations. \n
-				Individual timing fields must not be consumed while this is false. */
+				Published after complete association; false for unsupported or ambiguous associations. \n
+				External consumers must not use individual timing fields while this is false. \n
+				Internal mixed-I/O calculation may use its validated partial association before publication. */
 			bool _timingAvailable;
-			/** Whether the new memory-contention path evaluated this operation. \n
+			/** Whether memory contention was evaluated for this operation. \n
 				True also when the calculated delay is zero. \n
-				Prevents the legacy path from evaluating the same operation again. */
+				Prevents a prepared mixed operation from being calculated again on completion. */
 			bool _contentionHandled;
-			/** Total additional CPU T-states calculated for this operation. \n
+			/** Total memory-contention T-states calculated for this operation. \n
+				Excludes the port's own contention delay in mixed instructions. \n
 				Remains unchanged while pending wait is consumed. \n
 				Only represents a calculated result when _contentionHandled is true. */
 			unsigned int _contentionClockCycles;
+			/** Memory-contention T-states already included in instruction duration. \n
+				They must not be consumed again as terminal CPU wait. */
+			unsigned int _includedContentionClockCycles;
 			/** Additional CPU T-states still to be consumed before another operation. \n
 				Buffered effects remain retained while this value is nonzero. \n
 				Decreases during wait consumption without changing the total delay. */
@@ -173,16 +195,22 @@ namespace ZXSPECTRUM
 
 		/** Non-owning connection established by the computer before execution. */
 		void linkToULA (ULA* u) { _ula = u; }
-		/** Whether memory contention for the recorded operation used the new path. */
+
+		// Information about the contention...
+		/** Whether memory contention was evaluated for the recorded operation, including zero delay. */
 		bool memoryContentionHandled () const
 							{ return (_memoryAccessTransaction._contentionHandled); }
-		/** Total additional wait calculated for the recorded operation. */
+		/** Total memory-contention wait calculated for the recorded operation. */
 		unsigned int memoryContentionClockCycles () const
 							{ return (_memoryAccessTransaction._contentionClockCycles); }
+		/** Memory-contention T-states already included in instruction duration. */
+		unsigned int includedMemoryContentionClockCycles () const
+							{ return (_memoryAccessTransaction._includedContentionClockCycles); }
 		/** Additional wait still to be consumed before buffered effects are released. */
 		unsigned int pendingMemoryContentionClockCycles () const
 							{ return (_memoryAccessTransaction._pendingContentionClockCycles); }
 
+		// Information about the access to the contented memory if any...
 		/** Whether notifications are currently being collected. */
 		bool recordingMemoryAccesses () const
 							{ return (_memoryAccessTransaction._recording); }
@@ -220,7 +248,15 @@ namespace ZXSPECTRUM
 		const MemoryAccesses& memoryAccesses () const
 							{ return (_memoryAccessTransaction._accesses); }
 
-		/** Completes pending port effects within their original access record. */
+		/** Calculates surrounding memory contention and publishes the included delay. */
+		virtual IOAccessTiming calculateIOAccessTiming
+			(const FZ80::Instruction& instruction,
+			 const FZ80::Z80Port::Access& access, unsigned int cC) override;
+
+		/** Releases buffered effects only after terminal memory wait has been consumed. \n
+			Pending terminal wait prevents release even when force is true. \n
+			A deferred block-input write is captured within its original transaction. \n
+			Delegated release preserves the order of preceding writes, port effect and following writes. */
 		virtual void executeBufferedCommands (bool force = false) override;
 		virtual bool initialize () override;
 
@@ -239,12 +275,22 @@ namespace ZXSPECTRUM
 			(unsigned int& e) override;
 
 		private:
+		/** Calculates memory and port waits for one prepared I/O transaction. \n
+			Unsupported memory contexts retain the generic port-only calculation. */
+		IOAccessTiming calculateMemoryAndIOAccessTiming
+			(const FZ80::Instruction& instruction,
+			 const FZ80::Z80Port::Access& access, unsigned int cC);
 		/** Resolves the executed instruction without reading or decoding memory. */
 		const FZ80::Instruction* executedInstruction () const;
 		/** Associates retained accesses with a single M-cycle structure. \n
 			Returns false when the operation or its mapping is not supported yet. \n
-			No memory is read and no execution state or clock is changed. */
+			Updates transaction timing metadata without reading memory or changing CPU registers or clocks. */
 		bool associateMemoryAccessTiming ();
+		/** Associates retained accesses without publishing complete timing. \n
+			I/O preparation can precede its deferred memory write. \n
+			The caller may use the validated retained prefix internally; external timing remains unpublished. */
+		bool associateMemoryAccessTiming
+			(const FZ80::Instruction& instruction, const FZ80::MCyclesData& timing);
 		/** Prepares a terminal wait for supported memory-only instructions. */
 		void prepareMemoryContentionDelay ();
 		/** Consumes pending wait instead of accepting another CPU operation. */
@@ -259,6 +305,7 @@ namespace ZXSPECTRUM
 			The connection survives CPU initialization. */
 		ULA* _ula;
 
+		// Implementation
 		/** Access capture, timing association and contention wait of one CPU operation. */
 		MemoryAccessTransaction _memoryAccessTransaction;
 	};

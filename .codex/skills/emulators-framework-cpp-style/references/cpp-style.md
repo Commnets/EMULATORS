@@ -298,19 +298,36 @@ Match nearby capitalization, indentation, field vocabulary, and hexadecimal form
 
 ## Class Structure
 
-Prefer this order when creating a class:
+Prefer this order when creating a class, preserving the access level of every member:
 
-1. `public:` plus friends/static constants/enums.
+1. Initial `public:` declarations: public static attributes/constants, followed by the relevant friends, types and enums.
 2. Constructors/destructor/copy and move policy.
-3. Accessors and mutators.
-4. Lifecycle methods such as `initialize ()`, `simulate ()`, `clock ()`.
+3. Public accessors and mutators.
+4. Public lifecycle methods such as `initialize ()`, `simulate ()`, `clock ()`.
 5. `getInfoStructure () const` for `InfoClass` derivatives.
-6. `protected:` hooks and helpers.
-7. `private:` implementation helpers.
-8. Debug methods (`private` by default, `protected` when called from derived classes), grouped last among method declarations between two `//-----` comment lines.
-9. Data members, with short Doxygen comments where helpful.
+6. Public static methods, after the public non-static methods.
+7. `protected:` hooks/helpers, then protected debug methods if needed, then protected static methods.
+8. `private:` helpers, then private debug methods, then private static methods.
+9. Defining data members, retaining their intended visibility.
+10. Execution state and derived performance data as the final attribute group, introduced by `// Implementation` and retaining their intended visibility.
 
 Use `final` for closed concrete classes. Use `virtual ... override` when overriding. Delete default construction, copy, assignment, or move operations when the existing ownership/lifecycle pattern requires it.
+
+## Member Categories And Static Placement
+
+Classify data members by purpose independently of their `public`, `protected` or `private` access level:
+
+- **Defining attributes** describe the entity's identity, configuration, owned descriptions, composition or connections. They come first in the ordinary attribute declarations. A configurable attribute remains defining even if it can change after construction.
+- **Execution attributes** retain the current or last operation's state or results. They belong in the final attribute group, rather than among the defining characteristics. A field being mutable is not sufficient to classify it as execution state.
+- **Derived implementation attributes** are calculated from the defining characteristics and retained to accelerate execution, such as lookup tables, flattened descriptors and precalculated indexes. They usually are not part of the ordinary external interface. Group them with execution attributes at the end of the attribute declarations.
+
+Introduce the combined execution/derived group with the exact comment line `// Implementation`, preserving capitalization. One marker introduces the group; do not repeat it for every field. Keep related attributes together and document their meaning, validity and ownership where relevant. Reopen access labels within the final group when needed; grouping must not change visibility. If a class has neither execution state nor derived data, do not add an empty implementation group.
+
+For example, an instruction's owned M-cycle descriptions are defining data; its selected execution alternative is execution state; and its precalculated M-cycle indexes are derived performance data. The last two belong below `// Implementation`. This is a declaration-layout rule, not a requirement to introduce new fields, caches or wrapper structures. Constructor initializer order must continue to match declaration order.
+
+Public static attributes are the exception to the ordinary bottom-of-class data layout: put them at the beginning of the class's public declarations, before constructors and method groups. Typical examples are peripheral/chip identifiers, event identifiers and class-level constants. Their `static` qualifier does not place them beside static methods. Preserve necessary type-declaration dependencies when an attribute uses a nested type.
+
+Static methods form the final method group of their respective visibility block: public static methods after public instance methods, protected static methods after protected instance methods, and private static methods after private instance methods. Non-static debug methods belong before the trailing static methods of their access level. Preserve conceptual grouping within each category and keep out-of-class definitions in declaration order. This placement convention does not favor static methods over instance methods or authorize unrelated reordering of existing code.
 
 ## Conceptual Method Groups And Debug Placement
 
@@ -318,7 +335,7 @@ Keep every conceptual group of methods together. Within the class declaration in
 
 This compact layout applies to declarations and in-class definitions only. Out-of-class implementations retain a blank line between methods, both for `inline` implementations in the header and for implementations in the `.cpp`; keep the normal `// ---` method separators.
 
-Debug methods are `private` by default. Declare a debug method `protected` when a derived class needs to invoke it; do not make it `public`. When the group contains both access levels, use explicit access labels inside the same `//-----` block and keep methods with the same access level together. Put all their declarations together as the final method group of the class, before the data members. Put all their implementations together after the other implementations of that same class, preserving declaration order. This means the end of that class's methods, not necessarily the end of a file containing several classes.
+Debug methods are `private` by default. Declare a debug method `protected` when a derived class needs to invoke it; do not make it `public`. Group them at the end of the non-static methods of their respective access level, before that access level's trailing static methods and before the data members. Keep their implementations grouped in the corresponding declaration order; any following static-method definitions retain their later position. When debug methods have different access levels, use a separate delimited group in each corresponding visibility block.
 
 Enclose the debug group with an opening and a closing comment line written exactly as `//-----`, both in the header declaration group and around its implementations. Use no blank lines between the debug declarations; retain the usual spacing between their implementations.
 
@@ -336,6 +353,7 @@ Enclose the debug group with an opening and a closing comment line written exact
 	void debugPortRead (unsigned short address) const;
 	//-----
 
+	// Implementation
 	bool _active;
 ```
 

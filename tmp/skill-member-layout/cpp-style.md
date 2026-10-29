@@ -1,0 +1,620 @@
+# EMULATORS Framework C++ Style Reference
+
+Use this reference when creating new framework classes or touching code where local style matters.
+
+## File Layout
+
+Headers usually start with:
+
+```cpp
+/** \ingroup CORE */
+/*@{*/
+
+/**	
+ *	@file	
+ *	File: ClassName.hpp \n
+ *	Framework: CPU Emulators library \n
+ *	Author: Ignacio Cea Fornies (EMULATORS library) \n
+ *	Creation Date: DD/MM/YYYY \n
+ *	Description: Short description.
+ *	Versions: 1.0 Initial
+ */
+
+#ifndef __MCHEMUL_CLASSNAME__
+#define __MCHEMUL_CLASSNAME__
+```
+
+Use the module group and guard prefix already used nearby:
+
+- `CORE`: `__MCHEMUL_NAME__` or the existing local `__CORE_NAME__` variant.
+- `COMMODORE`: `__COMMODORE_NAME__`.
+- Other modules: match neighboring files exactly.
+
+Headers end with:
+
+```cpp
+}
+
+#endif
+  
+// End of the file
+/*@}*/
+```
+
+`.cpp` files normally begin with their own header first, then extra dependencies:
+
+```cpp
+#include <CORE/ClassName.hpp>
+#include <CORE/OtherDependency.hpp>
+```
+
+## Instruction Declaration Alignment
+
+Repeated CPU instruction declarations are tables expressed as macro calls. Preserve their visual columns in proposed snippets and generated or edited source, including migrations between macro variants.
+
+Use four-column tab stops for these tables. Inspect the user's corrected neighboring declarations and identify three independent anchor columns, counted from one:
+
+1. The opening quote of the semantic instruction text.
+2. The first character of the instruction class name, immediately after that text argument.
+3. The first slash of a trailing documentation comment, when present, such as `// Undocumented`.
+
+The corrected `include/FZ80/LD.hpp` uses columns **41, 65 and 101**, respectively. These are the reference columns for that layout, not universal constants for every CPU family or macro signature. Retain a different established local layout when the surrounding table requires it.
+
+For example, these first lines have the same three anchors despite their different opcode, text and class lengths:
+
+```cpp
+	_INSTZ80_MC_FROM (0x3E,	2, 7,		"LD A,[#1]",			LD_A, LD_General,
+		_Z80_M1 (), _Z80_MR3 ());
+
+	_INSTZ80_MC_FROM (0xDD3E,	3, 11,	"U1LD A,[#1]",			U1LD_A, LD_General,					// Undocumented
+		_Z80_M1 (), _Z80_M1 (), _Z80_MR3 ());
+
+	_INSTZ80_MC_FROM (0xDD7C,	2, 8,	"LD A,IXH",				LD_AFromIXH, LD_General,			// Undocumented
+		_Z80_M1 (), _Z80_M1 ());
+```
+
+Recalculate tab padding separately before each anchor. A longer macro name, a prefixed opcode, a two-digit duration, or a different argument list can change where the next tab lands. Do not apply a blanket extra tab, copy the same number of tabs to every row, or assume that preserving a class column also preserves the semantic text and comment columns. Preserve the reference layout's continuation indentation, spacing and blank-line rhythm as well.
+
+Before completing an edit or presenting a proposal, expand tabs with width four and compare all three anchor columns across the complete affected block, including unchanged declarations interleaved with migrated ones. Count a visual column as `len(line[:anchor].expandtabs(4)) + 1`; raw character indexes and tab counts are not visual columns. Rows without a trailing comment still have to satisfy the first two anchors. Use the corrected reference columns as the expectation, rather than accepting the pre-edit positions as proof of alignment. Check representative long texts, long class names, prefixed opcodes and comments as well as short rows.
+
+If a field cannot fit the established columns, choose a coherent wider layout for the affected block instead of leaving one row displaced. Do not reformat unrelated instruction tables or change semantic strings, opcodes, timing, names or documentation merely to align them.
+
+## Formatting Rules
+
+- Use the repository's tab-based indentation and align continuation lines like nearby code. Do not replace leading tabs with spaces in patches, examples, or proposed snippets.
+- Put a space before function-call parentheses: `initialize ()`, `size ()`.
+- Put a space between template name and argument list: `std::vector <MCHEmul::UByte>`.
+- For conversions between fundamental numeric types, including aliases such as `size_t`, use the compact form `(size_t) (value)` or `(unsigned char) (value)`. Do not use `static_cast` for these ordinary numeric conversions.
+- Keep the explicit C++ cast operators when their specific semantics matter: use `static_cast` for pointer, reference, class, or enum conversions; `const_cast` for cv-qualification; `dynamic_cast` for checked polymorphic conversions; and `reinterpret_cast` for intentional representation-level conversions. Do not replace these with a C-style cast merely to shorten the source.
+- Put spaces around pointer arrows: `_memory -> initialize ()`.
+- Wrap return expressions in parentheses: `return (result);`.
+- For multiline braced initializer lists used to construct objects, put the closing `}` immediately after the last element on the same line. Keep any enclosing closing parentheses and the statement terminator with it, such as `lastElement });` or `lastElement };`. Apply the same rule to nested initializer lists; do not leave a separate line containing only their closing delimiters. This is initializer-list formatting, not a change to function, class, enum, or control-flow block braces.
+
+```cpp
+const std::vector <unsigned int> cycles {
+	firstCycle,
+	lastCycle };
+
+const MCHEmul::CycleStructure otherCycles ({
+	MCHEmul::CPUCycle::_READ,
+	MCHEmul::CPUCycle::_INTERNAL });
+
+const FZ80::MCyclesStructures alternatives {
+	FZ80::MCyclesStructure {
+		firstMachineCycle,
+		lastMachineCycle },
+	FZ80::MCyclesStructure {
+		anotherMachineCycle } };
+```
+- Separate consecutive structural blocks with exactly one blank line. This includes multi-line preprocessor macros that define classes or declarations, class/struct/enum definitions, and the declaration or explanatory comment that follows them. The closing macro line or `};` must not run directly into the next block; avoid multiple blank lines as well.
+- Group variables of the same type in a single declaration when every
+  initializer is simple. A simple initializer is absent, a literal or constant,
+  or a previously available variable or member:
+
+```cpp
+int x = 0, y = previousY, displacement;
+bool active = false, finished = previousFinished;
+```
+
+  Do not spread such a simple declaration group across consecutive statements:
+
+```cpp
+int x;
+int y;
+int displacement;
+```
+
+  If at least one initializer is long or complex, declare at least that variable
+  separately. Function calls, compound calculations, conditional expressions,
+  and non-trivial constructions are complex for this rule. Keep the remaining
+  simple variables grouped when declaration order and dependencies allow it:
+
+```cpp
+int x = calculateHorizontalPosition (raster, cycle, offset);
+int y = 0, displacement;
+```
+
+  When the complex initializer depends on one of the simple variables, preserve
+  the required declaration order instead of forcing a combined declaration:
+
+```cpp
+int base = previousBase, displacement;
+int x = calculateHorizontalPosition (base, displacement, offset);
+```
+
+- Keep braces in the local style:
+  - Free/member function definitions put `{` on the next line.
+  - Constructors use initializer lists with members on separate aligned lines when non-trivial.
+  - Short inline methods use the compact aligned body style already present in headers.
+  - Omit braces for a control statement whose body is exactly one
+    instruction:
+
+```cpp
+if (active)
+	advance ();
+else
+	reset ();
+```
+
+  - Use braces when the body contains several instructions.
+  - `switch` cases follow a symmetry rule. If all actions are uniform and very
+    simple, place each action and its `break` compactly on the case line:
+
+```cpp
+switch (mode)
+{
+	case 0: result = 1; break;
+	case 1: result = 2; break;
+	default: result = 0; break;
+}
+```
+
+  - If any peer case requires several instructions, local declarations, or a
+    complex action, enclose that case in braces and use the same braced shape
+    for the other action-bearing cases in the switch:
+
+```cpp
+switch (mode)
+{
+	case 0:
+		{
+			result = 1;
+			advance ();
+		}
+
+		break;
+
+	case 1:
+		{
+			result = 2;
+		}
+
+		break;
+
+	default:
+		{
+			result = 0;
+		}
+
+		break;
+}
+```
+
+    Braces required for declaration scope or safe control flow take precedence
+    over compactness.
+- Separate `.cpp` function definitions with:
+
+```cpp
+// ---
+```
+
+## Comments
+
+- Include comments in proposed snippets and real code when they explain why the code exists, document hardware timing, capture a framework convention, or prevent a future misread of non-obvious logic.
+- Avoid comments that only repeat the expression, assignment, or method name.
+- Match nearby comment style: short `//` comments inside functions, Doxygen-style block comments for public API/member documentation, and existing explanatory multi-line comments for hardware behaviour.
+- Keep comments concise and close to the code they explain.
+- In multi-line Doxygen comments, terminate every line that must appear separately in generated browser documentation with a period followed by one space and `\n`: `First rendered line. \n`.
+
+## Naming
+
+- Types/classes: `PascalCase`, often domain-specific: `PhysicalStorageSubset`, `VIAControlLineType2`.
+- Methods/functions: lower camel case, e.g. `getInfoStructure ()`, `setActive ()`, `initializeInternalCounters ()`.
+- Local variables in methods, including constants and references, always start with a lowercase letter. Compound names use lower camel case (`unaVariable`, `unaVariableQueSirve`). Abbreviated multiword names keep the first initial lowercase and subsequent initials uppercase (`uV`, `uVQS`). The declared type may start with uppercase; the variable identifier must not.
+- Member variables: leading underscore, e.g. `_id`, `_activeForReading`, `_wavesPlain`.
+- Constants/statics: leading underscore and uppercase where established, e.g. `_DEFAULTVALUE`, `_GETINFOBYTESLIMIT`.
+- Enums often use leading underscore values: `_RAM`, `_ROM`, `_TRIANGLE`.
+- Type aliases use plural domain names for collections: `using SoundWaves = std::vector <SoundWave*>;`.
+
+## Integer Types
+
+- Match the framework's existing use of fundamental integer types: `char`, `unsigned char`, `short`, `unsigned short`, `int`, and `unsigned int`.
+- Do not introduce the fixed-width aliases from `<cstdint>`, including `int8_t`, `uint8_t`, `int16_t`, `uint16_t`, `int32_t`, `uint32_t`, `int64_t`, and `uint64_t`.
+- Do not introduce SDL width aliases such as `Sint8`, `Uint8`, `Sint16`, `Uint16`, `Sint32`, or `Uint32` when a fundamental integer type is sufficient. Retain semantic SDL types such as `SDL_AudioFormat` and `SDL_AudioDeviceID` when they describe an API concept instead of merely selecting an integer width.
+- Use `size_t` when a value represents a size, a memory position, or an index into an array, vector, string, or another container.
+- Use the nearby domain type for hardware values and counters: typically `unsigned char` for bytes, `unsigned short` for 16-bit addresses, and `unsigned int` for clock or cycle counters.
+- When signed arithmetic is required for a bounded displacement or difference, use `int` if its verified range is sufficient instead of selecting a wider fixed-width type.
+
+## Runtime Performance
+
+- Design every proposal and implementation for maximum runtime performance while preserving observable emulation correctness.
+- Treat CPU instruction execution, memory and I/O access, chip simulation, raster/cycle processing, audio sample generation, and inner protocol loops as hot paths unless measurement proves otherwise.
+- Avoid allocations, container growth, copies, repeated address translation, repeated map or string lookup, redundant validation, unnecessary branches, virtual dispatch, formatting, and logging work inside hot loops.
+- Reserve container capacity when the final size is known, reuse existing buffers and computed values, hoist loop-invariant work, and prefer the cheapest existing framework operation that preserves semantics.
+- Do not add defensive checks to a lower-level hot path merely for general robustness when its callers already guarantee the invariant. Keep the invariant documented and use `assert` when debug-only verification is appropriate.
+- Consider algorithmic complexity, data locality, branch predictability, and the number of operations performed per emulated cycle, not only source-code brevity.
+- Validate meaningful hot-path changes with the available performance tests or a focused before/after measurement when practical. Do not claim an optimization without evidence when its effect is uncertain.
+- When an optimized expression, lookup, bit manipulation, indexing scheme, cache, or combined operation is complex or non-obvious, place a concise comment immediately beside it explaining how it works, which invariant makes it safe, and which repeated or slower work it avoids.
+- Keep straightforward optimized code uncommented when its behavior is already obvious; comments are required for complexity introduced specifically to gain runtime performance.
+
+## Deep-Debug Output
+
+- Treat deep-debug output as a structured diagnostic interface. When a `debug*Cycle` method already uses `writeCompleteLine (...)`, preserve its initializer-list collection of named blocks instead of flattening new state into an unlabelled string.
+- Give every block a stable semantic name such as `Raster position`, `Internal`, `CPU stop prediction`, `Interrupt`, or `Memory access`. Do not encode a changing value in the block name.
+- Inside a block, concatenate closely related values as explicit `Field=value` entries separated by commas. Keep field names stable so logs remain both human-readable and searchable.
+- Add a value to the nearest existing block when it describes the same subsystem or phase. Create a new block only when the information represents a distinct concern that is important for diagnosing timing, state transitions, bus ownership, interrupts, memory effects, or another observable emulation problem.
+- Prefer one coherent block over several one-field blocks. Conversely, do not append unrelated prediction, raster, interrupt, and memory state to a generic `Internal` block merely to avoid creating a justified block.
+- Preserve the block ordering used by the local method: physical position or time first, internal state next, then specialized state such as bus arbitration, graphics, borders, memory, sound, or interrupts. Append a new block beside the block it most directly explains.
+- Use `writeLineData (...)` only for a short event or narrative continuation attached to the preceding complete line. State that must be compared across cycles or parsed later belongs in a named `writeCompleteLine (...)` block.
+- Keep all string construction and diagnostic-only calculations inside the existing `_IFDEBUG` path or debug method. Do not calculate formatted values in the normal emulation path solely for logging.
+- Do not duplicate unchanged information in multiple blocks or chips. The component that owns the state logs the authoritative detail; callers log only the context needed to correlate the event, such as CPU clock, transaction type, instruction address, or interrupt identifier.
+- `MCHEmul::Address::asString (...)` can return a string containing embedded null characters when `'\0'` is selected as the separator between the address `UByte` values. For any result sent to deep debug, logs, `std::cout`, formatters, consoles, or another textual channel, wrap that conversion in `MCHEmul::removeAll0 (...)`. Apply this at the point where the address is converted, before concatenating it with labels or other fields.
+
+Correct textual conversion:
+
+```cpp
+"Address=$" + MCHEmul::removeAll0
+	(address.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2))
+```
+
+Do not emit the raw result:
+
+```cpp
+"Address=$" + address.asString
+	(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)
+```
+
+Follow the local formatting pattern:
+
+```cpp
+_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
+	{ { "Raster position",
+		"Column=" + std::to_string (_raster.currentColumn ()) + "," +
+		"Row=" + std::to_string (_raster.currentLine ()) },
+	  { "CPU stop prediction",
+		"Valid=" + std::to_string (_pendingCPUTransaction._valid) + "," +
+		"StopCycles=" + std::to_string (_pendingCPUTransaction._stopCycles) } });
+```
+
+Match nearby capitalization, indentation, field vocabulary, and hexadecimal formatting rather than mechanically copying the example.
+
+## Function Ownership
+
+- Do not add free functions outside the existing `global.hpp` and `global.cpp`, including `static` file helpers and functions inside anonymous namespaces.
+- Put implementation helpers on the class that owns the affected state or behavior. Make them `private` when they are internal details and `static` only when they do not need an instance.
+- Do not create a utility function in an unrelated class merely to avoid a free function.
+- If no existing class is a clear owner, ask the user which class should own the method before implementing it.
+- Do not refactor pre-existing free functions unless the requested work explicitly includes that cleanup.
+
+## Class Structure
+
+Prefer this order when creating a class, preserving the access level of every member:
+
+1. Initial `public:` declarations: public static attributes/constants, followed by the relevant friends, types and enums.
+2. Constructors/destructor/copy and move policy.
+3. Public accessors and mutators.
+4. Public lifecycle methods such as `initialize ()`, `simulate ()`, `clock ()`.
+5. `getInfoStructure () const` for `InfoClass` derivatives.
+6. Public static methods, after the public non-static methods.
+7. `protected:` hooks/helpers, then protected debug methods if needed, then protected static methods.
+8. `private:` helpers, then private debug methods, then private static methods.
+9. Defining data members, retaining their intended visibility.
+10. Execution state and derived performance data as the final attribute group, introduced by `// Implementation` and retaining their intended visibility.
+
+Use `final` for closed concrete classes. Use `virtual ... override` when overriding. Delete default construction, copy, assignment, or move operations when the existing ownership/lifecycle pattern requires it.
+
+## Member Categories And Static Placement
+
+Classify data members by purpose independently of their `public`, `protected` or `private` access level:
+
+- **Defining attributes** describe the entity's identity, configuration, owned descriptions, composition or connections. They come first in the ordinary attribute declarations. A configurable attribute remains defining even if it can change after construction.
+- **Execution attributes** retain the current or last operation's state or results. They belong in the final attribute group, rather than among the defining characteristics. A field being mutable is not sufficient to classify it as execution state.
+- **Derived implementation attributes** are calculated from the defining characteristics and retained to accelerate execution, such as lookup tables, flattened descriptors and precalculated indexes. They usually are not part of the ordinary external interface. Group them with execution attributes at the end of the attribute declarations.
+
+Introduce the combined execution/derived group with the exact comment line `// Implementation`, preserving capitalization. One marker introduces the group; do not repeat it for every field. Keep related attributes together and document their meaning, validity and ownership where relevant. Reopen access labels within the final group when needed; grouping must not change visibility. If a class has neither execution state nor derived data, do not add an empty implementation group.
+
+For example, an instruction's owned M-cycle descriptions are defining data; its selected execution alternative is execution state; and its precalculated M-cycle indexes are derived performance data. The last two belong below `// Implementation`. This is a declaration-layout rule, not a requirement to introduce new fields, caches or wrapper structures. Constructor initializer order must continue to match declaration order.
+
+Public static attributes are the exception to the ordinary bottom-of-class data layout: put them at the beginning of the class's public declarations, before constructors and method groups. Typical examples are peripheral/chip identifiers, event identifiers and class-level constants. Their `static` qualifier does not place them beside static methods. Preserve necessary type-declaration dependencies when an attribute uses a nested type.
+
+Static methods form the final method group of their respective visibility block: public static methods after public instance methods, protected static methods after protected instance methods, and private static methods after private instance methods. Non-static debug methods belong before the trailing static methods of their access level. Preserve conceptual grouping within each category and keep out-of-class definitions in declaration order. This placement convention does not favor static methods over instance methods or authorize unrelated reordering of existing code.
+
+## Conceptual Method Groups And Debug Placement
+
+Keep every conceptual group of methods together. Within the class declaration in the `.hpp`, consecutive method declarations and short in-class definitions belonging to the same group have no blank lines between them. Method documentation may remain directly attached to its declaration without introducing blank lines inside the group. Use one blank line between different conceptual groups.
+
+This compact layout applies to declarations and in-class definitions only. Out-of-class implementations retain a blank line between methods, both for `inline` implementations in the header and for implementations in the `.cpp`; keep the normal `// ---` method separators.
+
+Debug methods are `private` by default. Declare a debug method `protected` when a derived class needs to invoke it; do not make it `public`. Group them at the end of the non-static methods of their respective access level, before that access level's trailing static methods and before the data members. Keep their implementations grouped in the corresponding declaration order; any following static-method definitions retain their later position. When debug methods have different access levels, use a separate delimited group in each corresponding visibility block.
+
+Enclose the debug group with an opening and a closing comment line written exactly as `//-----`, both in the header declaration group and around its implementations. Use no blank lines between the debug declarations; retain the usual spacing between their implementations.
+
+```cpp
+	public:
+	bool active () const
+							{ return (_active); }
+	void setActive (bool a)
+							{ _active = a; }
+
+	private:
+	//-----
+	void debugCycle (MCHEmul::CPU* cpu);
+	/** Reports a port read without consuming event flags. */
+	void debugPortRead (unsigned short address) const;
+	//-----
+
+	// Implementation
+	bool _active;
+```
+
+Implementation layout (bodies omitted in this placement example):
+
+```cpp
+//-----
+// ---
+void Example::debugCycle (MCHEmul::CPU* cpu)
+{
+	// Diagnostic implementation.
+}
+
+// ---
+void Example::debugPortRead (unsigned short address) const
+{
+	// Diagnostic implementation.
+}
+//-----
+```
+
+## Method Definition Order
+
+For each class, define its methods in the same relative order in which they are declared. Apply this rule consistently to:
+
+- Constructors and destructors.
+- Overloads of the same method.
+- Out-of-class `inline` definitions placed in the header.
+- Non-trivial definitions placed in the `.cpp` file.
+
+When introducing a method into an existing class, locate the declarations immediately before and after it and place the new definition in the equivalent position among their definitions. Do not append a new definition at the end merely because that is convenient.
+
+Methods defined directly inside the class already occupy their declaration position and do not require a second ordering step. Preserve unrelated pre-existing order when the current task does not authorize a broader cleanup.
+
+## Constructors And Ownership
+
+Pass non-trivial input objects and containers by const reference by default. Preserve this convention through forwarding constructors instead of introducing pass-by-value and `std::move` solely to transfer storage. If an object retains an input description, copy it into owned storage during construction; do not retain a reference to a temporary initializer-list-backed argument.
+
+For a constructor defined in a `.cpp` file whose initializer list or delegation performs all the work, document its intentionally empty body:
+
+```cpp
+FZ80::Example::Example (const FZ80::MCyclesStructure& mCS)
+	: _mCycles (mCS)
+{
+	// Nothing else to do...
+}
+```
+
+Compact empty constructors defined in headers may retain their existing form.
+
+Initialize all members in initializer lists and keep member order consistent with declarations:
+
+```cpp
+MCHEmul::ClassName::ClassName (int id, Dependency* d)
+	: MCHEmul::InfoClass ("ClassName"),
+	  _id (id),
+	  _dependency (d),
+	  _active (false)
+{ 
+	assert (_dependency != nullptr);
+}
+```
+
+If the class owns raw pointers, say so in the header comment and delete them in the destructor:
+
+```cpp
+MCHEmul::ClassName::~ClassName ()
+{
+	for (auto i : _items)
+		delete (i);
+}
+```
+
+Do not replace raw pointer ownership with smart pointers as a side effect unless the surrounding module already uses them or the user asks for that refactor.
+
+## InfoClass Pattern
+
+For `InfoClass` derivatives:
+
+Document `getInfoStructure () const` in the `.cpp`, immediately before the method definition or in the nearby class-specific documentation block used by the file. The documentation must enumerate every field added to the returned `InfoStructure`:
+
+- Use `FIELD = Attribute: meaning` for scalar values added with `result.add ("FIELD", ...)`.
+- Use `FIELD = InfoStructure: meaning` for nested structures added with `result.add ("FIELD", std::move (...))` or equivalent.
+- If the class derives from another class that already contributes fields through its own `getInfoStructure ()`, start the documentation with `The attributes and infostructures of the parent class, plus:`.
+- Keep field names exactly as they appear in `result.add (...)`, preserving uppercase/local spelling.
+
+```cpp
+/**
+  *	The name of the fields are: \n
+  * The attributes and infostructures of the parent class, plus: \n
+  * ID		= Attribute: Internal identifier. \n
+  * ACTIVE	= Attribute: Whether the component is active. \n
+  */
+MCHEmul::InfoStructure MCHEmul::ClassName::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+
+	result.add ("ID",		_id);
+	result.add ("ACTIVE",	_active);
+
+	return (result);
+}
+```
+
+Use uppercase field names. For nested objects, build nested `InfoStructure` values and `std::move` them where the local code does.
+
+## Inline Methods
+
+Define methods with an empty body directly inside the class, including virtual exits/hooks whose default implementation does nothing. Put the compact `{ }` body on the same line as the method declaration, separated by one space; do not move it to a following aligned line. Omit the `inline` keyword and do not add a separate out-of-class definition. Put any necessary contract documentation above the method rather than expanding the empty body for a comment:
+
+```cpp
+virtual void whenReading (const Address& a, size_t nB) const { }
+virtual void whenWriting (const Address& a, size_t nB) { }
+```
+
+Define extremely short methods whose body is one simple instruction or expression directly with their declaration inside the class. Do not write the `inline` keyword in this case. A direct member access, assignment, or equivalently compact operation is simple:
+
+```cpp
+int id () const
+							{ return (_id); }
+bool active () const
+							{ return (_active); }
+void setActive (bool a)
+							{ _active = a; }
+```
+
+Do not classify a method as simple merely because its body contains a single syntactic instruction. A long or compound `return`, several logical or arithmetic clauses, nested calls or casts, or an expression that needs several source lines is complex for this rule. Declare such a method `inline` in the class and put its definition immediately after the class definition in the same header. Use the same form for a short method containing a couple of instructions:
+
+```cpp
+class ClassName
+{
+	public:
+	inline void setRange (int min, int max);
+
+	private:
+	int _min;
+	int _max;
+};
+
+inline void ClassName::setRange (int min, int max)
+{
+	_min = min;
+	_max = max;
+}
+```
+
+Move non-trivial methods to the `.cpp` file.
+
+Use the const/non-const forwarding pattern when exposing mutable access:
+
+```cpp
+const Dependency* dependency () const
+							{ return (_dependency); }
+Dependency* dependency ()
+							{ return (const_cast <Dependency*> 
+								(const_cast <const ClassName*> (this) -> dependency ())); }
+```
+
+## Transient Results
+
+Avoid a local `const` variable when its value is consumed by only one formula:
+
+```cpp
+_pendingCycles += (_halfCycle + (nC << shift)) >> 1;
+```
+
+Introduce a local `const` result when it is reused by several calculations, or when an otherwise single-use expression is long or complex enough that a descriptive name makes the formula easier to understand:
+
+```cpp
+const unsigned int elapsedHalfCycles = _halfCycle + (nC << shift);
+_pendingCycles += elapsedHalfCycles >> 1;
+_halfCycle = elapsedHalfCycles & 0x01;
+```
+
+Do not create an intermediate solely so that a one-use value can be compared in an `assert`, or to name a subtraction, index, or conversion immediately consumed by the following call. When the relation is already guaranteed by the owning class or caller, use the expression directly and document the invariant next to it:
+
+```cpp
+// Alternative 6500 cycle structures are indexed by additional cycles.
+prepare (instruction -> cycleStructure (
+	clockCycles - instruction -> clockCycles ()));
+```
+
+Keep the intermediate when it avoids recalculating a non-trivial operation, is used more than once, establishes a required evaluation order or lifetime, or gives a genuinely complex value a useful domain name. A comment must explain the non-obvious invariant; it must not hide repeated work or unsafe evaluation.
+
+## Error Handling And Validation
+
+- Do not use exception-based control flow in EMULATORS C++ proposals or implementations: no `try`, `catch`, or `throw`. Follow the existing return-value and error-state conventions. For temporary modes such as opcode FETCH, save the previous value, perform the operation, and restore the saved value before returning; cover any early-return paths and explain the required scope in a comment.
+
+- Use `assert` at meaningful contract boundaries and for invariants whose violation would otherwise permit unsafe indexing, invalid ownership, corruption, or an impossible hardware/framework state.
+- Do not repeat with an `assert` a relational guarantee already established by the caller, constructor, type, selected container element, or immediately preceding control flow. Avoid routine checks such as `a >= b` immediately before a trusted internal `a - b`, or checking an alternative index derived from a class invariant on every hot-path invocation. State the invariant in a concise nearby comment instead.
+- Do not introduce local variables solely to make such redundant assertions possible. Prefer the direct expression when it is used once.
+- Retain assertions for external or loosely typed inputs, required non-null ownership dependencies, container bounds not already guaranteed by the API, decoded data, and states whose impossibility is central to correctness.
+- Return `false`, empty structures, or default values for normal runtime failure where the surrounding API does that.
+- Use `_LOG (...)` plus `assert (false)` for unsupported internal modes when nearby code follows that pattern.
+- Check boundaries explicitly for memory/address/vector operations.
+
+## Includes
+
+- Include what the file uses directly. Do not depend on accidental transitive includes.
+- In headers, prefer forward declarations for pointer/reference-only dependencies when nearby code does.
+- Keep include paths in angle brackets with repository module prefixes: `<CORE/...>`, `<COMMODORE/...>`.
+
+## New File Checklist
+
+When adding a new class:
+
+- Create matching `include/<MODULE>/Name.hpp` and `src/<MODULE>/Name.cpp` unless the class is intentionally header-only.
+- Add both files to the relevant `.vcxproj` and `.vcxproj.filters` when the Visual Studio project lists files explicitly.
+- Add the header to the module `incs.hpp` only if neighboring code uses that aggregator for public inclusion.
+- Keep changes scoped to the new behavior and avoid touching generated binaries or unrelated formatter files.
+
+## Minimal Class Template
+
+```cpp
+namespace MCHEmul
+{
+	class ClassName : public InfoClass
+	{
+		public:
+		ClassName (int id);
+
+		int id () const
+							{ return (_id); }
+
+		virtual void initialize ();
+
+		virtual InfoStructure getInfoStructure () const override;
+
+		private:
+		int _id;
+		bool _active;
+	};
+}
+```
+
+```cpp
+#include <CORE/ClassName.hpp>
+
+// ---
+MCHEmul::ClassName::ClassName (int id)
+	: MCHEmul::InfoClass ("ClassName"),
+	  _id (id),
+	  _active (false)
+{ 
+	initialize ();
+}
+
+// ---
+void MCHEmul::ClassName::initialize ()
+{
+	_active = false;
+}
+
+// ---
+MCHEmul::InfoStructure MCHEmul::ClassName::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = std::move (MCHEmul::InfoClass::getInfoStructure ());
+
+	result.add ("ID",		_id);
+	result.add ("ACTIVE",	_active);
+
+	return (result);
+}
+```

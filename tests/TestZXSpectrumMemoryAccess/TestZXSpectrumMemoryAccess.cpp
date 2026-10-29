@@ -22,6 +22,7 @@
 #include <CORE/Ticks.hpp>
 #include <SDL.h>
 
+#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -36,12 +37,13 @@
 class FixedInputPort final : public FZ80::Z80Port
 {
 	public:
-	FixedInputPort ()
+	FixedInputPort (unsigned int delay = 0)
 		: FZ80::Z80Port (0x10, "Memory access test"),
-		  _reads (0) { }
+		  _delay (delay), _reads (0), _queries (0) { }
 
 	unsigned int reads () const
 							{ return (_reads); }
+	unsigned int queries () const { return (_queries); }
 	virtual MCHEmul::UByte value
 		(unsigned short, unsigned char) const override;
 	virtual MCHEmul::UByte peekValue
@@ -49,11 +51,15 @@ class FixedInputPort final : public FZ80::Z80Port
 							{ return (MCHEmul::UByte (0xa5)); }
 	virtual void setValue
 		(unsigned short, unsigned char, const MCHEmul::UByte&) override { }
-	virtual void initialize () override
-							{ _reads = 0; }
+	virtual unsigned int additionalClockCyclesForIO
+		(unsigned short, unsigned int) const override;
+	virtual void initialize () override;
 
 	private:
-	mutable unsigned int _reads;
+	unsigned int _delay;
+
+	// Implementation
+	mutable unsigned int _reads, _queries;
 };
 
 /** Exercises production CPU and memory entry points with literal access expectations. */
@@ -103,6 +109,22 @@ MCHEmul::UByte FixedInputPort::value
 	_reads++;
 
 	return (MCHEmul::UByte (0xa5));
+}
+
+// ---
+unsigned int FixedInputPort::additionalClockCyclesForIO
+	(unsigned short, unsigned int) const
+{
+	_queries++;
+
+	return (_delay);
+}
+
+// ---
+void FixedInputPort::initialize ()
+{
+	_reads = 0;
+	_queries = 0;
 }
 
 // ---
@@ -458,6 +480,92 @@ inline ZXSPECTRUM::CZ80& ContentionMachine::cpu ()
 	return (*static_cast <ZXSPECTRUM::CZ80*> (_computer.cpu ()));
 }
 
+/** Verifies the production port manager's timestamp source with distinguishable bus values. */
+class PortTimestampTests final
+{
+	public:
+	PortTimestampTests () : _checks (0), _failures (0), _caseName () { }
+	int run ();
+
+	private:
+	enum class Kind { _IMMEDIATE, _PREFIXED, _BLOCK, _REPEATED };
+
+	void check (bool ok, const std::string& message);
+	void runCase (Kind kind, bool perCycle, bool pal);
+
+	unsigned int _checks, _failures;
+	std::string _caseName;
+};
+
+/** Counts actual transfers and timing queries while using the production ULA arbiter. */
+class ObservedContendedPort final : public FZ80::Z80Port
+{
+	public:
+	ObservedContendedPort (const ZXSPECTRUM::ULA& ula)
+		: FZ80::Z80Port (0x10, "Observed contended port"),
+		  _ula (ula), _queries (0), _reads (0), _writes (0),
+		  _queryClock (0), _transferClock (0), _address (0), _value (0) { }
+
+	unsigned int queries () const { return (_queries); }
+	unsigned int reads () const { return (_reads); }
+	unsigned int writes () const { return (_writes); }
+	unsigned int queryClock () const { return (_queryClock); }
+	unsigned int transferClock () const { return (_transferClock); }
+	unsigned short address () const { return (_address); }
+	unsigned char lastValue () const { return (_value); }
+	virtual MCHEmul::UByte value (unsigned short ab, unsigned char) const override;
+	virtual MCHEmul::UByte peekValue (unsigned short, unsigned char) const override
+		{ return (MCHEmul::UByte (0xa5)); }
+	virtual void setValue (unsigned short ab, unsigned char, const MCHEmul::UByte& v) override;
+	virtual unsigned int additionalClockCyclesForIO
+		(unsigned short ab, unsigned int cC) const override;
+
+	private:
+	const ZXSPECTRUM::ULA& _ula;
+
+	// Implementation
+	mutable unsigned int _queries, _reads;
+	unsigned int _writes;
+	mutable unsigned int _queryClock, _transferClock;
+	mutable unsigned short _address;
+	mutable unsigned char _value;
+};
+
+/** Exercises memory-before/I-O/memory-after timing with literal expected delays. */
+class MixedIOContentionTests final
+{
+	public:
+	MixedIOContentionTests () : _checks (0), _failures (0), _caseName () { }
+	int run ();
+
+	private:
+	enum class Operation { _IN, _OUT, _IN_BLOCK, _OUT_BLOCK };
+
+	struct Case
+	{
+		const char* _name;
+		Operation _operation;
+		std::vector <MCHEmul::UByte> _code;
+		unsigned short _pc, _hl, _bc;
+		unsigned char _a;
+		/** Start relative to the first contention T-state, not INT acknowledge. */
+		int _startOffset;
+		/** Literal nominal duration and the three expected delay components. */
+		unsigned int _nominal, _before, _port, _after;
+		/** Nominal I/O contention and data points relative to instruction start. */
+		unsigned int _ioStart, _sample;
+		size_t _alternative = 0;
+	};
+
+	void check (bool ok, const std::string& message);
+	void runCase (const Case& test, bool perCycle, bool pal,
+		ZXSPECTRUM::Memory::Configuration configuration);
+
+	// Implementation
+	unsigned int _checks, _failures;
+	std::string _caseName;
+};
+
 /** Tests terminal memory contention independently of instruction timing capture. \n
 	Expected delays are literal vectors, never obtained from the ULA query under test. */
 class MemoryContentionTests final
@@ -490,6 +598,8 @@ class MemoryContentionTests final
 		size_t _alternative = 0;
 		/** Prepares a real stack containing the following instruction's address. */
 		bool _stack = false;
+		/** Memory and port delays already included in instruction duration. */
+		unsigned int _included = 0, _portDelay = 0;
 	};
 
 	static void check (bool ok, const std::string& message);
@@ -550,12 +660,11 @@ bool ContentionMachine::initialize (unsigned int frameTState, bool perCycle)
 			return (false);
 
 	// The ULA's first nonzero CPU timestamp establishes its epoch, without raster advance.
-	if (cpu ().clockCycles () != 4 || rasterClocks () != 0 ||
-		ula ().legacyMemoryContentionPending ())
+	if (cpu ().clockCycles () != 4 || rasterClocks () != 0)
 		return (false);
 
 	// Fixture-only idle advance positions the actual ULA without decoding filler code.
-	// Subsequent measured steps always use runComputerCycle, including its legacy hook.
+	// Subsequent measured steps always use runComputerCycle, including CPU/chip coordination.
 	cpu ().addClockCycles (frameTState);
 	for (const auto& chip : _computer.chips ())
 		if (!chip.second -> simulate (&cpu ()))
@@ -587,6 +696,391 @@ unsigned int ContentionMachine::rasterClocks () const
 {
 	return ((unsigned int) _computer.ula () -> raster ().currentLineAtBase0 () * 224 +
 		(unsigned int) _computer.ula () -> raster ().currentColumnAtBase0 () / 2);
+}
+
+// ---
+int PortTimestampTests::run ()
+{
+	for (Kind kind : { Kind::_IMMEDIATE, Kind::_PREFIXED, Kind::_BLOCK, Kind::_REPEATED })
+		for (bool perCycle : { false, true })
+			for (bool pal : { true, false })
+				runCase (kind, perCycle, pal);
+
+	std::cout << "\nPort timestamp checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void PortTimestampTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: " << _caseName << ": " << message << '\n';
+	}
+}
+
+// ---
+void PortTimestampTests::runCase (Kind kind, bool perCycle, bool pal)
+{
+	bool immediate = kind == Kind::_IMMEDIATE;
+	bool block = kind == Kind::_BLOCK || kind == Kind::_REPEATED;
+	_caseName = std::string (immediate ? "IN A,(n)" :
+		(kind == Kind::_PREFIXED ? "IN A,(C)" : (kind == Kind::_BLOCK ? "INI" : "INIR"))) +
+		" timestamp" + (perCycle ? " [PerCycle]" : " [Full]") + (pal ? " [PAL]" : " [NTSC]");
+	std::cout << _caseName << '\n';
+	unsigned int failuresBefore = _failures;
+	ContentionMachine machine (ZXSPECTRUM::Memory::Configuration::_48K, pal);
+	unsigned int sampleOffset = immediate ? 10 : (block ? 12 : 11);
+	// The scheduled sample is at the first bitmap phase (line T=11).
+	// Completion is later: attribute 0x34 or idle 0xff, deliberately distinct from bitmap 0x12.
+	unsigned int startRaster = (pal ? 14336 : 10752) + 11 - sampleOffset;
+	if (!machine.initialize (startRaster, perCycle))
+	{
+		check (false, "port fixture initialization");
+
+		return;
+	}
+
+	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
+	MCHEmul::Memory& memory = machine.memory ();
+	std::vector <MCHEmul::UByte> code;
+	if (immediate)
+		code = { 0xdb, 0xff };
+	else
+		code = { 0xed, (unsigned char) (block ? (kind == Kind::_BLOCK ? 0xa2 : 0xb2) : 0x78) };
+	cpu.setIFF1 (false);
+	cpu.setIFF2 (false);
+	cpu.aRegister ().set ({ 0x02 });
+	cpu.bRegister ().set ({ (unsigned char) (kind == Kind::_BLOCK ? 1 : 2) });
+	cpu.cRegister ().set ({ 0xff });
+	cpu.hRegister ().set ({ 0x90 }); cpu.lRegister ().set ({ 0x00 });
+	memory.put (MCHEmul::Address (2, 0x4000), MCHEmul::UByte (0x12));
+	memory.put (MCHEmul::Address (2, 0x5800), MCHEmul::UByte (0x34));
+	memory.put (MCHEmul::Address (2, 0x9000), MCHEmul::UByte (0xab));
+	memory.put (MCHEmul::Address (2, 0x2000), code, true);
+	cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x2000));
+	unsigned int startClock = cpu.clockCycles ();
+	bool completed = false;
+	for (unsigned int step = 0; step < 64 && !completed; step++)
+	{
+		if (!machine.step ())
+			break;
+		completed = cpu.memoryAccessState () ==
+			ZXSPECTRUM::CZ80::MemoryAccessState::_PENDING_PORT_COMPLETION;
+	}
+	check (completed && cpu.hasPendingPortAccess (), "deferred input is available");
+	if (!completed || !cpu.hasPendingPortAccess ())
+		return;
+
+	check (cpu.currentInstruction () == nullptr, "input completion occurs outside instruction execution");
+	unsigned int sampleClock = startClock + sampleOffset;
+	unsigned short portAddress = cpu.pendingPortAccess ()._address;
+	check (cpu.pendingPortAccess ()._clockCycle == sampleClock, "descriptor retains literal sample time");
+	check (machine.ula ().floatingBusValueAt (sampleClock).value () == 0x12,
+		"scheduled sample is the prepared bitmap byte");
+	unsigned char directValue = machine.ula ().floatingBusValueAt (cpu.clockCycles ()).value ();
+	check (directValue != 0x12, "sample time and completion time are distinguishable");
+
+	const MCHEmul::Instruction* instruction = cpu.lastInstruction ();
+	const auto* undefined = dynamic_cast <const MCHEmul::InstructionUndefined*> (instruction);
+	if (undefined != nullptr)
+		instruction = undefined -> lastDefinedInstruction ();
+	const auto* defined = dynamic_cast <const FZ80::Instruction*> (instruction);
+	check (defined != nullptr && defined == cpu.pendingPortAccess ()._instruction,
+		"container resolves to the pending input's actual owner");
+	if (defined != nullptr)
+		check (defined -> IOAccessClockCycle () == sampleClock, "defined instruction retains local timing");
+
+	const FZ80::Z80Port* port = cpu.ports ().find (0xff) -> second;
+	check (port -> peekValue (portAddress, 0xff).value () == directValue,
+		"inspection uses current time even while an input is pending");
+	cpu.executeBufferedCommands (true);
+	check (!cpu.hasPendingPortAccess (), "pending input released once");
+	if (block)
+		check (memory.value (MCHEmul::Address (2, 0x9000)).value () == 0x12,
+			"block input stores the scheduled sample at the original HL");
+	else
+		check (cpu.aRegister ().values ()[0].value () == 0x12,
+			"register input receives the scheduled sample");
+	check (port -> value (portAddress, 0xff).value () == directValue,
+		"direct read without pending access uses current time");
+	check (port -> peekValue (portAddress, 0xff).value () == directValue,
+		"inspection remains tied to current time after completion");
+	if (_failures == failuresBefore)
+		std::cout << "PASS\n";
+}
+
+// ---
+MCHEmul::UByte ObservedContendedPort::value (unsigned short ab, unsigned char) const
+{
+	_reads++;
+	_address = ab;
+	_transferClock = cpu () -> pendingPortAccess ()._clockCycle;
+	_value = 0xa5;
+
+	return (MCHEmul::UByte (_value));
+}
+
+// ---
+void ObservedContendedPort::setValue
+	(unsigned short ab, unsigned char, const MCHEmul::UByte& v)
+{
+	_writes++;
+	_address = ab;
+	_transferClock = cpu () -> pendingPortAccess ()._clockCycle;
+	_value = v.value ();
+}
+
+// ---
+unsigned int ObservedContendedPort::additionalClockCyclesForIO
+	(unsigned short ab, unsigned int cC) const
+{
+	_queries++;
+	_queryClock = cC;
+
+	return (_ula.IOContentionDelayAt (ab, cC));
+}
+
+// ---
+int MixedIOContentionTests::run ()
+{
+	const std::vector <Case> cases (
+		{
+			// At F, the two contained instruction bytes wait 6+4 T-states.
+			{ "OUT immediate even low", Operation::_OUT, { 0xd3, 0xfe }, 0x5000, 0x6000, 0, 0x02,
+				0, 11, 10, 4, 0, 7, 10 },
+			{ "OUT immediate even high", Operation::_OUT, { 0xd3, 0xfe }, 0x5000, 0x6000, 0, 0x40,
+				0, 11, 10, 5, 0, 7, 10 },
+			{ "OUT immediate odd low", Operation::_OUT, { 0xd3, 0xff }, 0x5000, 0x6000, 0, 0x02,
+				0, 11, 10, 0, 0, 7, 10 },
+			{ "OUT immediate odd high", Operation::_OUT, { 0xd3, 0xff }, 0x5000, 0x6000, 0, 0x40,
+				0, 11, 10, 11, 0, 7, 10 },
+			{ "IN immediate even low", Operation::_IN, { 0xdb, 0xfe }, 0x5000, 0x6000, 0, 0x02,
+				0, 11, 10, 4, 0, 7, 10 },
+			{ "IN immediate even high", Operation::_IN, { 0xdb, 0xfe }, 0x5000, 0x6000, 0, 0x40,
+				0, 11, 10, 5, 0, 7, 10 },
+			{ "IN immediate odd low", Operation::_IN, { 0xdb, 0xff }, 0x5000, 0x6000, 0, 0x02,
+				0, 11, 10, 0, 0, 7, 10 },
+			{ "IN immediate odd high", Operation::_IN, { 0xdb, 0xff }, 0x5000, 0x6000, 0, 0x40,
+				0, 11, 10, 11, 0, 7, 10 },
+			{ "IN register even low", Operation::_IN, { 0xed, 0x78 }, 0x5000, 0x6000, 0x02fe, 0x30,
+				0, 12, 10, 3, 0, 8, 11 },
+			{ "IN register even high", Operation::_IN, { 0xed, 0x78 }, 0x5000, 0x6000, 0x40fe, 0x30,
+				0, 12, 10, 4, 0, 8, 11 },
+			{ "IN register odd low", Operation::_IN, { 0xed, 0x78 }, 0x5000, 0x6000, 0x02ff, 0x30,
+				0, 12, 10, 0, 0, 8, 11 },
+			{ "IN register odd high", Operation::_IN, { 0xed, 0x78 }, 0x5000, 0x6000, 0x40ff, 0x30,
+				0, 12, 10, 10, 0, 8, 11 },
+			{ "OUT register even low", Operation::_OUT, { 0xed, 0x79 }, 0x5000, 0x6000, 0x02fe, 0x30,
+				0, 12, 10, 3, 0, 8, 11 },
+			{ "OUT register even high", Operation::_OUT, { 0xed, 0x79 }, 0x5000, 0x6000, 0x40fe, 0x30,
+				0, 12, 10, 4, 0, 8, 11 },
+			{ "OUT register odd low", Operation::_OUT, { 0xed, 0x79 }, 0x5000, 0x6000, 0x02ff, 0x30,
+				0, 12, 10, 0, 0, 8, 11 },
+			{ "OUT register odd high", Operation::_OUT, { 0xed, 0x79 }, 0x5000, 0x6000, 0x40ff, 0x30,
+				0, 12, 10, 10, 0, 8, 11 },
+			// INI starts at F-9: port waits 5; the following write also waits 5.
+			{ "INI following memory", Operation::_IN_BLOCK, { 0xed, 0xa2 }, 0x2000, 0x6000, 0x01fe, 0x30,
+				-9, 16, 0, 5, 5, 9, 12 },
+			{ "IND following memory", Operation::_IN_BLOCK, { 0xed, 0xaa }, 0x2000, 0x6000, 0x01fe, 0x30,
+				-9, 16, 0, 5, 5, 9, 12 },
+			{ "INIR repeating", Operation::_IN_BLOCK, { 0xed, 0xb2 }, 0x2000, 0x6000, 0x02fe, 0x30,
+				-9, 21, 0, 5, 5, 9, 12, 1 },
+			{ "INIR terminal", Operation::_IN_BLOCK, { 0xed, 0xb2 }, 0x2000, 0x6000, 0x01fe, 0x30,
+				-9, 16, 0, 5, 5, 9, 12 },
+			{ "INDR repeating", Operation::_IN_BLOCK, { 0xed, 0xba }, 0x2000, 0x6000, 0x02fe, 0x30,
+				-9, 21, 0, 5, 5, 9, 12, 1 },
+			{ "INDR terminal", Operation::_IN_BLOCK, { 0xed, 0xba }, 0x2000, 0x6000, 0x01fe, 0x30,
+				-9, 16, 0, 5, 5, 9, 12 },
+			{ "INIR B wraps", Operation::_IN_BLOCK, { 0xed, 0xb2 }, 0x2000, 0x6000, 0x00fe, 0x30,
+				-9, 21, 0, 5, 5, 9, 12, 1 },
+			{ "INI contained code and data", Operation::_IN_BLOCK, { 0xed, 0xa2 }, 0x5000, 0x6000, 0x02fe, 0x30,
+				0, 16, 10, 2, 5, 9, 12 },
+			{ "INIR contained code and data", Operation::_IN_BLOCK, { 0xed, 0xb2 }, 0x5000, 0x6000, 0x02fe, 0x30,
+				0, 21, 10, 2, 5, 9, 12, 1 },
+			{ "OUTI preceding memory", Operation::_OUT_BLOCK, { 0xed, 0xa3 }, 0x2000, 0x6000, 0x02ff, 0x30,
+				-9, 16, 6, 0, 0, 12, 15 },
+			{ "OUTD preceding memory", Operation::_OUT_BLOCK, { 0xed, 0xab }, 0x2000, 0x6000, 0x02ff, 0x30,
+				-9, 16, 6, 0, 0, 12, 15 },
+			{ "OUTI decremented high byte", Operation::_OUT_BLOCK, { 0xed, 0xa3 }, 0x2000, 0x6000, 0x41fe, 0x30,
+				-9, 16, 6, 5, 0, 12, 15 },
+			{ "OTIR repeating", Operation::_OUT_BLOCK, { 0xed, 0xb3 }, 0x2000, 0x6000, 0x02ff, 0x30,
+				-9, 21, 6, 0, 0, 12, 15, 1 },
+			{ "OTIR terminal", Operation::_OUT_BLOCK, { 0xed, 0xb3 }, 0x2000, 0x6000, 0x01ff, 0x30,
+				-9, 16, 6, 0, 0, 12, 15 },
+			{ "OTDR repeating", Operation::_OUT_BLOCK, { 0xed, 0xbb }, 0x2000, 0x6000, 0x02ff, 0x30,
+				-9, 21, 6, 0, 0, 12, 15, 1 },
+			{ "OTDR terminal", Operation::_OUT_BLOCK, { 0xed, 0xbb }, 0x2000, 0x6000, 0x01ff, 0x30,
+				-9, 16, 6, 0, 0, 12, 15 },
+			{ "OUTI contained code and data", Operation::_OUT_BLOCK, { 0xed, 0xa3 }, 0x5000, 0x6000, 0x02fe, 0x30,
+				0, 16, 13, 4, 0, 12, 15 },
+			{ "INI uncontained destination", Operation::_IN_BLOCK, { 0xed, 0xa2 }, 0x5000, 0x9000, 0x02fe, 0x30,
+				0, 16, 10, 2, 0, 9, 12 },
+			{ "OUTI uncontained source", Operation::_OUT_BLOCK, { 0xed, 0xa3 }, 0x2000, 0x9000, 0x02ff, 0x30,
+				-9, 16, 0, 0, 0, 12, 15 },
+			{ "Outside active contention", Operation::_OUT, { 0xd3, 0xfe }, 0x5000, 0x6000, 0, 0x40,
+				-100, 11, 0, 0, 0, 7, 10 } });
+
+	for (const auto& test : cases)
+		for (bool perCycle : { false, true })
+			for (bool pal : { true, false })
+				for (auto configuration : { ZXSPECTRUM::Memory::Configuration::_48K,
+					ZXSPECTRUM::Memory::Configuration::_16K })
+					if (test._hl < 0x8000 || configuration == ZXSPECTRUM::Memory::Configuration::_48K)
+						runCase (test, perCycle, pal, configuration);
+
+	std::cout << "\nMixed I/O checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void MixedIOContentionTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: " << _caseName << ": " << message << '\n';
+	}
+}
+
+// ---
+void MixedIOContentionTests::runCase (const Case& test, bool perCycle, bool pal,
+	ZXSPECTRUM::Memory::Configuration configuration)
+{
+	_caseName = std::string (test._name) + (perCycle ? " [PerCycle]" : " [Full]") +
+		(pal ? "[PAL]" : "[NTSC]") +
+		(configuration == ZXSPECTRUM::Memory::Configuration::_16K ? "[16K]" : "[48K]");
+	std::cout << _caseName << '\n';
+	unsigned int failuresBefore = _failures;
+	ContentionMachine machine (configuration, pal);
+	unsigned int startRaster = (unsigned int) ((pal ? 14335 : 10751) + test._startOffset);
+	if (!machine.initialize (startRaster, perCycle))
+	{
+		check (false, "mixed fixture initialization");
+
+		return;
+	}
+
+	ZXSPECTRUM::CZ80& cpu = machine.cpu ();
+	MCHEmul::Memory& memory = machine.memory ();
+	bool input = test._operation == Operation::_IN || test._operation == Operation::_IN_BLOCK;
+	bool block = test._operation == Operation::_IN_BLOCK || test._operation == Operation::_OUT_BLOCK;
+	unsigned short portAddress = test._code [0].value () != 0xed
+		? (unsigned short) (((unsigned short) test._a << 8) | test._code [1].value ())
+		: (unsigned short) (test._bc - (test._operation == Operation::_OUT_BLOCK ? 0x0100 : 0));
+	unsigned char portNumber = (unsigned char) (portAddress & 0x00ff);
+	ObservedContendedPort* port = new ObservedContendedPort (machine.ula ());
+	cpu.addPorts ({ { portNumber, port } });
+	// Route reads and timing queries through the observer using the public port-list API.
+	// Output still fans out to the production PortManager and this observer.
+	auto& routes = cpu.port (portNumber);
+	std::rotate (routes.begin (), routes.end () - 1, routes.end ());
+
+	cpu.aRegister ().set ({ test._a });
+	cpu.bRegister ().set ({ (unsigned char) (test._bc >> 8) });
+	cpu.cRegister ().set ({ (unsigned char) (test._bc & 0xff) });
+	cpu.hRegister ().set ({ (unsigned char) (test._hl >> 8) });
+	cpu.lRegister ().set ({ (unsigned char) (test._hl & 0xff) });
+	memory.put (MCHEmul::Address (2, test._hl), MCHEmul::UByte (0x20));
+	memory.put (MCHEmul::Address (2, test._pc), test._code, true);
+	memory.put (MCHEmul::Address (2, test._pc + test._code.size ()), MCHEmul::UByte (0), true);
+	cpu.programCounter ().setAddress (MCHEmul::Address (2, test._pc));
+	unsigned int startClock = cpu.clockCycles ();
+	unsigned int duration = test._nominal + test._before + test._port + test._after;
+	bool pending = false;
+	for (unsigned int step = 0; step < 64 && !pending; step++)
+	{
+		if (!machine.step ())
+			break;
+		pending = cpu.memoryAccessState () ==
+			ZXSPECTRUM::CZ80::MemoryAccessState::_PENDING_PORT_COMPLETION;
+	}
+	check (pending && cpu.hasPendingPortAccess (), "one prepared port access");
+	if (!pending || !cpu.hasPendingPortAccess ())
+		return;
+
+	unsigned int sample = startClock + test._sample + test._before + test._port;
+	check (cpu.clockCycles () - startClock == duration, "literal nominal plus three delay components");
+	check (machine.rasterClocks () == (startRaster + duration) % machine.frameClocks (),
+		"ULA advances through the complete mixed duration");
+	check (port -> queries () == 1 && port -> queryClock () == startClock + test._ioStart + test._before,
+		"one port query at the memory-shifted contention point");
+	check (cpu.pendingPortAccess ()._clockCycle == sample, "sampling includes preceding waits only");
+	check (cpu.pendingPortAccess ()._address == portAddress, "captured full port address");
+	check (port -> reads () == 0 && port -> writes () == 0, "preparation has no actual port effects");
+	check (cpu.memoryContentionHandled (), "mixed operation has a calculated memory delay");
+	check (cpu.memoryContentionClockCycles () == test._before + test._after,
+		"memory total excludes the port's own delay");
+	check (cpu.includedMemoryContentionClockCycles () == test._before + test._after &&
+		cpu.pendingMemoryContentionClockCycles () == 0, "included memory wait is not queued again");
+	check (!cpu.memoryAccessTimingAvailable (), "deferred completion has not published final association");
+	check (!cpu.stopped (), "no additional CPU stop");
+	if (input && block)
+	{
+		check (memory.value (MCHEmul::Address (2, test._hl)).value () == 0x20,
+			"input destination unchanged before release");
+		check (cpu.pendingPortAccess ()._readContext._memoryAddress == test._hl,
+			"future write retains original HL");
+	}
+	if (block)
+	{
+		int direction = test._code [1].bit (3) ? -1 : 1;
+		unsigned short hl = (unsigned short) (((unsigned short) cpu.hRegister ().values ()[0].value () << 8) |
+			cpu.lRegister ().values ()[0].value ());
+		check (hl == (unsigned short) (test._hl + direction), "live HL advances before deferred transfer");
+		check (cpu.bRegister ().values ()[0].value () == (unsigned char) ((test._bc >> 8) - 1),
+			"B decrements once, including wraparound");
+	}
+
+	size_t beforeCount = cpu.memoryAccesses ().size ();
+	cpu.executeBufferedCommands (true);
+	check (!cpu.hasPendingPortAccess (), "port released once");
+	check (port -> queries () == 1 && port -> reads () == (input ? 1 : 0) &&
+		port -> writes () == (input ? 0 : 1), "release neither recalculates nor repeats I/O");
+	check (port -> transferClock () == sample && port -> address () == portAddress,
+		"actual transfer sees its original descriptor");
+	if (input)
+	{
+		if (block)
+			check (memory.value (MCHEmul::Address (2, test._hl)).value () == 0xa5,
+				"input written to captured destination");
+		else
+			check (cpu.aRegister ().values ()[0].value () == 0xa5, "register input completed");
+	}
+	else
+		check (port -> lastValue () == (block ? 0x20 : test._a), "output preserves captured data");
+
+	check (cpu.memoryAccessTimingAvailable () && cpu.memoryAccessMCyclesStructure () == test._alternative,
+		"final accesses associated with the selected alternative");
+	check (cpu.memoryContentionClockCycles () == test._before + test._after &&
+		cpu.includedMemoryContentionClockCycles () == test._before + test._after &&
+		cpu.pendingMemoryContentionClockCycles () == 0, "completion preserves the planned wait accounting");
+	bool containedWrite = input && block && (test._hl & 0xc000) == 0x4000;
+	check (cpu.memoryAccesses ().size () == beforeCount + (containedWrite ? 1 : 0),
+		"planned write is recorded only when actually requested");
+	cpu.executeBufferedCommands (true);
+	check (port -> reads () == (input ? 1 : 0) && port -> writes () == (input ? 0 : 1),
+		"second release has no port effects");
+	check (cpu.clockCycles () - startClock == duration, "release consumes no additional CPU time");
+
+	unsigned short expectedPC = test._alternative == 1
+		? test._pc : (unsigned short) (test._pc + test._code.size ());
+	check (cpu.programCounter ().asAddress ().value () == expectedPC, "terminal/repeating PC behavior");
+	if (test._alternative == 0)
+	{
+		if (!machine.step ())
+			check (false, "next instruction cycle");
+		else
+			check (cpu.memoryAccessStartClockCycle () == startClock + duration &&
+				cpu.memoryAccessPC () == expectedPC, "next instruction starts without another contention wait");
+	}
+	if (_failures == failuresBefore)
+		std::cout << "PASS\n";
 }
 
 // ---
@@ -640,7 +1134,7 @@ int MemoryContentionTests::run ()
 				42784, 4, 6, 1, true, true, false, false },
 			{ "After last contention line", 0x5000, 0x3000, { 0x00 },
 				43008, 4, 0, 1, true, true, false, false },
-			// Alternatives now use their executed path; mixed I/O remains a later block.
+			// Alternatives and mixed I/O both use their executed path.
 			{ "Taken alternative is handled", 0x5000, 0x3000, { 0x20, 0x00 },
 				0, 12, 10, 2, true, true, false, false, 0x00, 1 },
 			{ "Not-taken JR alternative", 0x5000, 0x3000, { 0x20, 0x00 },
@@ -656,8 +1150,8 @@ int MemoryContentionTests::run ()
 				0, 11, 14, 3, true, true, false, false, 0x00, 1, true },
 			{ "Not-taken RET", 0x5000, 0x3000, { 0xc0 },
 				0, 5, 6, 1, true, true, false, false, 0x40, 0, true },
-			{ "I/O stays excluded", 0x5000, 0x3000, { 0xd3, 0xfe },
-				0, 11, 0, 2, false, true, false, false } });
+			{ "I/O includes preceding memory", 0x5000, 0x3000, { 0xd3, 0xfe },
+				0, 11, 10, 2, true, true, false, false, 0x00, 0, false, 10, 4 } });
 
 	// Literal oracle for all eight phases of a contended data read.
 	const unsigned int phaseDelays [8] = { 6, 5, 4, 3, 2, 1, 0, 0 };
@@ -680,12 +1174,18 @@ int MemoryContentionTests::run ()
 				}
 			}
 
+	MixedIOContentionTests mixedTests;
+	int mixedResult = mixedTests.run ();
+
+	PortTimestampTests portTests;
+	int portResult = portTests.run ();
+
 	SDL_Quit ();
 
 	std::cout << "\nContention checks=" << _checks
 		<< ", failures=" << _failures << '\n';
 
-	return (_failures == 0 ? 0 : 1);
+	return (_failures == 0 && portResult == 0 && mixedResult == 0 ? 0 : 1);
 }
 
 // ---
@@ -816,12 +1316,13 @@ void MemoryContentionTests::runCase
 
 	check (cpu.memoryAccessState () == ZXSPECTRUM::CZ80::MemoryAccessState::_COMPLETED,
 		"execution completed before terminal wait");
-	check (cpu.clockCycles () - startClock == test._cycles, "nominal duration before wait");
+	check (cpu.clockCycles () - startClock == test._cycles + test._included + test._portDelay,
+		"duration before terminal wait");
 	check (cpu.memoryAccessMCyclesStructure () == test._alternative, "associated execution alternative");
 	check (cpu.memoryContentionClockCycles () == test._delay, "literal expected total wait");
-	check (cpu.pendingMemoryContentionClockCycles () == test._delay, "initial pending wait");
-	check (!machine.ula ().legacyMemoryContentionPending (), "no legacy reconstruction");
-	check (!cpu.stopped (), "no additional legacy CPU stop");
+	check (cpu.includedMemoryContentionClockCycles () == test._included, "included memory wait");
+	check (cpu.pendingMemoryContentionClockCycles () == test._delay - test._included, "initial pending wait");
+	check (!cpu.stopped (), "no additional CPU stop");
 
 	if (test._code [0].value () == 0x7e)
 		check (cpu.aRegister ().values ()[0].value () == 0x20, "LD reads fixture data");
@@ -881,8 +1382,8 @@ void MemoryContentionTests::runCase
 		check (!cpu.recordingMemoryAccesses (), "capture remains suspended during wait");
 		check (cpu.memoryAccessOperation () == ZXSPECTRUM::CZ80::MemoryAccessOperation::_INSTRUCTION,
 			"no interrupt accepted during wait");
-		check (!cpu.stopped () && !machine.ula ().legacyMemoryContentionPending (),
-			"wait not duplicated by legacy path");
+		check (!cpu.stopped (),
+			"wait does not introduce a separate CPU stop");
 		if (test._interrupt)
 			check (cpu.IFF1 (), "interrupt remains unacknowledged");
 		if (test._writes)
@@ -894,9 +1395,9 @@ void MemoryContentionTests::runCase
 	if (cpu.pendingMemoryContentionClockCycles () != 0)
 		return;
 
-	check (cpu.clockCycles () - startClock == test._cycles + test._delay, "nominal plus wait duration");
+	check (cpu.clockCycles () - startClock == test._cycles + test._delay + test._portDelay, "nominal plus wait duration");
 	check (machine.rasterClocks () ==
-		(startRaster + test._cycles + test._delay) % machine.frameClocks (), "final ULA position");
+		(startRaster + test._cycles + test._delay + test._portDelay) % machine.frameClocks (), "final ULA position");
 
 	cpu.executeBufferedCommands (true);
 	if (test._writes)
@@ -1122,8 +1623,9 @@ void AlternativeSelectionTests::runCase (const Case& test, bool perCycle)
 
 		cpu.executeBufferedCommands (true);
 		const MCHEmul::Instruction* instruction = cpu.lastInstruction ();
-		while (const auto* undefined = dynamic_cast <const MCHEmul::InstructionUndefined*> (instruction))
-			instruction = undefined -> lastInstruction ();
+		const auto* undefined = dynamic_cast <const MCHEmul::InstructionUndefined*> (instruction);
+		if (undefined != nullptr)
+			instruction = undefined -> lastDefinedInstruction ();
 		const auto* leaf = dynamic_cast <const FZ80::Instruction*> (instruction);
 		check (leaf != nullptr, "executed leaf available");
 		if (leaf == nullptr)
@@ -1279,6 +1781,239 @@ void AlternativeSelectionTests::checkLifecycle ()
 		std::cout << "PASS\n";
 }
 
+/** Selects among existing non-owned instructions without introducing CPU dependencies. */
+class SelectableInstruction final : public MCHEmul::InstructionUndefined
+{
+	public:
+	SelectableInstruction (unsigned int c, const MCHEmul::Instructions& instructions)
+		: MCHEmul::InstructionUndefined (c, instructions),
+		  _selection (nullptr), _selectionCalls (0) { }
+
+	void choose (const MCHEmul::Instruction* instruction) { _selection = instruction; }
+	unsigned int selectionCalls () const { return (_selectionCalls); }
+
+	protected:
+	virtual const MCHEmul::Instruction* selectInstruction
+		(MCHEmul::Memory*, const MCHEmul::Address&) const override;
+
+	private:
+	/** Non-owning selector result; the fixture owns all possible targets. */
+	const MCHEmul::Instruction* _selection;
+	mutable unsigned int _selectionCalls;
+};
+
+// ---
+const MCHEmul::Instruction* SelectableInstruction::selectInstruction
+	(MCHEmul::Memory*, const MCHEmul::Address&) const
+{
+	_selectionCalls++;
+
+	return (_selection);
+}
+
+/** Exercises the generic retained-selection contract without executing host I/O. */
+class InstructionResolutionTests final
+{
+	public:
+	InstructionResolutionTests () : _checks (0), _failures (0) { }
+	int run ();
+
+	private:
+	void check (bool ok, const std::string& message);
+
+	unsigned int _checks, _failures;
+};
+
+// ---
+int InstructionResolutionTests::run ()
+{
+	std::cout << "Recursive defined-instruction resolution\n";
+	ZXSPECTRUM::Memory memory
+		(ZXSPECTRUM::Memory::Configuration::_48K, ZXSPECTRUM::Type::_STANDARD, "ENG");
+	ZXSPECTRUM::CZ80 cpu (0);
+	cpu.setMemoryRef (&memory);
+	memory.linkToCPU (&cpu);
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (!memory.initialize () || !cpu.initialize ())
+	{
+		check (false, "resolution fixture initialization; check ROM working directory");
+
+		return (1);
+	}
+
+	memory.put (MCHEmul::Address (2, 0x5000), MCHEmul::UByte (0x00));
+	const MCHEmul::Address address (2, 0x5000);
+	auto* nop = dynamic_cast <MCHEmul::InstructionDefined*> (cpu.instruction (0x00));
+	auto* inc = dynamic_cast <MCHEmul::InstructionDefined*> (cpu.instruction (0x04));
+	AlternativeExecutionProbe failing;
+	SelectableInstruction inner (0xcb, { { 0x00, nop }, { 0x04, inc }, { 0x100, &failing } });
+	SelectableInstruction middle (0xdd, { { 0xcb, &inner } });
+	SelectableInstruction outer (0xfd, { { 0xdd, &middle } });
+	inner.choose (nop);
+	middle.choose (&inner);
+	outer.choose (&middle);
+	check (inner.lastDefinedInstruction () == nullptr && outer.lastDefinedInstruction () == nullptr,
+		"construction and selector preparation do not invent a retained selection");
+
+	cpu.programCounter ().setAddress (address);
+	check (inner.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()), "execute one level");
+	check (inner.lastInstruction () == nop && inner.lastDefinedInstruction () == nop,
+		"one-level immediate and final selections agree");
+	cpu.programCounter ().setAddress (address);
+	check (middle.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()), "execute two levels");
+	check (middle.lastInstruction () == &inner && middle.lastDefinedInstruction () == nop,
+		"two levels preserve their immediate link and resolve the leaf");
+	cpu.programCounter ().setAddress (address);
+	check (outer.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()), "execute three levels");
+	check (outer.lastInstruction () == &middle && outer.lastDefinedInstruction () == nop,
+		"three-level resolution");
+
+	inner.choose (inc);
+	check (outer.lastDefinedInstruction () == nop, "choosing alone does not replace execution selection");
+	cpu.programCounter ().setAddress (address);
+	check (outer.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()), "execute changed leaf");
+	check (outer.lastDefinedInstruction () == inc, "next successful execution replaces the leaf");
+
+	unsigned int calls = inner.selectionCalls () + middle.selectionCalls () + outer.selectionCalls ();
+	unsigned int clock = cpu.clockCycles ();
+	unsigned int pc = cpu.programCounter ().asAddress ().value ();
+	unsigned char b = cpu.bRegister ().values ()[0].value ();
+	for (unsigned int i = 0; i < 3; i++)
+		check (outer.lastDefinedInstruction () == inc, "repeated resolution returns the same leaf");
+	check (calls == inner.selectionCalls () + middle.selectionCalls () + outer.selectionCalls (),
+		"resolution does not invoke memory selectors");
+	check (cpu.clockCycles () == clock && cpu.programCounter ().asAddress ().value () == pc &&
+		cpu.bRegister ().values ()[0].value () == b, "resolution does not modify CPU state");
+
+	inner.choose (nop);
+	check (outer.defineInstructionFrom (&memory, address), "define through nested selectors");
+	check (outer.lastDefinedInstruction () == nop, "definition publishes its own retained selection");
+	check (cpu.bRegister ().values ()[0].value () == b, "definition does not execute the selected instruction");
+
+	failing.setSuccess (false);
+	inner.choose (&failing);
+	cpu.programCounter ().setAddress (address);
+	check (!outer.execute (&cpu, &memory, memory.stack (), &cpu.programCounter ()), "nested execution can fail");
+	check (outer.lastDefinedInstruction () == nop, "failure does not publish the attempted leaf");
+	inner.choose (nullptr);
+	check (!outer.defineInstructionFrom (&memory, address), "definition can leave an unresolved inner link");
+	check (outer.lastDefinedInstruction () == nullptr, "unresolved nested chain returns null");
+
+	cpu.executeBufferedCommands (true);
+	MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+	if (_failures == 0)
+		std::cout << "PASS\n";
+	std::cout << "Resolution checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void InstructionResolutionTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: recursive resolution: " << message << '\n';
+	}
+}
+
+/** Confirms the default hook preserves port-only timing without a Spectrum ULA link. */
+class PortOnlyTimingTests final
+{
+	public:
+	PortOnlyTimingTests () : _checks (0), _failures (0) { }
+	int run ();
+
+	private:
+	void check (bool ok, const std::string& message);
+
+	// Implementation
+	unsigned int _checks, _failures;
+};
+
+// ---
+int PortOnlyTimingTests::run ()
+{
+	for (bool perCycle : { false, true })
+	{
+		std::cout << "Port-only timing" << (perCycle ? " [PerCycle]\n" : " [Full]\n");
+		unsigned int failuresBefore = _failures;
+		ZXSPECTRUM::Memory memory
+			(ZXSPECTRUM::Memory::Configuration::_48K, ZXSPECTRUM::Type::_STANDARD, "ENG");
+		MCHEmul::TicksCounterDelayed ticks (1);
+		ZXSPECTRUM::CZ80 cpu (0);
+		cpu.setMemoryRef (&memory);
+		memory.linkToCPU (&cpu);
+		FixedInputPort* port = new FixedInputPort (3);
+		cpu.addPorts ({ { 0x10, port } });
+		MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+		if (!memory.initialize () || !cpu.initialize ())
+		{
+			check (false, "port-only initialization");
+
+			continue;
+		}
+		if (perCycle)
+			cpu.assignTicksCounter (ticks);
+		cpu.setIFF1 (false);
+		cpu.setIFF2 (false);
+		cpu.bRegister ().set ({ 0x02 }); cpu.cRegister ().set ({ 0x10 });
+		cpu.hRegister ().set ({ 0x60 }); cpu.lRegister ().set ({ 0x00 });
+		memory.put (MCHEmul::Address (2, 0x2000), std::vector <MCHEmul::UByte> { 0xed, 0xb2 }, true);
+		cpu.programCounter ().setAddress (MCHEmul::Address (2, 0x2000));
+
+		for (unsigned int iteration = 0; iteration < 2; iteration++)
+		{
+			unsigned int startClock = cpu.clockCycles ();
+			bool pending = false;
+			for (unsigned int step = 0; step < 64 && !pending; step++)
+			{
+				if (perCycle)
+					ticks.count (1);
+				if (!cpu.executeNextCycle ())
+					break;
+				pending = cpu.memoryAccessState () ==
+					ZXSPECTRUM::CZ80::MemoryAccessState::_PENDING_PORT_COMPLETION;
+			}
+			check (pending && cpu.hasPendingPortAccess (), "prepared repeating/terminal input");
+			if (!pending || !cpu.hasPendingPortAccess ())
+				break;
+			check (cpu.clockCycles () - startClock == (iteration == 0 ? 24 : 19),
+				"three port waits plus existing repetition duration");
+			check (cpu.pendingPortAccess ()._clockCycle == startClock + 15,
+				"port-only sample offset unchanged by repetition");
+			check (port -> queries () == iteration + 1 && port -> reads () == iteration,
+				"one query and no early input");
+			check (!cpu.memoryContentionHandled () && cpu.includedMemoryContentionClockCycles () == 0,
+				"no memory plan without ULA");
+			cpu.executeBufferedCommands (true);
+			check (port -> reads () == iteration + 1, "input completes once");
+			check (cpu.memoryAccessTimingAvailable () && cpu.memoryAccessMCyclesStructure () == (iteration == 0 ? 1 : 0),
+				"both alternatives retain their association");
+		}
+		cpu.executeBufferedCommands (true);
+		MCHEmul::Memory::configuration ().setBufferMemorySetCommands (false);
+		if (_failures == failuresBefore)
+			std::cout << "PASS\n";
+	}
+	std::cout << "Port-only checks=" << _checks << ", failures=" << _failures << '\n';
+
+	return (_failures == 0 ? 0 : 1);
+}
+
+// ---
+void PortOnlyTimingTests::check (bool ok, const std::string& message)
+{
+	_checks++;
+	if (!ok)
+	{
+		_failures++;
+		std::cerr << "FAIL: port-only timing: " << message << '\n';
+	}
+}
+
 int main ()
 {
 	std::cout << std::unitbuf;
@@ -1291,9 +2026,14 @@ int main ()
 
 	int accessResult = MemoryAccessTests::run ();
 	int alternativeResult = AlternativeSelectionTests::run ();
+	PortOnlyTimingTests portOnlyTests;
+	int portOnlyResult = portOnlyTests.run ();
+	InstructionResolutionTests resolutionTests;
+	int resolutionResult = resolutionTests.run ();
 	int contentionResult = MemoryContentionTests::run ();
 
-	return (accessResult == 0 && alternativeResult == 0 && contentionResult == 0 ? 0 : 1);
+	return (accessResult == 0 && alternativeResult == 0 && portOnlyResult == 0 &&
+		resolutionResult == 0 && contentionResult == 0 ? 0 : 1);
 }
 
 // End of the file

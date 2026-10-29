@@ -132,19 +132,19 @@ bool FZ80::INBlock_General::executeWith (int a)
 	_lastExecutionData._INOUTAddress = addressBC ();
 	unsigned short ab =
 		(unsigned short) _lastExecutionData._INOUTAddress.value ();
-	// The memory write follows the port read, so I/O is not the last bus access.
-	prepareIOAccess (ab, rCA, false);
 
 	// Save everything completion needs before advancing the CPU registers.
 	// The byte and its dependent flags/memory write are produced only on release.
 	Z80Port::Access access;
 	access._type = Z80Port::Access::Type::_READ;
-	access._clockCycle = IOAccessClockCycle ();
 	access._address = ab;
 	access._instruction = this;
 	access._readContext._memoryAddress = (unsigned short) hlA.value ();
 	access._readContext._bAfter = (unsigned char) (rBA - 1);
 	access._readContext._cAdjusted = (unsigned char) (rCA + a);
+	// Timing and completion share the same original destination.
+	prepareIOAccess (access);
+
 	if (!static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access))
 		return (false);
 
@@ -178,11 +178,13 @@ _INST_IMPL (FZ80::INIR)
 {
 	assert (parameters ().size () == 2);
 
+	// B alone determines repetition, before the common operation changes it.
+	selectMCyclesStructure (valueRegisterB ().value () == 1 ? 0 : 1);
+
 	bool result = executeWith (1); // move up...
 	if (result)
 	{
 		_FINISH = _b0;
-		selectMCyclesStructure (_FINISH ? 0 : 1);
 
 		// Preserve the existing repetition cycles independently of path metadata.
 		if (!_FINISH)
@@ -205,11 +207,13 @@ _INST_IMPL (FZ80::INDR)
 {
 	assert (parameters ().size () == 2);
 
+	// B alone determines repetition, before the common operation changes it.
+	selectMCyclesStructure (valueRegisterB ().value () == 1 ? 0 : 1);
+
 	bool result = executeWith (-1); // move down...
 	if (result)
 	{
 		_FINISH = _b0;
-		selectMCyclesStructure (_FINISH ? 0 : 1);
 
 		// Preserve the existing repetition cycles independently of path metadata.
 		if (!_FINISH)
@@ -320,15 +324,15 @@ bool FZ80::OUTBlock_General::executeWith (int a)
 	// The internal register RW used later in BIT instructions...
 	static_cast <FZ80::CZ80*> (cpu ()) -> setRWInternalRegister 
 		((unsigned char) ((ab + 1) >> 8));
-	prepareIOAccess (ab, rCA);
 
 	// OUTI/OUTD use decremented B in the port address. Capture the memory byte
 	// now; releasing the output must not reread memory after HL has advanced.
 	Z80Port::Access access;
 	access._type = Z80Port::Access::Type::_WRITE;
-	access._clockCycle = IOAccessClockCycle ();
 	access._address = ab;
 	access._value = vR;
+	prepareIOAccess (access);
+
 	if (!static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access))
 		return (false);
 
@@ -371,11 +375,13 @@ _INST_IMPL (FZ80::OTIR)
 {
 	assert (parameters ().size () == 2);
 
+	// B alone determines repetition, before the common operation changes it.
+	selectMCyclesStructure (valueRegisterB ().value () == 1 ? 0 : 1);
+
 	bool result = executeWith (1); // move up...
 	if (result)
 	{
 		_FINISH = _b0;
-		selectMCyclesStructure (_FINISH ? 0 : 1);
 
 		// Preserve the existing repetition cycles independently of path metadata.
 		if (!_FINISH)
@@ -398,11 +404,13 @@ _INST_IMPL (FZ80::OTDR)
 {
 	assert (parameters ().size () == 2);
 
+	// B alone determines repetition, before the common operation changes it.
+	selectMCyclesStructure (valueRegisterB ().value () == 1 ? 0 : 1);
+
 	bool result = executeWith (-1); // move down...
 	if (result)
 	{
 		_FINISH = _b0;
-		selectMCyclesStructure (_FINISH ? 0 : 1);
 
 		// Preserve the existing repetition cycles independently of path metadata.
 		if (!_FINISH)

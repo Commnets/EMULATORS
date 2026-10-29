@@ -90,6 +90,26 @@ void FZ80::CZ80::addPorts (const FZ80::Z80PortsMap& pts)
 }
 
 // ---
+FZ80::CZ80::IOAccessTiming FZ80::CZ80::calculateIOAccessTiming
+	(const FZ80::Instruction& instruction,
+	 const FZ80::Z80Port::Access& access, unsigned int cC)
+{
+	const FZ80::MCyclesData& timing =
+		instruction.mCyclesData (instruction.executedMCyclesStructure ());
+
+	assert (timing.ioCycles ().size () == 1);
+
+	const FZ80::MCycleData& io = timing.cycleData (timing.ioCycles ()[0]);
+	IOAccessTiming result;
+
+	result._port = additionalClockCyclesForIO
+		(access._address, (unsigned char) (access._address & 0x00ff),
+		 cC + (unsigned int) (io._contentionCycle));
+
+	return (result);
+}
+
+// ---
 bool FZ80::CZ80::schedulePortAccess (const FZ80::Z80Port::Access& a)
 {
 	// Never overwrite an unfinished transaction: later instructions must not

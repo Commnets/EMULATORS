@@ -47,7 +47,9 @@ namespace ZXSPECTRUM
 		virtual void initialize () override;
 
 		private:
-		/** The T-state stored by the input instruction currently being executed. */
+		/** Returns the scheduled timestamp while completing a pending port access. \n
+			Direct reads without a pending transaction use the current CPU clock. \n
+			Does not inspect the current or previously selected instruction. */
 		unsigned int IOAccessClockCycle () const;
 		/** ms = true when is is wanted to modify the internal status. */
 		MCHEmul::UByte getValue (unsigned short ab, unsigned char id, bool ms = false) const;

@@ -258,10 +258,23 @@ Useful compatibility probes:
 The current implementation is centered in:
 
 - `src/ZXSpectrum/ULA.cpp`: raster stepping, fetch/draw, INT, FLASH, sound scheduling, contention.
-- `src/ZXSpectrum/ZXSpectrum.cpp`: post-instruction access reconstruction and ULA linkage.
+- `src/ZXSpectrum/ZXSpectrum.cpp`: computer assembly and CPU/ULA linkage; no post-instruction contention reconstruction remains.
+- `include/ZXSpectrum/CZ80.hpp`, `src/ZXSpectrum/CZ80.cpp`: access transactions, context/range filtering, M-cycle association, cumulative memory waits and mixed memory/I/O timing.
+- `include/ZXSpectrum/ContendedMemory.hpp`, `src/ZXSpectrum/ContendedMemory.cpp`: CPU-visible Stack-compatible RAM forwarding read/write requests before buffered effects are applied.
 - `src/ZXSpectrum/PortManager.cpp`: partial port decoding, keyboard, tape, border, beeper, floating bus, Kempston.
 - `src/ZXSpectrum/Memory.cpp`: 16K/48K maps and ULA view.
 - `include/FZ80`, `src/FZ80`: authoritative M-cycle and access timing needed by contention.
+
+Current implementation scope:
+
+- Memory-only instructions calculate cumulative waits from nominal access points and consume the resulting delay as terminal CPU wait before buffered effects are released.
+- Mixed instructions include memory-before, port and memory-after waits in their duration. Transaction memory totals exclude the port's own delay, and already included memory waits are not consumed again.
+- The port descriptor retains its intended transfer timestamp; actual port effects are deferred. Exact intra-instruction CPU/chip interleaving is not provided.
+- External timing consumers require published complete association. Internal mixed-I/O preparation may use a partial association it has just validated.
+- Contained bytes are still recorded when an access range crosses a boundary. Timing association of partially retained, ambiguous data-transfer groups remains unsupported.
+- Memory contention supports Full mode and PerCycle mode with one tick per CPU call. Multi-tick batches and interrupt-response contention remain pending; interrupt accesses are recorded without timing association or delay calculation.
+- Unsupported memory cases have no approximate reconstruction fallback. Mixed instructions retain the generic port-only calculation when their memory timing cannot be evaluated.
+- Contention event visualization is a diagnostic marker: notifications can coalesce and do not identify every wait's exact intra-instruction T-state.
 
 Comparative local implementations:
 

@@ -429,3 +429,19 @@ bool MCHEmul::InstructionUndefined::execute (MCHEmul::CPU* c, MCHEmul::Memory* m
 
 	return (result);
 }
+
+// ---
+const MCHEmul::InstructionDefined*
+MCHEmul::InstructionUndefined::lastDefinedInstruction () const
+{
+	if (_lastInstruction == nullptr)
+		return (nullptr);
+
+	const MCHEmul::InstructionUndefined* undefined =
+		dynamic_cast <const MCHEmul::InstructionUndefined*> (_lastInstruction);
+
+	if (undefined != nullptr)
+		return (undefined -> lastDefinedInstruction ());
+
+	return (dynamic_cast <const MCHEmul::InstructionDefined*> (_lastInstruction));
+}

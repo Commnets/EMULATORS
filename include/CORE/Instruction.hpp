@@ -480,11 +480,19 @@ namespace MCHEmul
 			and is is dragged up to the first level. */
 		virtual bool execute (CPU* c, Memory* m, Stack* stk, ProgramCounter* pc) override;
 
-		// Info just useful when "executing" the instruction...
+		/** Returns the immediate instruction retained by the last selection. \n
+			The selection can originate from execution or defineInstructionFrom. */
 		const Instruction* lastInstruction () const
 							{ return (_lastInstruction); }
 		Instruction* lasInstruction ()
 							{ return (_lastInstruction); }
+		/** Resolves the defined instruction through the retained selection chain. \n
+			Returns nullptr when the chain does not resolve to a defined instruction. \n
+			Does not read memory, execute instructions or modify selection state. \n
+			After successful execution it identifies the executed leaf, provided no later
+			definition has changed the retained selection. \n
+			It must not be used to identify an inner instruction still executing. */
+		const InstructionDefined* lastDefinedInstruction () const;
 
 		// By default the asString method is based in the last instruction executed, 
 		// ...but it should be based more in the parameters, as they can be set using external calls.
@@ -507,7 +515,9 @@ namespace MCHEmul
 		Instructions _instructions;
 
 		// Implementation
-		/** The last instruction executed inside finally. */
+		/** Immediate instruction retained by execution or defineInstructionFrom. \n
+			May identify another undefined instruction or a defined instruction. \n
+			Initialized to nullptr; it is not a separate execution-history record. */
 		Instruction* _lastInstruction;
 	};
 }

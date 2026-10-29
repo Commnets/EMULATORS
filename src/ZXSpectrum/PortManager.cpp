@@ -1,7 +1,6 @@
 #include <ZXSpectrum/PortManager.hpp>
 #include <ZXSpectrum/ULA.hpp>
 #include <ZXSpectrum/ULARegisters.hpp>
-#include <FZ80/Instruction.hpp>
 
 const std::string ZXSPECTRUM::PortManager::_NAME = "ZX81 PortManager";
 
@@ -78,23 +77,10 @@ unsigned int ZXSPECTRUM::PortManager::IOAccessClockCycle () const
 {
 	assert (cpu () != nullptr);
 
-	// Buffered input is released after currentInstruction has been cleared.
-	// The pending record retains the original access time, including contention.
 	if (cpu () -> hasPendingPortAccess ())
 		return (cpu () -> pendingPortAccess ()._clockCycle);
 
-	assert (cpu () -> currentInstruction () != nullptr);
-
-	const FZ80::Instruction* i =
-		dynamic_cast <const FZ80::Instruction*> (cpu () -> currentInstruction ());
-	if (i != nullptr)
-		return (i -> IOAccessClockCycle ());
-
-	const FZ80::InstructionUndefined* uI =
-		dynamic_cast <const FZ80::InstructionUndefined*> (cpu () -> currentInstruction ());
-	assert (uI != nullptr);
-
-	return (uI -> IOAccessClockCycle ());
+	return (cpu () -> clockCycles ());
 }
 
 // ---

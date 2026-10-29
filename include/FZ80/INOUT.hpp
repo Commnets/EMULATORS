@@ -67,15 +67,15 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np);
 		// Capture the old A in the port address; install the input only on release.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._instruction = this;
 		access._readContext._destination = &registerA ();
 		// The default context preserves flags for IN A,(n).
+		prepareIOAccess (access);
+
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
 
@@ -92,15 +92,15 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np);
 		// Keep BC before an input into B or C can replace part of the address.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._instruction = this;
 		access._readContext._destination = &r;
 		access._readContext._affectFlags = true;
+
+		prepareIOAccess (access);
 
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
@@ -119,14 +119,14 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		// The value is not kept anywhere...(lost)
-		prepareIOAccess (ab, np);
 		// The flags-only input still performs a real port read when released.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_READ;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._instruction = this;
 		access._readContext._affectFlags = true;
+
+		prepareIOAccess (access);
 
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
@@ -280,14 +280,13 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np);
-
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_WRITE;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._value = registerA ().values ()[0];
+
+		prepareIOAccess (access);
 
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
@@ -305,14 +304,13 @@ namespace FZ80
 		unsigned short ab =
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
-		prepareIOAccess (ab, np);
-
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_WRITE;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._value = r.values ()[0];
+
+		prepareIOAccess (access);
 
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
@@ -329,14 +327,14 @@ namespace FZ80
 			(unsigned short) _lastExecutionData._INOUTAddress.value ();
 
 		// Undocumented OUT (C),0 writes a zero byte to the captured BC address.
-		prepareIOAccess (ab, np);
 
 		// Preserve the full port address and output byte until CPU release.
 		Z80Port::Access access;
 		access._type = Z80Port::Access::Type::_WRITE;
-		access._clockCycle = IOAccessClockCycle ();
 		access._address = ab;
 		access._value = MCHEmul::UByte::_0;
+
+		prepareIOAccess (access);
 
 		return (static_cast <CZ80*> (cpu ()) -> schedulePortAccess (access));
 	}
