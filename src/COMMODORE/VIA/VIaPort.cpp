@@ -16,6 +16,15 @@ COMMODORE::VIAPort::VIAPort (int id, bool portA)
 }
 
 // ---
+void COMMODORE::VIAPort::latchValue ()
+{
+	// A control-line edge can precede the periodic port simulation after OR/DDR writes.
+	captureExternalPins ();
+	refreshPortValue ();
+	_valueLatched = portValue ();
+}
+
+// ---
 const MCHEmul::UByte& COMMODORE::VIAPort::value (bool r) const
 {
 	_IR = (_latch ? _valueLatched : portValue ()); 
@@ -42,8 +51,8 @@ void COMMODORE::VIAPort::setValue (const MCHEmul::UByte& v, bool r)
 	_OR = v; 
 
 	// Writting the VIAPort, 
-	// the interrupt of the two control lines are deleted...
-	// But there could have been a possibility to do that without restarting...
+	// Applicable C1/C2 flags are acknowledged according to their modes.
+	// Non-handshake accesses skip those side effects.
 	if (r)
 	{ 
 		assert (_CL1 != nullptr && 
@@ -87,13 +96,27 @@ bool COMMODORE::VIAPort::simulate (MCHEmul::CPU* cpu)
 void COMMODORE::VIAPort::captureExternalPins ()
 {
 	if (portValue () != _lastPortValue)
-		_externalPins = (_externalPins & _DDR) | (portValue () & ~_DDR);
+	{
+		MCHEmul::UByte direction = effectiveDDR ();
+
+		// Alternate outputs must not be captured as externally supplied inputs.
+		_externalPins = (_externalPins & direction) | (portValue () & ~direction);
+	}
+}
+
+// ---
+MCHEmul::UByte COMMODORE::VIAPort::resolvedValue
+	(const MCHEmul::UByte& external) const
+{
+	MCHEmul::UByte direction = effectiveDDR ();
+
+	return ((outputValue () & direction) | (external & ~direction));
 }
 
 // ---
 void COMMODORE::VIAPort::refreshPortValue ()
 {
-	MCHEmul::UByte r = (outputValue () & _DDR) | (_externalPins & ~_DDR);
+	MCHEmul::UByte r = resolvedValue (_externalPins);
 	if (r != _lastPortValue)
 	{
 		notifyPortChanges (r ^ _lastPortValue, r);
@@ -132,23 +155,38 @@ COMMODORE::VIAPortB::VIAPortB (int id)
 }
 
 // ---
+bool COMMODORE::VIAPortB::timerControlsP7 () const
+{
+	if (_T == nullptr)
+		return (false);
+
+	VIATimer::RunMode mode = _T -> runMode ();
+	return (mode == VIATimer::RunMode::_ONESHOOTSIGNAL ||
+		mode == VIATimer::RunMode::_CONTINUOUSSIGNAL);
+}
+
+// ---
+MCHEmul::UByte COMMODORE::VIAPortB::effectiveDDR () const
+{
+	MCHEmul::UByte result = _DDR;
+
+	// ACR7 enables the timer output independently of the stored DDRB7.
+	if (timerControlsP7 ())
+		result.setBit (7, true);
+
+	return (result);
+}
+
+// ---
 const MCHEmul::UByte& COMMODORE::VIAPortB::value (bool r) const
 {
-	// The standard value of _IR is assigned ans returned in this invocation,
-	// but it is changed as the behaviour of the PortB is a little bit different.
-	// See the header of the class for more details...
+	// Preserve input selection and the existing control-line side effects.
 	COMMODORE::VIAPort::value (r);
 
-	MCHEmul::UByte out = _OR;
+	MCHEmul::UByte direction = effectiveDDR ();
+	MCHEmul::UByte out = outputValue ();
 
-	if ((_T != nullptr) &&
-		(_T -> runMode () == VIATimer::RunMode::_ONESHOOTSIGNAL ||
-		 _T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL) &&
-		_DDR.bit (7))
-		out.setBit (7, _p7);
-
-	// The real value is either the one latched or the last one sent to the port...
-    return (_IR = ((_IR & ~_DDR) | (out & _DDR)));
+	return (_IR = ((_IR & ~direction) | (out & direction)));
 }
 
 // ---
@@ -176,9 +214,7 @@ bool COMMODORE::VIAPortB::simulate (MCHEmul::CPU* cpu)
 MCHEmul::UByte COMMODORE::VIAPortB::outputValue () const
 {
 	MCHEmul::UByte result = _OR;
-	if ((_T != nullptr) &&
-		(_T -> runMode () == VIATimer::RunMode::_ONESHOOTSIGNAL ||
-		 _T -> runMode () == VIATimer::RunMode::_CONTINUOUSSIGNAL))
+	if (timerControlsP7 ())
 		result.setBit (7, _p7);
 
 	return (result);

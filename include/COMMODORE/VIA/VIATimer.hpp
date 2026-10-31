@@ -22,9 +22,8 @@ namespace COMMODORE
 	class VIA;
 	class VIAPortB;
 
-	/** Every "Timer" always count down, 
-		and it is defined basically by an id, the way it runs (what to do once it reaches 0) 
-		and the input signal used to count down.*/
+	/** A countdown timer with a selected count source and timeout policy. \n
+		Zero reached by a decrement, timeout and automatic reload are distinct phases. */
 	class VIATimer : public MCHEmul::InfoClass
 	{
 		public:
@@ -42,16 +41,16 @@ namespace COMMODORE
 			bool _lowByteReached0;
 		};
 
-		/** What to do when reaching 0? \n
+		/** Timeout and reload policy. \n
 			Not all modes are applicable to the two timers. */
 		enum class RunMode
 		{
-			// In Timer2 this mode applies just only when CountMode = _PROCESSORCYCLES
-			_ONESHOOT			= 0,	// One single count - down. 
-										// Interrupt flag sets when reaches 0, just once.
+			// Timer 1 and Timer 2; T2 accepts PHI2 or PB6 falling-edge counting.
+			_ONESHOOT			= 0,	// One interrupt per explicit counter load; counting continues.
+										// The current one-shot model requests at the first decrement to zero.
 										// No "reflection" of the status in the bit 7 at the port linked (@see VIAPort).
 			// This free-running mode is only applicable to Timer 1.
-			_CONTINUOUS			= 1,	// Starts back once 0 is reached.
+			_CONTINUOUS			= 1,	// Underflows after 0 and reloads on the following cycle.
 										// Interrupt flag sets everytime it runs out.
 										// No "reflection" in the bit 7 at port linked.
 			// This two modes are only applicable to Timer1
@@ -131,9 +130,12 @@ namespace COMMODORE
 
 		virtual void initialize ();
 
-		/** To simulate the behaviour of the timer. \n
-			It invokes also some private methods. \n
-			Returns true when everything was ok, and false in other circunstance. */
+		/** Simulates one PHI2 cycle and returns event flags, not a success code. \n
+			_lowByteReached0 reports a consumed decrement whose low byte became zero. \n
+			_timeout follows the selected run policy: the current one-shot model uses
+			a decrement to zero; continuous mode uses zero-to-$ffff underflow. \n
+			Continuous reload consumes the next cycle without decrement or event,
+			giving a steady timeout period of latch + 2 cycles. */
 		virtual CycleResult simulate (MCHEmul::CPU* cpu);
 
 		/**
@@ -141,7 +143,7 @@ namespace COMMODORE
 		  * The ones comming from the parent class and: \n
 		  * RUN				= Attribute: Run mode of the timer. \n
 		  *	COUNT			= Attribute: Count mode of the timer. \n
-		  *	IRQ				= Attribute: YES (1) when IRQ are enabled and NO in other cas.
+		  *	IRQ				= Attribute: YES (1) when interrupts are enabled; this is the IER mask, not the pending flag.
 		  *	VALUE			= Attribute: Current value of the timer.
 		  *	INITIALVALUE	= Attribute: Initial value of the timer.
 		  */
@@ -151,10 +153,10 @@ namespace COMMODORE
 		// Managing the "Timer"...
 		/** 
 		  * To count down to 0. \n
-		  * The method will return true when it reaches 0. \n
+		  * The method returns true when a decrement is consumed. \n
 		  * The way of counting down will depend on the counting mode,
 		  * If the "Timer" reaches 0, the varible _reaches0 will be set to true. \n
-		  *	When this variable is read, then becomes false back.
+		  * The zero flags describe this decrement and remain valid for this cycle.
 		  */
 		virtual bool countDown (MCHEmul::CPU* cpu);
 
@@ -176,18 +178,20 @@ namespace COMMODORE
 		// Implementation
 		/** To indicate whether the "Timer" is or not counting down. */
 		bool _counting;
+		/** A continuous-mode underflow reloads the latch on the next cycle. */
+		bool _reloadPending;
 		/** The value the "Timer" has per loop. */
 		unsigned short _currentValue; 
 		
-		/** When 0 is reached, 
-			this variable becomes true, just for the time the "Timer" starts back if any. */
+		/** True only in the simulated cycle whose consumed decrement reaches zero. */
 		bool _reaches0;
 		/** The same with this varible when LSB reaches 0. */
 		bool _reaches0LSB;
-		/** True when it is the first time 0 is reached. */
+		/** Remembers that the first one-shot zero event has been consumed until reset/load. */
 		bool _firstTimeReaches0;
 
-		/** When an interrupt is requested this variable is set to true, until it is read. */
+		/** Pending flag: cleared by acknowledgement; interruptRequested() consumes it,
+			whereas peekInterruptRequested() and IFR reads preserve it. */
 		MCHEmul::OBool _interruptRequested;
 	};
 

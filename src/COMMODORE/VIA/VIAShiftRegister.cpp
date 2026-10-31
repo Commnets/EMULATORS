@@ -18,6 +18,10 @@ COMMODORE::VIAShiftRegister::VIAShiftRegister (int id)
 // ---
 void COMMODORE::VIAShiftRegister::setMode (COMMODORE::VIAShiftRegister::ShiftMode m)
 {
+	// Updating other ACR fields must not restart the current serial transfer.
+	if (_mode == m)
+		return;
+
 	_mode = m;
 	_numberBits = 0;
 	_finishPending = false;
@@ -29,11 +33,66 @@ void COMMODORE::VIAShiftRegister::setMode (COMMODORE::VIAShiftRegister::ShiftMod
 	if (_mode == ShiftMode::_DISABLE)
 		_interruptRequested = false;
 
+	updateCB2Function ();
+
 	if (_CL1 != nullptr &&
 		(_mode == ShiftMode::_INUNDERTIMER || _mode == ShiftMode::_INATCLOCK ||
 		 _mode == ShiftMode::_OUTFREERUNNING || _mode == ShiftMode::_OUTUNDERTIMER ||
 		 _mode == ShiftMode::_OUTATCLOCK))
 		_CL1 -> setValue (true);
+}
+
+// ---
+void COMMODORE::VIAShiftRegister::updateCB2Function () const
+{
+	// The constructor initializes the SR before its control lines are connected.
+	if (_CL2 == nullptr)
+		return;
+
+	using Function = COMMODORE::VIAControlLineType2::Function;
+	switch (_mode)
+	{
+		case ShiftMode::_DISABLE:
+			{
+				_CL2 -> setFunction (Function::_PERIPHERAL);
+			}
+
+			break;
+
+		case ShiftMode::_INUNDERTIMER:
+		case ShiftMode::_INATCLOCK:
+		case ShiftMode::_INUNDERSIGNALCL1:
+			{
+				_CL2 -> setFunction (Function::_SERIALINPUT);
+			}
+
+			break;
+
+		case ShiftMode::_OUTFREERUNNING:
+		case ShiftMode::_OUTUNDERSIGNALCL1:
+			{
+				_CL2 -> setFunction (Function::_SERIALOUTPUT);
+			}
+
+			break;
+
+		case ShiftMode::_OUTUNDERTIMER:
+		case ShiftMode::_OUTATCLOCK:
+			{
+				_CL2 -> setFunction (_shifting
+					? Function::_SERIALOUTPUT
+					: Function::_SERIALOUTPUTIDLE);
+			}
+
+			break;
+
+		default:
+			{
+				assert (false);
+			}
+
+			break;
+	}
 }
 
 // ---
@@ -54,11 +113,19 @@ void COMMODORE::VIAShiftRegister::startTransfer () const
 	else
 		_timerCounter = 0;
 
+	updateCB2Function ();
+
 	if (_CL1 != nullptr &&
 		(_mode == ShiftMode::_INUNDERTIMER || _mode == ShiftMode::_INATCLOCK ||
 		 _mode == ShiftMode::_OUTFREERUNNING || _mode == ShiftMode::_OUTUNDERTIMER ||
 		 _mode == ShiftMode::_OUTATCLOCK))
 		_CL1 -> setValue (true);
+
+	// Both SR reads and writes can start another output transfer.
+	if (_CL2 != nullptr &&
+		(_mode == ShiftMode::_OUTFREERUNNING || _mode == ShiftMode::_OUTUNDERTIMER ||
+		 _mode == ShiftMode::_OUTATCLOCK || _mode == ShiftMode::_OUTUNDERSIGNALCL1))
+		_CL2 -> setValue (_value.bit (7));
 }
 
 // ---
@@ -73,12 +140,8 @@ const MCHEmul::UByte COMMODORE::VIAShiftRegister::value () const
 void COMMODORE::VIAShiftRegister::setValue (const MCHEmul::UByte& v)
 {
 	_value = v;
-	startTransfer ();
 
-	if (_CL2 != nullptr &&
-		(_mode == ShiftMode::_OUTFREERUNNING || _mode == ShiftMode::_OUTUNDERTIMER ||
-		 _mode == ShiftMode::_OUTATCLOCK || _mode == ShiftMode::_OUTUNDERSIGNALCL1))
-		_CL2 -> setValue (_value.bit (7));
+	startTransfer ();
 }
 
 // ---
@@ -95,6 +158,8 @@ void COMMODORE::VIAShiftRegister::initialize ()
 	_finishPending = false;
 	_timerCounter = 0;
 	_clockPhase = true;
+
+	updateCB2Function ();
 }
 
 
@@ -164,6 +229,9 @@ bool COMMODORE::VIAShiftRegister::simulate (MCHEmul::CPU* cpu)
 	{
 		_finishPending = false;
 		_shifting = false;
+
+		updateCB2Function ();
+
 		return (true);
 	}
 

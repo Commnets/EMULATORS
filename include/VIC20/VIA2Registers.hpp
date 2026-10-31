@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
- *	Description: VCI20 VIA 1 Registers Emulation
+ *	Description: VIC20 VIA 2 Registers Emulation
  *	Versions: 1.0 Initial
  */
 
@@ -21,39 +21,11 @@ namespace VIC20
 	class VIA2;
 	class VIA1VIA2RegistersReflection;
 
-	/** This specific type of port is connected
-		to the different elements of OSIO of the VICII: Keyboard and Joystick. \n
-		The keyboard matrix is a matrix of 8x8 "cables" not connected to anything in one extreme.
-		and to the the two ports of the VIA in the other. \n
-		Any of the 64 keys of the keyboard is a switch located 
-		in each of the intersection of those 2 groups of cables. \n
-					C0	C1	C2	C3	C4	C5	C6	C7	
-					|	|	|	|	|	|	|	|     
-			  R0----+---+---+---+---+---+---+---+----C
-			    	|	|	|	|	|	|	|	|	 o
-			  R1----+---+---+---+---+---+---+---+----n
-			    	|	|	|	|	|	|	|	|	 n
-			  R2----+---+---+---+---+---+---+---+----e
-			    	|	|	|	|	|	|	|	|	 c
-			  R3----+---+---+---+---+---+---+---+----t
-			    	|	|	|	|	|	|	|	|	 e
-			  R4----+---+---+---+---+---+---+---+----d
-			    	|	|	|	|	|	|	|	|	 
-			  R5----+---+---+---+---+---+---+---+----P
-			    	|	|	|	|	|	|	|	|	 o
-			  R6----+---+---+---+---+---+---+---+----r
-			    	|	|	|	|	|	|	|	|	 t
-			  R7----+---+---+---+---+---+---+---+----B
-					|	|	|	|	|	|	|	|	
-					Connected PortA
-		The switch only allow the flow of the current in one way (using a diode). \n
-		When a key is pressed the status of one line is transmited to the other. \n
-		The diode allows to transmite the status of the Column to the Row.
-		The default status of the lines, when read is, according with VIA datasheet 1.
-		So to read a key the status of a the column is set to 0, and then is read the status of the row, 
-		when a 0 appears the key has been pressed. \n
-		Additionally the joystick is connected to the port A. \n
-	  */
+	/** VIA2 connects keyboard rows to PA and columns to PB. \n
+		The joystick right switch shares PB7. \n
+		The digital keyboard model propagates low levels through pressed switches
+		in both directions while configured outputs retain drive priority. \n
+		A zero in a keyboard matrix bit represents a pressed switch. */
 	class VIA2Registers final : public COMMODORE::VIARegisters
 	{
 		public:
@@ -70,8 +42,7 @@ namespace VIC20
 							{ return (_joystickStatus); }
 		void setJoystickStatus (unsigned char js)
 							{ _joystickStatus = js; }
-		/** and these ones are to manage the matrix of keys pressed...
-			...and also the inputs comming from the joystick 1... */
+		/** Cached switch matrix and its transposed view; zero means a pressed key. */
 		bool keyboardStatusMatrix (size_t r, size_t c) const
 							{ return (_keyboardStatusMatrix [r].bit (c)); }
 		const MCHEmul::UByte& keyboardStatusMatrix (size_t r) const
@@ -86,15 +57,23 @@ namespace VIC20
 
 		private:
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		/** Avoids acknowledgement/handshake but still resolves and publishes keyboard pin levels. */
+		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
 
-		// Implementation
+		/** Settles the sixteen-pin digital network in at most sixteen computations, without CPU cycles. \n
+			Called for port reads/peeks and initialization; it is not an independently clocked scan. \n
+			Outputs retain priority; analog contention is outside this model. */
+		void refreshKeyboardInputs () const;
+
+		// Reset cached inputs even during construction; apply keyboard presets only after wiring.
 		virtual void initializeInternalValues () override;
 
 		private:
 		/** Status of the joystick. */
 		unsigned char _joystickStatus;
-		/** 0 at the bit representing the part of the keyboard matrix pressed. */
+		/** Column-to-row switch states; zero means pressed. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
+		/** Row-to-column view of the same switches. */
 		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
 	};
 }

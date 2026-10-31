@@ -113,7 +113,7 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r, bool portA)
 		case 0x04:
 			{
 				// CA2 handshakes reads and writes; CB2 handshakes writes only.
-				if (portA || !r)
+				if (_function == Function::_PERIPHERAL && (portA || !r))
 					setValue (false); 
 			}
 
@@ -121,7 +121,7 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r, bool portA)
 
 		case 0x05:
 			{
-				if (portA || !r)
+				if (_function == Function::_PERIPHERAL && (portA || !r))
 				{
 					setValue (false);
 
@@ -148,16 +148,44 @@ void COMMODORE::VIAControlLineType2::whenReadWritePort (bool r, bool portA)
 }
 
 // ---
+void COMMODORE::VIAControlLineType2::setFunction
+	(COMMODORE::VIAControlLineType2::Function f)
+{
+	if (_function == f)
+		return;
+
+	_function = f;
+	// A pulse from the previous function must not survive the handover.
+	_justMovedToFalse = false;
+
+	applyOutputLevel ();
+}
+
+// ---
+void COMMODORE::VIAControlLineType2::applyOutputLevel ()
+{
+	if (_function == Function::_SERIALOUTPUTIDLE)
+	{
+		// Finite serial output terminates at the level selected by PCR5.
+		setValue ((_mode & 0x01) != 0);
+	}
+	else if (_function == Function::_PERIPHERAL)
+	{
+		if (_mode == 0x04 || _mode == 0x05 || _mode == 0x07)
+			setValue (true);
+		else if (_mode == 0x06)
+			setValue (false);
+	}
+}
+
+// ---
 void COMMODORE::VIAControlLineType2::setMode (unsigned char m)
 {
 	_mode = m;
 	_justMovedToFalse = false;
 
-	// Output modes establish their idle/manual level immediately.
-	if (_mode == 0x04 || _mode == 0x05 || _mode == 0x07)
-		setValue (true);
-	else if (_mode == 0x06)
-		setValue (false);
+	// PCR remains readable even when the serial function owns the pin.
+	applyOutputLevel ();
 }
 
 // ---
@@ -166,6 +194,7 @@ void COMMODORE::VIAControlLineType2::initialize ()
 	COMMODORE::VIAControlLine::initialize ();
 
 	_mode = 3; // This is the default mode...
+	_function = Function::_PERIPHERAL;
 
 	_justMovedToFalse = false;
 }
@@ -173,6 +202,10 @@ void COMMODORE::VIAControlLineType2::initialize ()
 // ---
 bool COMMODORE::VIAControlLineType2::simulate (MCHEmul::CPU* cpu)
 {
+	// Serial input/output must not execute the peripheral PCR state machine.
+	if (_function != Function::_PERIPHERAL)
+		return (true);
+
 	switch (_mode)
 	{
 		case 0x00:

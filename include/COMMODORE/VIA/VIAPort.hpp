@@ -1,9 +1,9 @@
-/** \ingroup VIC20 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
  *	@file	
- *	File: VIAPorts.hpp \n
+ *	File: VIAPort.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/01/2024 \n
@@ -35,13 +35,12 @@ namespace COMMODORE
 	  *		with the info to be moved into the computer. \n
 	  *	4.-	A Direction Data Register (_DDR) that defines which bits of the _OR register will be moved into the pin,
 	  *		and which bits of the _IR refister will be moved from the pin into the computer (data bus). \n
-	  * When the "Port" is read, the value in the _IR is read. \n
-	  * A collateral action might happen in the associated "ControlLines". 
-	  * What this action is about will depend on the mode in which the "ControlLine" is working (@see VIAControlLine). \n
-	  * That value might be latched if the configuration defines that possiblity (@see method setLanch, and VIARegisters). \n
-	  * The latch operation happens (if allowed) when the interrupt flag of the "ControlLine" linked happens (@see VIAControlLine). \n
-	  * A "Timer" might be also linked to the "Port" (Timer1 usually). \n
-	  * In some modes of the timer (Timer1 when ACR7 = true) anytime reaches0 = true, P7 changes its value.
+	  * Reads combine resolved pins or a captured input with the port's output readback rules. \n
+	  * CA1/CB1 active edges capture pins; ACR selects whether reads use that capture. \n
+	  * Port accesses may acknowledge control flags and start handshakes, according to PCR. \n
+	  * With ACR7 set, Timer 1 drives PB7 independently of stored DDRB7. \n
+	  * One-shot output goes high at its first timeout; continuous output toggles on
+	  * zero-to-$ffff timeout, before the following reload cycle.
 	  */
 	class VIAPort : public MCHEmul::InfoClass, public MCHEmul::Notifier
 	{
@@ -64,8 +63,8 @@ namespace COMMODORE
 							{ return (_latch); }
 		void setLatchIR (bool l)
 							{ _latch = l; }
-		void latchValue ()
-							{ _valueLatched = portValue (); }
+		/** Resolve current external/output levels before capturing the port pins. */
+		void latchValue ();
 		const MCHEmul::UByte& valueLatched () const
 							{ return (_valueLatched); }
 
@@ -77,6 +76,8 @@ namespace COMMODORE
 							{ _port.setValue (MCHEmul::UBytes ({ v })); } // A notification will be issued...
 		const MCHEmul::UByte& portValue () const
 							{ return (_port.value ()[0]); }
+		/** Resolves supplied external levels without publishing or reading the port. */
+		MCHEmul::UByte resolvedValue (const MCHEmul::UByte& external) const;
 		/** Sets the levels supplied by the devices connected to input pins. */
 		void setExternalPins (const MCHEmul::UByte& v)
 							{ _externalPins = v; refreshPortValue (); }
@@ -85,7 +86,8 @@ namespace COMMODORE
 
 		/** To get the value present in the "Port" (potentially to be moved into the data bus). \n
 			The value = pins when no latching. \n
-			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true (default). */
+			When r is true, applicable control flags are acknowledged and configured handshake/pulse
+			outputs are triggered; independent C2 input flags are preserved. */
 		virtual const MCHEmul::UByte& value (bool r = true) const;
 		/** To set the value to be sent (initially) to the port pins. */
 		virtual void setValue (const MCHEmul::UByte& v, bool r = true);
@@ -96,6 +98,9 @@ namespace COMMODORE
 							{ return (_DDR); }
 		void setDDR (const MCHEmul::UByte& v)
 							{ _DDR = v; }
+		/** Output direction including alternate pin functions. */
+		virtual MCHEmul::UByte effectiveDDR () const
+							{ return (_DDR); }
 
 		/** Internal registers. 
 			Not used very often. */
@@ -120,9 +125,8 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-		/** To get the info of the port like an string. \n
-			It is used something by the debug pieces. \n 
-			It can be overloaded. */
+		/** Serializes OR,IR,DDR as three comma-separated hexadecimal bytes for deep debug. \n
+			This tuple does not contain the current pin levels. */
 		virtual std::string asString () const
 							{ return (_OR.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
 									  _IR.asString (MCHEmul::UByte::OutputFormat::_HEXA) + "," +
@@ -146,11 +150,11 @@ namespace COMMODORE
 
 		protected:
 		int _id;
-		/** Latch or not the value in _IR. */
+		/** Selects captured rather than live input for reads; capture itself occurs on C1 edges. */
 		bool _latch;
-		/** The value latched, if the option is activ. */
+		/** Last C1-captured pin value, retained independently of the ACR read selection. */
 		MCHEmul::UByte _valueLatched;
-		/** The value present at the pins of the VIC. 
+		/** The value present at the pins of the VIA.
 			It is represented using a Bus of 8 bits, to detect changes e.g in it. */
 		MCHEmul::Bus _port;
 		/** Levels supplied by peripherals to pins configured as inputs. */
@@ -211,33 +215,29 @@ namespace COMMODORE
 							{ return (_p6.transition ()); }
 		bool peekP6negativeEdge () const // When this one, the "transition" status is not cleared...
 							{ return (_p6.peekNegativeEdge ()); }
-		/** To set the value to be sent (initially) to the port pins. \n
-			The value that finally will be present in the port pins might be slighly different
-			depending on the Direction Register (DDR) value and others (reflection of timer1 in bit 7 of output register). \n
-			Any time this method is executed the "ControlLines" interrupt flag is cleared only if r = true. */
+		/** Internal Timer 1 PB7 output state, selected onto the pin by ACR7. */
 		bool p7 () const
 							{ return (_p7); }
-		/** Set the value of the bit 7. \n
-			Usually this is called from "Timer" simulation in some modes, when reaches0 = true. */
+		/** Sets Timer 1 output state on initialization, explicit load or one-shot timeout. */
 		void setP7 (bool v)
 							{ _p7 = v; }
-		/** Just to change the value of the bit 7. \n
-			Same comments than above. */
+		/** Toggles Timer 1 output state at a continuous-mode timeout. */
 		void changeP7 ()
 							{ _p7 = !_p7; }
 
-		/** In the PortB the value returned finally for the PINS declared as output
-			is the value in the OR Register. \n
-			This is because a Darlington Transistor can be connected to that port and, 
-			when a big current is demanded the value in that port pint coould bring down up to 0, 
-			reading then as a 0 instead a 1. */
+		/** PB output bits read back the output latch, with Timer 1 overriding PB7 when ACR7 is set. \n
+			Input bits use resolved live or captured levels. \n
+			Effective direction is DDRB | $80 when T1 owns PB7; stored DDRB is unchanged. */
 		virtual const MCHEmul::UByte& value (bool r = true) const override;
+		virtual MCHEmul::UByte effectiveDDR () const override;
 
 		virtual void initialize () override;
 
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
+		bool timerControlsP7 () const;
+
 		/** Link to "Timer" 
 			Could be overloaded e.g. to control the type of control lines linked. */
 		void linkAtTimer (VIATimer1* t)

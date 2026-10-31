@@ -85,7 +85,7 @@
   ],
   "timing_rules": [
     "The header cycle is the emulator's absolute counter unless the machine-specific section documents an anomaly or different unit.",
-    "In complete-instruction mode, the CPU finishes the instruction before chips recover their cycles. Membership of a block does not prove the exact physical cycle of a mapped write.",
+    "In complete-instruction mode, chips normally recover cycles after CPU execution; some components also advance before a predicted access, as documented in the machine-specific section. Record order within a block alone does not prove the physical bus cycle of an access or chronological interleaving across chips.",
     "Chip snapshots are normally written before the recovered cycle is processed. A subordinate event occurs during that cycle, and its resulting state is usually visible in the next snapshot.",
     "Additional Info records do not count as ordinary cycles when checking instruction duration.",
     "Duration comparisons must be restarted around stop blocks or interrupt entry.",

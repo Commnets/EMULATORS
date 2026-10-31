@@ -40,14 +40,19 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	if (!result)
 		return (false);
 
+	if (!via1 () -> enableCPUTimedWrites (_cpu) ||
+		!via2 () -> enableCPUTimedWrites (_cpu))
+	{
+		_error = MCHEmul::_INIT_ERROR;
+		return (false);
+	}
+
 	// Depending on the memory configuration, 
 	// the registers that point out to the char and color memory must be adapted!
 	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
-	// The CPU is observed by VIC20
-	// This is because when a instruction is about to be executed,
-	// The VIC-I has to be aware of the next instruction length
-	// in order to approximate reads from $9003/$9004 raster registers.
+	// Forward CPU transaction contexts to the VIAs for write scheduling.
+	// VIC-I also uses instruction length to approximate $9003/$9004 raster reads.
 	observe (_cpu);
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
@@ -75,11 +80,20 @@ void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::N
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
-	else
-	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
+	else if (n == _cpu && evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
 	{
-		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) -> CPUAboutToExecute
-			(static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ()));
+		const MCHEmul::InstructionContextEventData* context =
+			static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ());
+		via1 () -> CPUAboutToExecute (context);
+		via2 () -> CPUAboutToExecute (context);
+		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) -> CPUAboutToExecute (context);
+	}
+	else if (n == _cpu && evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINTERRUPT)
+	{
+		const MCHEmul::InterruptContextEventData* context =
+			static_cast <const MCHEmul::InterruptContextEventData*> (evnt.data ().get ());
+		via1 () -> CPUAboutToExecute (context);
+		via2 () -> CPUAboutToExecute (context);
 	}
 }
 

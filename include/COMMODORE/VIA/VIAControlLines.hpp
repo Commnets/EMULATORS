@@ -3,7 +3,7 @@
 
 /**	
  *	@file	
- *	File: VIAControlLine.hpp \n
+ *	File: VIAControlLines.hpp \n
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 07/01/2023 \n
@@ -59,7 +59,7 @@ namespace COMMODORE
 							{ setValue (!value ()); }
 
 		/** The "ControlLine" can affect the VIA Chip in different ways.
-			Every way is defined by a number (0 - 255). */
+			The concrete mode ranges are 0..1 for CA1/CB1 and 0..7 for CA2/CB2. */
 		unsigned char mode () const
 							{ return (_mode); }
 		virtual void setMode (unsigned char m)
@@ -114,10 +114,10 @@ namespace COMMODORE
 		There are only two available modes for this type.
 		0 : Interrupt is flagged when the control line value goes from 1 to 0 = negative edge.
 			Flag is cleared when read/write action in port linked happen (not in register 0x0f). \n
-			When flag is set, the value at the port linked is lached. \n
+			Every active edge captures the linked port, even if the flag was already set. \n
 		1 : Interrupt is flagged when the control line value goes from 0 to 1 = positive edge.
 			Flag is cleared when a read/write action in the linked port happens (not in register 0x0f). \n
-			When the flag is set, the value at the port linked is latched. \n */
+			Every active edge captures the linked port; ACR selects whether reads use that capture. \n */
 	class VIAControlLineType1 final : public VIAControlLine
 	{
 		public:
@@ -155,17 +155,17 @@ namespace COMMODORE
 		depending on the _mode: From nothing to impact in the another "ControlLine" linked. \n
 		There are 8 modes available for this type.
 		0 : Interrupt is flagged when the control line value goes from 1 to 0 = negative edge.
-			In the port linked (mandatory) the value in the _IR is latched. \n
+			C2 does not capture port inputs; capture belongs to CA1/CB1. \n
 			Flag is cleared when read/write action in the port linked happen (not in register 0x0f). \n
 		1 : Independent interrupt input on a negative edge. Port accesses do not clear its flag. \n
 		2 : Interrupt input on a positive edge. Port accesses clear its flag. \n
 		3 : Independent interrupt input on a positive edge. Port accesses do not clear its flag. \n
 		4 : Handshake mode: \n
-			Value goes low = 0, when write operation in linked port happen.  \n
-			Value goes back to high = 1, when transition happens in th elinked "ControlLine". \n
+			CA2 goes low on a linked PA read/write; CB2 goes low only on a linked PB write.  \n
+			Value returns high on the linked CA1/CB1 active edge, selected by PCR. \n
 			Interrupt flag not affected. \n
 		5 : Pulse output mode: \n
-			Value goes low for a cycle only. \n
+			The same PA/PB access rules as handshake mode start a one-cycle low pulse. \n
 			Interrupt flag not affected. \n
 		6 : Value is maintained always low. \n
 			Interrupt flag not affected. \n
@@ -177,34 +177,43 @@ namespace COMMODORE
 		public:
 		friend VIA;
 
+		/** Selects the pin owner without changing the stored PCR mode. \n
+			Serial operation suppresses peripheral CB2 drive/acknowledgement behavior;
+			disabling SR restores the latest PCR configuration. */
+		enum class Function
+		{
+			_PERIPHERAL,
+			_SERIALINPUT,
+			_SERIALOUTPUT,
+			_SERIALOUTPUTIDLE
+		};
+
 		VIAControlLineType2 (int id)
 			: VIAControlLine (id),
-			  _CL (nullptr), // it must be associated later...
-			  _justMovedToFalse (false)
+			  _function (Function::_PERIPHERAL),
+			  _justMovedToFalse (false),
+			  _CL (nullptr)
 							{ }
 
-		/** The collateral effect in he port will depend on 
-			the mode the line is configured. */
+		Function function () const
+							{ return (_function); }
+		void setFunction (Function f);
+
 		virtual void whenReadWritePort (bool r, bool portA) override;
 		virtual void setMode (unsigned char m) override;
-
 		virtual void initialize () override;
-
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
-		/** In some type, in some modes, 
-			the result might affect another "ControlLine". (pulse modes). \n
-			The link is not always needeed. */
+		void applyOutputLevel ();
+		/** The linked CB1/CA1 edge can complete a peripheral handshake. */
 		void linkToControlLine (VIAControlLine* c)
-							{ _CL = c;}
+							{ _CL = c; }
 
 		private:
-		/** In handshake mode (0x05) a pulse is generate in the control line
-			for just one cycle. */
+		Function _function;
+		/** Keeps a peripheral pulse low for one simulated cycle. */
 		MCHEmul::OBool _justMovedToFalse;
-
-		private:
 		VIAControlLine* _CL;
 	};
 }

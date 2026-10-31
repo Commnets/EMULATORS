@@ -10,102 +10,39 @@ VIC20::VIA1Registers::VIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, co
 }
 
 // ---
-const MCHEmul::UByte& VIC20::VIA1Registers::readValue (size_t p) const
+void VIC20::VIA1Registers::setJoystickStatus (unsigned char js)
 {
-	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
+	_joystickStatus = js;
 
-	if (_CA1 == nullptr ||
-		_CA2 == nullptr ||
-		_CB1 == nullptr ||
-		_CB2 == nullptr ||
-		_T1  == nullptr ||
-		_T2  == nullptr ||
-		_SR  == nullptr ||
-		_PA  == nullptr ||
-		_PB  == nullptr)
-		return (_lastValueRead);
+	refreshPortAInputs ();
+}
 
-	size_t pp = p % 0x10;
+// ---
+void VIC20::VIA1Registers::setTapeSensePressed (bool v)
+{
+	_tapeSensePressed = v;
 
-	switch (pp)
-	{
-		// VIA1 Port B
-		case 0x00:
-			{
-				// Live external pins for user port / RS-232.
-				// Default: pull-up/high.
-				MCHEmul::UByte pins = 0xff;
-				// TODO:
-				// Apply external RS-232/user-port input states:
-				// PB7 DSR, PB6 CTS, PB4 DCD, PB3 RI, PB0 SIN.
-				//
-				// Example:
-				// if (!_rs232DSR) pins &= ~0x80;
-				// if (!_rs232CTS) pins &= ~0x40;
-				// if (!_rs232DCD) pins &= ~0x10;
-				// if (!_rs232RI ) pins &= ~0x08;
-				// if (!_rs232SIN) pins &= ~0x01;
+	refreshPortAInputs ();
+}
 
-				MCHEmul::UByte input = pins;
-				// If you model input latching inside VIAPort, this part should
-				// use the port's latched input value instead.
-				if (_PB -> latchIR ())
-					input = _PB -> valueLatched ();
+// ---
+void VIC20::VIA1Registers::refreshPortAInputs ()
+{
+	assert (_PA != nullptr);
 
-				// The generic VIA port resolves ORB, DDRB and the external levels.
-				_PB -> setExternalPins (input);
-				// Reading ORB affects CB1/CB2 interrupt flags.
-				result = _PB -> value (true);
-			}
-
-			break;
-
-		// VIA1 Port A
-		case 0x01:
-		case 0x0f:
-			{
-				// Live external pins for serial/tape/joystick/fire.
-				// Default: pull-up/high.
-				MCHEmul::UByte pins = 0xff;
-				// PA2, PA3, PA4, PA5:
-				// joystick up/down/left/fire, active low.
-				pins &= (_joystickStatus | 0x80);
-				// PA6:
-				// tape sense, active low when any cassette key is down.
-				pins = _tapeSensePressed ? (pins & ~0x40) : (pins | 0x40);
-				// TODO:
-				// PA1/PA0:
-				// serial data in / serial clock in.
-				// Default high unless serial bus pulls low.
-				// if (!_serialDataIn)  pins &= ~0x02;
-				// if (!_serialClockIn) pins &= ~0x01;
-
-				MCHEmul::UByte input = pins;
-				if (_PA -> latchIR ())
-					input = _PA -> valueLatched ();
-
-				// The generic VIA port resolves ORA, DDRA and the external levels.
-				_PA -> setExternalPins (input);
-				// Reading ORA affects CA1/CA2 interrupt flags.
-				result = _PA -> value (pp == 0x01);
-			}
-
-			break;
-			
-		default:
-			{
-				result = COMMODORE::VIARegisters::readValue (pp);
-			}
-
-			break;
-	}
-
-	return (_lastValueRead = result);
+	// Only joystick PA2..PA5 and cassette sense PA6 belong to these sources.
+	// Preserve the external IEC levels and PA7; DDR resolution belongs to the port.
+	MCHEmul::UByte pins = (_PA -> externalPins () & 0x83) | (_joystickStatus & 0x3c);
+	pins.setBit (6, !_tapeSensePressed);
+	_PA -> setExternalPins (pins);
 }
 
 // ---
 void VIC20::VIA1Registers::initializeInternalValues ()
 {
+	_joystickStatus = 0xff; // No switches clicked, no fire buttons pressed...
+	_tapeSensePressed = false; // NO key pressed in the datasette...
+
 	COMMODORE::VIARegisters::initializeInternalValues ();
 
 	if (_CA1 == nullptr ||
@@ -126,7 +63,6 @@ void VIC20::VIA1Registers::initializeInternalValues ()
 	setValue (0x00, MCHEmul::UByte (0xff));
 	setValue (0x01, MCHEmul::UByte (0xff));
 
-	_joystickStatus = 0xff; // No switches clicked, no fire buttons pressed...
-	_tapeSensePressed = false; // NO key pressed in the datasette...
+	refreshPortAInputs ();
 }
 

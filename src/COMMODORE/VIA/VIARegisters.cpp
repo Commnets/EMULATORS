@@ -6,8 +6,12 @@
 // ---
 COMMODORE::VIARegisters::VIARegisters (int id, MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (id, ps, pp, a, s),
+	  _CA1 (nullptr), _CB1 (nullptr),
+	  _CA2 (nullptr), _CB2 (nullptr),
+	  _T1 (nullptr), _T2 (nullptr),
+	  _SR (nullptr),
+	  _PA (nullptr), _PB (nullptr),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE)
-	  // At this point all internal variables will have random values...
 { 
 	setClassName ("VIARegisters");
 
@@ -65,7 +69,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// Data Direction Register B: VIA?DDRA
+		// Data Direction Register A: VIA?DDRA
 		case 0x03:
 			{
 				_PA -> setDDR (v.value ());
@@ -73,9 +77,9 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// LSB of the latch Timer A: VIA?T1CL
+		// T1C-L write updates the low latch, without loading the counter.
 		case 0x04:
-		// LSB of the counter Timer A: VIA?T1LL
+		// T1L-L write has the same low-latch effect.
 		// Notice that setting this register or 0x06 the result is the same...
 		case 0x06: 
 			{
@@ -84,9 +88,9 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// MSB of the latch Timer A: VIA?T1CH
+		// T1C-H writes the high latch, acknowledges IFR6 and loads/rearms T1.
 		case 0x05:
-		// MSB of the latch Timer A: VIA1T1LH
+		// T1L-H writes the high latch and acknowledges IFR6 without loading T1.
 		// Notice that in this case, the behaviour is only partially equivalent!
 		case 0x07:
 			{
@@ -103,7 +107,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// LSB of the latch Timer B: VIA?T2CL
+		// T2C-L write updates the low latch without loading T2.
 		case 0x08:
 			{
 				_T2 -> setLatchLow (v);
@@ -111,7 +115,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// MSB of the latch Timer B: VIA?T2CH
+		// T2C-H writes the high latch, acknowledges IFR5 and loads/rearms T2.
 		case 0x09:
 			{
 				_T2 -> setLatchHigh (v);
@@ -125,7 +129,7 @@ void COMMODORE::VIARegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x0a:
 			{
 				// What happens there will depen on the shifting mode...
-				// e.g if it disable won't happen nothing...
+				// Even when disabled, an SR write stores data and clears its pending flag.
 				_SR -> setValue (v);
 			}
 
@@ -346,7 +350,7 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 				result = 
 					((_CA1 -> mode () == 1 ) ? 0x1 : 0x00) | // bit 0
 					(_CA2 -> mode () << 1) | // bits 1,2,3
-					((_CB1 -> mode () == 1) ? 0x20 : 0x00) | // bit 4
+					((_CB1 -> mode () == 1) ? 0x10 : 0x00) | // bit 4
 					(_CB2 -> mode () << 5); // bits 5,6,7
 			}
 
@@ -356,9 +360,9 @@ const MCHEmul::UByte& COMMODORE::VIARegisters::readValue (size_t p) const
 			{
 				result = MCHEmul::UByte::_0;
 				result.setBit (7, launchInterrupt ()); // Any Interrupt?
-				// Reading any bit clears the flag...
-				result.setBit (6, _T1  -> peekInterruptRequested ()); // in Timer A?
-				result.setBit (5, _T2  -> peekInterruptRequested ()); // in Timer B?
+				// IFR reads observe pending flags without acknowledging them.
+				result.setBit (6, _T1  -> peekInterruptRequested ()); // in Timer 1?
+				result.setBit (5, _T2  -> peekInterruptRequested ()); // in Timer 2?
 				result.setBit (4, _CB1 -> peekInterruptRequested ()); // CB1 transition?
 				result.setBit (3, _CB2 -> peekInterruptRequested ()); // CB2 transition?
 				result.setBit (2, _SR  -> peekInterruptRequested ()); // In the shift register?

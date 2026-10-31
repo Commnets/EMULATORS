@@ -56,9 +56,12 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const override;
 
 		// Implementation
+		/** Shared by construction and initialize(); skips connected-hardware setup until all nine links exist. \n
+			Derived classes reset local state before that guard, then apply machine INITVIA defaults. \n
+			Those machine presets are distinct from the generic chip reset values. */
 		virtual void initializeInternalValues ();
 
-		// This methods are invoked from CIA chip...
+		// These links are supplied by the VIA chip; register objects do not own them.
 		/** Link to the "ControlLines". */
 		void lookAtControlLines (VIAControlLineType1* ca1, VIAControlLineType2* ca2, 
 			VIAControlLineType1* cb1, VIAControlLineType2* cb2)

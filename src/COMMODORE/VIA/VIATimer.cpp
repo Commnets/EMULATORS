@@ -15,6 +15,9 @@ COMMODORE::VIATimer::VIATimer (int id)
 void COMMODORE::VIATimer::reset ()
 { 
 	_currentValue = _initialValue; 
+	// An explicit counter load replaces any pending automatic reload.
+	_reloadPending = false;
+	_reaches0 = _reaches0LSB = false;
 		
 	_firstTimeReaches0 = false;
 		
@@ -34,6 +37,7 @@ void COMMODORE::VIATimer::initialize ()
 
 	// The implementation values...
 	_counting = false;
+	_reloadPending = false;
 	_currentValue = 0x0000;
 	_reaches0 = _reaches0LSB = _firstTimeReaches0 = false;
 	_interruptRequested = false;
@@ -45,71 +49,87 @@ COMMODORE::VIATimer::CycleResult COMMODORE::VIATimer::simulate (MCHEmul::CPU* cp
 	assert (cpu != nullptr);
 
 	CycleResult result;
+	_reaches0 = _reaches0LSB = false;
 
-	if (_counting && 
-		countDown (cpu)) // Counting one at a time...
+	if (!_counting)
+		return (result);
+
+	if (_reloadPending)
 	{
-		result._lowByteReached0 = _reaches0LSB;
-
-		if (!_reaches0)
-			return (result);
-
-		result._timeout = true;
-
-		switch (_runMode)
+		_reloadPending = false;
+		if (_runMode == RunMode::_CONTINUOUS || _runMode == RunMode::_CONTINUOUSSIGNAL)
 		{
-			case COMMODORE::VIATimer::RunMode::_ONESHOOT:
-			case COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL:
+			// Reload consumes a complete cycle without decrementing or raising events.
+			_currentValue = _initialValue;
+			return (result);
+		}
+	}
+
+	unsigned short previousValue = _currentValue;
+	if (!countDown (cpu))
+		return (result);
+
+	result._lowByteReached0 = _reaches0LSB;
+
+	switch (_runMode)
+	{
+		case COMMODORE::VIATimer::RunMode::_ONESHOOT:
+		case COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL:
+			{
+				if (!_reaches0)
+					return (result);
+
+				result._timeout = true;
+				if (!_firstTimeReaches0)
 				{
-					if (!_firstTimeReaches0)
-					{ 
-						_firstTimeReaches0 = true;
+					_firstTimeReaches0 = true;
 
-						_interruptRequested = true;
-
-						if (_runMode == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL)
-						{ 
-							// just in case...
-							// Timer 2 has nothing to do with this mode and when defined,
-							// the timer 2 doesn't take a look of any timer, so this is just a protection...
-							assert (_P != nullptr);
-
-							_P -> setP7 (true);
-						}
-					}
-				}
-
-				break;
-
-			case COMMODORE::VIATimer::RunMode::_CONTINUOUS:
-			case COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL:
-				{
 					_interruptRequested = true;
 
-					// Starts back...
-					_currentValue = _initialValue;
-
-
-					if (_runMode == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+					if (_runMode == COMMODORE::VIATimer::RunMode::_ONESHOOTSIGNAL)
 					{
+						// just in case...
+						// Timer 2 has nothing to do with this mode and when defined,
+						// the timer 2 doesn't take a look of any timer, so this is just a protection...
 						assert (_P != nullptr);
 
-						_P -> changeP7 (); // Train of pulses!
+						_P -> setP7 (true);
 					}
 				}
+			}
 
-				break;
+			break;
 
-			default:
-				{ 
-					// It shouldn't be here
-					_LOG ("Via Timer Run mode not supported:" + 
-						std::to_string ((int) _runMode));
-					assert (false); // Just when compiling under DEBUG mode...
+		case COMMODORE::VIATimer::RunMode::_CONTINUOUS:
+		case COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL:
+			{
+				if (previousValue != 0x0000)
+					return (result);
+
+				// Keep $ffff visible on timeout; reload on the following cycle.
+				result._timeout = true;
+				_interruptRequested = true;
+				_reloadPending = true;
+
+				if (_runMode == COMMODORE::VIATimer::RunMode::_CONTINUOUSSIGNAL)
+				{
+					assert (_P != nullptr);
+
+					_P -> changeP7 (); // Train of pulses!
 				}
+			}
 
-				break;
-		}
+			break;
+
+		default:
+			{
+				// It shouldn't be here
+				_LOG ("Via Timer Run mode not supported:" +
+					std::to_string ((int) _runMode));
+				assert (false); // Just when compiling under DEBUG mode...
+			}
+
+			break;
 	}
 
 	return (result);

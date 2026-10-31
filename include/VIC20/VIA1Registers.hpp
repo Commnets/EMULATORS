@@ -21,8 +21,10 @@ namespace VIC20
 	class VIA1;
 	class VIA1VIA2RegistersReflection;
 
-	/** Just to identify this space of the memory in a different section. 
-		VIA2Registers is aimed to take care of the information about keyboard. */
+	/** VIA1 register bank at $9110. \n
+		PA2..PA5 receive joystick up/down/left/fire and PA6 cassette sense;
+		PA0/PA1/PA7 retain their independently supplied external levels. \n
+		PB follows the generic user-port behavior; reads do not replace its inputs. */
 	class VIA1Registers final : public COMMODORE::VIARegisters
 	{
 		public:
@@ -33,22 +35,21 @@ namespace VIC20
 
 		VIA1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
-		/** To manage the status of the joystick. */
+		/** Cached joystick state; publishing a new state requires the VIA port links to exist. */
 		unsigned char joystickStatus ()
 							{ return (_joystickStatus); }
-		void setJoystickStatus (unsigned char js)
-							{ _joystickStatus = js; }
+		void setJoystickStatus (unsigned char js);
 
-		/** To know whether a key is the tape has benn pressed. */
+		/** Cached datasette key/sense state; its setter publishes through the connected PA. */
 		bool tapeSensePressed () const
 							{ return (_tapeSensePressed); }
-	    void setTapeSensePressed (bool v)
-							{ _tapeSensePressed = v; }
+		void setTapeSensePressed (bool v);
 
 		private:
-		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		/** Publish live joystick/tape inputs independently of input latching. */
+		void refreshPortAInputs ();
 
-		// Implementation
+		// Reset cached inputs even during construction; apply INITVIA presets only after wiring.
 		virtual void initializeInternalValues () override;
 
 		private:

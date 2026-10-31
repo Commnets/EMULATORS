@@ -1,4 +1,4 @@
-/** \ingroup VIC20 */
+/** \ingroup COMMODORE */
 /*@{*/
 
 /**	
@@ -19,7 +19,8 @@
 
 namespace COMMODORE
 {
-	class VIAControlLine;
+	class VIAControlLineType1;
+	class VIAControlLineType2;
 	class VIATimer;
 	class VIA;
 
@@ -36,40 +37,31 @@ namespace COMMODORE
 		{
 			_DISABLE			= 0,		// None. The "ShiftRegister" is free for other purposes.
 
-			// IN
-			_INUNDERTIMER		= 1,		// Shift - in (from _CL2 value to bit 0) every time _T reaches0LSB = true.
-											// Every shift - in, _CL1 changes (shift pulse).
-											// After 8 shift pulses in _CL1 (or 8 shift - ins),
-											// the shift operation is disabled and the interrupt flag is set.
-			_INATCLOCK			= 2,		// Same than above but system clock pulses determine the shift - in pace instead _T.
-			_INUNDERSIGNALCL1	= 3,		// The input signal to shift is here the changes in the _CL1 status.
-											// After 8 bits shifted - in, and flagging the interrupt, the counter starts back.
-											// Writting or reading the "ShiftRegisters" puts back the counter to 0, 
-											// and clear the interrupt flag.
+			// Internally generated CB1 clocks shift on falling edges.
+			// Timer modes use a private divider loaded from the low T2 latch,
+			// independently of the T2 counter and its timeout/zero flags.
+			_INUNDERTIMER		= 1,		// Eight input bits from CB2; T2-latch divider.
+			_INATCLOCK			= 2,		// Eight input bits from CB2; PHI2 divider.
+			_INUNDERSIGNALCL1	= 3,		// Input on external CB1 positive edges; repeated bytes.
 
-			// OUT
-			_OUTFREERUNNING		= 4,		// @see just below.
-											// But never stops.
-											// Continuous (bit 7 enters back bit 0). Shift counter makes no sense.
-			_OUTUNDERTIMER		= 5,		// Shift - out (bit 7 to _CL2) every time _T reaches0 = true.
-											// Every shift - out, _CL1 changes (shift pulse).
-											// After 8 shift pulses in _CL1 (or 8 shift - outs),
-											// the shift operation is disabled, the interrupt flag is set,
-											// and _CL2 goes to the status that PCR (VIA Register 0x05) defines (bit 5).
-											// To start back the shift - out process, 
-											// data has be read/write from/into the "ShiftRegister".
-			_OUTATCLOCK			= 6,		// Same than above, 
-											// but system clock pulses determine the shift - out pace instead _T.
-			_OUTUNDERSIGNALCL1	= 7			// The input signal to shift is here the changes in _CL1 status.
+			_OUTFREERUNNING		= 4,		// T2-latch divider; recirculating output, modulo-eight count, no IFR2.
+			_OUTUNDERTIMER		= 5,		// Eight output bits to CB2; T2-latch divider.
+			_OUTATCLOCK			= 6,		// Eight output bits to CB2; PHI2 divider.
+			_OUTUNDERSIGNALCL1	= 7			// Output on external CB1 positive edges; repeated bytes.
+			// Finite internal transfers complete the final rising CB1 half-cycle.
+			// Except in mode 4, the eighth shift sets IFR2.
+			// Finite internal output idles at PCR bit 5 after the final rising edge.
+			// CB1 interrupt polarity remains independently selected by PCR.
 		};
 
 		VIAShiftRegister (int id);
 
 		ShiftMode mode () const
 							{ return (_mode); }
+		/** Reapplying the current mode preserves the transfer; a changed mode resets it. */
 		void setMode (ShiftMode m);
 
-		// Managing the value that is in the register...
+		// Ordinary reads/writes clear IFR2 and restart a transfer; peekValue() only observes.
 		const MCHEmul::UByte value () const;
 		const MCHEmul::UByte& peekValue () const
 							{ return (_value); }
@@ -103,6 +95,7 @@ namespace COMMODORE
 
 		private:
 		void startTransfer () const;
+		void updateCB2Function () const;
 
 		/** To shift in/out the data. \n
 			Returns true when 8 bits has been already shifted. */
@@ -113,7 +106,7 @@ namespace COMMODORE
 		/** To link the shift register with the VIA chip. */
 		void lookAtTimer (VIATimer* t)
 							{ _T = t; }
-		void lookAtControlLines (VIAControlLine* c1, VIAControlLine* c2)
+		void lookAtControlLines (VIAControlLineType1* c1, VIAControlLineType2* c2)
 							{ _CL1 = c1; _CL2 = c2; }
 
 		private:
@@ -124,11 +117,11 @@ namespace COMMODORE
 
 		// Other Elements the Shift Register has relation with...
 		VIATimer* _T;
-		VIAControlLine* _CL1;
-		VIAControlLine* _CL2;
+		VIAControlLineType1* _CL1;
+		VIAControlLineType2* _CL2;
 
 		// Implementation
-		/** How many bits have been already shifted in/out? */
+		/** Number of bits shifted modulo eight, including free-running mode. */
 		mutable unsigned char _numberBits;
 		/** Whether the current transfer is producing/accepting shift clocks. */
 		mutable bool _shifting;

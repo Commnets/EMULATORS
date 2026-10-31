@@ -7,7 +7,7 @@
  *	Framework: CPU Emulators library \n
  *	Author: Ignacio Cea Fornies (EMULATORS library) \n
  *	Creation Date: 17/12/2023 \n
- *	Description: The VIA2 Chip. This chip read the keyboard and the main joystick!
+ *	Description: The VIA2 Chip. This chip handles the keyboard, joystick right and datasette signals.
  *	Versions: 1.0 Initial
  */
 

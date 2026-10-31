@@ -121,3 +121,16 @@ Inspect partial address decoding outside canonical ranges. In particular, simult
 | System | Keyboard/joystick sharing; tape motor versus read; IEC resolved levels; mirrors and simultaneous selects; cold reset versus KERNAL initialization |
 
 Report missing observability explicitly. The current VIA deep trace may contain ports without timer latch/counter/IFR/IER snapshots. Handler cadence can prove a period mismatch, but it cannot by itself establish every internal phase or which source first asserted the line.
+
+## Current repository model
+
+This section describes implementation choices, not an amendment to the hardware contract above. Recheck the source after changes; the maintained coverage and historical results are in [TestVIATimer README](../../../../tests/TestVIATimer/README.md).
+
+- CPU-timed operation uses complete instructions. The instruction-start callback advances VIA internal activity to the predicted read point, capped before the first write. The last advanced cycle is completed after ordinary CPU reads; buffered writes are then replayed at their bus positions while the remaining cycles run. This is not independent scheduling of every read in one instruction.
+- Continuous T1 has separate decrement-to-zero, zero-to-$ffff timeout and next-cycle reload phases, with a steady period of latch + 2. The current one-shot model requests once on the first decrement to zero and continues counting until explicitly loaded/rearmed. T2 uses one-shot operation with either PHI2 or sampled PB6 falling edges.
+- Timer-driven SR clocks use a private divider based on the low T2 latch, not T2 counter timeout flags. Internal clocks shift on falling CB1 edges; external clocks shift on positive CB1 edges. CB1 interrupt detection retains its PCR polarity.
+- C1 active edges capture resolved port levels; ACR selects captured versus live input readback. T1 ownership of PB7 uses effective DDRB | $80 without changing stored DDRB.
+- Register constructors keep initializeInternalValues(). Non-owning links start at nullptr; connected setup is guarded until all nine links exist. Derived cached input state resets before the guard. Machine INITVIA presets are distinct from generic chip reset values.
+- VIA2 matrix resolution is a bounded digital low-propagation calculation performed on port reads/peeks and initialization. Peeks avoid acknowledgement/handshake but can publish updated pin levels. The sixteen iterations are computations, not CPU cycles; configured outputs retain priority.
+- VIA deep-debug cycles use an explicit absolute cycle and snapshot before internal activity, including advance from the instruction-start callback. Port tuples are OR,IR,DDR; they omit live pins, timer state and IFR/IER. The split access cycle has one snapshot, not two.
+- Distinct reads within one instruction, missing dummy reads, I/O instruction fetches, timestamped external input histories, global cross-chip phase ordering and physical half-cycle priority remain limitations of the current access model.

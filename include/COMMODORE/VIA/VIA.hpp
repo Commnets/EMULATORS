@@ -24,6 +24,12 @@
 
 namespace COMMODORE
 {
+	/** Reusable VIA with machine-supplied register bank and interrupt routing. \n
+		CPU-timed operation predicts the read point from instruction bus metadata,
+		advances internal activity before ordinary CPU reads, then completes that cycle
+		after those reads and replays buffered writes at their positions in the remaining cycles. \n
+		This complete-instruction model does not provide independent timing for every
+		read in one instruction, timestamped external inputs or global cross-chip interleaving. */
 	class VIA : public MCHEmul::Chip
 	{
 		public:
@@ -66,9 +72,18 @@ namespace COMMODORE
 		void setPortBExternalPins (const MCHEmul::UByte& v)
 							{ _PB.setExternalPins (v); }
 
+		/** Enables buffered CPU writes and advance to the instruction read point. \n
+			The CPU must execute complete instructions. \n
+			Call after initializing the CPU and VIA. */
+		bool enableCPUTimedWrites (MCHEmul::CPU* cpu);
+		virtual void CPUAboutToExecute
+			(const MCHEmul::InstructionContextEventData* dt) override;
+		virtual void CPUAboutToExecute
+			(const MCHEmul::InterruptContextEventData* dt) override;
+
 		virtual bool initialize () override;
 
-		// Just to add debug info when active...
+		/** Completes any advanced access cycle, applies buffered writes and catches up to the CPU clock. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**
@@ -87,13 +102,25 @@ namespace COMMODORE
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+		private:
+		void prepareCPUTransaction
+			(MCHEmul::CPU* cpu, const MCHEmul::BusCycleData* busData);
+		bool extractPendingRegisterWrites ();
+		bool executePendingRegisterWriteAt (unsigned int cycle);
+		/** Advances explicit cycles; the last awaits CPU-access completion. */
+		bool simulate (MCHEmul::CPU* cpu, unsigned int cycles);
+		bool simulateVIACycle
+			(MCHEmul::CPU* cpu, unsigned int cycle, bool completeCycle);
+		bool finishVIACycle
+			(MCHEmul::CPU* cpu, unsigned int cycle, bool afterCPURead);
+
 		protected:
 		// -----
 		// Different debug methods to simplify the internal code
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugVIACycle (MCHEmul::CPU* cpu, unsigned int i);
+		void debugVIACycle (unsigned int cycle);
 		// -----
 
 		protected:
@@ -110,7 +137,22 @@ namespace COMMODORE
 		VIAPortB _PB;
 
 		// Implementation
+		/** First cycle whose internal activity has not been processed. */
 		unsigned int _lastClockCycles;
+		/** Whether the VIA interrupt output was asserted in the previous cycle. */
+		bool _interruptOutputActive;
+
+		private:
+		/** Non-owning reference; nullptr preserves direct-access operation. */
+		MCHEmul::CPU* _timedWriteCPU;
+		/** Non-owning reference to immutable bus data of the current transaction. */
+		const MCHEmul::BusCycleData* _writeBusCycleData;
+		unsigned int _writeStartCycle;
+		MCHEmul::SetMemoryCommands _pendingRegisterWrites;
+		/** Internal cycles already advanced for the current instruction. */
+		unsigned int _cyclesSimulatedInAdvance;
+		/** The last advanced cycle still needs post-access completion. */
+		bool _advancedCyclePending;
 	};
 }
 
