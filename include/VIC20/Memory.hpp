@@ -47,6 +47,44 @@ namespace VIC20
 		mutable MCHEmul::UByte _lastValue;
 	};
 
+	/** CPU access to four-bit color RAM. */
+	class CPUColorRAMSubset final : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		CPUColorRAMSubset
+			(int id, MCHEmul::PhysicalStorage* storage,
+			 size_t physicalPosition, const MCHEmul::Address& address, size_t size);
+
+		private:
+		/** Only the low nibble reaches the physical cells. */
+		virtual void setValue (size_t position, const MCHEmul::UByte& value) override
+							{ MCHEmul::PhysicalStorageSubset::setValue (position, value & 0x0f); }
+		virtual const MCHEmul::UByte& readValue (size_t position) const override;
+
+		private:
+		// Implementation
+		mutable MCHEmul::UByte _lastValueRead;
+	};
+
+	/** Read-only video alias of the physical color RAM. */
+	class VICIColorRAMSubset final : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		VICIColorRAMSubset (int id, MCHEmul::PhysicalStorage* storage);
+		/** The original subsets initialize the shared storage. */
+		virtual void initialize () override
+							{ }
+
+		private:
+		virtual void setValue (size_t position, const MCHEmul::UByte& value) override
+							{ }
+		virtual const MCHEmul::UByte& readValue (size_t position) const override;
+
+		private:
+		// Implementation
+		mutable MCHEmul::UByte _lastValueRead;
+	};
+
 	/** The memory itself for the VIC 20... */
 	class Memory final : public MCHEmul::Memory
 	{
@@ -89,17 +127,21 @@ namespace VIC20
 		static const int _VICIRAFTER_SUBSET		= 113;
 		static const int _VIAAFTER_SUBSET		= 114;
 		static const int _SCREENC1RAM_SUBSET	= 115;
-		static const int _SCREENC1RAMUC_SUBSET	= 116;
 		static const int _SCREENC2RAM_SUBSET	= 117;
-		static const int _SCREENC2RAMUC_SUBSET	= 118;
 		static const int _BANK4_SUBSET			= 119;
 		static const int _BANK5_SUBSET			= 120;
 		static const int _BANK5UC_SUBSET		= 121;	// The not connected...
 		static const int _BASICROM_SUBSET		= 122;
 		static const int _KERNELROM_SUBSET		= 123;
 
+		static const int _VICICOLOR_SUBSET					= 124;
+		static const int _VICIUNCONNECTEDLOW_SUBSET			= 125;
+		static const int _VICIUNCONNECTEDIO_SUBSET			= 126;
+		static const int _VICIUNCONNECTEDEXPANSION_SUBSET	= 127;
+
 		// Views
 		static const int _CPU_VIEW				= 0;
+		static const int _VICI_VIEW				= 1;
 
 		/** The constructor receives the posible memory configuration. */
 		Memory (Configuration cfg, 
@@ -138,10 +180,6 @@ namespace VIC20
 		MCHEmul::EmptyPhysicalStorageSubset* _BANK2UC;
 		MCHEmul::PhysicalStorageSubset* _BANK3;
 		MCHEmul::EmptyPhysicalStorageSubset* _BANK3UC;
-		MCHEmul::PhysicalStorageSubset* _SCREENC1RAM;
-		MCHEmul::RandomPhysicalStorageSubset* _SCREENC1RAMUC;
-		MCHEmul::PhysicalStorageSubset* _SCREENC2RAM;
-		MCHEmul::RandomPhysicalStorageSubset* _SCREENC2RAMUC;
 		MCHEmul::PhysicalStorageSubset* _BANK5;
 		MCHEmul::EmptyPhysicalStorageSubset* _BANK5UC;
 	};

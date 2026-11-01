@@ -37,10 +37,6 @@ namespace COMMODORE
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
 		
-		/** To set the number of positions that the next instruction will take. */
-		void setNumberPositionsNextInstruction (unsigned int nP)
-							{ _numberPositionsNextInstruction = nP; }
-
 		/** To know whether the status of the interlaced mode. */
 		bool interlacedActive () const
 							{ return (_interlaced); }
@@ -110,10 +106,18 @@ namespace COMMODORE
 		/** To knlow the different zones of the memory. */
 		const MCHEmul::Address& screenMemory () const
 							{ return (_screenMemory); }
+		/** Add the offset in VIC address space before CPU-view translation. */
+		MCHEmul::Address screenMemory (size_t offset) const
+							{ return (cpuAddressFromVIC (_screenMemoryVIC + offset)); }
 		const MCHEmul::Address& charDataMemory () const
 							{ return (_charDataMemory); }
+		/** Add the offset in VIC address space before CPU-view translation. */
+		MCHEmul::Address charDataMemory (size_t offset) const
+							{ return (cpuAddressFromVIC (_charDataMemoryVIC + offset)); }
 		const MCHEmul::Address& colourMemory () const
 							{ return (_colourMemory); }
+		/** Add an offset within the physical 1024-nibble color RAM. */
+		inline MCHEmul::Address colourMemory (size_t offset) const;
 
 		virtual void initialize () override;
 
@@ -135,14 +139,15 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& readValue (size_t p) const override;
 
 		// Implementation
-		/** Just to initialize the internal values. */
+		/** Used by construction and initialize(). \n
+			Seeds every address selector before applying the register presets. */
 		void initializeInternalValues ();
 		/** Calculate the internal memory positions. */
 		inline void calculateMemoryPositions ();
+		/** Translate a wrapped 14-bit VIC address to its CPU-view equivalent. */
+		inline MCHEmul::Address cpuAddressFromVIC (size_t address) const;
 
 		private:
-		/** The number of cycle that the next instruction to be executed in the CPU will take. */
-		unsigned int _numberPositionsNextInstruction;
 		/** Interlaced? */
 		bool _interlaced;
 		/** Offset X of the screen. \n
@@ -173,7 +178,7 @@ namespace COMMODORE
 		unsigned char _latchLightPenVerticalPosition;
 		/** To identify whether the light pen is or not active to take it into account in the simulation. */
 		bool _lightPenActive;
-		/** The sound wrapper. */
+		/** Non-owning sound wrapper linked by VICI. */
 		VICISoundLibWrapper* _soundWrapper;
 		/** Colors. */
 		unsigned char _auxiliarColor, _backgroundColor, _borderColor;
@@ -182,11 +187,13 @@ namespace COMMODORE
 
 		// Some of this variables are set by the emulation of the VICI
 		// The VICI chip also uses this object as a temporary storage
-		/** Where the raster line is. */
+		/** Non-owning raster linked by VICI before raster-register reads. */
 		MCHEmul::Raster* _raster;
 
 		// Implementation...
 		mutable MCHEmul::UByte _lastValueRead;
+		/** Cached chip-space bases, recomputed only when address selectors change. */
+		unsigned int _screenMemoryVIC, _charDataMemoryVIC;
 		MCHEmul::Address _screenMemory;
 		MCHEmul::Address _charDataMemory; 
 		MCHEmul::Address _colourMemory;
@@ -195,30 +202,40 @@ namespace COMMODORE
 	};
 
 	// ---
+	inline MCHEmul::Address VICIRegisters::colourMemory (size_t offset) const
+	{
+		return (MCHEmul::Address
+			(2, 0x9400 + (unsigned int)
+				(((_b9ScreenColorMemory << 9) + offset) & 0x03ff)));
+	}
+
+	// ---
 	inline void VICIRegisters::calculateMemoryPositions ()
 	{ 
-		// To help calculus...
-		const unsigned int screenNibble = _b10to13ScreenMemory & 0x0f;
-		const unsigned int charNibble   = _b10to13CharDatamemory & 0x0f;
+		_screenMemoryVIC =
+			((_b10to13ScreenMemory & 0x0f) << 10) |
+			((_b9ScreenColorMemory & 0x01) << 9);
+		_charDataMemoryVIC =
+			(_b10to13CharDatamemory & 0x0f) << 10;
 
-		// VIC screen address:
-		// $9002 bit 7 supplies A9.
-		// $9005 bits 6..4 supply A12..A10.
-		// $9005 bit 7 is inverted into A13.
-		_screenMemory = MCHEmul::Address
-			(2, (_b9ScreenColorMemory << 9) +
-				(((screenNibble & 0x07) + (((screenNibble & 0x08) != 0x00) ? 0x00 : 0x08)) << 10));
-
-		// VIC character address:
-		// low nibble 0..7 -> ROM/I/O window $8000-$9C00
-		// low nibble 8..15 -> RAM $0000-$1C00
-		_charDataMemory = MCHEmul::Address
-			(2, (((charNibble & 0x08) != 0x00) ? 0x0000 : 0x8000) +
-				((charNibble & 0x07) << 10));
+		_screenMemory = screenMemory (0);
+		_charDataMemory = charDataMemory (0);
 
 		_colourMemory = MCHEmul::Address
 			(2, _b9ScreenColorMemory ? 0x9600 : 0x9400);
 	}
+
+	// ---
+	inline MCHEmul::Address VICIRegisters::cpuAddressFromVIC (size_t address) const
+	{
+		address &= 0x3fff;
+
+		// VIC A13 selects CPU A15 with inverted polarity.
+		return (MCHEmul::Address
+			(2, (unsigned int) ((address & 0x1fff) |
+				((address & 0x2000) != 0 ? 0x0000 : 0x8000))));
+	}
+
 }
 
 #endif

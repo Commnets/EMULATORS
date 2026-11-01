@@ -9,7 +9,7 @@
     [
       "106",
       "VIC-I",
-      "Raster, instruction projection, screen/character/colour memory, and sound"
+      "Raster, CPU read-point timing, screen/character/colour memory, and sound"
     ],
     [
       "210",
@@ -36,22 +36,22 @@
     {
       "name": "VICI — Info Cycle",
       "producer": "src/COMMODORE/VICI/VICI.cpp :: debugVICICycle",
-      "fields": "Raster: zero-based column, zero-based line, and raster cycle; Instruction projection: PositionsToEffect; Memory: hexadecimal Screen, Characters, and Color.",
-      "timing": "cpu.clockCycles()-i for each recovered position.",
+      "fields": "Raster: zero-based column, zero-based line, and raster cycle; CPU timing: CyclesAdvanced counts cycles already started by pre-instruction advancement when the snapshot is emitted; Memory: hexadecimal Screen, Characters, and Color.",
+      "timing": "The header receives the explicit absolute cycle passed to debugVICICycle(cycle), before that cycle's video fetch/output. In complete-instruction CPU-timed mode, records can be emitted during CPUAboutToExecute while advancing to the read point and later during simulate() for the remaining cycles. The final advanced cycle keeps its raster position during the CPU read; simulate() closes it without repeating its fetch/output or snapshot. CPU writes precede counter updates. The clock origin is aligned during initialization, including when it is zero.",
       "events": "This method adds no subordinate events."
     },
     {
-      "name": "VICI — CPU transaction projection",
+      "name": "VICI — CPU transaction timing",
       "producer": "src/COMMODORE/VICI/VICI.cpp :: debugCPUAboutToExecute",
-      "fields": "Transaction(Type, Address, Code, Cycles); Raster origin(Row, Cycle); Raster projection(PositionsToEffect).",
-      "timing": "Emitted when VIC-I receives the context of the next instruction.",
-      "events": "Allows the projection to be compared with PositionsToEffect in following cycles."
+      "fields": "Transaction(Type, Address, Code, Cycles); Raster origin(Row, Cycle); CPU read point(AdvanceCycles). Cycles is the complete predicted instruction duration. AdvanceCycles includes the video phase of the selected read cycle and is capped before the first write cycle.",
+      "timing": "Emitted after preparing the instruction bus context and before advancing VIC-I. Raster origin is the position at the instruction boundary, before any advance.",
+      "events": "Following Info Cycle records show the pre-instruction advance. The final cycle remains pending until the ordinary CPU read has occurred. There is no dedicated CPU read event in this producer."
     },
     {
       "name": "VICI Sound — Info Cycle",
       "producer": "src/COMMODORE/VICI/VICI.cpp :: SoundFunction::debugVICISoundCycle",
       "fields": "Voice state produced by the wrapper: activity, volume/frequency, and waveform according to the current sound structure.",
-      "timing": "cpu.clockCycles()-i.",
+      "timing": "cpu.clockCycles()-i for each sound cycle actually generated. Before a CPU write to $900a-$900e, sound finishes the old interval through the end of that bus cycle. Remaining sound cycles run afterwards without replay; sound records can therefore interleave with VIC-I cycle records.",
       "events": "Adds no subordinate events."
     },
     {
@@ -73,16 +73,20 @@
     "CPU     24500       Info Cycle",
     "                    Last 2 cycles",
     "                    PC:$e000(Stack 255) SEI",
-    "VICI    24500       CPU transaction projection",
+    "VICI    24500       CPU transaction timing",
+    "                    Transaction         :Type=Instruction,Address=$e000,Code=120,Cycles=2",
     "                    Raster origin       :Row=12,Cycle=33",
+    "                    CPU read point      :AdvanceCycles=2",
     "VICI    24500       Info Cycle",
-    "                    Raster              :120,11,33",
+    "                    Raster              :256,12,33",
+    "                    CPU timing          :CyclesAdvanced=0",
     "                    Memory              :Screen=$1e00,Characters=$8000,Color=$9400",
     "+"
   ],
-  "example_note": "Schematic example built from the code's current literals and fields; values are illustrative.",
+  "example_note": "Schematic excerpt built from the current literals and fields; values are illustrative. It shows the first of the two advanced cycles, not a complete instruction trace. The second cycle snapshot and its later completion are omitted.",
   "limitations": [
-    "The VIC-I projection expresses internal positions, not necessarily physical CPU-bus cycles.",
+    "VIC-I CPU-timed reads use one predicted read point per complete instruction. Multiple I/O reads at distinct bus cycles, missing dummy reads, instruction fetches from I/O, un-timestamped external inputs, global cross-chip phase interleaving and physical half-cycle priority are not resolved. Raster reads use the current Raster model, including its existing NTSC line numbering and interlace limitations.",
+    "CPU-timed VIC-I writes use instruction or accepted interrupt bus-cycle metadata and existing buffered commands for registers, shared internal RAM and color RAM. RMW dummy/final writes remain distinct. Read-point advancement stops before the first write cycle. This cycle-granular order does not model physical pixel latency or a phase-accurate fetch pipeline.",
     "VIA read-point advancement requires complete-instruction CPU execution. Multiple VIA reads at distinct bus cycles in one instruction, missing dummy reads, instruction fetches from I/O, un-timestamped external inputs, cross-chip phase interleaving and physical half-cycle priority are not resolved by that model.",
     "VIA PortA/PortB contain OR,IR,DDR, not pin levels or timer/interrupt state. Correlate accesses with CPU context and source code; record order across chips is not a globally chronological bus trace.",
     "ALLIO may include records from dynamically connected peripherals."

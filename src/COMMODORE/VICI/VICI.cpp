@@ -123,7 +123,8 @@ COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
 		  { "Manufacturer", "Commodore Business Machines CBM" },
 		  { "Year", "1977" } },
 		sW),
-	  _lastCPUCycles (0)
+	  _lastCPUCycles (0),
+	  _clockSynchronized (false)
 { 
 	// Take care that the sound emulation library was not null at all...
 	// ...and also belonging to the right type..
@@ -139,42 +140,45 @@ bool COMMODORE::VICI::SoundFunction::initialize ()
 		return (false);
 
 	_lastCPUCycles = 0;
+	_clockSynchronized = false;
 
 	return (true);
 }
 
 // ---
-bool COMMODORE::VICI::SoundFunction::simulate (MCHEmul::CPU* cpu)
+bool COMMODORE::VICI::SoundFunction::simulateUntil (MCHEmul::CPU* cpu, unsigned int cycle)
 {
-	// First time?
-	if (_lastCPUCycles == 0)
-	{ 
-		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
-
+	assert (cpu != nullptr);
+	if (!_clockSynchronized)
+	{
+		synchronizeClock (cycle);
 		return (true);
 	}
 
-	if (soundWrapper () != nullptr)
+	// Reject a future target or a request to replay time already completed.
+	if (cycle - _lastCPUCycles > cpu -> clockCycles () - _lastCPUCycles)
 	{
-		for (unsigned int i = (cpu -> clockCycles () - _lastCPUCycles); i > 0 ; i--)
-		{
-			_IFDEBUG debugVICISoundCycle (cpu, i);
-
-			// The number of bytes that can come from the wrapper might not be fixed...
-			MCHEmul::UBytes data;
-			if (soundWrapper () -> getData (cpu, data))
-			{
-				for (size_t j = 0; j < data.size (); j++)
-				{
-					char dt = (char) data [j].value ();
-					if (soundMemory () -> addSampleData (&dt, sizeof (char)))
-						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
-				}
-			}
-		}
+		_error = MCHEmul::_CHIP_ERROR;
+		return (false);
 	}
 
-	_lastCPUCycles = cpu -> clockCycles ();
+	for (unsigned int remaining = cycle - _lastCPUCycles; remaining > 0; --remaining)
+	{
+		if (soundWrapper () != nullptr)
+		{
+			_IFDEBUG debugVICISoundCycle (cpu, cpu -> clockCycles () - _lastCPUCycles);
+			MCHEmul::UBytes data;
+			if (soundWrapper () -> getData (cpu, data))
+				for (size_t j = 0; j < data.size (); ++j)
+				{
+					char value = (char) data [j].value ();
+					if (soundMemory () -> addSampleData (&value, sizeof (char)))
+						MCHEmul::SoundChip::notify (MCHEmul::Event (_SOUNDREADY));
+				}
+		}
+
+		++_lastCPUCycles;
+	}
 
 	return (true);
 }
@@ -229,23 +233,26 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _VICIView (vV),
 	  _cyclesPerRasterLine (cRL),
 	  _raster (vd, hd, 8 /** The step is here 8 pixels */),
-	  _maxXVisible (0), // Defined better later...
+	  _videoMemory (nullptr),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
 	  _lastVBlankEntered (false),
 	  _scrX1 (0), _scrY1 (0), _scrX2 (0), _scrY2 (0),
-	  _lightPenFrameLatched (false), _lightPenButtonPressed (false)
+	  _lightPenFrameLatched (false), _lightPenButtonPressed (false),
+	  _timedWriteCPU (nullptr),
+	  _timedWriteSubsets (),
+	  _writeBusCycleData (nullptr),
+	  _writeStartCycle (0),
+	  _pendingWrites (),
+	  _cyclesSimulatedInAdvance (0),
+	  _advancedCyclePending (false)
 {
 	assert (_cyclesPerRasterLine >= 65);
 
 	setClassName ("VICI");
 
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
-
-	unsigned short x1, y1, x2, y2;
-	_raster.screenPositions (x1, y1, x2, y2);
-	_maxXVisible = (x2 - x1);
 }
 
 // ---
@@ -270,6 +277,14 @@ bool COMMODORE::VICI::initialize ()
 	if (!MCHEmul::GraphicalChip::initialize ())
 		return (false);
 
+	_videoMemory = memoryRef () -> view (_VICIView);
+	if (_videoMemory == nullptr)
+	{
+		MCHEmul::GraphicalChip::_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
 	// Gets the memory block dedicated to the VICI
 	if (!(_VICIRegisters = 
 		dynamic_cast <COMMODORE::VICIRegisters*> 
@@ -287,6 +302,13 @@ bool COMMODORE::VICI::initialize ()
 	_VICIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;
+	_timedWriteCPU = nullptr;
+	_timedWriteSubsets.clear ();
+	_writeBusCycleData = nullptr;
+	_writeStartCycle = 0;
+	_pendingWrites.clear ();
+	_cyclesSimulatedInAdvance = 0;
+	_advancedCyclePending = false;
 	
 	_cycleInRasterLine = 1;
 
@@ -303,82 +325,162 @@ bool COMMODORE::VICI::initialize ()
 }
 
 // ---
+bool COMMODORE::VICI::enableCPUTimedWrites
+	(MCHEmul::CPU* cpu, const MCHEmul::PhysicalStorageSubsets& subsets)
+{
+	assert (cpu != nullptr && _VICIRegisters != nullptr);
+	assert (_timedWriteCPU == nullptr && _pendingWrites.empty ());
+	const MCHEmul::PhysicalStorageSubsets::const_iterator registers =
+		subsets.find (_VICIRegisters -> id ());
+
+	if (cpu -> ticksCounter () != nullptr || registers == subsets.end () ||
+		registers -> second != _VICIRegisters)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
+	for (const auto& subset : subsets)
+	{
+		if (subset.second == nullptr ||
+			!MCHEmul::Memory::configuration ().bufferMemorySetCommands (subset.second))
+		{
+			_error = MCHEmul::_INIT_ERROR;
+
+			return (false);
+		}
+	}
+
+	_timedWriteCPU = cpu;
+	_timedWriteSubsets = subsets;
+	_lastCPUCycles = cpu -> clockCycles ();
+	_soundFunction -> synchronizeClock (_lastCPUCycles);
+
+	return (true);
+}
+
+// ---
 void COMMODORE::VICI::CPUAboutToExecute
 	(const MCHEmul::InstructionContextEventData* dt)
 {
 	assert (dt != nullptr);
 
-	const unsigned int positions = dt -> _clockCycles;
+	if (_timedWriteCPU == nullptr || _error != MCHEmul::_NOERROR)
+		return;
 
-	_VICIRegisters -> setNumberPositionsNextInstruction (positions);
+	const MCHEmul::InstructionDefined* instruction =
+		static_cast <const MCHEmul::InstructionDefined*> (dt -> _instruction);
+	const size_t cycleStructure =
+		(size_t) (dt -> _clockCycles - instruction -> clockCycles ());
+	const MCHEmul::BusCycleData& busData =
+		instruction -> busCycleData (cycleStructure);
 
-	_IFDEBUG debugCPUAboutToExecute (dt, positions);
+	if (!prepareCPUTransaction (dt -> _cpu, &busData))
+		return;
+
+	unsigned int cycles = 0;
+	if (busData._lastReadCycle != MCHEmul::BusCycleData::_NOCYCLE)
+		cycles = (unsigned int) (busData._lastReadCycle + 1);
+	// Buffered writes do not exist yet: stop before the first write cycle.
+	if (busData._numberWriteCycles != 0 &&
+		cycles > busData._firstWriteCycle)
+		cycles = (unsigned int) (busData._firstWriteCycle);
+
+	_IFDEBUG debugCPUAboutToExecute (dt, cycles);
+
+	if (!simulate (dt -> _cpu, cycles))
+		_error = MCHEmul::_CHIP_ERROR;
+}
+
+// ---
+void COMMODORE::VICI::CPUAboutToExecute (const MCHEmul::InterruptContextEventData* dt)
+{
+	assert (dt != nullptr);
+	if (_timedWriteCPU == nullptr || _error != MCHEmul::_NOERROR)
+		return;
+
+	prepareCPUTransaction (dt -> _cpu, &dt -> _interrupt -> busCycleData ());
 }
 
 // ---
 bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 {
-	// First time?
-	if (_lastCPUCycles == 0)
-	{ 
-		_lastCPUCycles = cpu -> clockCycles (); // Nothing to do...
+	assert (cpu != nullptr);
+
+	const unsigned int currentCPUCycles = cpu -> clockCycles ();
+
+	if (_timedWriteCPU != nullptr)
+	{
+		if (cpu != _timedWriteCPU || _error != MCHEmul::_NOERROR ||
+			cpu -> ticksCounter () != nullptr)
+		{
+			_error = MCHEmul::_CHIP_ERROR;
+
+			return (false);
+		}
+
+		if (_writeBusCycleData != nullptr)
+		{
+			const unsigned int elapsedCycles =
+				currentCPUCycles - _writeStartCycle;
+
+			// This mode requires complete transactions and cannot replay time.
+			if (elapsedCycles != _writeBusCycleData -> _numberCycles ||
+				elapsedCycles < _cyclesSimulatedInAdvance ||
+				_lastCPUCycles !=
+					_writeStartCycle + _cyclesSimulatedInAdvance)
+			{
+				_error = MCHEmul::_CHIP_ERROR;
+
+				return (false);
+			}
+		}
+		else
+			assert (_cyclesSimulatedInAdvance == 0 &&
+				!_advancedCyclePending);
+
+		if (!extractPendingWrites ())
+			return (false);
+
+		if (_advancedCyclePending)
+		{
+			// Its video phase ran before the CPU performed the register read.
+			if (!finishRasterCycle (cpu, _lastCPUCycles - 1))
+				return (false);
+
+			_advancedCyclePending = false;
+		}
+	}
+	else if (_lastCPUCycles == 0)
+	{
+		// Preserve direct-access component operation without a connected scheduler.
+		_lastCPUCycles = currentCPUCycles;
 
 		return (true);
 	}
 
-	// Simulate the visulization...
-	for (unsigned int i = (cpu -> clockCycles  () - _lastCPUCycles); i > 0; i--)
+	for (unsigned int remaining = currentCPUCycles - _lastCPUCycles;
+		remaining > 0; --remaining)
 	{
-		_IFDEBUG debugVICICycle (cpu, i);
+		if (!simulateRasterCycle (cpu, _lastCPUCycles, true))
+			return (false);
 
-		// Read the graphics and draw the visible zone, 
-		// if it is the case...
-		readGraphicsAndDrawVisibleZone ();
-
-		// ...and then treat the current cycle...
-		treatRasterCycle ();
-
-		// Evaluate light-pen detection at the new raster position.
-		// The emulated light pen uses the mouse position and button state. The
-		// position is latched when the raster beam reaches the mouse/light-pen
-		// position, and at most once per frame.
-		treatLightPenAtCurrentRasterPosition ();
-
-		// ...and also moves 8 pixels right in the raster line and jump to other line is possible...
-		if (_raster.moveCycles (1))
-		{
-			_cycleInRasterLine = 1;
-			// ...and also allow a new light pen latch in the new frame, 
-			// if this happened...
-			if (_raster.vData ().currentPosition () == 0)
-				_lightPenFrameLatched = false;
-		}
-
-		// When the raster enters the non visible part of the screen,
-		// a notification is sent (to the Screen class usually) 
-		// just to draw the screen...
-		if (_raster.isInFirstVBlankZone ())
-		{
-			if (!_lastVBlankEntered)
-			{
-				_lastVBlankEntered = true;
-
-				notify (MCHEmul::Event (_GRAPHICSREADY));
-
-				_vicGraphicInfo.initialize (_VICIRegisters);
-			}
-		}
-		else
-			_lastVBlankEntered = false;
+		++_lastCPUCycles;
 	}
 
-	_lastCPUCycles = cpu -> clockCycles ();
+	if (!_pendingWrites.empty ())
+	{
+		_error = MCHEmul::_CHIP_ERROR;
+
+		return (false);
+	}
+
+	_writeBusCycleData = nullptr;
+	_cyclesSimulatedInAdvance = 0;
+	_advancedCyclePending = false;
 
 	return (true);
-
-	// Note that the _soundFunction is not simulated here...
-	// It is added like another different chip on regards simulation
-	// The framework need a sound chip always!
 }
 
 // ---
@@ -392,6 +494,32 @@ MCHEmul::InfoStructure COMMODORE::VICI::getInfoStructure () const
 	result.add ("VICISoundFunction",	std::move (_soundFunction -> getInfoStructure ()));
 
 	return (result);
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::VICI::screenMemorySnapShot (MCHEmul::CPU* cpu) const
+{
+	std::vector <MCHEmul::UByte> result;
+	result.reserve (0x01fa);
+
+	for (size_t i = 0; i < 0x01fa; ++i)
+		result.emplace_back
+			(_videoMemory -> value (_VICIRegisters -> screenMemory (i)));
+
+	return (MCHEmul::UBytes (std::move (result)));
+}
+
+// ---
+MCHEmul::UBytes COMMODORE::VICI::colorMemorySnapShot (MCHEmul::CPU* cpu) const
+{
+	std::vector <MCHEmul::UByte> result;
+	result.reserve (0x01fa);
+
+	for (size_t i = 0; i < 0x01fa; ++i)
+		result.emplace_back
+			(_videoMemory -> value (_VICIRegisters -> colourMemory (i)) & 0x0f);
+
+	return (MCHEmul::UBytes (std::move (result)));
 }
 
 // ---
@@ -411,11 +539,16 @@ MCHEmul::Strings COMMODORE::VICI::charsDrawSnapshot (MCHEmul::CPU* cpu,
 			continue;
 
 		MCHEmul::Address chrAdd = 
-			_VICIRegisters -> charDataMemory () + (i * bytesPerChar);
+			_VICIRegisters -> charDataMemory (i * bytesPerChar);
 		std::string dt = std::to_string (i) + "---\n$" +
 			MCHEmul::removeAll0 (chrAdd.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "\n";
-		MCHEmul::UBytes chrDt = 
-			cpu -> memoryRef () -> values (chrAdd, bytesPerChar);
+		std::vector <MCHEmul::UByte> chrBytes;
+		chrBytes.reserve (bytesPerChar);
+		for (size_t j = 0; j < bytesPerChar; ++j)
+			chrBytes.emplace_back
+				(_videoMemory -> value
+					(_VICIRegisters -> charDataMemory (i * bytesPerChar + j)));
+		MCHEmul::UBytes chrDt (std::move (chrBytes));
 		for (size_t j = 0; j < bytesPerChar; j++) // 8/16 lines per character...
 		{
 			if (j != 0)
@@ -492,23 +625,25 @@ void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 {
 	unsigned int* cP = new unsigned int [16];
-	// The colors are partially transparents to allow the blending...
+
+	// Mike PAL reference palette; retain the renderer's existing alpha.
+	// Source: https://raw.githubusercontent.com/VICE-Team/svn-mirror/main/vice/data/VIC20/mike-pal.vpl
 	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
 	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Brown
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Grey
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Grey
+	cP [2]  = SDL_MapRGBA (_format, 0xb6, 0x1f, 0x21, 0xe0); // Red
+	cP [3]  = SDL_MapRGBA (_format, 0x4d, 0xf0, 0xff, 0xe0); // Cyan
+	cP [4]  = SDL_MapRGBA (_format, 0xb4, 0x3f, 0xff, 0xe0); // Purple
+	cP [5]  = SDL_MapRGBA (_format, 0x44, 0xe2, 0x37, 0xe0); // Green
+	cP [6]  = SDL_MapRGBA (_format, 0x1a, 0x34, 0xff, 0xe0); // Blue
+	cP [7]  = SDL_MapRGBA (_format, 0xdc, 0xd7, 0x1b, 0xe0); // Yellow
+	cP [8]  = SDL_MapRGBA (_format, 0xca, 0x54, 0x00, 0xe0); // Orange
+	cP [9]  = SDL_MapRGBA (_format, 0xe9, 0xb0, 0x72, 0xe0); // Light orange
+	cP [10] = SDL_MapRGBA (_format, 0xe7, 0x92, 0x93, 0xe0); // Light red
+	cP [11] = SDL_MapRGBA (_format, 0x9a, 0xf7, 0xfd, 0xe0); // Light cyan
+	cP [12] = SDL_MapRGBA (_format, 0xe0, 0x9f, 0xff, 0xe0); // Light purple
+	cP [13] = SDL_MapRGBA (_format, 0x8f, 0xe4, 0x93, 0xe0); // Light green
+	cP [14] = SDL_MapRGBA (_format, 0x82, 0x90, 0xff, 0xe0); // Light blue
+	cP [15] = SDL_MapRGBA (_format, 0xe5, 0xde, 0x85, 0xe0); // Light yellow
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }
@@ -516,15 +651,22 @@ MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 // ---
 void COMMODORE::VICI::readGraphicsAndDrawVisibleZone ()
 {
-	// The graphical info is always read!
-	readVideoMatrixAndColorRAM ();
-	readGraphicalInfo ();
+	// During display, acquire character data only for its first output half.
+	// Keep the existing inactive-window accesses until fetch phases are modeled.
+	if (!_vicGraphicInfo.draw () || !_vicGraphicInfo._FH)
+	{
+		readVideoMatrixAndColorRAM ();
+		readGraphicalInfo ();
+	}
 
-	// Calculate the screen position, if it is needed...
-	// If the screen position has not been reached yet, or it is already out of it, the previous value is maintained...
+	// Both output halves consume the same retained glyph-row byte.
+	_vicGraphicInfo._graphicData =
+		_vicGraphicInfo._FH
+			? (_vicGraphicInfo._graphicByteData.value () & 0x0f)
+			: ((_vicGraphicInfo._graphicByteData.value () >> 4) & 0x0f);
+
 	calculateScreenPositions ();
 
-	// ..and draws the graphics & border if it has to do so...
 	if (_raster.isInVisibleZone ())
 		drawVisibleZone ();
 }
@@ -577,35 +719,28 @@ void COMMODORE::VICI::drawVisibleZone ()
 // ---
 void COMMODORE::VICI::drawGraphics (const COMMODORE::VICI::DrawContext& dC)
 {
-	// First of all, the screen is drawn!...
+	// Fill the visible part of this cycle with the common background.
 	screenMemory () -> setHorizontalLine ((size_t) dC._RC, (size_t) dC._RR,
-		(dC._RC + 8) > _raster.visibleColumns () ? (_raster.visibleColumns () - dC._RC) : 8, 
-			_VICIRegisters -> backgroundColor ());
+		(dC._RC + 8) > _raster.visibleColumns ()
+			? (_raster.visibleColumns () - dC._RC) : 8,
+		_VICIRegisters -> backgroundColor ());
 
-	// Multicolor mode?
-	// where the color of the pixels are determined by combination 
-	// of the pair of bits in the char data definition memory...
-	// or just high resolution one?
-	// where the color of the pixels is determined by any individual bit in
-	// in the char definition memory...
-	int cb = (int) dC._RC - (int) dC._ICD;
+	// Color RAM bit 3 selects the character decoding mode.
 	drawResultToScreen (
-		(((_vicGraphicInfo._colorData.value () & 0x08) == 0x00) // MSB low nibble on? = multicolorMode...
-			? drawHighResolutionMode (cb)
-			: drawMulticolorMode (cb)), dC);
+		((_vicGraphicInfo._colorData.value () & 0x08) == 0x00)
+			? drawHighResolutionMode ()
+			: drawMulticolorMode (),
+		dC);
 }
 
 // ---
-COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode (int cb)
+COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode ()
 {
 	COMMODORE::VICI::DrawResult result;
 
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
 	{
-		if ((cb + i) >= _maxXVisible)
-			break;
-
 		if (_vicGraphicInfo._graphicData [3 - (i >> 1)])
 		{
 			// If the pixel is set and the inverse mode is not active...
@@ -632,16 +767,13 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawHighResolutionMode (int cb)
 }
 
 // ---
-COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
+COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode ()
 {
 	COMMODORE::VICI::DrawResult result;
 
 	for (unsigned short i = 0 ; 
 			i < 8 /** To paint always 8 pixels but in blocks of 4. */; i += 4)
 	{
-        if ((cb + i) >= _maxXVisible)
-            break;
-
 		unsigned char cs =
 			(i == 0)
 				? ((_vicGraphicInfo._graphicData.value () >> 2) & 0x03)
@@ -661,42 +793,45 @@ COMMODORE::VICI::DrawResult COMMODORE::VICI::drawMulticolorMode (int cb)
 		result._foregroundColorData [i + 1] =
 		result._foregroundColorData [i + 2] =
 		result._foregroundColorData [i + 3] = fc;
-    }
+	}
 
-    return result;
+	return (result);
 }
 
 // ---
-void COMMODORE::VICI::drawResultToScreen (const COMMODORE::VICI::DrawResult& cT, const COMMODORE::VICI::DrawContext& dC)
+void COMMODORE::VICI::drawResultToScreen (
+	const COMMODORE::VICI::DrawResult& cT,
+	const COMMODORE::VICI::DrawContext& dC)
 {
-	// The four pixels to draw...
-	for (size_t i = 0; i < 8; i++)
-	{
-		size_t pos = (size_t) dC._RC + i;
+	// The caller supplies an origin inside the visible frame.
+	// Only the positions remaining in the current row may be written.
+	const size_t columns = screenMemory () -> columns ();
+	const size_t nP = std::min (
+		(size_t) 8, columns - (size_t) dC._RC);
 
-		// And then the background pixels...
+	size_t pos = (size_t) dC._RR * columns + (size_t) dC._RC;
+	for (size_t i = 0; i < nP; ++i, ++pos)
+	{
 		if (cT._backgroundColorData [i] != ~0)
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._backgroundColorData [i]);
-		// and the foreground ones finally...
+			screenMemory () -> setPixel (pos, cT._backgroundColorData [i]);
+
 		if (cT._foregroundColorData [i] != ~0)
-			screenMemory () -> setPixel (pos, (size_t) dC._RR, cT._foregroundColorData [i]);
+			screenMemory () -> setPixel (pos, cT._foregroundColorData [i]);
 	}
 }
 
 // ---
-void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
+void COMMODORE::VICI::debugVICICycle (unsigned int cycle)
 {
 	assert (_deepDebugFile != nullptr);
 
-	_deepDebugFile -> writeCompleteLine (className (), cpu -> clockCycles () - i, "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), cycle, "Info Cycle",
 		{ { "Raster", 
 				std::to_string (_raster.currentColumnAtBase0 ()) + "," +
 				std::to_string (_raster.currentLineAtBase0 ()) + "," +
 				std::to_string (_cycleInRasterLine) },
-		  { "Instruction projection",
-				"PositionsToEffect=" +
-					std::to_string
-						(_VICIRegisters -> _numberPositionsNextInstruction) },
+		  { "CPU timing",
+				"CyclesAdvanced=" + std::to_string (_cyclesSimulatedInAdvance) },
 		  { "Memory",
 				"Screen=$" + MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
@@ -709,26 +844,169 @@ void COMMODORE::VICI::debugVICICycle (MCHEmul::CPU* cpu, unsigned int i)
 // ---
 void COMMODORE::VICI::debugCPUAboutToExecute
 	(const MCHEmul::InstructionContextEventData* dt,
-	 unsigned int positions)
+	 unsigned int cycles)
 {
 	assert (_deepDebugFile != nullptr);
 	assert (dt != nullptr);
 
 	_deepDebugFile -> writeCompleteLine
 		(className (), dt -> _cpu -> clockCycles (),
-		 "CPU transaction projection",
+		 "CPU transaction timing",
 		{ { "Transaction",
 			"Type=Instruction," +
 			std::string ("Address=$") +
-				dt -> _address.asString
-					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2) + "," +
+				MCHEmul::removeAll0 (dt -> _address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
 			"Code=" + std::to_string (dt -> _instruction -> code ()) + "," +
-			"Cycles=" + std::to_string (positions) },
+			"Cycles=" + std::to_string (dt -> _clockCycles) },
 		  { "Raster origin",
 			"Row=" + std::to_string (_raster.currentLine ()) + "," +
 			"Cycle=" + std::to_string (_cycleInRasterLine) },
-		  { "Raster projection",
-			"PositionsToEffect=" + std::to_string (positions) } });
+		  { "CPU read point",
+			"AdvanceCycles=" + std::to_string (cycles) } });
+}
+
+// ---
+bool COMMODORE::VICI::prepareCPUTransaction
+	(MCHEmul::CPU* cpu, const MCHEmul::BusCycleData* busData)
+{
+	assert (cpu != nullptr && busData != nullptr);
+	if (cpu != _timedWriteCPU || cpu -> ticksCounter () != nullptr ||
+		_writeBusCycleData != nullptr || !_pendingWrites.empty () ||
+		_cyclesSimulatedInAdvance != 0 || _advancedCyclePending ||
+		_lastCPUCycles != cpu -> clockCycles ())
+	{
+		_error = MCHEmul::_CHIP_ERROR;
+
+		return (false);
+	}
+
+	_writeBusCycleData = busData;
+	_writeStartCycle = cpu -> clockCycles ();
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::extractPendingWrites ()
+{
+	assert (_pendingWrites.empty ());
+	MCHEmul::Memory::configuration ().extractMemorySetCommandsBuffered (_timedWriteSubsets, _pendingWrites);
+
+	if (_pendingWrites.empty ())
+		return (true);
+
+	if (_writeBusCycleData == nullptr || _pendingWrites.size () != _writeBusCycleData -> _numberWriteCycles)
+	{
+		_error = MCHEmul::_CHIP_ERROR;
+
+		return (false);
+	}
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::executePendingWriteAt (MCHEmul::CPU* cpu, unsigned int cycle)
+{
+	if (_pendingWrites.empty ())
+		return (true);
+
+	const size_t writeIndex = _writeBusCycleData -> _numberWriteCycles - _pendingWrites.size ();
+	if (cycle != _writeStartCycle + (unsigned int) (_writeBusCycleData -> writeCycle (writeIndex)))
+		return (true);
+
+	MCHEmul::SetMemoryCommand& command = _pendingWrites.front ();
+	if (command.subset () == _VICIRegisters)
+	{
+		const size_t position = command.position () % 0x10;
+		// Finish the old audio interval before a write changes its parameters.
+		if (position >= 0x0a && position <= 0x0e)
+		{
+			if (!_soundFunction -> simulateUntil (cpu, cycle + 1))
+			{
+				_error = MCHEmul::_CHIP_ERROR;
+				return (false);
+			}
+		}
+	}
+
+	command.execute ();
+	_pendingWrites.erase (_pendingWrites.begin ());
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::simulate
+	(MCHEmul::CPU* cpu, unsigned int cycles)
+{
+	assert (cpu != nullptr && cpu == _timedWriteCPU);
+	assert (_writeBusCycleData != nullptr);
+	assert (_cyclesSimulatedInAdvance == 0 && !_advancedCyclePending);
+	assert (_pendingWrites.empty ());
+
+	for (unsigned int i = 0; i < cycles; ++i)
+	{
+		// Only the final cycle waits for the CPU read before completing.
+		if (!simulateRasterCycle
+			(cpu, _lastCPUCycles, i + 1 != cycles))
+			return (false);
+
+		++_lastCPUCycles;
+		++_cyclesSimulatedInAdvance;
+	}
+
+	_advancedCyclePending = (cycles != 0);
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::simulateRasterCycle
+	(MCHEmul::CPU* cpu, unsigned int cycle, bool completeCycle)
+{
+	_IFDEBUG debugVICICycle (cycle);
+
+	readGraphicsAndDrawVisibleZone ();
+
+	if (completeCycle)
+		return (finishRasterCycle (cpu, cycle));
+
+	return (true);
+}
+
+// ---
+bool COMMODORE::VICI::finishRasterCycle
+	(MCHEmul::CPU* cpu, unsigned int cycle)
+{
+	// CPU writes precede the counter updates of their own cycle.
+	if (!executePendingWriteAt (cpu, cycle))
+		return (false);
+
+	treatRasterCycle ();
+	treatLightPenAtCurrentRasterPosition ();
+
+	if (_raster.moveCycles (1))
+	{
+		_cycleInRasterLine = 1;
+		if (_raster.vData ().currentPosition () == 0)
+			_lightPenFrameLatched = false;
+	}
+
+	if (_raster.isInFirstVBlankZone ())
+	{
+		if (!_lastVBlankEntered)
+		{
+			_lastVBlankEntered = true;
+			notify (MCHEmul::Event (_GRAPHICSREADY));
+			_vicGraphicInfo.initialize (_VICIRegisters);
+		}
+	}
+	else
+		_lastVBlankEntered = false;
+
+	return (true);
 }
 
 // ---

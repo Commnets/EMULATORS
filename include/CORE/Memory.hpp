@@ -683,6 +683,10 @@ namespace MCHEmul
 				their original relative order. The caller becomes responsible for finally
 				executing the returned commands. */
 			SetMemoryCommands extractMemorySetCommandsBuffered (PhysicalStorageSubset* pS);
+			/** Extracts selected commands in their original order. \n
+				The destination must be empty and retains its capacity between calls. */
+			void extractMemorySetCommandsBuffered
+				(const PhysicalStorageSubsets& subsets, SetMemoryCommands& result);
 			/** Execute all set memory commands buffered if that configuration is active.
 				Bear in mind that when that configuration is disconnected, this method will also be executed. */
 			inline void executeMemorySetCommandsBuffered ();

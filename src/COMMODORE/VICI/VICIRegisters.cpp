@@ -3,12 +3,14 @@
 // ---
 COMMODORE::VICIRegisters::VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_VICREGS_SUBSET, ps, pp, a, s),
-	  _numberPositionsNextInstruction (0),
-	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _soundWrapper (nullptr),
 	  _latchLightPenHorizontalPosition (0x00),
 	  _latchLightPenVerticalPosition (0x00),
 	  _lightPenActive (false),
+	  _soundWrapper (nullptr),
+	  _raster (nullptr),
+	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
+	  _screenMemoryVIC (0),
+	  _charDataMemoryVIC (0),
 	  _mousePositionX (-1),
 	  _mousePositionY (-1)
 {
@@ -47,8 +49,8 @@ void COMMODORE::VICIRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 {
 	size_t pp = p % 0x10;
 
-	// The 64 first bytes will keep the right value...
-	MCHEmul::PhysicalStorageSubset::setValue (p, v);
+	// Mirrored accesses share the canonical byte used by register reads.
+	MCHEmul::PhysicalStorageSubset::setValue (pp, v);
 
 	switch (pp)
 	{
@@ -186,30 +188,23 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 
 			break;
 
-			case 0x03:
-				{
-					bool oP = false;
-					unsigned short rL = currentRasterLine ();
-					_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-					if (oP) rL++;
-					result = MCHEmul::UByte
-						((((rL & 0x0001) != 0x00) ? 0x80 : 0x00) |
-						 ((_charsHeightScreen << 1) & 0x7e) |
-						 ((_charsExpanded != 0x00) ? 0x01 : 0x00));
-				}
+		case 0x03:
+			{
+				result = MCHEmul::UByte ((unsigned char)
+					(((currentRasterLine () & 0x0001) << 7) |
+					 ((_charsHeightScreen << 1) & 0x7e) |
+					 (_charsExpanded ? 0x01 : 0x00)));
+			}
 
-				break;
+			break;
 
-			case 0x04:
-				{
-					bool oP = false;
-					unsigned short rL = currentRasterLine ();
-					_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-					if (oP) rL++;
-					result = MCHEmul::UByte ((unsigned char) ((rL >> 1) & 0x00ff));
-				}
+		case 0x04:
+			{
+				result = MCHEmul::UByte
+					((unsigned char) ((currentRasterLine () >> 1) & 0x00ff));
+			}
 
-				break;
+			break;
 
 		case 0x06:
 			{
@@ -270,21 +265,26 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 // ---
 void COMMODORE::VICIRegisters::initializeInternalValues ()
 {
-	setValue (0x00, 0x0e); // No interlaced & horizontal adjust = 14 (for PAL systems)
-	setValue (0x01, 0x27); // Vertical adjust = 39 (for both PAL systems)
-	setValue (0x02, 0x96); // 9 bit screen (true) & color memory = true (color map l ocation = 0x9600) & 22 columns = 0x16 (see also 0x05)
-	setValue (0x03, 0x2e); // 23 rows, not exapanded
-	setValue (0x04, 0x00); // Has no effect...
-	setValue (0x05, 0xf0); // Screen map location = this value (bot 13,12,11,10) + bit 7 0x02 (bit 9) = $1e00 (7680), 
-						   // Colour map location = 0x9600
-	setValue (0x06, 0x00); // No important...
-	setValue (0x07, 0x00); // No important...
-	setValue (0x08, 0xff); // No important...
-	setValue (0x09, 0xff); // No important...
+	// Writes to either address register recalculate all memory positions.
+	// Define every selector before applying the register presets.
+	_b9ScreenColorMemory = 0;
+	_b10to13ScreenMemory = 0;
+	_b10to13CharDatamemory = 0;
+
+	setValue (0x00, 0x0e); // Non-interlaced; horizontal origin 14.
+	setValue (0x01, 0x27); // Vertical origin 39.
+	setValue (0x02, 0x96); // 22 columns; matrix address bit 9 set.
+	setValue (0x03, 0x2e); // 23 rows; 8x8 characters.
+	setValue (0x04, 0x00); // Raster position is read-only.
+	setValue (0x05, 0xf0); // Matrix $1e00; characters $8000; color RAM $9600.
+	setValue (0x06, 0x00);
+	setValue (0x07, 0x00);
+	setValue (0x08, 0xff);
+	setValue (0x09, 0xff);
 	setValue (0x0a, 0x00);
 	setValue (0x0b, 0x00);
 	setValue (0x0c, 0x00);
 	setValue (0x0d, 0x00);
 	setValue (0x0e, 0x00);
-	setValue (0x0f, 0x1b); // Background color = 1 (white), inverse active, border color = 3 (cyan)
+	setValue (0x0f, 0x1b); // White background; normal hires; cyan border.
 }

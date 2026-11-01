@@ -506,6 +506,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestEmulOut", "tests\TestEm
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "RakNetCommsAd", "tests\RakNetCommsAd\RakNetCommsAd.vcxproj", "{AADD80C8-24E2-48C7-89F5-A8CBDC6A622E}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestVICIGraphics", "tests\TestVICIGraphics\TestVICIGraphics.vcxproj", "{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -514,6 +516,14 @@ Global
 		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Debug|x64.ActiveCfg = Debug|x64
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Debug|x64.Build.0 = Debug|x64
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Debug|x86.ActiveCfg = Debug|Win32
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Debug|x86.Build.0 = Debug|Win32
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Release|x64.ActiveCfg = Release|x64
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Release|x64.Build.0 = Release|x64
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Release|x86.ActiveCfg = Release|Win32
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343}.Release|x86.Build.0 = Release|Win32
 		{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8}.Debug|x64.ActiveCfg = Debug|x64
 		{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8}.Debug|x64.Build.0 = Debug|x64
 		{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8}.Debug|x86.ActiveCfg = Debug|Win32
@@ -939,6 +949,7 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
+		{07DB2D1E-DBC3-4A8C-8682-33E0BEF37343} = {C595171B-2D87-4C94-8028-51FEBB948C36}
 		{0B49D3E7-F82E-486A-8212-5DA19CA5F3E8} = {D9C30467-E7E9-478D-B0EF-EA64F0C11241}
 		{232573A6-2559-4F0D-8726-7100F1D3F240} = {E52691C5-7FBF-44D3-BE28-E682B6D06DD5}
 		{2861B305-8103-477A-867C-0561EC31D932} = {CB7D0793-14E8-492E-8620-DBE966D6AA14}

@@ -64,7 +64,11 @@ namespace COMMODORE
 
 			virtual bool initialize () override;
 
-			virtual bool simulate (MCHEmul::CPU* cpu) override;
+			inline void synchronizeClock (unsigned int cycle);
+			/** Advances sound to an exclusive cycle boundary without replaying samples. */
+			bool simulateUntil (MCHEmul::CPU* cpu, unsigned int cycle);
+			virtual bool simulate (MCHEmul::CPU* cpu) override
+							{ return (simulateUntil (cpu, cpu -> clockCycles ())); }
 
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
@@ -81,6 +85,7 @@ namespace COMMODORE
 			// Implementation
 			/** The number of cycles the CPU was executed once the simulated method finishes. */
 			unsigned int _lastCPUCycles;
+			bool _clockSynchronized;
 		};
 
 		static const unsigned int _ID = 106;
@@ -132,6 +137,10 @@ namespace COMMODORE
 							{ return (_VICIRegisters -> lightPenActive ()); }
 
 		virtual bool initialize () override;
+		/** Connects the CPU-timed consumer; buffering must already be enabled. \n
+			Call after initializing the CPU, VICI and SoundFunction. */
+		bool enableCPUTimedWrites
+			(MCHEmul::CPU* cpu, const MCHEmul::PhysicalStorageSubsets& subsets);
 
 		/** The raster is a critical thing in the behaviour of the VICI. \n
 			The content of registers 0x03 and 0x04 is "real time". \n
@@ -140,6 +149,8 @@ namespace COMMODORE
 			when that instruction happens. */
 		virtual void CPUAboutToExecute
 			(const MCHEmul::InstructionContextEventData* dt) override;
+		virtual void CPUAboutToExecute
+			(const MCHEmul::InterruptContextEventData* dt) override;
 
 		/** Simulates cycles in the VICI. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
@@ -155,12 +166,8 @@ namespace COMMODORE
 		// To get snapshots of the memory...
 		// They are used in some commands...
 		/** content of the screen. */
-		MCHEmul::UBytes screenMemorySnapShot (MCHEmul::CPU* cpu) const
-							{ return (cpu -> memoryRef () -> values 
-								(_VICIRegisters -> screenMemory (), 0x01fa /** 506 positions = 22 x 23. */)); }
-		MCHEmul::UBytes colorMemorySnapShot (MCHEmul::CPU* cpu) const
-							{ return (cpu -> memoryRef () -> values 
-								(_VICIRegisters -> colourMemory (), 0x01fa /** 506 positions = 22 x 23. */)); }
+		MCHEmul::UBytes screenMemorySnapShot (MCHEmul::CPU* cpu) const;
+		MCHEmul::UBytes colorMemorySnapShot (MCHEmul::CPU* cpu) const;
 
 		/** The characters. */
 		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
@@ -215,8 +222,7 @@ namespace COMMODORE
 		/** To read the video matrix and the RAM color. \n
 			Someting that happens during a display fetch / video matrix fetch. */
 		inline void readVideoMatrixAndColorRAM ();
-		/** To read the graphical info, considerig the info read in the previous method. \n
-			This method is executed per raster cycles. */
+		/** Reads and retains the complete glyph-row byte for the current character. */
 		inline void readGraphicalInfo ();
 
 		// Light pen...
@@ -234,12 +240,12 @@ namespace COMMODORE
 			dC = other info about the raster used to finally draw. \n
 			They all return a instance of DrawResult (@see above). */
 		void drawGraphics (const DrawContext& dC);
-		/** To draw the pixels in the high resolution mode. */
-		DrawResult drawHighResolutionMode (int cb);
-		/** To draw the pixels in the multicolor mode. */
-		DrawResult drawMulticolorMode (int cb);
-		/** To move the graphics drawn to the screen. \n
-			The info move is the text/bitmap info that has been already draw to the screen. */
+		/** To decode the eight internal pixels of the current cycle in high resolution. */
+		DrawResult drawHighResolutionMode ();
+		/** To decode the eight internal pixels of the current cycle in multicolor. */
+		DrawResult drawMulticolorMode ();
+		/** Copies the decoded pixels, clipping the span to the visible frame width. \n
+			The context origin must belong to the visible frame. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
 		// -----
@@ -247,14 +253,23 @@ namespace COMMODORE
 		// and to make simplier the modification in case it is needed...
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugVICICycle (MCHEmul::CPU* cpu, unsigned int i);
-		/** Records the raster projection calculated for the notified instruction. */
+		void debugVICICycle (unsigned int cycle);
+		/** Records the raster origin and advance to the instruction read point. */
 		void debugCPUAboutToExecute
 			(const MCHEmul::InstructionContextEventData* dt,
-			 unsigned int positions);
+			 unsigned int cycles);
 		// -----
 
 		private:
+		bool prepareCPUTransaction
+			(MCHEmul::CPU* cpu, const MCHEmul::BusCycleData* busData);
+		bool extractPendingWrites ();
+		bool executePendingWriteAt (MCHEmul::CPU* cpu, unsigned int cycle);
+		/** Advances through the video phase of the predicted CPU read cycle. */
+		bool simulate (MCHEmul::CPU* cpu, unsigned int cycles);
+		bool simulateRasterCycle
+			(MCHEmul::CPU* cpu, unsigned int cycle, bool completeCycle);
+		bool finishRasterCycle (MCHEmul::CPU* cpu, unsigned int cycle);
 		/** Just to calculate the screen positions. \n
 			This method is invoked from treatRasterCycle, and always before actualizing the graphical info. */
 		inline void calculateScreenPositions ();
@@ -272,10 +287,10 @@ namespace COMMODORE
 		MCHEmul::Raster _raster;
 
 		// Implementation
-		/** The max X coordinate visible. 
-			Defined at construction time, but used when drawing. */
-		unsigned short _maxXVisible;
-		/** The number of cycles the CPU was executed once the simulated method finishes. */
+		/** Non-owning video view, linked during initialize(). */
+		MCHEmul::MemoryView* _videoMemory;
+		/** Next cycle to start. \n
+			The last started cycle may still await completion during a CPU read. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
@@ -311,11 +326,12 @@ namespace COMMODORE
 				  _RC (0), _DOUBLEHIGH (false),
 				  _DRAW (false), _SCREENORIGINX (false), _SCREENORIGINY (false),
 				  _screenCodeData (MCHEmul::UByte::_0),
+				  _graphicByteData (MCHEmul::UByte::_0),
 				  _graphicData (MCHEmul::UByte::_0),
 				  _colorData (MCHEmul::UByte::_0)
 							{ }
 
-			/** Invoked only from the VICI initialization method. */
+			/** Resets display counters and retained character data. */
 			inline void initialize (VICIRegisters* r);
 			inline void nextHorizontal (VICIRegisters* r);
 			inline void nextVertical (VICIRegisters* r);
@@ -372,10 +388,13 @@ namespace COMMODORE
 				When both are true, the left up corner of the text window is detected. */
 			bool _SCREENORIGINX, _SCREENORIGINY;
 
-			// The graphics info read!
-			// It is only 1 byte length. No more is needed...
+			/** Character code retained for the current character. */
 			mutable MCHEmul::UByte _screenCodeData;
-			mutable MCHEmul::UByte _graphicData; 
+			/** Complete glyph-row byte retained across both output halves. */
+			mutable MCHEmul::UByte _graphicByteData;
+			/** Four glyph bits selected for the current output cycle. */
+			mutable MCHEmul::UByte _graphicData;
+			/** Character color and mode retained across both output halves. */
 			mutable MCHEmul::UByte _colorData;
 
 			private:
@@ -392,8 +411,28 @@ namespace COMMODORE
 		VICGraphicInfo _vicGraphicInfo;
 
 		private:
+		// Implementation
+		/** Non-owning CPU/subset links used only by the complete-instruction scheduler. */
+		MCHEmul::CPU* _timedWriteCPU;
+		MCHEmul::PhysicalStorageSubsets _timedWriteSubsets;
+		/** Persistent instruction/interrupt metadata, never an event-context pointer. */
+		const MCHEmul::BusCycleData* _writeBusCycleData;
+		unsigned int _writeStartCycle;
+		MCHEmul::SetMemoryCommands _pendingWrites;
+		/** Cycles already started before executing the current CPU instruction. */
+		unsigned int _cyclesSimulatedInAdvance;
+		/** The final advanced cycle still needs its CPU phase and counter updates. */
+		bool _advancedCyclePending;
+
 		static const MCHEmul::Address _MEMORYPOSOFF;
 	};
+
+	// ---
+	inline void VICI::SoundFunction::synchronizeClock (unsigned int cycle)
+	{
+		_lastCPUCycles = cycle;
+		_clockSynchronized = true;
+	}
 
 	// ---
 	inline void VICI::screenPositions (short& x1, short& y1, short& x2, short& y2) const
@@ -431,33 +470,28 @@ namespace COMMODORE
 		if (!_vicGraphicInfo.draw ())
 		{
 			_vicGraphicInfo._screenCodeData = 
-			_vicGraphicInfo._colorData = memoryRef () -> value (_MEMORYPOSOFF);
+			_vicGraphicInfo._colorData = _videoMemory -> value (_MEMORYPOSOFF);
 		}
 		else
 		{
 			_vicGraphicInfo._screenCodeData =
-				memoryRef () -> value (_VICIRegisters -> screenMemory () + 
-					(size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL); 
+				_videoMemory -> value (_VICIRegisters -> screenMemory
+					((size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL));
 			_vicGraphicInfo._colorData = 
-				memoryRef () -> value (_VICIRegisters -> colourMemory () + 
-					(size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL) & 0x0f;
+				_videoMemory -> value (_VICIRegisters -> colourMemory
+					((size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL)) & 0x0f;
 		}
 	}
 
 	// ---
 	inline void VICI::readGraphicalInfo ()
 	{
-		_vicGraphicInfo._graphicData = 
-			memoryRef () -> value (_VICIRegisters -> charDataMemory () + 
-				(size_t) ((_vicGraphicInfo._screenCodeData.value () << (_VICIRegisters -> charsExpanded () ? 4 : 3)) + 
-					_vicGraphicInfo._RC));
-		
-		// The low nibble?
-		_vicGraphicInfo._graphicData =
-			_vicGraphicInfo._FH
-				? _vicGraphicInfo._graphicData.value () & 0x0f // low...
-				: ((_vicGraphicInfo._graphicData.value () & 0xf0) >> 4); // high...
-		// Every bit in the nibble has to be draw twice...(@see the drawing routines)
+		_vicGraphicInfo._graphicByteData =
+			_videoMemory -> value (_VICIRegisters -> charDataMemory
+				((size_t)
+					((_vicGraphicInfo._screenCodeData.value () <<
+						(_VICIRegisters -> charsExpanded () ? 4 : 3)) +
+					 _vicGraphicInfo._RC)));
 	}
 
 	// ---
@@ -530,6 +564,11 @@ namespace COMMODORE
 		initializeVertical (v);
 
 		_VBASE = 0;
+
+		_screenCodeData = MCHEmul::UByte::_0;
+		_graphicByteData = MCHEmul::UByte::_0;
+		_graphicData = MCHEmul::UByte::_0;
+		_colorData = MCHEmul::UByte::_0;
 
 		setDraw ();
 	}

@@ -354,6 +354,28 @@ MCHEmul::SetMemoryCommands MCHEmul::Memory::Configuration::extractMemorySetComma
 }
 
 // ---
+void MCHEmul::Memory::Configuration::extractMemorySetCommandsBuffered
+	(const MCHEmul::PhysicalStorageSubsets& subsets, MCHEmul::SetMemoryCommands& result)
+{
+	assert (result.empty ());
+
+	// One pass preserves global order while the destination reuses its capacity.
+	for (MCHEmul::SetMemoryCommands::iterator command = _memorySetCommands.begin ();
+		command != _memorySetCommands.end ();)
+	{
+		const MCHEmul::PhysicalStorageSubsets::const_iterator subset =
+			subsets.find (command -> subset () -> id ());
+		if (subset != subsets.end () && subset -> second == command -> subset ())
+		{
+			result.emplace_back (std::move (*command));
+			command = _memorySetCommands.erase (command);
+		}
+		else
+			++command;
+	}
+}
+
+// ---
 MCHEmul::InfoStructure MCHEmul::MemoryViewDUMP::getInfoStructure () const
 {
 	MCHEmul::InfoStructure result;

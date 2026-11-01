@@ -462,41 +462,41 @@ Use uppercase field names. For nested objects, build nested `InfoStructure` valu
 
 ## Inline Methods
 
-Define methods with an empty body directly inside the class, including virtual exits/hooks whose default implementation does nothing. Put the compact `{ }` body on the same line as the method declaration, separated by one space; do not move it to a following aligned line. Omit the `inline` keyword and do not add a separate out-of-class definition. Put any necessary contract documentation above the method rather than expanding the empty body for a comment:
+Define simple one-instruction methods directly inside the class, without an explicit `inline` keyword or a separate declaration and definition. The signature occupies its own line. Put the complete body on the following line, prefixed by exactly seven literal tabs from column zero. Never put the body on the signature line. This also applies to an empty body and to a compact forwarding call with a cached base plus an offset:
 
 ```cpp
-virtual void whenReading (const Address& a, size_t nB) const { }
-virtual void whenWriting (const Address& a, size_t nB) { }
-```
-
-Define extremely short methods whose body is one simple instruction or expression directly with their declaration inside the class. Do not write the `inline` keyword in this case. A direct member access, assignment, or equivalently compact operation is simple:
-
-```cpp
+virtual void whenReading (const Address& a, size_t nB) const
+							{ }
 int id () const
 							{ return (_id); }
-bool active () const
-							{ return (_active); }
 void setActive (bool a)
 							{ _active = a; }
+MCHEmul::Address screenMemory (size_t offset) const
+							{ return (cpuAddressFromVIC (_screenMemoryVIC + offset)); }
 ```
 
-Do not classify a method as simple merely because its body contains a single syntactic instruction. A long or compound `return`, several logical or arithmetic clauses, nested calls or casts, or an expression that needs several source lines is complex for this rule. Declare such a method `inline` in the class and put its definition immediately after the class definition in the same header. Use the same form for a short method containing a couple of instructions:
+Do not classify a method as simple merely because it has a single syntactic instruction. An expression that requires several body lines is not compact. For short methods with multiple instructions or a compound multi-line expression, declare the method `inline` inside the class and define it after the class in the same header, following declaration order. Use the usual blank line and `// ---` separators between external definitions.
+
+A private helper implementing object behavior remains an instance method, marked `const` if it does not modify the object. Do not make it static solely because its current implementation does not access members. Use static only for justified class-level behavior. Place an inline instance helper at the end of its private non-static method block, before any justified static methods and data members:
 
 ```cpp
 class ClassName
 {
-	public:
-	inline void setRange (int min, int max);
-
 	private:
-	int _min;
-	int _max;
+	inline MCHEmul::Address cpuAddressFromVIC (size_t address) const;
+
+	unsigned int _screenMemoryVIC;
 };
 
-inline void ClassName::setRange (int min, int max)
+// ---
+inline MCHEmul::Address ClassName::cpuAddressFromVIC (size_t address) const
 {
-	_min = min;
-	_max = max;
+	address &= 0x3fff;
+
+	// VIC A13 selects CPU A15 with inverted polarity.
+	return (MCHEmul::Address
+		(2, (unsigned int) ((address & 0x1fff) |
+			((address & 0x2000) != 0 ? 0x0000 : 0x8000))));
 }
 ```
 

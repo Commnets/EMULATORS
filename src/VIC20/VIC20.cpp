@@ -51,7 +51,27 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	// the registers that point out to the char and color memory must be adapted!
 	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
-	// Forward CPU transaction contexts to the VIAs for write scheduling.
+	// Setup writes precede the first emulated transaction; they consume no CPU cycles.
+	_cpu -> executeBufferedCommands (true);
+	MCHEmul::PhysicalStorageSubsets videoWriteSubsets (
+		{
+			{ COMMODORE::VICIRegisters::_VICREGS_SUBSET,
+				memory () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET) },
+			{ VIC20::Memory::_PAGEZERO_SUBSET, memory () -> subset (VIC20::Memory::_PAGEZERO_SUBSET) },
+			{ VIC20::Memory::_STACK_SUBSET, memory () -> subset (VIC20::Memory::_STACK_SUBSET) },
+			{ VIC20::Memory::_PAGE2AND3_SUBSET, memory () -> subset (VIC20::Memory::_PAGE2AND3_SUBSET) },
+			{ VIC20::Memory::_BASICAREA_SUBSET, memory () -> subset (VIC20::Memory::_BASICAREA_SUBSET) },
+			{ VIC20::Memory::_SCREENC1RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC1RAM_SUBSET) },
+			{ VIC20::Memory::_SCREENC2RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC2RAM_SUBSET) }
+		});
+	if (!static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) ->
+		enableCPUTimedWrites (_cpu, videoWriteSubsets))
+	{
+		_error = MCHEmul::_INIT_ERROR;
+		return (false);
+	}
+
+	// Forward CPU transaction contexts to the VIAs and VIC-I for write scheduling.
 	// VIC-I also uses instruction length to approximate $9003/$9004 raster reads.
 	observe (_cpu);
 	// It is also needed to observe the expansion port...
@@ -94,6 +114,7 @@ void VIC20::CommodoreVIC20::processEvent (const MCHEmul::Event& evnt, MCHEmul::N
 			static_cast <const MCHEmul::InterruptContextEventData*> (evnt.data ().get ());
 		via1 () -> CPUAboutToExecute (context);
 		via2 () -> CPUAboutToExecute (context);
+		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) -> CPUAboutToExecute (context);
 	}
 }
 
@@ -124,10 +145,10 @@ MCHEmul::Chips VIC20::CommodoreVIC20::standardChips
 	// Some how it is also controlled by VIA II
 	COMMODORE::VICI* vic = (COMMODORE::VICI*) ((vS == VIC20::CommodoreVIC20::VisualSystem::_NTSC) 
 		? (COMMODORE::VICI*) new COMMODORE::VICI_NTSC 
-			(VIC20::Memory::_CPU_VIEW, new COMMODORE::VICISoundSimpleLibWrapper 
+			(VIC20::Memory::_VICI_VIEW, new COMMODORE::VICISoundSimpleLibWrapper
 				(VIC20::CommodoreVIC20::_NTSCCLOCK, COMMODORE::VICI::_SOUNDSAMPLINGCLOCK)) 
 		: (COMMODORE::VICI*) new COMMODORE::VICI_PAL
-			(VIC20::Memory::_CPU_VIEW, new COMMODORE::VICISoundSimpleLibWrapper 
+			(VIC20::Memory::_VICI_VIEW, new COMMODORE::VICISoundSimpleLibWrapper
 				(VIC20::CommodoreVIC20::_PALCLOCK, COMMODORE::VICI::_SOUNDSAMPLINGCLOCK)));
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::VICI::_ID, (MCHEmul::Chip*) vic));
 	

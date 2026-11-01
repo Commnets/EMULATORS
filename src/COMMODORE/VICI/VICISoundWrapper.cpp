@@ -192,40 +192,32 @@ void COMMODORE::VICISoundSimpleLibWrapper::initialize ()
 }
 
 // ---
-bool COMMODORE::VICISoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
+bool COMMODORE::VICISoundSimpleLibWrapper::getData
+	(MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
 {
 	bool result = false;
 
-	for (auto i : _voices)
-		i -> clock (); // just one...
+	for (auto* voice : _voices)
+		voice -> clock ();
 
 	_counterCyclesPerSample += 1.0;
-	if ((result = 
+	if ((result =
 			(_cyclesPerSample > 0.0f &&
 			 _counterCyclesPerSample >= _cyclesPerSample)))
 	{
-		_counterCyclesPerSample = 
+		_counterCyclesPerSample =
 			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		// In the emulation of the TED the voices are added before applying
-		// the master volume. The PCM conversion limits the final mix.
-		double sample = 0.0f;
-		size_t activeVoices = 0;
-		for (auto i : _voices)
-		{
-			if (i -> active ())
-			{
-				sample += i -> data ();
-				activeVoices++;
-			}
-		}
+		double sample = 0.0;
+		for (auto* voice : _voices)
+			if (voice -> active ())
+				sample += voice -> data ();
 
-		if (activeVoices > 0)
-			sample /= (double) activeVoices; // Average the voices...
-		sample *= _volumen;
+		// Fixed headroom for four normalized sources keeps each voice's gain constant.
+		sample *= _volumen * 0.25;
 
 		dt = MCHEmul::UBytes ({
-			MCHEmul::normalizedSoundSampleToU8 (sample)	});
+			MCHEmul::normalizedSoundSampleToU8 (sample) });
 	}
 
 	return (result);
