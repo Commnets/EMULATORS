@@ -150,6 +150,96 @@ VIC-I now advances to the selected instruction read point before CPU execution, 
 
 ## Retaining character data across output halves
 
-During display, the current implementation acquires the matrix code, color nibble and complete glyph-row byte on the first output half. The second half consumes the retained byte and color without re-reading these cells. Inactive-window accesses and global color-register sampling retain their existing behavior. The retained data is reset alongside the display counters.
+The preceding retention step acquired the matrix code, color nibble and complete glyph-row byte on the first output half, then consumed the retained byte and color on the second half. The alternating-acquisition change below supersedes that acquisition schedule. The retained data is reset alongside the display counters.
 
 The existing wrapped-address and isolated-VIA fetch probes were adapted to inspect the complete retained byte returned by readGraphicalInfo(), rather than a previously selected output nibble. No new cases were added, and no compilation or test execution was performed for this change. The preceding pass reports refer to earlier revisions. Separate matrix/glyph fetch cycles, their startup timing and the output pipeline remain pending; this step alone does not complete cycle-accurate VIC-I fetch emulation.
+
+## Alternating acquisition and independent output
+
+The current cycle model alternates matrix/color acquisition and glyph-row acquisition inside the existing geometry window. Matrix reads update the pending code/color. Glyph reads publish the complete glyph byte and matching color to output; the high nibble is emitted in that cycle and the low nibble in the following cycle. Acquiring the next matrix cell cannot overwrite the current output color. Output can finish after the acquisition window closes; physical line initialization discards any residual half at the raster boundary.
+
+Reported horizontal output coordinates include one raster step after the matrix-acquisition origin and use the same cached column count as the acquisition controller. This is the explicit cycle-granular convention of this implementation, not a measured physical output latency. Absolute window timing, dynamic geometry latches and subcycle output behavior remain pending. Idle accesses retain their existing placeholder; this is not an open-bus implementation.
+
+The direct-render fixture now marks its manually prepared output nibble as valid. No new cases were added, and no compilation or test execution was performed for this change. Earlier passing results describe earlier revisions and do not validate the alternating acquisition or output timing.
+
+## Live origin comparisons
+
+Horizontal and vertical origins are now compared against the live raster before each video acquisition. A pending opening observes CPU writes to $9000/$9001 from the next video phase; a passed horizontal match is not replayed, and a line cannot open twice. Vertical state distinguishes waiting, pending first horizontal opening, displaying and finished. Glyph rows do not advance while the vertical opening is pending. Frame wrap resets display state independently of GRAPHICSREADY notification.
+
+At this preceding step, column count was sampled when preparing each line, while row count and expanded height used frame initialization. The pending/active column update below supersedes that policy for columns; glyph height now uses the live mode. Row sampling, matrix advancement in unusual geometries, absolute startup latency and subcycle effects remain pending. Reported horizontal bounds follow each line opening; a single rectangle does not describe every dynamically positioned scanline.
+
+The wrapped-address fixture prepares the new window state instead of removed origin countdowns. No new cases were added, and no compilation or test execution was performed for this change. Earlier passing reports do not validate the live origin comparisons.
+
+## Pending and active column counts
+
+The column count is sampled at horizontalCycle == 1 (the second cycle of the current zero-based line model), independently of display activity. A horizontal opening copies that pending count into the active width. The pending count survives line and frame boundaries; complete initialization alone seeds it from the register. At that step, frame start still sampled the number of rows; the row-sampling update below supersedes it. Glyph height uses the live mode bit and masks the glyph-row address; it is no longer cached per frame.
+
+With horizontal origin zero, acquisition uses the preceding pending count. At origin one, sampling precedes activation in this cycle-granular model. This ordering remains provisional until startup latency is validated. Matrix advancement and unusual geometries retain their current policy. No compilation or test execution was performed for this change; earlier passing reports do not validate these boundaries.
+
+## Matrix advancement without horizontal opening
+
+At a character-row boundary, the matrix base advances by the active width only if the horizontal window opened on that raster line. A line without opening cannot consume a matrix row using a width retained from another line. Vertical counters and vertical-window completion still advance independently. An opened zero-width window adds zero; an opened but truncated acquisition retains the active-width policy pending specific validation.
+
+No compilation or test execution was performed for this change. Earlier passing reports do not validate unopened-line or truncated-acquisition boundaries.
+
+## Row sampling independent of frame reset
+
+The row limit is captured at rasterLine == 0 and horizontalCycle == 2, after origin comparisons and before video acquisition in the current zero-based cycle model. Complete initialization seeds the initial limit; frame reset preserves it until the next capture. Sampling does not reset counters or reopen a completed vertical window. Vertical state, rather than a second ROW < ROWMAX drawing condition, controls display lifetime; row completion still compares the incremented row counter with the retained limit.
+
+Origin zero may open or close the window using the previous retained limit before capture. A later positive limit does not reopen a completed window, and capturing zero after opening does not immediately close it. These boundary effects and the capture cycle are a reference-based emulation convention requiring targeted validation. No compilation or test execution was performed for this change.
+
+## Column advancement on glyph acquisition
+
+The matrix column now advances immediately after a glyph read, including a read completed in the last physical cycle of a line. FetchPhase is the only acquisition-phase controller; the independent FH toggle and deferred nextHorizontal update have been removed. The existing direct-fetch probes no longer prepare FH. The retained output still drains independently after the active width is exhausted, and physical line reset discards any residual half.
+
+This change makes the next-column position reflect completed acquisitions; it does not replace the active-width matrix increment with a completed-glyph count. Matrix advancement for truncated lines remains unvalidated. No compilation or test execution was performed, and no new cases were added.
+
+## Experimental half-character matrix counter
+
+The retained matrix base and working acquisition position now use half-character units. The working position is loaded at horizontal opening and advances after each active matrix/color or glyph acquisition. Matrix and color offsets are (matrixCounter + 1) >> 1; the column counter still counts complete glyph acquisitions. On a character-row boundary, an opened line retains the working position, including an unmatched matrix acquisition. Frame initialization clears both counters; idle accesses do not advance them. The wrapped-address probe seeds 1024 half units for its previous 512-cell offset.
+
+This replaces the preceding active-width matrix increment with an experimental arithmetic model. Physical counter width, anomalous carries, exact boundary ordering and startup latency are not implemented or validated. Fetch DEBUG fields MatrixBaseHalf and MatrixHalf are decimal half-character units; Column and Columns are decimal character units. The working counter can retain the preceding line endpoint while no new window has opened. No compilation or test execution was performed; no compatibility improvement or complete truncated-line correction is established.
+
+## Reference acquisition startup delay
+
+Horizontal opening now enters Start with four startup cycles. For an opening at zero-based cycle N, cycles N through N+3 use the provisional idle access without advancing the matrix counter; N+3 prepares Matrix, the first matrix read occurs at N+4, and the first glyph/high output half at N+5. The latest pending column sample is activated when startup finishes, superseding the opening-only active-width policy above. Video output bounds are calculated after the first matrix read, one cycle before its first output group; bounds without acquisition are not evidence of displayed geometry.
+
+Physical line initialization cancels startup and residual output. Fetch DEBUG now reports Phase=Start/Matrix/Glyph and decimal StartupLeft before cycle activity. This delay is a reference-based convention, not validated physical timing; anomalous carries, exact line-boundary ordering and subcycle output remain pending. The existing fixtures were not extended or executed. No compilation or test execution was performed for this change.
+
+## Matrix counter width and boundary carries
+
+The experimental matrix counter now wraps at 12 bits. Both acquisition phases use the same increment helper; the rounded matrix/color offset is also masked before conversion to character units. The working counter reloads at physical horizontal cycle zero, independently of window opening, and is not reloaded a second time when acquisition starts.
+
+A per-cycle marker is cleared before video activity and set by an active matrix or glyph increment. At line completion, only an increment in that final cycle can retain carries into bits 4 and 8. The next physical-line reload applies those carries independently to their four-bit groups, without propagating a further carry, then consumes them. An earlier increment followed by idle cycles cannot produce a retained boundary carry. Frame initialization clears the new state; horizontal initialization preserves it for the following reload. Character-row completion saves the endpoint before that reload.
+
+This implements the proposed experimental ordering, not verified physical subcycle behavior. The 31-versus-32-increment discrepancy for late acquisition remains unresolved; no artificial endpoint increment was added. The $fff rounded-address case, simultaneous row save/reload/carry ordering, ordinary and truncated lines, and frame transitions still require validation. Existing fixtures were not extended or executed. No compilation or test execution was performed for this change.
+
+## Independent counter, acquisition and output timing
+
+The current experimental schedule supersedes the four-cycle shared-startup convention above. For a horizontal comparison at zero-based cycle N, the matrix counter first increments at N+3, the first matrix/color read occurs at N+5, and the first glyph/high output half at N+6. The low output half follows at N+7. The counter captures the pending width on activation and counts twice that width independently of later acquisitions. Acquisitions use the same active width and may finish after counting stops.
+
+Before each pair of counter increments, the rounded, masked matrix offset is retained for acquisition two cycles later. The current matrix read consumes the old offset before the counter replaces it with the following cell offset; glyph completion advances only the acquired column. Bounds are recorded when the first output group is actually emitted. Physical line reset cancels both startups, remaining counter steps, pending address and residual output, while preserving the boundary carries for reload. The CPU-read split still executes each video phase only once.
+
+For PAL with origin 36 and width 22, the proposed schedule permits 32 counter increments from cycle 39 through 70. That arithmetic result is not proof of physical fetch/output timing or hardware compatibility. This remains a cycle-granular interpretation of the 6561 circuit analysis; subcycle phases, simultaneous boundary operations, unusual widths and live register writes still need targeted validation. The direct address fixture now seeds the retained offset as well as the counter. No new cases were added; no compilation or test execution was performed.
+
+## Inactive cycles do not acquire character data
+
+The fixed $1c00 placeholder read has been removed. Startup and inactive cycles preserve the last acquired screen code and pending color; they do not derive a color nibble from an arbitrary RAM byte. Matrix/color reads are invoked only by the active matrix phase. The final startup cycle still prepares that phase for acquisition on the following cycle.
+
+The independent counter controller, retained pixel output, CPU write replay and raster completion continue on inactive cycles. Retained code/color alone do not authorize output. This removes a fabricated acquisition; it does not specify electrical bus levels, disconnected-window readback or undriven color bits. The separate memory-map placeholders remain in place. No compilation or test execution was performed, and no new cases were added.
+
+## Horizontal viewport alignment
+
+The visible horizontal interval is now 88..554 inclusive for PAL (467 internal positions), and 56..475 inclusive for NTSC (420 positions). Both intervals move 48 positions to account for the current six-cycle origin-to-output delay; line periods, acquisition timing and vertical raster definitions are unchanged.
+
+The supplied PAL BASIC trace has origin 12 and 22 columns: output begins at raw position 144 and occupies 352 positions, leaving visible margins of 56 and 59. For NTSC, origin 5 and 22 columns give calculated margins of 32 and 36; that example has not been confirmed by an NTSC trace. This aligns the viewport with the current output model and does not establish measured analog blanking. DEBUG raster columns remain full-line coordinates; visible coordinates subtract 88 for PAL or 56 for NTSC.
+
+No compilation or test execution was performed for this change. Visual confirmation in both models remains pending.
+
+## Retained bus state for active VIC-I acquisitions
+
+Active matrix and glyph acquisitions now retain separate data-byte and color-nibble bus values. Color RAM is addressed with the acquisition address's low ten bits in both phases; only a matrix acquisition captures the character output color. Startup and inactive cycles, line and frame resets, snapshots and dumps do not update the chip's retained bus values. Complete initialization seeds data $ff and color $0f as deterministic emulator defaults.
+
+The three unconnected video-view subsets use the compatibility expression previousData & ($f0 | previousColor), then the acquisition captures the current address's color nibble. Video color-RAM reads provide only their low nibble. CPU color-RAM reads retain the preceding placeholder implementation. CPU-driven changes of video-bus state and physical verification of the compatibility expression remain pending; this is not complete open-bus emulation. The separate CPU, VIC-I and combined subset collections are preserved.
+
+No compilation or test execution was performed for this change, and existing fixtures do not validate the new bus model.

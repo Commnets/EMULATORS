@@ -265,6 +265,10 @@ const MCHEmul::UByte& COMMODORE::VICIRegisters::readValue (size_t p) const
 // ---
 void COMMODORE::VICIRegisters::initializeInternalValues ()
 {
+	// Initialize retained input state directly: CPU register writes cannot change it.
+	_latchLightPenHorizontalPosition = 0x00;
+	_latchLightPenVerticalPosition = 0x00;
+
 	// Writes to either address register recalculate all memory positions.
 	// Define every selector before applying the register presets.
 	_b9ScreenColorMemory = 0;

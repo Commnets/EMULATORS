@@ -2,6 +2,7 @@
 #include <VIC20/VIA1Registers.hpp>
 #include <VIC20/VIA2Registers.hpp>
 #include <COMMODORE/VICI/VICIRegisters.hpp>
+#include <COMMODORE/VICI/VICI.hpp>
 
 // ---
 void VIC20::VIA1VIA2RegistersReflection::setValue (size_t nB, const MCHEmul::UByte& d)
@@ -106,16 +107,53 @@ VIC20::VICIColorRAMSubset::VICIColorRAMSubset
 	  _lastValueRead (MCHEmul::UByte (0xff))
 {
 	setClassName ("VICIColorRAMSubset");
+
 	setBufferMemorySetCommands (false);
 }
 
 // ---
 const MCHEmul::UByte& VIC20::VICIColorRAMSubset::readValue (size_t position) const
 {
-	// Upper bits are a placeholder until open-bus behavior is implemented.
+	_lastValueRead =
+		MCHEmul::PhysicalStorageSubset::readValue (position) & 0x0f;
+
+	return (_lastValueRead);
+}
+
+// ---
+VIC20::VICIUnconnectedSubset::VICIUnconnectedSubset
+	(int id, MCHEmul::PhysicalStorage* storage,
+	 size_t physicalPosition, const MCHEmul::Address& address, size_t size)
+	: MCHEmul::PhysicalStorageSubset
+		(id, storage, physicalPosition, address, size),
+	  _vici (nullptr),
+	  _lastValueRead (MCHEmul::UByte (0xff))
+{
+	setClassName ("VICIUnconnectedSubset");
+
+	setBufferMemorySetCommands (false);
+}
+
+// ---
+void VIC20::VICIUnconnectedSubset::linkToVICI (const COMMODORE::VICI* vici)
+{
+	assert (vici != nullptr);
+
+	_vici = vici;
+}
+
+// ---
+const MCHEmul::UByte& VIC20::VICIUnconnectedSubset::readValue (size_t position) const
+{
+	// Permit inspection before the machine has connected the chip.
+	if (_vici == nullptr)
+		return (_lastValueRead);
+
+	// VICE-compatible unconnected fetch model; physical behavior needs validation.
 	_lastValueRead = MCHEmul::UByte
-		((unsigned char) (0xf0 |
-			(MCHEmul::PhysicalStorageSubset::readValue (position).value () & 0x0f)));
+		((unsigned char)
+			(_vici -> videoBusData ().value () &
+				(0xf0 | _vici -> videoBusColor ().value ())));
 
 	return (_lastValueRead);
 }
@@ -394,10 +432,14 @@ bool VIC20::Memory::initialize ()
 	if (!result)
 		return (false);
 
-	// Fill the memory with random values...
-	for (size_t i = 0X000; i < 0x10000; i++)
-		fillWith (MCHEmul::Address ({ 0x00, 0x00 }) + i, 
-			MCHEmul::UByte ((unsigned char) (std::rand () % 255)), 1); // Only affects the RAM....
+	// Fill the memory with almost random values...
+	bool bp = true;
+	for (size_t i = 0X0000; i < 0x10000; i += 0x40)
+	{
+		fillWith (MCHEmul::Address ({ 0x00, 0x00 }, false) + i,
+			bp ? MCHEmul::UByte::_0 : MCHEmul::UByte::_FF, 0x40);
+		bp = !bp;
+	}
 
 	// The active view has to be initially the CPU view...
 	setCPUView ();
@@ -583,24 +625,18 @@ MCHEmul::Memory::Content VIC20::Memory::standardMemoryContent ()
 	VIC20::VICIColorRAMSubset* viciColorRAM =
 		new VIC20::VICIColorRAMSubset (_VICICOLOR_SUBSET, RAM);
 
-	// Fixed values are placeholders, not an electrical open-bus model.
-	MCHEmul::EmptyPhysicalStorageSubset* viciUnconnectedLow =
-		new MCHEmul::EmptyPhysicalStorageSubset
-			(_VICIUNCONNECTEDLOW_SUBSET, MCHEmul::UByte (0xff),
-			 RAM, 0x0400, MCHEmul::Address (2, 0x0400), 0x0c00);
-	MCHEmul::EmptyPhysicalStorageSubset* viciUnconnectedIO =
-		new MCHEmul::EmptyPhysicalStorageSubset
-			(_VICIUNCONNECTEDIO_SUBSET, MCHEmul::UByte (0xff),
-			 RAM, 0x9000, MCHEmul::Address (2, 0x9000), 0x0400);
-	MCHEmul::EmptyPhysicalStorageSubset* viciUnconnectedExpansion =
-		new MCHEmul::EmptyPhysicalStorageSubset
-			(_VICIUNCONNECTEDEXPANSION_SUBSET, MCHEmul::UByte (0xff),
-			 RAM, 0x9800, MCHEmul::Address (2, 0x9800), 0x0800);
+	// Unconnected acquisitions resolve against the retained VIC-I bus state...
+	VIC20::VICIUnconnectedSubset* viciUnconnectedLow = new VIC20::VICIUnconnectedSubset 
+		(_VICIUNCONNECTEDLOW_SUBSET, RAM, 0x0400, MCHEmul::Address (2, 0x0400), 0x0c00);
+	VIC20::VICIUnconnectedSubset* viciUnconnectedIO = new VIC20::VICIUnconnectedSubset 
+		(_VICIUNCONNECTEDIO_SUBSET, RAM, 0x9000, MCHEmul::Address (2, 0x9000), 0x0400);
+	VIC20::VICIUnconnectedSubset* viciUnconnectedExpansion = new VIC20::VICIUnconnectedSubset 
+		(_VICIUNCONNECTEDEXPANSION_SUBSET, RAM, 0x9800, MCHEmul::Address (2, 0x9800), 0x0800);
 
 	// To set the names of the different memory zones...
 	viciColorRAM				-> setName ("VICI Color RAM");
 	viciUnconnectedLow			-> setName ("VICI Unconnceted Low");
-	viciUnconnectedIO			-> setName ("VICI Unconnected IO");
+	viciUnconnectedIO			-> setName ("VICI Unconnected I/O");
 	viciUnconnectedExpansion	-> setName ("VICI Unconnected Expansion");
 
 	MCHEmul::PhysicalStorageSubsets viciSubsets (

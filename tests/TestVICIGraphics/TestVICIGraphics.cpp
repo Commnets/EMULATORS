@@ -169,6 +169,7 @@ void VICIGraphicsProbe::render (
 	_VICIRegisters -> setRegister (0x0f, MCHEmul::UByte ((mode & 1) ? 0x23 : 0x2b));
 	_vicGraphicInfo._graphicData = MCHEmul::UByte (nibble);
 	_vicGraphicInfo._colorData = MCHEmul::UByte (mode >= 2 ? 13 : 5);
+	_vicGraphicInfo._graphicDataReady = true;
 	drawGraphics ({ _raster.hData ().firstDisplayPosition (),
 		_raster.hData ().lastDisplayPosition (), x,
 		_raster.vData ().firstDisplayPosition (),
@@ -183,10 +184,14 @@ bool VICIGraphicsProbe::addressReads ()
 	memoryRef () -> set (MCHEmul::Address (2, 0x2000), MCHEmul::UByte (0x3c));
 	_VICIRegisters -> setRegister (0x05, MCHEmul::UByte (0xff));
 	_VICIRegisters -> setRegister (0x02, MCHEmul::UByte (0x96));
-	_vicGraphicInfo._HC = _vicGraphicInfo._VC = 0;
+	_vicGraphicInfo._horizontalOpened = true;
+	_vicGraphicInfo._verticalState =
+		VICGraphicInfo::VerticalState::_DISPLAY;
 	_vicGraphicInfo._COL = _vicGraphicInfo._ROW = 0;
 	_vicGraphicInfo._COLMAX = _vicGraphicInfo._ROWMAX = 1;
-	_vicGraphicInfo._VBASE = 0x0200;
+	_vicGraphicInfo._matrixBaseCounter =
+	_vicGraphicInfo._matrixCounter = 0x0400;
+	_vicGraphicInfo._matrixOffset = 0x0200;
 	_vicGraphicInfo._DRAW = true;
 	readVideoMatrixAndColorRAM ();
 	if (_vicGraphicInfo._screenCodeData.value () != 0xa5)
@@ -197,7 +202,6 @@ bool VICIGraphicsProbe::addressReads ()
 		_VICIRegisters -> setRegister (0x03, MCHEmul::UByte (0x2e | expanded));
 		_vicGraphicInfo._screenCodeData = MCHEmul::UByte (expanded ? 0x40 : 0x80);
 		_vicGraphicInfo._RC = 0;
-		_vicGraphicInfo._FH = false;
 		readGraphicalInfo ();
 		if (_vicGraphicInfo._graphicByteData.value () != 0xa5)
 			return (false);
@@ -213,7 +217,6 @@ bool VICIGraphicsProbe::isolatedVIARead ()
 	_VICIRegisters -> setRegister (0x03, MCHEmul::UByte (0x2e));
 	_vicGraphicInfo._screenCodeData = MCHEmul::UByte (0x24);
 	_vicGraphicInfo._RC = 4;
-	_vicGraphicInfo._FH = false;
 	readGraphicalInfo ();
 	return (_vicGraphicInfo._graphicByteData.value () == 0xff);
 }

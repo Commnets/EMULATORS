@@ -23,41 +23,39 @@
 	and the size of the non visible zone. = 28
 	So: 0,28,28,311,311,311. Total 312. \n
 	\n
-	HORIZONTAL RASTER:\n
-	------------------\n
-	In one side:
-	The VICI is connected to a clock at 4.433.618Hz. \n
-	It reduces the speed and set CPU Clock at /4 speed = 1.108.404Hz. \n
-	It is said that the screen is 233 pixels width (visible part). \n
-	We could initially suppose than the screen has then (233 - (23 * 8)) / 2 = 24,5 
-	pixels border per side in average. Or 23 and 25 each it was centered.
+	HORIZONTAL RASTER: \n
+	------------------ \n
+	In one side: \n
+	The VICI is connected to a clock at 4,433,618 Hz. \n
+	It divides this clock by 4 to obtain approximately 1,108,404.5 CPU cycles per second. \n
+	The original visible-width estimate was 233 native pixels. \n
+	The existing inclusive interval 40..506 actually contains 467 internal positions, or 233.5 native pixels. \n
+	Preserve that width while aligning its position with the current output timing. \n
 	\n
-	In the other side:
-	Every line takes 71 CPU cycles. \n
-	The sensibility of the screen movement (looking registers $00 e.g) is 4 pixels. \n
-	So in each CPU cycle only 4 pixels should be drawn. \n
-	It is said (in the documentation) that when the value of the register $00 is $00, and the number of columns is 22,
-	the first visible pixel of the display is the 4th pixel of the 3rd column. \n
-	When that value is 5, the first pixel seen is the first pixel of the first column.
-	If the screen started to be drawn at the very first cycle in each line,
-	we could say that there would be 20 pixels hidden. and because the usual value of this register is 12, 
-	the size of the left border would be = 32 pixels (12 - 5 + 1) * 4. \n
-	This number doesn't match with the one that roughly was calculated above (24). 
-	The number of pixels of the usual screen are in this case 176 pixels (22 * 8).
-	So the right margin is: 233 - (32 + 176) = 25 pixels.
+	In the other side: \n
+	Every line takes 71 CPU cycles and each cycle represents 4 native pixels. \n
+	The emulator doubles the horizontal representation, giving 8 internal positions per cycle. \n
+	The complete line therefore contains 71 * 8 = 568 positions, numbered 0..567. \n
+	A horizontal-origin comparison at cycle N produces its first character pixels at N+6 in the current model. \n
+	Those six cycles add 6 * 8 = 48 internal positions before the first output. \n
+	The old visible interval did not include that output delay in its alignment. \n
+	For the BASIC origin 12 and 22 columns observed in VIC20.LOG, output starts at (12 + 6) * 8 = 144. \n
+	The text occupies 22 * 16 = 352 internal positions. \n
+	With the old visible origin 40, its margins would be 144 - 40 = 104 and 467 - 104 - 352 = 11. \n
+	Move the visible interval by the same 48 positions: 40 + 48 = 88 and 506 + 48 = 554. \n
+	The margins then become 144 - 88 = 56 and 467 - 56 - 352 = 59. \n
 	\n
 	Finally: \n
-	(71 * 4) - (20 HIDDEN LEFT + 32 MARGIN + 176 SCREEN + 25 MARGIN) = 31 hidden on the right... \n
-	I would like to "duplicate" the size of the horizontal screen, so: \n
-	(71 * 8) - (40 + 64 + 352 + 50) = 62 hidden on the right... \n
-	Or: 0,40,104,455,505,567. Total 568.
+	The left non-visible interval contains 88 positions, and the right one contains 567 - 554 = 13. \n
+	568 - (88 HIDDEN LEFT + 56 LEFT MARGIN + 352 TEXT + 59 RIGHT MARGIN) = 13 HIDDEN RIGHT. \n
+	The visible width remains 554 - 88 + 1 = 467 internal positions. \n
 	\n
-=>	However, as the drawing is controlled by internal counters, 
-	the only thing that matters actually is is total visible positions = 233 * 2 = 466 
-	and the size of the non visible zone. = 40
-	So: 0,40,40,506,506,567. Total 568. */
+=>	As character acquisition and output are controlled by internal state, the display bounds cover the visible interval. \n
+	Only the viewport alignment changes; line duration, origin comparisons and acquisition delays are preserved. \n
+	This aligns the viewport with the current output model, rather than specifying measured analog blanking. \n
+	So: 0,88,88,554,554,567. Total 568. */
 const MCHEmul::RasterData COMMODORE::VICI_PAL::_VRASTERDATA	(0, 28, 28, 311, 311, 311, 311, 312, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 40, 40, 506, 506, 567, 567, 568, 0, 0);
+const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 88, 88, 554, 554, 567, 567, 568, 0, 0);
 // NTSC SYSTEM
 /** VERTICAL RASTER: \n
 	---------------- \n
@@ -79,41 +77,37 @@ const MCHEmul::RasterData COMMODORE::VICI_PAL::_HRASTERDATA	(0, 40, 40, 506, 506
 	and the size of the non visible zone. = 28
 	So: 0,28,28,260,260,260. 
 	\n
-	HORIZONTAL RASTER:\n
-	------------------\n
-	In one side:
-	The VICI is connected to a clock at 14.318.181Hz. \n
-	It reduces the speed and set CPU Clock at /14 speed = 1.020.000Hz. \n
-	It is said that the screen is 210 pixels width (visible part). \n
-	We could initially suppose than the screen has then (210 - (23 * 8)) / 2 = 13 pixels border per side.
+	HORIZONTAL RASTER: \n
+	------------------ \n
+	In one side: \n
+	The VICI is connected to a clock at 14,318,181 Hz. \n
+	It divides this clock by 14 to obtain approximately 1,022,727 CPU cycles per second. \n
+	The visible width is 210 native pixels, represented by 420 internal positions. \n
+	The existing inclusive interval 8..427 contains those 420 positions. \n
+	Preserve that width while applying the same output-delay alignment as PAL. \n
 	\n
-	In the other side:
-	Every line takes 65 CPU cycles. \n
-	The sensinility of the screen movement (looking registers $00 e.g) is 4 pixels. \n
-	So in each CPU cycle only 4 pixels should be drawn. \n
-	It is said (in the documentation) that when the value of the register $00 is $00, and the number of columns is 22,
-	the first visible pixel of the display is the 4th pixel of the 1st column. \n
-	When that value is 1, the first pixel seen is the first pixel of the first column.
-	If the screen started to be drawn at the very first cycle in each line,
-	we could say that there would be 4 pixels hidden and, because the usual value of this register is 6,
-	the size of the left border would be = 16 pixels (5 - 1 + 1) * 4 \n
-	This number doesn't match with the one that roughly was calculated above (13). 
-	The number of pixels of the usual screen are in this case 176 pixels (22 * 8).
-	So the right margin is: 210 - (16 + 176) = 18 pixels.
+	In the other side: \n
+	Every line takes 65 CPU cycles and each cycle represents 4 native pixels. \n
+	The emulator doubles the horizontal representation, giving 8 internal positions per cycle. \n
+	The complete line therefore contains 65 * 8 = 520 positions, numbered 0..519. \n
+	A horizontal-origin comparison at cycle N produces its first character pixels at N+6 in the current model. \n
+	Those six cycles add 6 * 8 = 48 internal positions before the first output. \n
+	Move the visible interval by those 48 positions: 8 + 48 = 56 and 427 + 48 = 475. \n
+	For example, origin 5 and 22 columns produce their first output at (5 + 6) * 8 = 88. \n
+	The text occupies 22 * 16 = 352 positions, leaving margins of 88 - 56 = 32 and 420 - 32 - 352 = 36. \n
+	Origin 5 is a calculation example; an NTSC execution and hardware comparison remain pending. \n
 	\n
 	Finally: \n
-	(65 * 4) - (4 HIDDEN LEFT + 16 MARGIN + 176 SCREEN + 18 MARGIN) = 46 hidden on the right... \n
-	I would like to "duplicate" the size of the horizontal screen, so: \n
-	(65 * 8) - (8 + 32 + 352 + 36) = 92 hidden on the right... \n
-	Or: 0,8,40,391,427,519.
+	The left non-visible interval contains 56 positions, and the right one contains 519 - 475 = 44. \n
+	520 - (56 HIDDEN LEFT + 32 LEFT MARGIN + 352 TEXT + 36 RIGHT MARGIN) = 44 HIDDEN RIGHT. \n
+	The visible width remains 475 - 56 + 1 = 420 internal positions. \n
 	\n
-=>	However, as the drawing is controlled by internal counters, 
-	the only thing that matters actually is is total visible positions = 210 * 2 = 420 
-	and the size of the non visible zone. = 8
-	So: 0,8,8,427,427,519. */
+=>	As character acquisition and output are controlled by internal state, the display bounds cover the visible interval. \n
+	Only the viewport alignment changes; line duration, origin comparisons and acquisition delays are preserved. \n
+	This is the NTSC counterpart of the PAL alignment, not a measured analog blanking specification. \n
+	So: 0,56,56,475,475,519. Total 520. */
 const MCHEmul::RasterData COMMODORE::VICI_NTSC::_VRASTERDATA (0, 28, 28, 260, 260, 260, 260, 261, 0, 0);
-const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 8, 8, 427, 427, 519, 519, 520, 0, 0);
-const MCHEmul::Address COMMODORE::VICI::_MEMORYPOSOFF = MCHEmul::Address ({ 0x00, 0x1c }, true /* already in little - endian. */);
+const MCHEmul::RasterData COMMODORE::VICI_NTSC::_HRASTERDATA (0, 56, 56, 475, 475, 519, 519, 520, 0, 0);
 
 // ---
 COMMODORE::VICI::SoundFunction::SoundFunction (MCHEmul::SoundLibWrapper* sW)
@@ -152,6 +146,7 @@ bool COMMODORE::VICI::SoundFunction::simulateUntil (MCHEmul::CPU* cpu, unsigned 
 	if (!_clockSynchronized)
 	{
 		synchronizeClock (cycle);
+
 		return (true);
 	}
 
@@ -159,6 +154,7 @@ bool COMMODORE::VICI::SoundFunction::simulateUntil (MCHEmul::CPU* cpu, unsigned 
 	if (cycle - _lastCPUCycles > cpu -> clockCycles () - _lastCPUCycles)
 	{
 		_error = MCHEmul::_CHIP_ERROR;
+
 		return (false);
 	}
 
@@ -167,6 +163,7 @@ bool COMMODORE::VICI::SoundFunction::simulateUntil (MCHEmul::CPU* cpu, unsigned 
 		if (soundWrapper () != nullptr)
 		{
 			_IFDEBUG debugVICISoundCycle (cpu, cpu -> clockCycles () - _lastCPUCycles);
+
 			MCHEmul::UBytes data;
 			if (soundWrapper () -> getData (cpu, data))
 				for (size_t j = 0; j < data.size (); ++j)
@@ -234,6 +231,8 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 	  _cyclesPerRasterLine (cRL),
 	  _raster (vd, hd, 8 /** The step is here 8 pixels */),
 	  _videoMemory (nullptr),
+	  _videoBusData (MCHEmul::UByte (0xff)),
+	  _videoBusColor (MCHEmul::UByte (0x0f)),
 	  _lastCPUCycles (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (0),
@@ -284,6 +283,10 @@ bool COMMODORE::VICI::initialize ()
 
 		return (false);
 	}
+
+	// Deterministic initial values; these do not specify physical power-on levels.
+	_videoBusData = MCHEmul::UByte (0xff);
+	_videoBusColor = MCHEmul::UByte (0x0f);
 
 	// Gets the memory block dedicated to the VICI
 	if (!(_VICIRegisters = 
@@ -452,7 +455,8 @@ bool COMMODORE::VICI::simulate (MCHEmul::CPU* cpu)
 			_advancedCyclePending = false;
 		}
 	}
-	else if (_lastCPUCycles == 0)
+	else
+	if (_lastCPUCycles == 0)
 	{
 		// Preserve direct-access component operation without a connected scheduler.
 		_lastCPUCycles = currentCPUCycles;
@@ -651,19 +655,69 @@ MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 // ---
 void COMMODORE::VICI::readGraphicsAndDrawVisibleZone ()
 {
-	// During display, acquire character data only for its first output half.
-	// Keep the existing inactive-window accesses until fetch phases are modeled.
-	if (!_vicGraphicInfo.draw () || !_vicGraphicInfo._FH)
+	_vicGraphicInfo._graphicDataReady = false;
+
+	// Preparing MATRIX at the end of startup does not acquire data in this cycle.
+	if (_vicGraphicInfo._horizontalOpened &&
+		_vicGraphicInfo._fetchPhase == VICGraphicInfo::FetchPhase::_START)
+		_vicGraphicInfo.advanceFetchStartup ();
+	else
+	if (_vicGraphicInfo.draw ())
 	{
-		readVideoMatrixAndColorRAM ();
-		readGraphicalInfo ();
+		switch (_vicGraphicInfo._fetchPhase)
+		{
+			case VICGraphicInfo::FetchPhase::_START:
+				{
+					// Startup is consumed before entering the active acquisition switch.
+				}
+
+				break;
+
+			case VICGraphicInfo::FetchPhase::_MATRIX:
+				{
+					readVideoMatrixAndColorRAM ();
+
+					_vicGraphicInfo._fetchPhase =
+						VICGraphicInfo::FetchPhase::_GLYPH;
+				}
+
+				break;
+
+			case VICGraphicInfo::FetchPhase::_GLYPH:
+				{
+					readGraphicalInfo ();
+
+					// Publish the glyph and its matching retained color together.
+					_vicGraphicInfo._colorData =
+						_vicGraphicInfo._pendingColorData;
+					_vicGraphicInfo._outputHalvesLeft = 2;
+
+					_vicGraphicInfo._fetchPhase =
+						VICGraphicInfo::FetchPhase::_MATRIX;
+
+					// Complete the acquired column independently of the running matrix counter.
+					_vicGraphicInfo.completeCharacterFetch ();
+				}
+
+				break;
+		}
 	}
 
-	// Both output halves consume the same retained glyph-row byte.
-	_vicGraphicInfo._graphicData =
-		_vicGraphicInfo._FH
-			? (_vicGraphicInfo._graphicByteData.value () & 0x0f)
-			: ((_vicGraphicInfo._graphicByteData.value () >> 4) & 0x0f);
+	// A matrix read consumes the retained address before this cycle can replace it.
+	_vicGraphicInfo.advanceMatrixCycle ();
+
+	// Output continues while the next character is acquired or the window closes.
+	if (_vicGraphicInfo._outputHalvesLeft != 0)
+	{
+		_vicGraphicInfo._graphicData =
+			(_vicGraphicInfo._outputHalvesLeft == 2)
+				? ((_vicGraphicInfo._graphicByteData.value () >> 4) & 0x0f)
+				: (_vicGraphicInfo._graphicByteData.value () & 0x0f);
+
+		_vicGraphicInfo._graphicDataReady = true;
+
+		--_vicGraphicInfo._outputHalvesLeft;
+	}
 
 	calculateScreenPositions ();
 
@@ -674,16 +728,10 @@ void COMMODORE::VICI::readGraphicsAndDrawVisibleZone ()
 // ---
 void COMMODORE::VICI::treatRasterCycle ()
 {
-	// At the very last cycle, the row is moved...
 	if (_cycleInRasterLine == _cyclesPerRasterLine)
 		_vicGraphicInfo.nextVertical (_VICIRegisters);
-	else
-	// In any raster cycles, expect the last one, the column is then moved...
-	if (_cycleInRasterLine < _cyclesPerRasterLine)
-		_vicGraphicInfo.nextHorizontal (_VICIRegisters);
 
-	// ...then finally moves to the next cycle...
-	_cycleInRasterLine++;
+	++_cycleInRasterLine;
 }
 
 // ---
@@ -704,7 +752,7 @@ void COMMODORE::VICI::drawVisibleZone ()
 			_VICIRegisters -> borderColor ());
 
 	// Now the information is drawn...
-	if (_vicGraphicInfo.draw ())
+	if (_vicGraphicInfo.graphicDataReady ())
 		drawGraphics (
 			{
 				/** _ICD */ _raster.hData ().firstDisplayPosition (),
@@ -832,6 +880,41 @@ void COMMODORE::VICI::debugVICICycle (unsigned int cycle)
 				std::to_string (_cycleInRasterLine) },
 		  { "CPU timing",
 				"CyclesAdvanced=" + std::to_string (_cyclesSimulatedInAdvance) },
+		  { "Fetch",
+			"MatrixBaseHalf=" +
+				std::to_string (_vicGraphicInfo._matrixBaseCounter) + "," +
+			"MatrixHalf=" +
+				std::to_string (_vicGraphicInfo._matrixCounter) + "," +
+			"Column=" +
+				std::to_string (_vicGraphicInfo._COL) + "," +
+			"Columns=" +
+				std::to_string (_vicGraphicInfo._COLMAX) + "," +
+			std::string ("Phase=") +
+				((_vicGraphicInfo._fetchPhase == VICGraphicInfo::FetchPhase::_START)
+					? "Start"
+					: ((_vicGraphicInfo._fetchPhase == VICGraphicInfo::FetchPhase::_MATRIX)
+						? "Matrix" : "Glyph")) + "," +
+			"StartupLeft=" +
+				std::to_string (_vicGraphicInfo._startupCyclesLeft) + "," +
+			"CounterStartupLeft=" +
+				std::to_string (_vicGraphicInfo._counterStartupCyclesLeft) + "," +
+			"CounterHalvesLeft=" +
+				std::to_string (_vicGraphicInfo._counterHalvesLeft) + "," +
+			"MatrixOffset=" +
+				std::to_string (_vicGraphicInfo._matrixOffset) + "," +
+			"PendingCode=$" +
+				_vicGraphicInfo._screenCodeData.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"PendingColor=$" +
+				_vicGraphicInfo._pendingColorData.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"OutputByte=$" +
+				_vicGraphicInfo._graphicByteData.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"OutputColor=$" +
+				_vicGraphicInfo._colorData.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, 2) + "," +
+			"HalvesLeft=" + std::to_string (_vicGraphicInfo._outputHalvesLeft) },
 		  { "Memory",
 				"Screen=$" + MCHEmul::removeAll0 (_VICIRegisters -> screenMemory ().asString
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
@@ -839,6 +922,38 @@ void COMMODORE::VICI::debugVICICycle (unsigned int cycle)
 					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
 				"Color=$" + MCHEmul::removeAll0 (_VICIRegisters -> colourMemory ().asString
 				(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) } });
+}
+
+// ---
+void COMMODORE::VICI::debugVICILineEnd (unsigned int cycle)
+{
+	assert (_deepDebugFile != nullptr);
+
+	_deepDebugFile -> writeCompleteLine (className (), cycle, "Line end",
+		{ { "Raster",
+			"Line=" +
+				std::to_string (_raster.vData ().currentPosition ()) + "," +
+			"Cycle=" +
+				std::to_string (_cycleInRasterLine) },
+		  { "Matrix",
+			"BaseHalf=" +
+				std::to_string (_vicGraphicInfo._matrixBaseCounter) + "," +
+			"EndHalf=" +
+				std::to_string (_vicGraphicInfo._matrixCounter) },
+		  { "Acquisition",
+			"Opened=" +
+				std::to_string (_vicGraphicInfo._horizontalOpened) + "," +
+			"Column=" +
+				std::to_string (_vicGraphicInfo._COL) + "," +
+			"Columns=" +
+				std::to_string (_vicGraphicInfo._COLMAX) + "," +
+			"StartupLeft=" +
+				std::to_string (_vicGraphicInfo._startupCyclesLeft) },
+		  { "Vertical",
+			"Row=" +
+				std::to_string (_vicGraphicInfo._ROW) + "," +
+			"GlyphLine=" +
+				std::to_string (_vicGraphicInfo._RC) } });
 }
 
 // ---
@@ -966,6 +1081,11 @@ bool COMMODORE::VICI::simulate
 bool COMMODORE::VICI::simulateRasterCycle
 	(MCHEmul::CPU* cpu, unsigned int cycle, bool completeCycle)
 {
+	_vicGraphicInfo.beginRasterCycle
+		(_VICIRegisters,
+		 (unsigned short) (_cycleInRasterLine - 1),
+		 _raster.vData ().currentPosition ());
+
 	_IFDEBUG debugVICICycle (cycle);
 
 	readGraphicsAndDrawVisibleZone ();
@@ -984,6 +1104,9 @@ bool COMMODORE::VICI::finishRasterCycle
 	if (!executePendingWriteAt (cpu, cycle))
 		return (false);
 
+	if (_cycleInRasterLine == _cyclesPerRasterLine)
+		_IFDEBUG debugVICILineEnd (cycle);
+
 	treatRasterCycle ();
 	treatLightPenAtCurrentRasterPosition ();
 
@@ -991,7 +1114,11 @@ bool COMMODORE::VICI::finishRasterCycle
 	{
 		_cycleInRasterLine = 1;
 		if (_raster.vData ().currentPosition () == 0)
+		{
 			_lightPenFrameLatched = false;
+			// Frame reset preserves sampled dimensions until their regular capture points.
+			_vicGraphicInfo.initializeFrame ();
+		}
 	}
 
 	if (_raster.isInFirstVBlankZone ())
@@ -1000,13 +1127,80 @@ bool COMMODORE::VICI::finishRasterCycle
 		{
 			_lastVBlankEntered = true;
 			notify (MCHEmul::Event (_GRAPHICSREADY));
-			_vicGraphicInfo.initialize (_VICIRegisters);
 		}
 	}
 	else
 		_lastVBlankEntered = false;
 
 	return (true);
+}
+
+// ---
+MCHEmul::UByte COMMODORE::VICI::acquireVideoMemory
+	(const MCHEmul::Address& address)
+{
+	// Resolve data using the retained bus state from before this acquisition.
+	_videoBusData = _videoMemory -> value (address);
+
+	// Both matrix and glyph acquisitions address the physical color RAM.
+	_videoBusColor = _videoMemory -> value
+		(MCHEmul::Address (2, 0x9400 + (address.value () & 0x03ff))) & 0x0f;
+
+	return (_videoBusData);
+}
+
+// ---
+void COMMODORE::VICI::VICGraphicInfo::beginRasterCycle
+	(VICIRegisters* v, unsigned short horizontalCycle,
+	 unsigned short rasterLine)
+{
+	_SCREENORIGINX = false;
+	_SCREENORIGINY = false;
+	_matrixAdvancedThisCycle = false;
+
+	// Reload belongs to the physical line boundary, independently of window opening.
+	if (horizontalCycle == 0)
+		reloadMatrixCounter ();
+
+	// Sampling is independent of vertical display and horizontal opening.
+	if (horizontalCycle == 1)
+		_pendingColumns = v -> charsWidthScreen ();
+
+	if (_verticalState == VerticalState::_WAITING &&
+		v -> offsetYScreen () == (rasterLine >> 1))
+		_verticalState = (_ROWMAX == 0)
+			? VerticalState::_DONE
+			: VerticalState::_PENDING;
+
+	if (!_horizontalOpened &&
+		(_verticalState == VerticalState::_PENDING ||
+		 _verticalState == VerticalState::_DISPLAY) &&
+		v -> offsetXScreen () == horizontalCycle)
+	{
+		_horizontalOpened = true;
+		_SCREENORIGINX = true;
+
+		// Keep a provisional width until the counter controller captures its active sample.
+		_COLMAX = _pendingColumns;
+
+		_fetchPhase = FetchPhase::_START;
+		_startupCyclesLeft = _FETCHSTARTDELAY;
+		// Include the comparison cycle: the first increment occurs at N+3.
+		_counterStartupCyclesLeft = _COUNTERSTARTDELAY + 1;
+
+		// The first horizontal opening starts actual vertical consumption.
+		if (_verticalState == VerticalState::_PENDING)
+		{
+			_verticalState = VerticalState::_DISPLAY;
+			_SCREENORIGINY = true;
+		}
+	}
+
+	// Origin comparisons use the previously retained limit in this cycle.
+	if (rasterLine == 0 && horizontalCycle == 2)
+		_ROWMAX = v -> charsHeightScreen ();
+
+	setDraw ();
 }
 
 // ---

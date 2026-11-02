@@ -128,6 +128,13 @@ namespace COMMODORE
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
 
+		/** Retained VD0..VD7 lines. */
+		const MCHEmul::UByte& videoBusData () const
+							{ return (_videoBusData); }
+		/** Retained VD8..VD11 lines, represented in the low nibble. */
+		const MCHEmul::UByte& videoBusColor () const
+							{ return (_videoBusColor); }
+
 		// Managing lightpen
 		/** To activate/desactivate the lightpen. */
 		void setLightPenActive (bool a)
@@ -254,6 +261,8 @@ namespace COMMODORE
 		/** Debug special situations...
 			Take care using this instructions _deepDebugFile could be == nullptr... */
 		void debugVICICycle (unsigned int cycle);
+		/** Records the completed final cycle before line counters are reset. */
+		void debugVICILineEnd (unsigned int cycle);
 		/** Records the raster origin and advance to the instruction read point. */
 		void debugCPUAboutToExecute
 			(const MCHEmul::InstructionContextEventData* dt,
@@ -273,6 +282,8 @@ namespace COMMODORE
 		/** Just to calculate the screen positions. \n
 			This method is invoked from treatRasterCycle, and always before actualizing the graphical info. */
 		inline void calculateScreenPositions ();
+		/** Acquires the data byte and the corresponding color-bus nibble. */
+		MCHEmul::UByte acquireVideoMemory (const MCHEmul::Address& address);
 
 		protected:
 		/** A reference to the sound part of the chip. */
@@ -289,6 +300,9 @@ namespace COMMODORE
 		// Implementation
 		/** Non-owning video view, linked during initialize(). */
 		MCHEmul::MemoryView* _videoMemory;
+		/** Retained bus lines, independent of character output and frame boundaries. */
+		MCHEmul::UByte _videoBusData;
+		MCHEmul::UByte _videoBusColor;
 		/** Next cycle to start. \n
 			The last started cycle may still await completion during a CPU read. */
 		unsigned int _lastCPUCycles;
@@ -312,100 +326,153 @@ namespace COMMODORE
 		/** 
 		  *	Structure to control how the graphics are displayed in the screen. \n
 		  * based on the article: http://tinyvga.com/6561 \n
-		  * The VICI considers all lines in the screen as bad lines, 
-		  * which means that in all lines graphical information is read from the memory 
-		  * (char code, char data definition and colour info). \n
+		  * During display, matrix/color and glyph acquisitions alternate on each raster line. \n
+		  * Pending acquisition data is separate from the retained character output. \n
 		  * The text window is something that can be relocated within the visible zone. \n
-		  * The methods defined in this class flag when the initial position of this text window is detected. */
+		  * Live origin comparisons open the window; display state advances independently of presentation. */
 		struct VICGraphicInfo
 		{
+			/** Experimental delays from origin comparison, expressed in CPU cycles. */
+			static constexpr unsigned char _COUNTERSTARTDELAY = 3;
+			static constexpr unsigned char _FETCHSTARTDELAY = 5;
+			/** Width of the experimental video-matrix counter model. */
+			static constexpr unsigned short _MATRIXCOUNTERMASK = 0x0fff;
+
+			enum class FetchPhase
+			{
+				_START,
+				_MATRIX,
+				_GLYPH
+			};
+
+			enum class VerticalState
+			{
+				_WAITING,
+				_PENDING,
+				_DISPLAY,
+				_DONE
+			};
+
 			VICGraphicInfo ()
-				: _VBASE (0),
-				  _HC (0), _COL (0), _COLMAX (0), _FH (false),
-				  _VC (0), _ROW (0), _ROWMAX (0), _FV (false),
-				  _RC (0), _DOUBLEHIGH (false),
+				: _matrixBaseCounter (0), _matrixCounter (0), _matrixOffset (0),
+				  _matrixCarry4 (false), _matrixCarry8 (false),
+				  _matrixAdvancedThisCycle (false),
+				  _COL (0), _COLMAX (0), _pendingColumns (0),
+				  _ROW (0), _ROWMAX (0),
+				  _RC (0),
+				  _horizontalOpened (false),
+				  _verticalState (VerticalState::_WAITING),
 				  _DRAW (false), _SCREENORIGINX (false), _SCREENORIGINY (false),
 				  _screenCodeData (MCHEmul::UByte::_0),
 				  _graphicByteData (MCHEmul::UByte::_0),
 				  _graphicData (MCHEmul::UByte::_0),
-				  _colorData (MCHEmul::UByte::_0)
+				  _colorData (MCHEmul::UByte::_0),
+				  _pendingColorData (MCHEmul::UByte::_0),
+				  _fetchPhase (FetchPhase::_MATRIX),
+				  _startupCyclesLeft (0),
+				  _counterStartupCyclesLeft (0), _counterHalvesLeft (0),
+				  _outputHalvesLeft (0),
+				  _graphicDataReady (false)
 							{ }
 
-			/** Resets display counters and retained character data. */
+			/** Seeds register-derived state and resets the display controller. */
 			inline void initialize (VICIRegisters* r);
-			inline void nextHorizontal (VICIRegisters* r);
+			/** Resets frame counters without resampling register-derived dimensions. */
+			inline void initializeFrame ();
+			/** Samples live origin registers before the current video acquisition. */
+			void beginRasterCycle
+				(VICIRegisters* r, unsigned short horizontalCycle,
+				 unsigned short rasterLine);
+			/** Consumes one startup cycle without performing an active acquisition. */
+			inline void advanceFetchStartup ();
+			/** Advances the completed column independently of the matrix counter. */
+			inline void completeCharacterFetch ();
+			/** Prepares the next address and advances the independently timed counter. */
+			inline void advanceMatrixCycle ();
 			inline void nextVertical (VICIRegisters* r);
 			bool draw () const
 							{ return (_DRAW); }
+			bool graphicDataReady () const
+							{ return (_graphicDataReady); }
 			bool screenOriginDetected () const
 							{ return (_SCREENORIGINX && _SCREENORIGINY); }
 
-			/** The base of the screen matrix where to read the info
-				about the colour and the pointer to the definition of the char. 
-				This value will move into _COL, once a full row (with 8 pixels height) is drawn. */
-			unsigned short _VBASE;
+			/** Retained matrix position, expressed in half-character acquisition units. */
+			unsigned short _matrixBaseCounter;
+			/** Working matrix position, advanced by the counter controller. */
+			unsigned short _matrixCounter;
+			/** Character-unit offset retained until the following matrix acquisition. */
+			size_t _matrixOffset;
+			/** Carry retained for the next physical-line reload. */
+			bool _matrixCarry4, _matrixCarry8;
+			/** Whether the current video cycle advanced the matrix counter. */
+			bool _matrixAdvancedThisCycle;
 
 			// Horixontal...
-			/** Delay to start to draw columns. 
-				Until this value reaches 0, _COL won't start to count. */
-			unsigned char _HC;
-			/** Counter to add to _VCBASE where to find the info 
-				about the char to draw and the color info to apply. */
+			/** Next matrix column, advanced after each complete glyph acquisition. */
 			unsigned char _COL;
-			/** The maximum value for the previous counter.
-				It is determined by the info in the VICI registers. */
+			/** Column count active for the current horizontal acquisition. */
 			unsigned char _COLMAX;
-			/** Flip flop to indicate whether the counter has or not to be increment. \n 
-				In the VIC every char is drawn using a minimun of 2 raster cycles,
-				so the counter (_COL) moves every two raster cycles and this flip flop is used to gurantee that. */
-			bool _FH;
+			/** Last sampled column count, retained until the next sampling point. */
+			unsigned char _pendingColumns;
 
 			// Vertical...
-			/** Delay to start to draw rows (and also _VBASE to be incremened). \n
-				Until this value reaches 0, the counter of rows (_ROW) doesn't move. */
-			unsigned char _VC;
 			/** Counter with current number of row. \n
 				It is not used to locate the char and colour info, just to control how many rows must be drawn. */
 			unsigned char _ROW;
 			/** Max number of rows, defined in the VICRegisters. */
 			unsigned char _ROWMAX;
-			/** The sensibility in starting to draw is 2, so this flip - flop control this. \n
-				So this value is related with the change in the _VC. */
-			bool _FV;
 
 			// Control the byte in the character size...
 			/** Byte within the char & colour matrix info read used to finally draw in the screen. */
 			unsigned char _RC;
-			/** When the characters can be double high this flag is set. */
-			bool _DOUBLEHIGH;
 
-			/** Wether to draw or not. \n
-				This flag is set when _HC & _VC reached 0 and the _COL and _ROW are below the limits. 
-				That is, when the system is recognizing a text window. */
+			/** Whether the horizontal window has already opened on this line. */
+			bool _horizontalOpened;
+			/** Vertical window lifecycle within the current frame. */
+			VerticalState _verticalState;
+
+			/** Whether the current geometry permits character acquisition. \n
+				Output validity is tracked separately so the final character can finish. */
 			bool _DRAW;
 			/** Has the origin of the screen being detected in this cycle. \n
 				First time the first column or the first row of the text window is detected, these flags get set. \n
-				When both are true, the left up corner of the text window is detected. */
+				Both pulse together when the first horizontal opening starts vertical display. */
 			bool _SCREENORIGINX, _SCREENORIGINY;
 
-			/** Character code retained for the current character. */
+			/** Character code retained between matrix and glyph reads. */
 			mutable MCHEmul::UByte _screenCodeData;
-			/** Complete glyph-row byte retained across both output halves. */
+			/** Complete glyph-row byte retained during character output. */
 			mutable MCHEmul::UByte _graphicByteData;
 			/** Four glyph bits selected for the current output cycle. */
 			mutable MCHEmul::UByte _graphicData;
-			/** Character color and mode retained across both output halves. */
+			/** Color and mode of the character currently being output. */
 			mutable MCHEmul::UByte _colorData;
+			/** Color acquired with the pending character code. */
+			MCHEmul::UByte _pendingColorData;
+			/** Next active-window memory acquisition. */
+			FetchPhase _fetchPhase;
+			/** Startup cycles remaining before preparing the first matrix acquisition. */
+			unsigned char _startupCyclesLeft;
+			/** Counter startup countdown, including its activation cycle. */
+			unsigned char _counterStartupCyclesLeft;
+			/** Half-cell increments still to perform with the captured width. */
+			unsigned char _counterHalvesLeft;
+			/** Output halves remaining in the retained glyph-row byte. */
+			unsigned char _outputHalvesLeft;
+			/** The current output nibble is valid for drawing. */
+			bool _graphicDataReady;
 
 			private:
-			void setDraw ()
-						{ _DRAW = (_HC == 0) && (_VC == 0) && 
-							(_COL < _COLMAX) && (_ROW < _ROWMAX); }
-			
-			inline void initializeHorizontal (VICIRegisters* r);
-			inline void initializeVertical (VICIRegisters* r);
+			inline void setDraw ();
+			inline void initializeHorizontal ();
+			inline void initializeVertical ();
 			inline void initializeHorizontalCounters ();
 			inline void initializeVerticalCounters ();
+			/** Loads the retained base and applies the preceding boundary carries. */
+			inline void reloadMatrixCounter ();
+			/** Advances one acquisition unit within the counter width. */
+			inline void advanceMatrixCounter ();
 		};
 
 		VICGraphicInfo _vicGraphicInfo;
@@ -423,8 +490,6 @@ namespace COMMODORE
 		unsigned int _cyclesSimulatedInAdvance;
 		/** The final advanced cycle still needs its CPU phase and counter updates. */
 		bool _advancedCyclePending;
-
-		static const MCHEmul::Address _MEMORYPOSOFF;
 	};
 
 	// ---
@@ -465,33 +530,25 @@ namespace COMMODORE
 	// ---
 	inline void VICI::readVideoMatrixAndColorRAM ()
 	{
-		// When the system is not yet within the text window,
-		// the colour & char info is read from a fix position in memory!
-		if (!_vicGraphicInfo.draw ())
-		{
-			_vicGraphicInfo._screenCodeData = 
-			_vicGraphicInfo._colorData = _videoMemory -> value (_MEMORYPOSOFF);
-		}
-		else
-		{
-			_vicGraphicInfo._screenCodeData =
-				_videoMemory -> value (_VICIRegisters -> screenMemory
-					((size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL));
-			_vicGraphicInfo._colorData = 
-				_videoMemory -> value (_VICIRegisters -> colourMemory
-					((size_t) _vicGraphicInfo._VBASE + (size_t) _vicGraphicInfo._COL)) & 0x0f;
-		}
+		_vicGraphicInfo._screenCodeData = acquireVideoMemory
+			(_VICIRegisters -> screenMemory (_vicGraphicInfo._matrixOffset));
+
+		// Character color belongs to the matrix acquisition.
+		_vicGraphicInfo._pendingColorData = _videoBusColor;
 	}
 
 	// ---
 	inline void VICI::readGraphicalInfo ()
 	{
-		_vicGraphicInfo._graphicByteData =
-			_videoMemory -> value (_VICIRegisters -> charDataMemory
+		const bool expanded = _VICIRegisters -> charsExpanded ();
+
+		// A mode change must keep the row address within the selected glyph.
+		_vicGraphicInfo._graphicByteData = acquireVideoMemory
+			(_VICIRegisters -> charDataMemory
 				((size_t)
 					((_vicGraphicInfo._screenCodeData.value () <<
-						(_VICIRegisters -> charsExpanded () ? 4 : 3)) +
-					 _vicGraphicInfo._RC)));
+						(expanded ? 4 : 3)) +
+					 (_vicGraphicInfo._RC & (expanded ? 0x0f : 0x07)))));
 	}
 
 	// ---
@@ -539,124 +596,221 @@ namespace COMMODORE
 
 	// ---
 	inline void VICI::calculateScreenPositions ()
-	{ 
+	{
+		if (_vicGraphicInfo.graphicDataReady () &&
+			_vicGraphicInfo._COL == 1 &&
+			_vicGraphicInfo._outputHalvesLeft == 1)
+		{
+			// Derive the bounds from the first group actually emitted this line.
+			_scrX1 =
+				(short) _raster.hData ().currentVisiblePosition ();
+			_scrX2 =
+				_scrX1 +
+				(short) ((unsigned short) _vicGraphicInfo._COLMAX << 4) - 1;
+		}
+
 		if (_vicGraphicInfo.screenOriginDetected ())
 		{
-			_scrX1 = // Can be negative...
-				(short) _raster.hData ().currentVisiblePosition ();
-			_scrX2 = // Can be longer that the width of the window...
-				(short) (_raster.hData ().currentVisiblePosition ()) + 
-				(short) (unsigned short (_VICIRegisters -> charsWidthScreen ()) << 4) - 1;
-
-			_scrY1 = // Can be negative...
+			_scrY1 =
 				(short) _raster.vData ().currentVisiblePosition ();
-			_scrY2 = // Can be longer than the height of the window...
-				(short) (_raster.vData ().currentVisiblePosition ()) + 
-				(short) (unsigned short ((_VICIRegisters -> charsHeightScreen ()) << (_VICIRegisters -> charsExpanded () ? 4 : 3)) - 1);
+			_scrY2 =
+				_scrY1 +
+				(short) ((unsigned short) _vicGraphicInfo._ROWMAX <<
+					(_VICIRegisters -> charsExpanded () ? 4 : 3)) - 1;
 		}
 	}
 
 	// ---
 	inline void VICI::VICGraphicInfo::initialize (VICIRegisters* v)
 	{
-		initializeHorizontal (v);
+		// Seed register-derived state before the first regular sampling points.
+		_pendingColumns = v -> charsWidthScreen ();
+		_ROWMAX = v -> charsHeightScreen ();
 
-		initializeVertical (v);
+		initializeFrame ();
+	}
 
-		_VBASE = 0;
+	// ---
+	inline void VICI::VICGraphicInfo::initializeFrame ()
+	{
+		_matrixBaseCounter = 0;
+		_matrixCounter = 0;
+		_matrixCarry4 = false;
+		_matrixCarry8 = false;
+		_matrixAdvancedThisCycle = false;
+		_COLMAX = 0;
+
+		initializeHorizontal ();
+		initializeVertical ();
 
 		_screenCodeData = MCHEmul::UByte::_0;
 		_graphicByteData = MCHEmul::UByte::_0;
 		_graphicData = MCHEmul::UByte::_0;
 		_colorData = MCHEmul::UByte::_0;
+		_pendingColorData = MCHEmul::UByte::_0;
 
 		setDraw ();
 	}
 
 	// ---
-	inline void VICI::VICGraphicInfo::nextHorizontal (VICIRegisters* v)
+	inline void VICI::VICGraphicInfo::advanceFetchStartup ()
 	{
-		unsigned char HC_old = _HC;
+		// Counter activation has already captured the width shared by both controllers.
+		if (--_startupCyclesLeft == 0)
+			_fetchPhase = FetchPhase::_MATRIX;
+	}
 
-		if (_HC != 0)
-			_HC--;
-		else
-		if (!(_FH = !_FH) && 
-			(_COL < _COLMAX))
-			_COL++;
-
-		_SCREENORIGINX = (_HC == 0 && HC_old != _HC);
+	// ---
+	inline void VICI::VICGraphicInfo::completeCharacterFetch ()
+	{
+		++_COL;
 
 		setDraw ();
+	}
+
+	// ---
+	inline void VICI::VICGraphicInfo::advanceMatrixCycle ()
+	{
+		if (!_horizontalOpened)
+			return;
+
+		if (_counterStartupCyclesLeft != 0)
+		{
+			if (--_counterStartupCyclesLeft != 0)
+				return;
+
+			// Capture once so counting and later acquisitions use the same width.
+			_COLMAX = _pendingColumns;
+			_counterHalvesLeft = (unsigned char) (_COLMAX << 1);
+		}
+
+		if (_counterHalvesLeft == 0)
+			return;
+
+		// Consume the old address before replacing it every two counter cycles.
+		if ((_counterHalvesLeft & 0x01) == 0)
+			_matrixOffset = (size_t)
+				((_matrixCounter + 1) & _MATRIXCOUNTERMASK) >> 1;
+
+		advanceMatrixCounter ();
+		--_counterHalvesLeft;
 	}
 
 	// ---
 	inline void VICI::VICGraphicInfo::nextVertical (VICIRegisters* v)
 	{
-		unsigned char VC_old = _VC;
+		// Only an increment in the final cycle can retain a boundary carry.
+		_matrixCarry4 = _matrixAdvancedThisCycle &&
+			(_matrixCounter & 0x000f) == 0;
+		_matrixCarry8 = _matrixAdvancedThisCycle &&
+			(_matrixCounter & 0x00ff) == 0;
 
-		if (_VC != 0)
+		// Pending vertical opening must not consume glyph rows before display starts.
+		if (_verticalState == VerticalState::_DISPLAY)
 		{
-			if (!(_FV = !_FV))
-				_VC--;
-		}
-		else
-		{
-			if (++_RC == (unsigned char) (_DOUBLEHIGH ? 16 : 8))
+			const unsigned char height =
+				(unsigned char) (v -> charsExpanded () ? 16 : 8);
+
+			++_RC;
+
+			// A height change may occur after the first matching boundary.
+			if (_RC == height ||
+				_RC == (unsigned char) (height << 1))
 			{
 				_RC = 0;
 
-				_VBASE += (unsigned short) _COLMAX;
+				// Save the completed endpoint before the next line reload.
+				if (_horizontalOpened)
+					_matrixBaseCounter = _matrixCounter;
 
-				if (_ROW < _ROWMAX)
-					_ROW++;
+				if (++_ROW == _ROWMAX)
+					_verticalState = VerticalState::_DONE;
 			}
 		}
 
-		_SCREENORIGINY = (_VC == 0 && VC_old != _VC);
-
-		initializeHorizontal (v);
+		initializeHorizontal ();
 	}
 
 	// ---
-	inline void VICI::VICGraphicInfo::initializeHorizontal (VICIRegisters* v)
+	inline void VICI::VICGraphicInfo::setDraw ()
 	{
-		_COLMAX			= v -> charsWidthScreen ();
-		_HC				= v -> offsetXScreen ();
+		_DRAW = _horizontalOpened &&
+			_verticalState == VerticalState::_DISPLAY &&
+			_fetchPhase != FetchPhase::_START &&
+			_COL < _COLMAX;
+	}
 
+	// ---
+	inline void VICI::VICGraphicInfo::initializeHorizontal ()
+	{
 		initializeHorizontalCounters ();
 
 		setDraw ();
 	}
 
 	// ---
-	inline void VICI::VICGraphicInfo::initializeVertical (VICIRegisters* v)
+	inline void VICI::VICGraphicInfo::initializeVertical ()
 	{
-		_ROWMAX			= v -> charsHeightScreen ();;
-		_VC				= v -> offsetYScreen ();
-		_DOUBLEHIGH		= v -> charsExpanded ();
-
 		initializeVerticalCounters ();
 
 		setDraw ();
 	}
 
+	// ---
 	inline void VICI::VICGraphicInfo::initializeHorizontalCounters ()
 	{
-		_COL			= 0;
-		_FH				= false;
+		_COL = 0;
+		_horizontalOpened = false;
 
-		_SCREENORIGINX	= (_HC == 0);
+		_fetchPhase = FetchPhase::_MATRIX;
+		_startupCyclesLeft = 0;
+		_counterStartupCyclesLeft = 0;
+		_counterHalvesLeft = 0;
+		_matrixOffset = 0;
+		_outputHalvesLeft = 0;
+		_graphicDataReady = false;
+
+		_SCREENORIGINX = false;
+		_SCREENORIGINY = false;
 	}
 
-	// --
+	// ---
 	inline void VICI::VICGraphicInfo::initializeVerticalCounters ()
 	{
-		_ROW			= 0;
-		_FV				= false;
-		_RC				= 0;
+		_ROW = 0;
+		_RC = 0;
+		_verticalState = VerticalState::_WAITING;
 
-		_SCREENORIGINY	= (_VC == 0);
+		_SCREENORIGINY = false;
+	}
+
+	// ---
+	inline void VICI::VICGraphicInfo::reloadMatrixCounter ()
+	{
+		_matrixCounter = _matrixBaseCounter;
+
+		// Boundary carries affect their own nibble without propagating further.
+		if (_matrixCarry8)
+			_matrixCounter = (unsigned short)
+				((_matrixCounter & 0x00ff) |
+				 (((_matrixCounter & 0x0f00) + 0x0100) & 0x0f00));
+
+		if (_matrixCarry4)
+			_matrixCounter = (unsigned short)
+				((_matrixCounter & 0x0f0f) |
+				 (((_matrixCounter & 0x00f0) + 0x0010) & 0x00f0));
+
+		_matrixCarry4 = false;
+		_matrixCarry8 = false;
+	}
+
+	// ---
+	inline void VICI::VICGraphicInfo::advanceMatrixCounter ()
+	{
+		_matrixCounter = (unsigned short)
+			((_matrixCounter + 1) & _MATRIXCOUNTERMASK);
+
+		_matrixAdvancedThisCycle = true;
 	}
 
 	/** The version para PAL systems. */

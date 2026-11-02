@@ -40,10 +40,27 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	if (!result)
 		return (false);
 
+	COMMODORE::VICI* vici =
+		static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID));
+
+	// The unconnected memory are linked to the vici...
+	for (int id :
+		{ VIC20::Memory::_VICIUNCONNECTEDLOW_SUBSET,
+		  VIC20::Memory::_VICIUNCONNECTEDIO_SUBSET,
+		  VIC20::Memory::_VICIUNCONNECTEDEXPANSION_SUBSET })
+	{
+		VIC20::VICIUnconnectedSubset* unconnected =
+			dynamic_cast <VIC20::VICIUnconnectedSubset*> (memory () -> subset (id));
+		assert (unconnected != nullptr); // The shouldn't, but just in case...
+		unconnected -> linkToVICI (vici);  // To read the information of the open bus...
+	}
+
+	// So far just the full execution of instrutions are allowed...
 	if (!via1 () -> enableCPUTimedWrites (_cpu) ||
 		!via2 () -> enableCPUTimedWrites (_cpu))
 	{
 		_error = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 
@@ -51,23 +68,22 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	// the registers that point out to the char and color memory must be adapted!
 	setConfiguration (static_cast <VIC20::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
-	// Setup writes precede the first emulated transaction; they consume no CPU cycles.
+	// Setup writes precede the first emulated transaction; they consume no CPU cycles...
 	_cpu -> executeBufferedCommands (true);
-	MCHEmul::PhysicalStorageSubsets videoWriteSubsets (
-		{
-			{ COMMODORE::VICIRegisters::_VICREGS_SUBSET,
-				memory () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET) },
-			{ VIC20::Memory::_PAGEZERO_SUBSET, memory () -> subset (VIC20::Memory::_PAGEZERO_SUBSET) },
-			{ VIC20::Memory::_STACK_SUBSET, memory () -> subset (VIC20::Memory::_STACK_SUBSET) },
-			{ VIC20::Memory::_PAGE2AND3_SUBSET, memory () -> subset (VIC20::Memory::_PAGE2AND3_SUBSET) },
-			{ VIC20::Memory::_BASICAREA_SUBSET, memory () -> subset (VIC20::Memory::_BASICAREA_SUBSET) },
-			{ VIC20::Memory::_SCREENC1RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC1RAM_SUBSET) },
-			{ VIC20::Memory::_SCREENC2RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC2RAM_SUBSET) }
-		});
 	if (!static_cast <COMMODORE::VICI*> (chip (COMMODORE::VICI::_ID)) ->
-		enableCPUTimedWrites (_cpu, videoWriteSubsets))
+		enableCPUTimedWrites (_cpu, 
+			{
+				{ COMMODORE::VICIRegisters::_VICREGS_SUBSET,
+					memory () -> subset (COMMODORE::VICIRegisters::_VICREGS_SUBSET) },
+				{ VIC20::Memory::_PAGEZERO_SUBSET, memory () -> subset (VIC20::Memory::_PAGEZERO_SUBSET) },
+				{ VIC20::Memory::_STACK_SUBSET, memory () -> subset (VIC20::Memory::_STACK_SUBSET) },
+				{ VIC20::Memory::_PAGE2AND3_SUBSET, memory () -> subset (VIC20::Memory::_PAGE2AND3_SUBSET) },
+				{ VIC20::Memory::_BASICAREA_SUBSET, memory () -> subset (VIC20::Memory::_BASICAREA_SUBSET) },
+				{ VIC20::Memory::_SCREENC1RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC1RAM_SUBSET) },
+				{ VIC20::Memory::_SCREENC2RAM_SUBSET, memory () -> subset (VIC20::Memory::_SCREENC2RAM_SUBSET) } }))
 	{
 		_error = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 

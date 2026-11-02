@@ -15,6 +15,7 @@
 #define __VIC20_MEMORY__
 
 #include <CORE/incs.hpp>
+#include <COMMODORE/VICI/incs.hpp>
 
 namespace VIC20
 {
@@ -72,16 +73,39 @@ namespace VIC20
 		public:
 		VICIColorRAMSubset (int id, MCHEmul::PhysicalStorage* storage);
 		/** The original subsets initialize the shared storage. */
-		virtual void initialize () override
-							{ }
+		virtual void initialize () override { }
 
 		private:
-		virtual void setValue (size_t position, const MCHEmul::UByte& value) override
-							{ }
+		virtual void setValue (size_t position, const MCHEmul::UByte& value) override { }
 		virtual const MCHEmul::UByte& readValue (size_t position) const override;
 
 		private:
 		// Implementation
+		mutable MCHEmul::UByte _lastValueRead;
+	};
+
+	/** Unconnected data window in the VIC-I memory view. */
+	class VICIUnconnectedSubset final : public MCHEmul::PhysicalStorageSubset
+	{
+		public:
+		VICIUnconnectedSubset
+			(int id, MCHEmul::PhysicalStorage* storage,
+			 size_t physicalPosition, const MCHEmul::Address& address, size_t size);
+
+		/** Non-owning reference, connected by the machine. \n
+			This link is just to read the valor of the bus later. */
+		void linkToVICI (const COMMODORE::VICI* vici);
+		/** Shared storage is initialized by its original subsets. */
+		virtual void initialize () override { }
+
+		private:
+		/** Unconnected. */
+		virtual void setValue (size_t position, const MCHEmul::UByte& value) override { }
+		virtual const MCHEmul::UByte& readValue (size_t position) const override;
+
+		private:
+		// Implementation
+		const COMMODORE::VICI* _vici;
 		mutable MCHEmul::UByte _lastValueRead;
 	};
 
