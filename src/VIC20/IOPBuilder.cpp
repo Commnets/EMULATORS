@@ -58,7 +58,7 @@ MCHEmul::IOPeripheral* VIC20::IOPeripheralBuilder::createPeripheral
 				Doing a similar calculus for PAL, the sampling frequency should be 5473,4Hz (182,7us). \n
 				With TurboLoaders only short and long pulses are used, but still this definition will be useful. */
 			unsigned int cR = (dynamic_cast <VIC20::CommodoreVIC20*> (c) -> visualSystem () == 
-				VIC20::CommodoreVIC20::VisualSystem::_PAL) ? 183 : 176;
+				VIC20::VisualSystem::_PAL) ? 183 : 176;
 			result = new COMMODORE::Datasette1530
 				(cR, new COMMODORE::Datasette1530::TAPFileFormatImplementation (cR));
 		}

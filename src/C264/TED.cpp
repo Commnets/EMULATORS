@@ -32,10 +32,7 @@ bool C264::TED::initialize ()
 // ---
 bool C264::TED::simulate (MCHEmul::CPU* cpu)
 {
-	COMMODORE::TED::simulate (cpu);
-	_TEDRegisters -> setROMMemoryConfigurationActive 
-		(static_cast <C264::Memory*> (memoryRef ()) -> ROMactive ());
-	return (true);
+	return (COMMODORE::TED::simulate (cpu));
 }
 
 // ---

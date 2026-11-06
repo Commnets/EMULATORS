@@ -301,7 +301,7 @@ bool COMMODORE::VICI::initialize ()
 	_raster.initialize ();
 
 	_VICIRegisters -> setSoundLibWrapper (_soundFunction -> soundWrapper ());
-	_VICIRegisters -> linkToRaster (&_raster);
+	_VICIRegisters -> linkToRaster (&_raster, _cyclesPerRasterLine);
 	_VICIRegisters -> initialize ();
 
 	_lastCPUCycles = 0;

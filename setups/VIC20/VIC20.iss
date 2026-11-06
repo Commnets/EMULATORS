@@ -27,6 +27,7 @@ Source: "bios/characters.DK901460-03-DKK.bin"; DestDir: "{app}/bios"; Flags: ign
 Source: "bios/kernal.901486-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.901486-07-DKK.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.901486-07-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.901486-04-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "bios/kernal.NecP22081-206-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
 Source: "VIC20Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "VIC20.hlp"; DestDir: "{app}"; Flags: ignoreversion

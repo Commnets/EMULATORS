@@ -200,6 +200,7 @@
     <ClInclude Include="..\..\include\VIC20\VIA2Registers.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20.hpp" />
     <ClInclude Include="..\..\include\VIC20\VIC20Emulator.hpp" />
+    <ClInclude Include="..\..\include\VIC20\VisualSystem.hpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ClassDiagram.cd" />

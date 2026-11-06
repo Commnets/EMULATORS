@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <VIC20/VisualSystem.hpp>
 #include <VIC20/Memory.hpp>
 #include <VIC20/VIA1.hpp>
 #include <VIC20/VIA2.hpp>
@@ -25,8 +26,6 @@ namespace VIC20
 	class CommodoreVIC20 final : public COMMODORE::Computer
 	{
 		public:
-		enum class VisualSystem { _NTSC, _PAL };
-
 		/** Macros for the speed. \n
 			In the original computer, 
 			the speed if defined by the VIC1 (Video & Sound) Chip. */

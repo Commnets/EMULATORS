@@ -16,6 +16,7 @@
 
 #include <CORE/incs.hpp>
 #include <COMMODORE/VICI/incs.hpp>
+#include <VIC20/VisualSystem.hpp>
 
 namespace VIC20
 {
@@ -168,7 +169,7 @@ namespace VIC20
 		static const int _VICI_VIEW				= 1;
 
 		/** The constructor receives the posible memory configuration. */
-		Memory (Configuration cfg, 
+		Memory (Configuration cfg, VisualSystem vS, 
 			const std::string& lang = MCHEmul::_DEFAULTLANGUAGE);
 
 		/** To get/set the configuration. \n

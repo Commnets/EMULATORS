@@ -37,7 +37,7 @@ namespace COMMODORE
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
 		
-		/** To know whether the status of the interlaced mode. */
+		/** Interlace request stored in $9000 bit 7. Field timing is unimplemented. */
 		bool interlacedActive () const
 							{ return (_interlaced); }
 
@@ -58,10 +58,9 @@ namespace COMMODORE
 		// Managing the raster
 		// The raster info is in the VICI chip actually.
 		// However its info is needed when checking some registers...
-		void linkToRaster (MCHEmul::Raster* r)
-							{ _raster = r; }
-		unsigned short currentRasterLine () const
-							{ return (_raster -> vData ().currentPosition ()); }
+		void linkToRaster (MCHEmul::Raster* raster, unsigned short cyclesPerLine);
+		/** Line number exposed in $9003/$9004 at the current bus phase. */
+		unsigned short currentRasterLine () const;
 		unsigned short currentRasterPositionInLine () const
 							{ return (_raster -> hData ().currentPosition ()); }
 
@@ -189,6 +188,8 @@ namespace COMMODORE
 		// The VICI chip also uses this object as a temporary storage
 		/** Non-owning raster linked by VICI before raster-register reads. */
 		MCHEmul::Raster* _raster;
+		/** CPU cycles per complete line of the linked raster. */
+		unsigned short _rasterCyclesPerLine;
 
 		// Implementation...
 		mutable MCHEmul::UByte _lastValueRead;

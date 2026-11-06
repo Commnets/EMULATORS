@@ -332,7 +332,7 @@ bool VICIRegisterRegression::run ()
 	MCHEmul::Raster raster (COMMODORE::VICI_PAL::_VRASTERDATA,
 		COMMODORE::VICI_PAL::_HRASTERDATA, 8);
 	raster.initialize ();
-	registers.linkToRaster (&raster);
+	registers.linkToRaster (&raster, 71);
 	registers.setSoundLibWrapper (&sound);
 	for (unsigned int cycle = 0; cycle < 4 * 71; ++cycle)
 		raster.moveCycles (1);
@@ -515,7 +515,7 @@ class VICIVideoViewRegression final
 // ---
 bool VICIVideoViewRegression::run ()
 {
-	VIC20::Memory memory (VIC20::Memory::Configuration::_NOEXPANDED);
+	VIC20::Memory memory (VIC20::Memory::Configuration::_NOEXPANDED, VIC20::VisualSystem::_PAL);
 	if (!memory.initialize ())
 	{
 		std::cerr << "Cannot initialize production VIC20 memory; run with VIC20 bios available\n";
@@ -634,7 +634,7 @@ class VICICPUColorRegression final
 // ---
 bool VICICPUColorRegression::run ()
 {
-	VIC20::Memory memory (VIC20::Memory::Configuration::_NOEXPANDED);
+	VIC20::Memory memory (VIC20::Memory::Configuration::_NOEXPANDED, VIC20::VisualSystem::_PAL);
 	if (!memory.initialize ())
 	{
 		std::cerr << "Color regression requires the VIC20 bios directory\n";

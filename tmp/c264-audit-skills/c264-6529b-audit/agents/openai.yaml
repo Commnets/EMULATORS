@@ -1,0 +1,4 @@
+interface:
+  display_name: "C264 6529B Audit"
+  short_description: "Auditar puertos 6529B, teclado y user port"
+  default_prompt: "Usa $c264-6529b-audit para revisar la fidelidad del chip y su conexión en EMULATORS, aportando fuentes y pruebas reproducibles."

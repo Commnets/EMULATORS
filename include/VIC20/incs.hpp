@@ -17,6 +17,7 @@
 #include <F6500/incs.hpp>
 #include <EMULATORS/incs.hpp>
 #include <COMMODORE/incs.hpp>
+#include <VIC20/VisualSystem.hpp>
 #include <VIC20/CommandBuilder.hpp>
 #include <VIC20/Commands.hpp>
 #include <VIC20/IOPBuilder.hpp>

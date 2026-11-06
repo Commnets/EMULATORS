@@ -1,0 +1,4 @@
+interface:
+  display_name: "C264 TED Audit"
+  short_description: "Auditar vídeo, sonido, timers y bus del TED"
+  default_prompt: "Usa $c264-ted-audit para revisar la fidelidad del chip y su conexión en EMULATORS, aportando fuentes y pruebas reproducibles."

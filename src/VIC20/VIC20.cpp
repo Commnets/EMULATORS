@@ -15,13 +15,13 @@
 VIC20::CommodoreVIC20::CommodoreVIC20 (
 		const MCHEmul::ASCIIToCodeConverter* cnv, 
 		VIC20::Memory::Configuration cfg, 
-		VIC20::CommodoreVIC20::VisualSystem vS, const std::string& lg)
+		VIC20::VisualSystem vS, const std::string& lg)
 	: COMMODORE::Computer 
 		(new F6500::C6502 (0 /** Only one micro. */),
 		 VIC20::CommodoreVIC20::standardChips (vS, lg),
-		 new VIC20::Memory (cfg, lg),
+		 new VIC20::Memory (cfg, vS, lg),
 		 VIC20::CommodoreVIC20::standardDevices (vS),
-		 vS == VIC20::CommodoreVIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
+		 vS == VIC20::VisualSystem::_PAL ? _PALCLOCK : _NTSCCLOCK,
 		 cnv,
 		 { }, { }, // The VIC20 emulation has been done without neither Buses nor Wires!
 		 { { "Name", "VIC20" },
@@ -88,7 +88,7 @@ bool VIC20::CommodoreVIC20::initialize (bool iM)
 	}
 
 	// Forward CPU transaction contexts to the VIAs and VIC-I for write scheduling.
-	// VIC-I also uses instruction length to approximate $9003/$9004 raster reads.
+	// VIC-I advances video to the predicted CPU read phase before register access.
 	observe (_cpu);
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
@@ -149,7 +149,7 @@ void VIC20::CommodoreVIC20::setConfiguration (VIC20::Memory::Configuration cfg, 
 
 // ---
 MCHEmul::Chips VIC20::CommodoreVIC20::standardChips 
-	(VIC20::CommodoreVIC20::VisualSystem vS, const std::string& sS)
+	(VIC20::VisualSystem vS, const std::string& sS)
 {
 	MCHEmul::Chips result;
 
@@ -159,7 +159,7 @@ MCHEmul::Chips VIC20::CommodoreVIC20::standardChips
 
 	// The VICI created will depend on whether the visualization is PAL or NTSC...
 	// Some how it is also controlled by VIA II
-	COMMODORE::VICI* vic = (COMMODORE::VICI*) ((vS == VIC20::CommodoreVIC20::VisualSystem::_NTSC) 
+	COMMODORE::VICI* vic = (COMMODORE::VICI*) ((vS == VIC20::VisualSystem::_NTSC) 
 		? (COMMODORE::VICI*) new COMMODORE::VICI_NTSC 
 			(VIC20::Memory::_VICI_VIEW, new COMMODORE::VICISoundSimpleLibWrapper
 				(VIC20::CommodoreVIC20::_NTSCCLOCK, COMMODORE::VICI::_SOUNDSAMPLINGCLOCK)) 
@@ -177,14 +177,14 @@ MCHEmul::Chips VIC20::CommodoreVIC20::standardChips
 }
 
 // ---
-MCHEmul::IODevices VIC20::CommodoreVIC20::standardDevices (VIC20::CommodoreVIC20::VisualSystem vS)
+MCHEmul::IODevices VIC20::CommodoreVIC20::standardDevices (VIC20::VisualSystem vS)
 {
 	MCHEmul::IODevices result;
 
 	// The very basic systems...
 	// They are really part of the system, with no simulated connections at all!
 	result.insert (MCHEmul::IODevices::value_type (VIC20::Screen::_ID, 
-		(MCHEmul::IODevice*) ((vS == VIC20::CommodoreVIC20::VisualSystem::_NTSC) 
+		(MCHEmul::IODevice*) ((vS == VIC20::VisualSystem::_NTSC) 
 			? (VIC20::Screen*) new VIC20::ScreenNTSC : (VIC20::Screen*) new VIC20::ScreenPAL)));
 	result.insert (MCHEmul::IODevices::value_type (VIC20::SoundSystem::_ID, new VIC20::SoundSystem));
 	result.insert (MCHEmul::IODevices::value_type (VIC20::InputOSSystem::_ID, new VIC20::InputOSSystem));

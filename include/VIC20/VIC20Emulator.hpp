@@ -64,13 +64,9 @@ namespace VIC20
 		virtual bool initialize () override;
 
 		protected:
-		virtual MCHEmul::Computer* createComputer () const override
-							{ return (new VIC20::CommodoreVIC20 (
-								asciiToCodeConverter (),
-								(Memory::Configuration) configurationMode (),
-								NTSCSystem () 
-									? VIC20::CommodoreVIC20::VisualSystem::_NTSC : VIC20::CommodoreVIC20::VisualSystem::_PAL,
-								computerLanguage ())); }
+		/** The visualization system is sometimes linked to the language. \n
+			So several test must be done before created the computer or to create a standard one instead. */
+		virtual MCHEmul::Computer* createComputer () const override;
 		virtual MCHEmul::IOPeripheralBuilder* createPeripheralBuilder () const override
 							{ return (new IOPeripheralBuilder); }
 		virtual MCHEmul::FileIO* createFileReader () const override

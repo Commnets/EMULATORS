@@ -49,3 +49,24 @@ bool VIC20::VIC20Emulator::initialize ()
 
 	return (true);
 }
+
+// ---
+MCHEmul::Computer* VIC20::VIC20Emulator::createComputer () const
+{
+	std::string lang = computerLanguage ();
+
+	// When the language is japannesse, the NTSC system must be active...
+	if (lang == "JAP" && !NTSCSystem ())
+	{
+		lang = MCHEmul::_DEFAULTLANGUAGE;
+
+		_LOG (lang + std::string (" requieres NTSC system"));
+	}
+
+	return (
+		new VIC20::CommodoreVIC20 (
+			asciiToCodeConverter (),
+			(Memory::Configuration) configurationMode (),
+			NTSCSystem () ? VIC20::VisualSystem::_NTSC : VIC20::VisualSystem::_PAL,
+			lang));
+}

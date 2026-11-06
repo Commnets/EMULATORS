@@ -409,6 +409,9 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 	_RAM42MirrorRAM2		-> setActiveForReading (!_ROMActive && _configuration == 1); // ...but active for reading when RAMs active...
 
 	setTEDROMActive (_ROMActive);
+
+	// Publish the CPU ROM status when its effective memory map changes.
+	_IOTED -> setROMMemoryConfigurationActive (_ROMActive);
 }
 
 // ---

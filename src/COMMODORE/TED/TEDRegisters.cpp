@@ -29,6 +29,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_TEDREGS_SUBSET, ps, pp, a, s),
 	  _backgroundColor (4, { 0x00, 0x00 }),
+	  _ROMMemoryConfigurationActive (false),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _numberPositionsNextInstruction (0),
 	  _raster (nullptr)
@@ -268,7 +269,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Also whether the clock mode is twice or single...
 		case 0x13:
 			{
-				_ROMMemoryConfigurationActive = v.bit (0);
+				// Bit 0 reflects the CPU memory configuration and ignores writes.
 				_singleClockModeForced = v.bit (1);
 				recalculateCharDataMemory ();
 			}

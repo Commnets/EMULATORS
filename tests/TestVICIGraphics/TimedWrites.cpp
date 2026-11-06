@@ -164,7 +164,7 @@ class VICITimingFixture final : public MCHEmul::Observer
 {
 	public:
 	VICITimingFixture (bool pal)
-		: _memory (VIC20::Memory::Configuration::_NOEXPANDED), _cpu (0),
+		: _memory (VIC20::Memory::Configuration::_NOEXPANDED, VIC20::VisualSystem::_PAL), _cpu (0),
 		  _sound (new VICITimingSound (pal)), _vic (pal, _sound),
 		  _trace (_memory.physicalStorage (VIC20::Memory::_RAM), &_vic),
 		  _videoTrace (_memory.physicalStorage (VIC20::Memory::_RAM), &_vic)

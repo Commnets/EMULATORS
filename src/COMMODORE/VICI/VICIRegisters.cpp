@@ -8,6 +8,7 @@ COMMODORE::VICIRegisters::VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp
 	  _lightPenActive (false),
 	  _soundWrapper (nullptr),
 	  _raster (nullptr),
+	  _rasterCyclesPerLine (0),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
 	  _screenMemoryVIC (0),
 	  _charDataMemoryVIC (0),
@@ -17,6 +18,38 @@ COMMODORE::VICIRegisters::VICIRegisters (MCHEmul::PhysicalStorage* ps, size_t pp
 	setClassName ("VICIRegisters");
 
 	initializeInternalValues ();
+}
+
+// ---
+void COMMODORE::VICIRegisters::linkToRaster
+	(MCHEmul::Raster* raster, unsigned short cyclesPerLine)
+{
+	assert (raster != nullptr && cyclesPerLine != 0);
+
+	_raster = raster;
+	_rasterCyclesPerLine = cyclesPerLine;
+}
+
+// ---
+unsigned short COMMODORE::VICIRegisters::currentRasterLine () const
+{
+	const unsigned short line = _raster -> vData ().currentPosition ();
+
+	// The non-interlaced NTSC readback convention combines lines 261 and 0
+	// into one internal drawing line. The exact bus phase needs hardware validation.
+	if (_rasterCyclesPerLine == 65 &&
+		_raster -> vData ().totalPositions () == 261 &&
+		!_interlaced && line == 0)
+	{
+		const MCHEmul::RasterData& horizontal = _raster -> hData ();
+		const unsigned int cycle =
+			(horizontal.currentPositionAtBase0 () * _rasterCyclesPerLine) /
+				horizontal.totalPositions ();
+		if (cycle < 33)
+			return (261);
+	}
+
+	return (line);
 }
 
 // ---

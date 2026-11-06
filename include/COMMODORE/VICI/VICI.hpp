@@ -90,7 +90,7 @@ namespace COMMODORE
 
 		static const unsigned int _ID = 106;
 
-		// 44,1MHz (more or less standard in current sound cards)
+		// Sample rate in Hz.
 		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
 		// 8 bits sound data, very simple nothing complicated...
 		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
@@ -225,7 +225,7 @@ namespace COMMODORE
 		// These all methods are invoked from the two ones above!
 		// They are here just to structure better the code...
 		// Read screen data
-		// Methods linked to the treatRasterCycle method...
+		// Acquisition helpers called by readGraphicsAndDrawVisibleZone().
 		/** To read the video matrix and the RAM color. \n
 			Someting that happens during a display fetch / video matrix fetch. */
 		inline void readVideoMatrixAndColorRAM ();
@@ -279,8 +279,7 @@ namespace COMMODORE
 		bool simulateRasterCycle
 			(MCHEmul::CPU* cpu, unsigned int cycle, bool completeCycle);
 		bool finishRasterCycle (MCHEmul::CPU* cpu, unsigned int cycle);
-		/** Just to calculate the screen positions. \n
-			This method is invoked from treatRasterCycle, and always before actualizing the graphical info. */
+		/** Updates text bounds after acquisition and before drawing the current cycle. */
 		inline void calculateScreenPositions ();
 		/** Acquires the data byte and the corresponding color-bus nibble. */
 		MCHEmul::UByte acquireVideoMemory (const MCHEmul::Address& address);
@@ -312,9 +311,9 @@ namespace COMMODORE
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;
-		/** Whether the vertical raster has entered the last VBlank zone already. */
+		/** Whether GRAPHICSREADY was emitted for the current initial vertical blank. */
 		bool _lastVBlankEntered;
-		/** The positions of the text screen. */
+		/** Inclusive text bounds relative to the visible viewport, before clipping. */
 		short _scrX1, _scrY1, _scrX2, _scrY2;
 		/** A temporal variable to indicate whether a lightpen position
 			has already been latched in the current frame.
@@ -397,34 +396,32 @@ namespace COMMODORE
 			bool screenOriginDetected () const
 							{ return (_SCREENORIGINX && _SCREENORIGINY); }
 
-			/** Retained matrix position, expressed in half-character acquisition units. */
+			/** Matrix endpoint saved at a character-row boundary, in half-character units. */
 			unsigned short _matrixBaseCounter;
-			/** Working matrix position, advanced by the counter controller. */
+			/** Working 12-bit matrix position in half-character units. */
 			unsigned short _matrixCounter;
-			/** Character-unit offset retained until the following matrix acquisition. */
+			/** Character-unit offset prepared by the counter for a later matrix acquisition. */
 			size_t _matrixOffset;
-			/** Carry retained for the next physical-line reload. */
+			/** Final-cycle carries into bits 4 and 8, applied independently at the next line reload. */
 			bool _matrixCarry4, _matrixCarry8;
 			/** Whether the current video cycle advanced the matrix counter. */
 			bool _matrixAdvancedThisCycle;
 
-			// Horixontal...
+			// Horizontal acquisition
 			/** Next matrix column, advanced after each complete glyph acquisition. */
 			unsigned char _COL;
-			/** Column count active for the current horizontal acquisition. */
+			/** Provisional width at opening, finalized when the matrix counter starts. */
 			unsigned char _COLMAX;
-			/** Last sampled column count, retained until the next sampling point. */
+			/** Width sampled on the second cycle of each internal raster line. */
 			unsigned char _pendingColumns;
 
 			// Vertical...
-			/** Counter with current number of row. \n
-				It is not used to locate the char and colour info, just to control how many rows must be drawn. */
+			/** Character-row index used to determine vertical window completion. */
 			unsigned char _ROW;
-			/** Max number of rows, defined in the VICRegisters. */
+			/** Row limit sampled on the third cycle of internal line 0. */
 			unsigned char _ROWMAX;
 
-			// Control the byte in the character size...
-			/** Byte within the char & colour matrix info read used to finally draw in the screen. */
+			/** Raster line within the current character row, used to address the glyph byte. */
 			unsigned char _RC;
 
 			/** Whether the horizontal window has already opened on this line. */
@@ -450,7 +447,7 @@ namespace COMMODORE
 			mutable MCHEmul::UByte _colorData;
 			/** Color acquired with the pending character code. */
 			MCHEmul::UByte _pendingColorData;
-			/** Next active-window memory acquisition. */
+			/** Startup, matrix or glyph phase of the acquisition controller. */
 			FetchPhase _fetchPhase;
 			/** Startup cycles remaining before preparing the first matrix acquisition. */
 			unsigned char _startupCyclesLeft;
@@ -458,7 +455,7 @@ namespace COMMODORE
 			unsigned char _counterStartupCyclesLeft;
 			/** Half-cell increments still to perform with the captured width. */
 			unsigned char _counterHalvesLeft;
-			/** Output halves remaining in the retained glyph-row byte. */
+			/** Four-bit groups still to emit from the glyph byte, high half first. */
 			unsigned char _outputHalvesLeft;
 			/** The current output nibble is valid for drawing. */
 			bool _graphicDataReady;
@@ -484,11 +481,13 @@ namespace COMMODORE
 		MCHEmul::PhysicalStorageSubsets _timedWriteSubsets;
 		/** Persistent instruction/interrupt metadata, never an event-context pointer. */
 		const MCHEmul::BusCycleData* _writeBusCycleData;
+		/** Absolute first cycle of the current CPU transaction. */
 		unsigned int _writeStartCycle;
+		/** Buffered writes awaiting replay on their assigned CPU bus cycles. */
 		MCHEmul::SetMemoryCommands _pendingWrites;
-		/** Cycles already started before executing the current CPU instruction. */
+		/** Video phases simulated before CPU execution, including the final phase awaiting completion. */
 		unsigned int _cyclesSimulatedInAdvance;
-		/** The final advanced cycle still needs its CPU phase and counter updates. */
+		/** The final advanced cycle awaits write replay and raster advancement. */
 		bool _advancedCyclePending;
 	};
 

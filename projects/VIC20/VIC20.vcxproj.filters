@@ -111,6 +111,9 @@
     <ClInclude Include="..\..\include\VIC20\1541Disk.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\VIC20\VisualSystem.hpp">
+      <Filter>Archivos de encabezado</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\VIC20\CommandBuilder.cpp">

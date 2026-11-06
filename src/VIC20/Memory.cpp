@@ -159,7 +159,8 @@ const MCHEmul::UByte& VIC20::VICIUnconnectedSubset::readValue (size_t position) 
 }
 
 // ---
-VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang)
+VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, 
+		VIC20::VisualSystem vS, const std::string& lang)
 	: MCHEmul::Memory (0, VIC20::Memory::standardMemoryContent (), { }),
 	  _configuration (cfg),
 	  _BANK0 (nullptr), _BANK0UC (nullptr),
@@ -174,15 +175,35 @@ VIC20::Memory::Memory (VIC20::Memory::Configuration cfg, const std::string& lang
 
 	// The default ROMS...
 	// They might change depending on the language
-	std::string ROMFILE = "./bios/basic.901486-01.bin";
+	std::string ROMFILE		= "./bios/basic.901486-01.bin";
 	std::string CHARROMFILE = "./bios/characters.901460-03-ENG.bin";
-	std::string KERNELFILE = "./bios/kernal.901486-07-ENG.bin";
+	std::string KERNELFILE	= vS == VIC20::VisualSystem::_PAL 
+		? "./bios/kernal.901486-07-ENG.bin" : "./bios/kernal.901486-04-ENG.bin"; // Different ROM...
 
 	// If the languaje selected is not ENG...
-	// then anither char rom file is selected!
-	if (lang == "JAP") { CHARROMFILE = "./bios/characters.901460-02-JAP.bin"; KERNELFILE = "./bios/kernal.901486-02-JAP.bin"; }
-	else if (lang == "SWE") { CHARROMFILE = "./bios/characters.NecP22101-207-SWE.bin"; KERNELFILE = "./bios/kernal.NecP22081-206-SWE.bin"; }
-	else if (lang == "DKA") { CHARROMFILE = "./bios/characters.DK901460-03-DKK.bin"; KERNELFILE = "./bios/kernal.901486-07-DKK.bin"; }
+	// then another char rom file is selected!
+	// and also another ROM in many cases...
+	// When the language is Japanesse, the ROM is NTSC for sure (gurantteed by the VIC20 emulator)
+	// although it is checked back here, but it is not necessary, just in case...
+	if (lang == "JAP")		
+	{ 
+		assert (vS == VIC20::VisualSystem::_NTSC);
+
+		CHARROMFILE		= "./bios/characters.901460-02-JAP.bin";
+		KERNELFILE		= "./bios/kernal.901486-02-JAP.bin";
+	}
+	else 
+	if (lang == "SWE")
+	{ 
+		CHARROMFILE		= "./bios/characters.NecP22101-207-SWE.bin";
+		KERNELFILE		= "./bios/kernal.NecP22081-206-SWE.bin";
+	}
+	else
+	if (lang == "DKA")
+	{ 
+		CHARROMFILE		= "./bios/characters.DK901460-03-DKK.bin";
+		KERNELFILE		= "./bios/kernal.901486-07-DKK.bin";
+	}
 
 	// The info is load into the physical storage directly, 
 	// but fixed into the subset above!
