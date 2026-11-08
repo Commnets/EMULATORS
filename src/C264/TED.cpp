@@ -1,5 +1,8 @@
 #include <C264/TED.hpp>
+#include <C264/ROMRAMSwitchRegisters.hpp>
+#include <C264/C1C2SelectorRegisters.hpp>
 #include <C264/TEDRegisters.hpp>
+#include <C264/C6529B1Registers.hpp>
 #include <C264/OSIO.hpp>
 
 // ---
@@ -25,6 +28,19 @@ bool C264::TED::initialize ()
 
 		return (false);
 	}
+
+	const C264::C6529B1Registers* keyboardRegisters =
+		dynamic_cast <const C264::C6529B1Registers*>
+			(memoryRef () -> subset (C264::C6529B1Registers::_C6529B1REGS_SUBSET));
+
+	if (keyboardRegisters == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
+	_TEDRegisters -> linkToKeyboardRegisters (keyboardRegisters);
 
 	return (true);
 }
@@ -96,6 +112,44 @@ void C264::TED::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 
 				_TEDRegisters -> setJoystickStatusBit (jb -> _joystickId, 
 					((C264::InputOSSystem*) n) -> bitForJoystickButton (jb -> _joystickId, jb -> _buttonId), false);
+			}
+
+			break;
+
+		default:
+			break;
+	}
+}
+
+// ---
+void C264::TED::applyCPUWriteEffects
+	(const MCHEmul::SetMemoryCommand& command)
+{
+	C264::Memory* memory = static_cast <C264::Memory*> (memoryRef ());
+
+	switch (command.subset () -> id ())
+	{
+		case C264::ROMRAMSwitchRegisters::_ROMRAMSWITCHREGS_SUBSET:
+			{
+				C264::ROMRAMSwitchRegisters* registers =
+					static_cast <C264::ROMRAMSwitchRegisters*>
+						(command.subset ());
+
+				if (registers -> configurationChanged ())
+					memory -> setROMactive (registers -> ROMActive ());
+			}
+
+			break;
+
+		case C264::C1C2SelectorRegisters::_C1C2SELECTORREGS_SUBSET:
+			{
+				C264::C1C2SelectorRegisters* registers =
+					static_cast <C264::C1C2SelectorRegisters*>
+						(command.subset ());
+
+				if (registers -> configurationChanged ())
+					memory -> setMemoryConfiguration
+						(registers -> memoryConfiguration ());
 			}
 
 			break;

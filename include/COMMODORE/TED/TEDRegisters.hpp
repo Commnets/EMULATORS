@@ -112,9 +112,9 @@ namespace COMMODORE
 			/** Where the raster is now. */
 			unsigned short _currentRasterLine;
 			unsigned short _currentRasterColumn; 
-			/** From 0 to 40. */
+			/** Character position reload counter. From 0 to 1023. */
 			unsigned short _currentCharacterPosition; 
-			/** From 0 to 7. */
+			/** Vertical subaddress inside a character. From 0 to 7. */
 			unsigned char _currentCharacterRow;
 		};
 
@@ -294,30 +294,27 @@ namespace COMMODORE
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
-		// Some of the instruction within the TED needs to know about the raster status...
-		// So there is instructions to link the raster (defined in TED chip) to its registers
-		// These methods, however, are very internal and just inked from TED simulation
+		/** Non-owning raster link for live position reads and diagnostics. */
 		void linkToRaster (MCHEmul::Raster* r)
 							{ _raster = r; }
+		/** Non-owning CPU reference for observed register-access diagnostics. */
+		void linkToDebugCPU (const MCHEmul::CPU* cpu)
+							{ _debugCPU = cpu; }
 		unsigned short currentRasterLine () const
 							{ return (_raster -> vData ().currentPosition ()); }
 		unsigned short currentRasterPositionInLine () const
 							{ return (_raster -> hData ().currentPosition ()); }
 
-		// Very important method...
-		/** When the CPU is about to execute an instruction, TED is informed about it
-			and the TED keeps that information in its registers. \n
-			When TED is requested about raster position (vertical), this information is then used. \n
-			to simulate the position where the raster will be when the instruction finishes. \n
-			The instruction requesting this information (e.g. the TED were connected to a 6500 Family CPU)
-			might read the register info just in the last cycle of the instruction, so 
-			returning the right value is mandatory. */
-		void setNumberPositionsNextInstruction (unsigned int nP)
-							{ _numberPositionsNextInstruction = nP; }
-
 		/** The alignement of the char Data memory will depend on the mode,
 			so any time the mode is changed, it must be recalculated. */
 		inline void recalculateCharDataMemory ();
+
+		private:
+		//-----
+		std::string debugInterruptAsString () const;
+		void debugRegisterWrite (size_t p, const MCHEmul::UByte& value, bool after) const;
+		void debugRegisterRead (size_t p, const MCHEmul::UByte& value) const;
+		//-----
 
 		protected:
 		// Elements related with this one...
@@ -382,10 +379,10 @@ namespace COMMODORE
 		// Implementation
 		mutable MCHEmul::UByte _lastValueRead;
 
-		/** The number of cycle that the next instruction to be executed in the CPU will take. */
-		unsigned int _numberPositionsNextInstruction;
 		/** A reference to the raster. This class is not the owner of it. */
 		MCHEmul::Raster* _raster;
+		/** Non-owning diagnostic link, cleared before register initialization. */
+		const MCHEmul::CPU* _debugCPU;
 };
 
 	// ---

@@ -32,12 +32,9 @@ namespace C264
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		/** Macros for the speed. \n
-			In the original series computer, 
-			the speed if defined by the TED (Video/Sound & IO) Chip. \n
-			The TED change speed depending on whether the raster is in a visible or nor visible zone of the screen.
-			and even if it has been configured to be PAL or NTSC! \n
-			So the speed here is just a reference as an average. */
+		/** Slow CPU-clock references. \n
+			Host pacing uses twice this frequency and charges one unit per fast
+			CPU cycle or two units per slow CPU cycle. */
 		static const unsigned int _PALCLOCK		= 886723; // 0.886 MHz = TED_PAL::_CLOCK / 20
 		static const unsigned int _NTSCCLOCK	= 894886; // 0.894 MHz = TED_NTSC::_CLOCK / 16
 
@@ -54,8 +51,12 @@ namespace C264
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
-		/** To change the speed of the CPU. */
-		virtual void specificComputerCycle () override;
+		virtual unsigned int clockCyclesForPacing
+			(unsigned int cpuCycles) override;
+		/** Applies pending board selectors before CPU execution. \n
+			Hooks see external mapping changes, and their own selector changes
+			are applied before the CPU fetches its next instruction. */
+		virtual bool executeComputerHooks () override;
 
 		// Managing memory configuration...
 		/** To get the configuration of the memory. */
@@ -70,6 +71,12 @@ namespace C264
 		static MCHEmul::Chips standardChips (const std::string& sS, VisualSystem vS);
 		static MCHEmul::IODevices standardDevices (VisualSystem vS);
 
+		private:
+		//-----
+		void debugClockPacing
+			(unsigned int cpuCycles, unsigned int pacingCycles) const;
+		//-----
+
 		protected:
 		/** The video system used by the C264 computer. */
 		VisualSystem _visualSystem;
@@ -80,9 +87,6 @@ namespace C264
 		// Implementation
 		/** A reference to the TED chip. */
 		TED* _ted;
-		/** Two additional clocks are used, 
-			the active one will depend on the situation of the processor. */
-		MCHEmul::Clock _slowClock, _fastClock;
 	};
 
 	/** The Commodore 16_116 a specific element of the series 264. \n

@@ -14,6 +14,164 @@ MCHEmul::InfoStructure COMMODORE::TEDSoundLibWrapper::getInfoStructure () const
 }
 
 // ---
+COMMODORE::TEDPulseSoundWave::TEDPulseSoundWave (unsigned int cF)
+	: MCHEmul::PulseSoundWave (cF),
+	  _frequencyRegister (0),
+	  _reloadValue (1023),
+	  _counter (1023),
+	  _halfLength (1023),
+	  _prescaler (0),
+	  _output (false),
+	  _previousOverflow (false),
+	  _dividerEdge (false),
+	  _dcActive (false)
+{
+	setClassName ("TEDPulseSoundWave");
+
+	MCHEmul::PulseSoundWave::setPulseUpPercentage (0.5);
+	setFrequencyRegister (0);
+}
+
+// ---
+void COMMODORE::TEDPulseSoundWave::setFrequencyRegister (unsigned short value)
+{
+	_frequencyRegister = value & 0x03ff;
+	_reloadValue = (_frequencyRegister == 0x03ff) ? 1024 : 1023 - _frequencyRegister;
+
+	// Only inspection metadata is updated here; the running count and half-length are preserved.
+	_frequency = (_frequencyRegister == 0x03fe)
+		? 0.0 : (double) _chipFrequency / (8.0 * (double) _reloadValue);
+	_cyclesPerWave = (_frequency > 0.0) ? (double) _chipFrequency / _frequency : 0.0;
+}
+
+// ---
+void COMMODORE::TEDPulseSoundWave::initialize ()
+{
+	MCHEmul::PulseSoundWave::initialize ();
+
+	_dcActive = false;
+	setFrequencyRegister (0);
+	initializeInternalCounters ();
+}
+
+// ---
+void COMMODORE::TEDPulseSoundWave::initializeInternalCounters ()
+{
+	// Deterministic emulator initialization, not a measured power-on state.
+	_counter = _halfLength = _reloadValue;
+	_prescaler = 0;
+	_output = _dcActive;
+	_previousOverflow = _dcActive && (_reloadValue == 1);
+	_dividerEdge = false;
+	_clockRestarted = false;
+}
+
+// ---
+void COMMODORE::TEDPulseSoundWave::clock (unsigned int nC)
+{
+	_dividerEdge = false;
+
+	for (unsigned int i = 0; i < nC; i++)
+	{
+		// One divider tick per four incoming single-clock cycles, even when output is muted.
+		_prescaler = (_prescaler + 1) & 0x03;
+		if (_prescaler != 0)
+			continue;
+
+		if (_dcActive)
+		{
+			_counter = _halfLength = _reloadValue;
+			_output = true;
+			_previousOverflow = (_reloadValue == 1);
+
+			continue;
+		}
+
+		const bool overflow = (--_counter == 0);
+		const bool edge = overflow && !_previousOverflow;
+
+		if (overflow)
+			_counter = _halfLength = _reloadValue;
+
+		_previousOverflow = overflow;
+
+		// A continuously asserted overflow is not a stream of edges (notably reload=1).
+		// Analog decay of the retained output in that case is not modeled here.
+		if (edge)
+		{
+			_output = !_output;
+			_dividerEdge = true;
+
+			if (_output)
+				_clockRestarted = true;
+		}
+	}
+}
+
+// ---
+double COMMODORE::TEDPulseSoundWave::clockValue () const
+{
+	if (_dcActive)
+		return (0.0);
+
+	// The active half-length is retained across frequency writes; no generic phase runs alongside it.
+	return ((_output ? 0.0 : 0.5) +
+		0.5 * ((double) (_halfLength - _counter) + (double) _prescaler / 4.0) / (double) _halfLength);
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::TEDPulseSoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::PulseSoundWave::getInfoStructure ();
+
+	result.add ("REGISTER", _frequencyRegister);
+	result.add ("RELOAD", _reloadValue);
+	result.add ("COUNTER", _counter);
+	result.add ("HALFLENGTH", _halfLength);
+	result.add ("PRESCALER", _prescaler);
+	result.add ("LEVEL", _output);
+	result.add ("DC", _dcActive);
+	result.add ("OVERFLOW", _previousOverflow);
+
+	return (result);
+}
+
+// ---
+COMMODORE::TEDNoiseSoundWave::TEDNoiseSoundWave (unsigned int cF)
+	: MCHEmul::SoundWave (MCHEmul::SoundWave::Type::_NOISE, cF),
+	  _shiftRegister (0xff)
+{
+	setClassName ("TEDNoiseSoundWave");
+}
+
+// ---
+void COMMODORE::TEDNoiseSoundWave::initialize ()
+{
+	MCHEmul::SoundWave::initialize ();
+
+	initializeInternalCounters ();
+}
+
+// ---
+void COMMODORE::TEDNoiseSoundWave::initializeInternalCounters ()
+{
+	_shiftRegister = 0xff;
+	_clockRestarted = false;
+}
+
+// ---
+MCHEmul::InfoStructure COMMODORE::TEDNoiseSoundWave::getInfoStructure () const
+{
+	MCHEmul::InfoStructure result = MCHEmul::SoundWave::getInfoStructure ();
+
+	result.add ("LFSR", _shiftRegister);
+	result.add ("LEVEL", output ());
+	result.add ("CLOCKSOURCE", std::string ("Channel2Divider"));
+
+	return (result);
+}
+
+// ---
 COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper 
 		(unsigned int tF, unsigned int dv, unsigned int sF)
 	: TEDSoundLibWrapper (
@@ -26,7 +184,6 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper
 	  _dividerValue (dv), // To get the CPU clock frequency...
 	  _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
-	  _soundReloadActive (false),
 	  _voices ( // Two voices...
 		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, tF / dv), 
 		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, tF / dv) }),
@@ -34,101 +191,52 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper
 	  _cyclesPerSample ((double) tF / (double (sF) * double (dv))), // It doesn't change ever...
 	  _counterCyclesPerSample (0.0f)
 {
-	// The voice 0...
-	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v0 = 
-		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [0]);
-	static_cast <MCHEmul::PulseSoundWave*> (v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) -> 
-		setActive (true); // The pulse is the one active always...
-	static_cast <MCHEmul::PulseSoundWave*> (v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) ->
-		setPulseUpPercentage (0.5); // 50% by default...
-	v0 -> setWavesActive (0); // Always a pulse wave...
+	// Nothing else.
+}
 
-	// The voice 1...
-	COMMODORE::TEDSoundSimpleLibWrapper::Voice* v1 = 
-		static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
-	static_cast <MCHEmul::PulseSoundWave*> (v1 -> wave (MCHEmul::SoundWave::Type::_PULSE)) ->
-		setPulseUpPercentage (0.5); // 50% by default...
-	v1 -> setWavesActive (0); // By defect a pulse wave, but it can be moved to noise!
+// ---
+COMMODORE::TEDSoundSimpleLibWrapper::~TEDSoundSimpleLibWrapper ()
+{
+	// SoundVoice owns its waves; delete the concrete voice because its base destructor is not virtual.
+	for (auto voice : _voices)
+		delete (static_cast <Voice*> (voice));
 }
 
 // ---
 void COMMODORE::TEDSoundSimpleLibWrapper::setValue (size_t p, const MCHEmul::UByte& v)
 {
-	size_t pp = p % 0x20;
-
-	_registers [pp] = v;
+	const size_t pp = p % 0x20;
 
 	switch (pp)
 	{
-		// Voice 1 LSB
 		case 0x0e:
-			{
-				_voices [0] -> setFrequency (tedToneFrequency (voice0Register ()));
-			}
-
-			break;
-
-		// Voice 2 LSB
-		case 0x0f:
-			{
-				_voices [1] -> setFrequency (tedToneFrequency (voice1Register ()));
-			}
-
-			break;
-
-		// Voice 2 MSB (only two bits)
-		case 0x10:
-			{
-				// Just 2 bits only...
-				// The information is rewritten...
-				_registers [0x10] = MCHEmul::UByte (v.value () & 0x03);
-
-				_voices [1] -> setFrequency (tedToneFrequency (voice1Register ()));
-			}
-
-			break;
-
-		// Sound "Color" Register
-		case 0x11:
-			{
-				const unsigned char programmedVolume = v.value () & 0x0f;
-				const unsigned char effectiveVolume =
-					(programmedVolume > 8) ? 8 : programmedVolume; // It can be bigger than 8, but it is not effective...
-				setVolumen ((double) effectiveVolume / (double) 8);
-				_voices [0] -> setActive (v.bit (4));
-				auto* voice1 =
-					static_cast <COMMODORE::TEDSoundSimpleLibWrapper::Voice*> (_voices [1]);
-				const bool voice1ToneEnabled = v.bit (5);
-				const bool noiseEnabled = ((v.value () & 0x60) == 0x40);
-				voice1 -> setActive (voice1ToneEnabled || noiseEnabled);
-				voice1 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> 
-					setActive (voice1ToneEnabled && !noiseEnabled);
-				voice1 -> wave (MCHEmul::SoundWave::Type::_NOISE) ->
-					setActive (noiseEnabled);
-				voice1 -> setWavesActive (noiseEnabled ? 1 : 0);
-
-				// The reload bit restarts the tone phases and the noise sequence.
-				const bool soundReloadActive = v.bit (7);
-				if (soundReloadActive && !_soundReloadActive)
-					reloadSoundGenerators ();
-				_soundReloadActive = soundReloadActive;
-			}
-
-			break;
-
-		// Voice 1 MSB (only two bits)
 		case 0x12:
 			{
-				// Just 2 bits only...
-				// The information is rewritten...
-				_registers [0x12] = MCHEmul::UByte (v.value () & 0x03);
-
-				_voices [0] -> setFrequency (tedToneFrequency (voice0Register ()));
+				_registers [pp] = (pp == 0x12) ? MCHEmul::UByte (v.value () & 0x03) : v;
+				static_cast <Voice*> (_voices [0]) ->
+					setFrequencyRegister ((unsigned short) voice0Register ());
 			}
 
 			break;
 
-		// The rest are nor taken into account...
+		case 0x0f:
+		case 0x10:
+			{
+				_registers [pp] = (pp == 0x10) ? MCHEmul::UByte (v.value () & 0x03) : v;
+				static_cast <Voice*> (_voices [1]) ->
+					setFrequencyRegister ((unsigned short) voice1Register ());
+			}
+
+			break;
+
+		case 0x11:
+			{
+				_registers [pp] = v;
+				updateControl ();
+			}
+
+			break;
+
 		default:
 			break;
 	}
@@ -177,117 +285,118 @@ const MCHEmul::UByte& COMMODORE::TEDSoundSimpleLibWrapper::readValue (size_t p) 
 
 // ---
 void COMMODORE::TEDSoundSimpleLibWrapper::initialize ()
-{ 
+{
 	TEDSoundLibWrapper::initialize ();
-							  
-	_volumen = 0.0f;
-	_soundReloadActive = false;
 
-	_counterCyclesPerSample = 0.0f;
+	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0);
+	_volumen = 0.0;
+	_counterCyclesPerSample = 0.0;
 
-	// Initialize all internal voice state.
-	for (auto i : _voices)
-		i -> initialize ();
+	for (auto voice : _voices)
+		voice -> initialize ();
 
-	// Actualize the right wave per voice....
-	auto* v0 = static_cast <Voice*> (_voices [0]);
-	v0 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
-	static_cast <MCHEmul::PulseSoundWave*> 
-		(v0 -> wave (MCHEmul::SoundWave::Type::_PULSE)) -> setPulseUpPercentage (0.5f);
-	v0 -> setWavesActive (0); // Pulse...
-	auto* v1 = static_cast <Voice*> (_voices [1]);
-	v1 -> wave (MCHEmul::SoundWave::Type::_PULSE) -> setActive (true);
-	v1 -> wave (MCHEmul::SoundWave::Type::_NOISE) -> setActive (false);
-	static_cast <MCHEmul::PulseSoundWave*>
-		(v1 -> wave (MCHEmul::SoundWave::Type::_PULSE)) -> setPulseUpPercentage (0.5f);
-	v1 -> setWavesActive (0); // Pulse...
-
-	// All registers are 0 by default...
-	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0); 
+	updateControl ();
 }
 
 // ---
-bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt)
+bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
 {
-	bool result = false;
-
-	for (auto i : _voices)
-		i -> clock (); // just one...
+	for (auto voice : _voices)
+		voice -> clock ();
 
 	_counterCyclesPerSample += 1.0;
-	if ((result = 
-			(_cyclesPerSample > 0.0f &&
-			 _counterCyclesPerSample >= _cyclesPerSample)))
-	{
-		_counterCyclesPerSample = 
-			std::fmod (_counterCyclesPerSample, _cyclesPerSample);
+	if (_cyclesPerSample <= 0.0 || _counterCyclesPerSample < _cyclesPerSample)
+		return (false);
 
-		// Active voices are averaged to keep the mix normalized
-		// before applying the master volume.
-		double sample = 0.0f;
-		size_t activeVoices = 0;
-		for (auto i : _voices)
-		{
-			if (i -> active ())
-			{
-				sample += i -> data ();
-				activeVoices++;
-			}
-		}
+	_counterCyclesPerSample = std::fmod (_counterCyclesPerSample, _cyclesPerSample);
 
-		if (activeVoices > 0)
-			sample /= (double) activeVoices; // Average the voices...
-		sample *= _volumen;
+	// Fixed per-channel gain preserves channel 1 amplitude when a silent channel 2 is enabled.
+	double sample = 0.0;
+	for (auto voice : _voices)
+		sample += voice -> data ();
+	sample *= 0.5 * _volumen;
 
-		dt = MCHEmul::UBytes ({
-			MCHEmul::normalizedSoundSampleToU8 (sample)	});
-	}
+	dt = MCHEmul::UBytes ({ MCHEmul::normalizedSoundSampleToU8 (sample) });
 
-	return (result);
+	return (true);
+}
+
+// ---
+void COMMODORE::TEDSoundSimpleLibWrapper::updateControl ()
+{
+	const MCHEmul::UByte control = _registers [0x11];
+	const unsigned char volume = control.value () & 0x0f;
+
+	setVolumen ((double) ((volume > 8) ? 8 : volume) / 8.0);
+	static_cast <Voice*> (_voices [0]) -> configure (control.bit (4), false, control.bit (7));
+	static_cast <Voice*> (_voices [1]) -> configure (control.bit (5), control.bit (6), control.bit (7));
 }
 
 // ---
 COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
-	: MCHEmul::SoundVoice (id, cF,
-		{
-			new MCHEmul::PulseSoundWave (cF),
-			new MCHEmul::NoiseSoundWave (cF, 0xffffu)
-		}, nullptr, { }), // No envelope, no filters attached...
-		_wavesActive (0)
-{ 
+	: MCHEmul::SoundVoice
+		(id, cF,
+		 (id == 1)
+			? MCHEmul::SoundWaves {
+				new COMMODORE::TEDPulseSoundWave (cF),
+				new COMMODORE::TEDNoiseSoundWave (cF) }
+			: MCHEmul::SoundWaves {
+				new COMMODORE::TEDPulseSoundWave (cF) },
+		 nullptr, { }),
+	  _pulse (static_cast <COMMODORE::TEDPulseSoundWave*> (wave (MCHEmul::SoundWave::Type::_PULSE))),
+	  _noise ((id == 1)
+		? static_cast <COMMODORE::TEDNoiseSoundWave*> (wave (MCHEmul::SoundWave::Type::_NOISE)) : nullptr),
+	  _noiseSelected (false)
+{
 	setClassName ("TEDVoice");
 }
 
 // ---
-double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
-{ 
-	// When the voice is not active, nothing is returned...
-	if (!active ())
-		return (0.0f);
+void COMMODORE::TEDSoundSimpleLibWrapper::Voice::configure
+	(bool toneEnabled, bool noiseEnabled, bool dcActive)
+{
+	// Tone 2 takes priority over noise; the output gate does not stop either divider.
+	_noiseSelected = !toneEnabled && noiseEnabled && (_noise != nullptr);
+	_active = toneEnabled || _noiseSelected;
+	_pulse -> setActive (toneEnabled);
+	_pulse -> setDCActive (dcActive);
+	if (_noise != nullptr)
+		_noise -> setActive (_noiseSelected);
+}
 
-	double result = 0.0f;
+// ---
+void COMMODORE::TEDSoundSimpleLibWrapper::Voice::initialize ()
+{
+	MCHEmul::SoundVoice::initialize ();
 
-	// TED voice output can be either pulse or noise depending on _wavesActive.
-	switch (_wavesActive)
+	_noiseSelected = false;
+}
+
+// ---
+void COMMODORE::TEDSoundSimpleLibWrapper::Voice::clock (unsigned int nC)
+{
+	// Process each input cycle so every divider edge clocks noise exactly once.
+	// Do not also call SoundVoice::clock(), which would clock the same pulse a second time.
+	for (unsigned int i = 0; i < nC; i++)
 	{
-		// pulse
-		case 0x00:
-			result = wave (MCHEmul::SoundWave::Type::_PULSE) -> data ();
-			break;
+		if (_noise != nullptr && _pulse -> dcActive ())
+			_noise -> shiftOne ();
 
-		// noise
-		case 0x01:
-			result = wave (MCHEmul::SoundWave::Type::_NOISE) -> data ();
-			break;
+		_pulse -> clock (1);
 
-		// This sitution is not possible but just in case!
-		default:
-			break;
+		if (_noise != nullptr && _pulse -> dividerEdge ())
+			_noise -> shift ();
 	}
+}
 
-	// There is no affection by the envelope, because there is no envelope in this chip!
+// ---
+double COMMODORE::TEDSoundSimpleLibWrapper::Voice::data () const
+{
+	if (!_active)
+		return (0.0);
 
-	if (result < -1.0f)	result = -1.0f;
-	else if (result > 1.0f)	result = 1.0f;
-	return (result);
+	if (_noiseSelected)
+		return (_pulse -> dcActive () ? 0.0 : (_noise -> output () ? 1.0 : 0.0));
+
+	return (_pulse -> pulseUp () ? 1.0 : 0.0);
 }

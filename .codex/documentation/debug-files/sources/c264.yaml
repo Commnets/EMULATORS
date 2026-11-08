@@ -5,16 +5,215 @@
   "output": "docs/C264Data/C264_DEBUG_File_Format.docx",
   "models": "Commodore 16, Commodore 116, and Commodore Plus/4, PAL or NTSC.",
   "cpu": "MOS 7501/8501, implemented through C7501.",
-  "components": [["101","TED","Raster, single/double clock, graphics modes, memory, badlines, and integrated sound"],["200/201","6529B","Keyboard/model latches; they currently have no dedicated DEBUG producer"],["202","ROM/RAM switch","ROM Active state on FF3E/FF3F access"],["203","C1/C2 selector","Selected memory configuration at FDD0/FDDF"],["I/O","Datasette 1531/IEC","Tape traps and serial peripherals"],["Memory","C264 map","Applied Set for selected subsets"]],
-  "records": [
-    {"name":"TED — Info Cycle","producer":"src/COMMODORE/TED/TED.cpp :: debugTEDCycle","fields":"Info Cycle type with In Single Clock indicator; Raster position; Instruction projection; Graphics mode; Memory(Screen, Attributes, Characters and ROM used, Bitmap).","timing":"The cycle column currently receives i, not the absolute CPU counter. Treat it as the recovered-loop index.","events":"Bad line situation; Reading Video Matrix & Attribute RAM; Reading Graphics."},
-    {"name":"TED — CPU transaction projection","producer":"src/COMMODORE/TED/TED.cpp :: debugCPUAboutToExecute","fields":"Transaction(Type, Address, Code, CPU Cycles); raster origin; PositionsToEffect; SingleClock.","timing":"Emitted when instruction context is received; it relates CPU cycles to TED positions.","events":"Adds no subordinate events."},
-    {"name":"ROMRAMSwitch — direct line","producer":"src/C264/ROMRAMSwitch.cpp :: debugROMRAMSwitchCycle","fields":"Component FF3E/FF3F,X; CPU cycle; Info cycle; ROM Active:YES|NO.","timing":"Emitted only when configurationChanged() is true.","events":"Legacy tab-separated format."},
-    {"name":"C1C2Selector — direct line","producer":"src/C264/C1C2Selector.cpp :: debugC1C2SelectorCycle","fields":"Component FDD0/FDDF,X; CPU cycle; Info cycle; Memory Cfg:number.","timing":"Emitted only when the configuration changes.","events":"Legacy tab-separated format."},
-    {"name":"Datasette 1531 / SerialIO","producer":"src/C264/1531Datasette.cpp and src/COMMODORE/SerialIOPeripherals.cpp","fields":"Header/data found, block, simulation state, error or missing data; serial-bus transitions.","timing":"CPU cycle of the trap or transition.","events":"May mix subordinate text and complete headers."}
+  "components": [
+    [
+      "101",
+      "TED",
+      "Raster, single/double clock, graphics modes, memory, badlines, and integrated sound"
+    ],
+    [
+      "1010",
+      "SoundFunction",
+      "Integrated TED sound batch processing and generated samples"
+    ],
+    [
+      "Memory 1010",
+      "TEDRegisters",
+      "Observed register accesses; requires TED diagnostic CPU link"
+    ],
+    [
+      "200/201",
+      "6529B",
+      "Keyboard/model latches; they currently have no dedicated DEBUG producer"
+    ],
+    [
+      "202",
+      "ROM/RAM switch",
+      "ROM Active state on FF3E/FF3F access"
+    ],
+    [
+      "203",
+      "C1/C2 selector",
+      "Selected memory configuration at FDD0/FDDF"
+    ],
+    [
+      "I/O",
+      "Datasette 1531/IEC",
+      "Tape traps and serial peripherals"
+    ],
+    [
+      "Memory",
+      "C264 map",
+      "Applied Set for selected subsets"
+    ]
   ],
-  "example": ["CPU     50000       Info Cycle","                    Last 3 cycles","TED     0           Info Cycle (In Single Clock:YES)","                    Raster position     :Column=...,Row=...,25","                    Instruction projection:PositionsToEffect=...,SingleClock=1","FF3E/FF3F,X    50000    Info cycle      ROM Active:YES","+"],
-  "example_note": "Schematic example. The TED time field is i and must not be read as an absolute CPU cycle.",
-  "limitations": ["The debugTEDCycle header uses i, so the absolute-continuity rules used for other chips cannot be applied directly.","The 6529B latches are part of the machine but produce no DEBUG lines of their own.","ROM/RAM and C1/C2 retain a legacy tab-separated format with variable-length labels."],
-  "watched_sources": ["src/C264/C264.cpp","src/C264/C1C2Selector.cpp","src/C264/ROMRAMSwitch.cpp","src/C264/1531Datasette.cpp","src/COMMODORE/TED/TED.cpp","src/COMMODORE/SerialIOPeripherals.cpp"]
+  "records": [
+    {
+      "name": "TED - Info Cycle",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugCycleContext / debugTEDCycle",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion, Snapshot=BeforeCycle, CPUBatchStart, CPUBatchEnd, CPUBatchIndex, CPUBatchCycles, ConversionSingleClock, HalfCarryIn, HalfCarryOut); Raster position(Column, ColumnBase0, Row, RowBase0, Cycle); Internal(VCReload, VC, RC, VLMI, Idle); Display(DisplayEnabled, VideoActive, ScrollX, ScrollY, Rows25, Columns40); Badline(Latched, LastScrollY, WithinBadlineRange); Clock(SingleClock, ForcedSingleClock, Freeze); Graphics mode(Mode); Memory(Screen, Attributes, Characters, Bitmap, CPUROMActive, GraphicsROMSelected); Timers; Interrupt.",
+      "timing": "Before graphics work for a completing TED pulse. Header+CPUHalf/2 is its completion coordinate: C+1, or C+0.5 for a slow CPU cycle with a carried half. CPUBatchIndex/CPUBatchCycles count CPU cycles. During read advancement CPUBatchEnd is the predicted transaction end; post-execution recovery validates it against the CPU clock. ConversionSingleClock is retained for the individual CPU cycle. HalfCarryIn/Out describe that cycle; no absolute TED counter is stored.",
+      "events": "Timers uses T1/T2/T3 prefixes with Counter, Reload, Counting, Pending, Enabled and ReachedZero. Interrupt contains PendingSources and EnabledSources in FF09 source-bit positions (including the existing light-pen placeholder), internal ReasonCode, TEDRequest and RasterCompare. ReasonCode and source masks have different encodings. A cycle prepared before CPU execution can have its matching Info Cycle End emitted only after the suspended access resumes; do not count these as two cycles."
+    },
+    {
+      "name": "TED - Info Cycle End",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugTEDCycleEnd",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion, Snapshot=AfterCycle); Raster position; Internal; Clock; Timers; Interrupt, including CPURequestClockArgument.",
+      "timing": "After raster advance, counter updates, timer clocks and IRQ evaluation. Header retains the processed TED-cycle completion coordinate; raster fields show the resulting next position. Pair with Info Cycle by CPU clock and CPUHalf.",
+      "events": "CPURequestClockArgument is the integer CPU-cycle coordinate C passed to requestInterrupt, or a dash when no IRQ request is made. It is separate from the diagnostic completion coordinate C+1 or C+0.5; the IRQ API has no half-cycle argument. Compare snapshots to locate reloads, line/frame transitions, timer reloads and speed/IRQ changes. A held request is not a new edge. FREEZE is the live register value. A pulse whose graphics began before access still completes if that access enables FREEZE; its counter-gating decision is retained from before access."
+    },
+    {
+      "name": "TED - Badline detected",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugBadLine",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion); Raster position; Internal; Badline(Latched, ScrollY, VideoActive, Cause=ScrollMatch).",
+      "timing": "After latching the current badline condition and clearing idle, within the cycle identified by the header.",
+      "events": "Replaces the unstructured Bad line situation continuation."
+    },
+    {
+      "name": "TED - Video matrix read",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugReadingVideoMatrix",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion); Raster position; Fetch(VCReload, VC, RC, VLMI, Idle); Matrix(Address, Value, Source=RAM); Attribute(Address, Value, Source=RAM).",
+      "timing": "After both RAM reads and before VC/VLMI increment. Logical addresses are reconstructed from unchanged registers/counters at this call site. Values are already-fetched bytes, not additional diagnostic reads.",
+      "events": "VLMI is the destination buffer index. Physical RAM alias resolution is not included."
+    },
+    {
+      "name": "TED - Graphics read",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugReadingGraphics",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion); Raster position; Fetch; Memory access(Kind, Source, Address, Value). Character fetches also report CharacterCode, CharacterMask and CharacterIndex in decimal.",
+      "timing": "After the graphics read and before VC/VLMI increment. Kind is Idle, Character or Bitmap. Source is TEDView for idle reads and the applied ROM/RAM selection for active reads. Address is logical and Value is already fetched.",
+      "events": "Character addresses include masked code and RC; bitmap addresses include VC and RC. No extra memory access is performed."
+    },
+    {
+      "name": "TED - CPU instruction transaction",
+      "producer": "src/COMMODORE/TED/TED.cpp :: debugCPUAboutToExecute",
+      "fields": "Transaction(Type=Instruction, Address, Code, Cycles); Bus cycles(StartCPU, IntrinsicCycles, ReadCycles, WriteCycles, FirstWriteCycle, LastReadCycle, TrailingWriteCycles); Raster origin(Row, Cycle); Clock(SingleClock).",
+      "timing": "At instruction notification, before optional TED read advancement. The predicted duration selects the 7501 BusCycleData alternative. Bus indexes are zero-based. No future raster position is estimated by this record.",
+      "events": "The scheduler prepares the readable prefix, stopping before the first write and suspending its final CPU cycle before access. It retains that cycle duration, input carry and graphics-work flag. CPU execution then produces buffered writes; simulate validates and resumes without repeating pre-access work. This does not independently time every opcode/operand/data read."
+    },
+    {
+      "name": "TED - CPU read advance",
+      "producer": "src/COMMODORE/TED/TED.cpp :: CPUAboutToExecute / advanceToCPURead / debugCPUReadAdvance",
+      "fields": "Timing(Reference=ObservedCPUClock, StartCPU, RecoveryCPU); Advance(Phase=Before|After, PreparedCPUCycles, AccessPending); Raster position; Clock(HalfCarry); Timers.",
+      "timing": "A pair surrounds pre-execution advancement of the readable instruction prefix. Header is the unchanged observed CPU clock. PreparedCPUCycles includes the final CPU cycle suspended before access. With N>0, RecoveryCPU after advancement is StartCPU+N-1 and AccessPending=1; N=0 leaves no suspended cycle. The CPU recovery cursor increments only on completion.",
+      "events": "The prefix is min(lastReadCycle+1, firstWriteCycle), ignoring an absent bound. The final retained cycle resumes after CPU execution and write extraction; its clock mode and carry are not recalculated or counted twice. JSR/BRK reads after writes cannot be reached by this prefix. HalfCarry already includes the suspended cycle duration; it is not evidence that its post-access work ran."
+    },
+    {
+      "name": "TED - CPU interrupt transaction",
+      "producer": "src/C264/C264.cpp :: processEvent / src/COMMODORE/TED/TED.cpp :: CPUAboutToExecute / debugCPUAboutToExecute",
+      "fields": "Transaction(Type=Interrupt, Id); Bus cycles(StartCPU, IntrinsicCycles, ReadCycles, WriteCycles, FirstWriteCycle, LastReadCycle, TrailingWriteCycles); Raster origin(Row, Cycle).",
+      "timing": "When the CPU accepts an interrupt and notifies its launch, before acknowledge and launch effects. Header and StartCPU identify the CPU clock at notification. Bus metadata describes the launch sequence. This is not emitted for each requestInterrupt call.",
+      "events": "C264 forwards accepted launch notifications from its own CPU. Launch stack writes are replayed at declared bus indexes. This callback does not advance to vector reads because they follow stack writes; interrupt vector-read synchronization remains outside this step."
+    },
+    {
+      "name": "TED - Frozen clock",
+      "producer": "src/COMMODORE/TED/TED.cpp :: beginCPUCycle / finishCPUCycle / debugFrozenTEDCycle",
+      "fields": "Timing(CPUHalf, Reference=TEDCycleCompletion); Raster position; Clock distribution(RasterEnabled=0, TimersEnabled=0, SoundEnabled=1); Interrupt.",
+      "timing": "One record for each completed slow-clock pulse whose counter gating was retained from before the CPU access. Header+CPUHalf/2 identifies pulse completion. A carried half with a slow CPU cycle completes before the CPU write; other pulses complete after access using the retained gating decision. Replaces the obsolete Freeze batch summary.",
+      "events": "Sound receives one pulse while raster and timers remain stopped. A pulse that began frozen remains gated even if its CPU access clears FREEZE; the Clock(Freeze) field in the corresponding CPU write record can therefore show zero. Fetch/draw separation remains the current graphics approximation; exact physical FREEZE acceptance phase and sound behavior are unverified."
+    },
+    {
+      "name": "TED - CPU write",
+      "producer": "src/COMMODORE/TED/TED.cpp :: executePendingWriteAt / debugCPUWrite; src/C264/TED.cpp :: applyCPUWriteEffects",
+      "fields": "Timing(Reference=ScheduledCPUCycle, ObservedCPUClock); Transaction(Type=Instruction|Interrupt, StartCPU, WriteIndex); Memory access(Phase=Before|After, Subset, Address, Value); Raster position; Clock(Freeze, ForcedSingleClock); Interrupt.",
+      "timing": "A pair surrounds each scheduled command and its board effects. Header is StartCPU+writeCycle(WriteIndex), with zero-based CPU-cycle indexes. ObservedCPUClock is the already executed batch end. CPU writes are applied even when that CPU cycle completes no slow TED pulse.",
+      "events": "Writes retain order across CPU RAM aliases and I/O. ROM/RAM and C1/C2 effects update the map immediately; their changed latches are consumed. Audio-register writes drain older queued sound pulses first. The command retains its capture-time subset; Address reconstructs its logical CPU address, not a newly decoded physical address. Instruction/interrupt duration and captured write count must match metadata; otherwise recovery reports an error."
+    },
+    {
+      "name": "TEDRegisters - Register write observed",
+      "producer": "src/COMMODORE/TED/TEDRegisters.cpp :: debugRegisterWrite",
+      "fields": "Timing(Reference=ObservedCPUClock, RasterReference=CurrentUnsynchronizedTED, Origin=Unknown); Register access(Phase=Before|After, Address, Register, Written); Raster position(Row, Column); Register effect(VCReload, RC, Flash, RasterRegisterRow, RasterRegisterColumn, ScrollX, ScrollY, DisplayEnabled, Mode, ForcedSingleClock, Freeze, KeyboardLatch); Memory bases and ROM selections; Timers(T1/T2/T3 Counter and Reload); Interrupt.",
+      "timing": "Two records surround each core setValue operation. No physical bus-write cycle or CPU/debugger origin is inferred. Initialization is suppressed until a diagnostic CPU link is available. Enable TED chip 101 to establish the link and TED register memory subset 1010 (or ALLMEM) to emit the records.",
+      "events": "Before/after state covers the base setValue, not extra operations in machine-specific overrides. Written data is not register readback."
+    },
+    {
+      "name": "TEDRegisters - Register read observed",
+      "producer": "src/COMMODORE/TED/TEDRegisters.cpp :: debugRegisterRead",
+      "fields": "Timing(Reference, RasterReference, Origin=Unknown); Register access(Address, Register, Returned); Raster position; Interrupt.",
+      "timing": "Decoded registers 00-05, 09-0B and 1A-1F, after calculating the original result without another read. Requires the same CPU link and memory selection as write records.",
+      "events": "CPU reads and debugger inspection are not distinguished. FF1C/FF1D return the current linked raster position, with existing unused-bit masks. They perform no simulated raster movement and emit no separate projection record."
+    },
+    {
+      "name": "SoundFunction - Sound batch",
+      "producer": "src/COMMODORE/TED/TED.cpp :: SoundFunction::simulatePendingCycles / debugSoundBatch",
+      "fields": "Timing(Reference=ObservedCPUClock|ScheduledCPUCycle, Cause=ChipSimulation|BeforeCPUWrite, ObservedCPUClock); Sound timing(ClockSource=TEDScheduler, Unit=SlowTEDCycle, PendingCyclesBefore, CyclesProcessed, SamplesGenerated).",
+      "timing": "Before clearing pending sound pulses. Regular chip simulation uses observed CPU time in the header. BeforeCPUWrite uses the scheduled CPU write cycle in the header and retains the observed CPU clock in Timing. The scheduled coordinate identifies the write boundary, not individual sample timestamps. Pending and processed counts are complete slow TED pulses already supplied by the common scheduler; neither entry point advances the scheduler.",
+      "events": "Select chip 1010 or ALLCHIP. BeforeCPUWrite precedes the matching CPU write Before/After pair for FF0E-FF12. Older queued pulses use the preceding audio parameters. Zero-pulse batches are retained to identify consecutive write boundaries, including RMW writes. SamplesGenerated counts bytes from successful getData calls (mono AUDIO_U8)."
+    },
+    {
+      "name": "ROMRAMSwitch — direct line",
+      "producer": "src/C264/ROMRAMSwitch.cpp :: debugROMRAMSwitchCycle",
+      "fields": "Component FF3E/FF3F,X; CPU cycle; Info cycle; ROM Active:YES|NO.",
+      "timing": "Legacy fallback when configurationChanged() is consumed by the standalone selector chip. In scheduled CPU writes, the C264 TED hook applies and consumes the change immediately, so this later selector record is normally absent.",
+      "events": "CPU write Before/After records identify scheduled selector writes. Setup or unscheduled accesses may still use this legacy tab-separated format."
+    },
+    {
+      "name": "C1C2Selector — direct line",
+      "producer": "src/C264/C1C2Selector.cpp :: debugC1C2SelectorCycle",
+      "fields": "Component FDD0/FDDF,X; CPU cycle; Info cycle; Memory Cfg:number.",
+      "timing": "Legacy fallback when configurationChanged() is consumed by the standalone selector chip. In scheduled CPU writes, the C264 TED hook applies and consumes the change immediately, so this later selector record is normally absent.",
+      "events": "CPU write Before/After records identify scheduled selector writes. Setup or unscheduled accesses may still use this legacy tab-separated format."
+    },
+    {
+      "name": "Datasette 1531 / SerialIO",
+      "producer": "src/C264/1531Datasette.cpp and src/COMMODORE/SerialIOPeripherals.cpp",
+      "fields": "Header/data found, block, simulation state, error or missing data; serial-bus transitions.",
+      "timing": "CPU cycle of the trap or transition.",
+      "events": "May mix subordinate text and complete headers."
+    },
+    {
+      "name": "C264 - Clock pacing",
+      "producer": "src/C264/C264.cpp :: clockCyclesForPacing / debugClockPacing",
+      "fields": "Timing(Reference=ObservedCPUClock); Pacing(Unit=FastCPUCycle, CPUCycles, ChargedCycles); Clock(BaseHz, Factor).",
+      "timing": "Once after chip simulation and before the iteration separator (+), when machine deep debug is active. The header is the observed CPU clock. The machine consumes the accumulated duration of completed recovered CPU cycles, including work prepared before CPU execution.",
+      "events": "ChargedCycles = fast CPU cycles + 2 * slow CPU cycles. CPUCycles is the generic CPU work count supplied by Computer; it may differ from ChargedCycles. A suspended pre-access cycle is charged only when completed. BaseHz is the fixed fast-clock reference; Factor scales the host pacing target. This is an elapsed-time budget, not an absolute TED clock."
+    }
+  ],
+  "example": [
+    "CPU     50000       Info Cycle",
+    "TED     50000       CPU read advance",
+    "                    Timing:Reference=ObservedCPUClock,StartCPU=50000,RecoveryCPU=50000",
+    "                    Advance:Phase=Before,PreparedCPUCycles=4,AccessPending=0",
+    "TED     50000       CPU read advance",
+    "                    Timing:Reference=ObservedCPUClock,StartCPU=50000,RecoveryCPU=50003",
+    "                    Advance:Phase=After,PreparedCPUCycles=4,AccessPending=1",
+    "TED     50004       Info Cycle End",
+    "                    Timing:CPUHalf=0,Reference=TEDCycleCompletion,Snapshot=AfterCycle",
+    "+",
+    "CPU     50004       Info Cycle",
+    "TED     50004       CPU read advance",
+    "                    Advance:Phase=After,PreparedCPUCycles=3,AccessPending=1",
+    "TED     50007       CPU write",
+    "                    Timing:Reference=ScheduledCPUCycle,ObservedCPUClock=50008",
+    "                    Transaction:Type=Instruction,StartCPU=50004,WriteIndex=0",
+    "                    Memory access:Phase=Before,Subset=1010,Address=$FF15,Value=$71",
+    "TED     50007       CPU write",
+    "                    Memory access:Phase=After,Subset=1010,Address=$FF15,Value=$71",
+    "+"
+  ],
+  "example_note": "Schematic excerpts with intervening cycle/fetch records omitted. The first four-cycle read instruction runs in forced slow mode: three CPU cycles complete before execution and cycle 50003 remains suspended; its TED pulse completes at 50004 after access. The second four-cycle store prepares three CPU cycles, leaving cycle 50006 suspended; its sole write at bus index 3 executes at 50007 while the observed CPU clock is 50008. Data and addresses are illustrative.",
+  "limitations": [
+    "Connected mode advances the TED to the readable prefix before CPU execution, suspends its final CPU access, then replays writes and finishes recovery. Opcode selection has already occurred, and earlier reads in an atomic instruction are not individually interleaved. JSR/BRK reads after writes and interrupt vector reads remain unsynchronized; finer fetch/pixel phases remain pending.",
+    "Register records retain observed CPU time and Origin=Unknown. Reads now see the prepared TED state in connected mode, without an independent timestamp for each read; scheduled CPU write pairs provide recovered write coordinates. Initialization is suppressed; enable TED 101 and memory 1010/ALLMEM for register records.",
+    "Before/event/end headers share TED-cycle completion time. The before snapshot precedes graphics work; the end snapshot follows raster advance and timer/IRQ processing. Event/end records are not extra recovered cycles.",
+    "Physical RAM/ROM addresses and per-pixel output are not traced.",
+    "The 6529B latches have no dedicated DEBUG producer.",
+    "Legacy selector records remain available for setup/unscheduled changes; scheduled CPU writes apply board effects through the TED hook and consume the selector change flags. External selector changes are applied before machine hooks and again after hooks, before the next CPU fetch, without advancing emulated time.",
+    "FREEZE preserves the common half-cycle remainder. A pulse whose graphics began before access completes even if a CPU write enables FREEZE; a pulse that began frozen remains gated if the write clears FREEZE. Sound continues receiving scheduler pulses. This is the scheduler transition contract; exact physical FREEZE acceptance phase and sound behavior remain unverified.",
+    "Timed-write mode requires complete CPU transactions and exact declared write counts. Setup writes are flushed before activation; the fallback independent component mode remains available. Generic Applied Set records still lack a CPU timestamp; CPU write records provide the scheduled coordinate.",
+    "Read advancement uses predicted cycle metadata before execution and validates actual duration afterwards. A failed CPU transaction is not rolled back. During preparation CPUBatchEnd is the planned boundary, not a clock already reached by the CPU.",
+    "FF1C/FF1D always read the current raster. Independent component mode no longer estimates an instruction-end position; callers must simulate the TED to the desired instant. Connected mode already used zero projection before this cleanup.",
+    "Host pacing uses a fixed fast-clock reference and weighted recovered durations. SPEED reports equivalent fast-clock units per second; its percentage compares against BaseHz. CLOCKFACTOR scales this pacing target, with factor 1 requesting normal speed. These values do not count raw executed CPU cycles per second.",
+    "GRAPHICSREADY is emitted at the end of the completed TED pulse that enters the last VBlank zone, after the Info Cycle End record. It can occur during pre-execution read advancement; it is not deferred to the end of the CPU transaction. Frozen pulses do not generate raster transitions."
+  ],
+  "watched_sources": [
+    "src/C264/C264.cpp",
+    "src/C264/C1C2Selector.cpp",
+    "src/C264/ROMRAMSwitch.cpp",
+    "src/C264/1531Datasette.cpp",
+    "src/COMMODORE/TED/TED.cpp",
+    "src/COMMODORE/SerialIOPeripherals.cpp",
+    "src/COMMODORE/TED/TEDRegisters.cpp",
+    "include/COMMODORE/TED/TED.hpp",
+    "include/COMMODORE/TED/TEDRegisters.hpp"
+  ]
 }

@@ -485,6 +485,11 @@ namespace MCHEmul
 			By default it does nothing. */
 		virtual void specificComputerCycle ()
 							{ }
+		/** Converts recovered CPU work into host-clock pacing units. \n
+			Invoked after chip simulation. \n
+			The default preserves the existing cycle accounting. */
+		virtual unsigned int clockCyclesForPacing (unsigned int cpuCycles)
+							{ return (cpuCycles); }
 
 		/** In the method runComputerCycle, 
 			before executing the cycle related to the computer (cpu + chips), this method is invoked

@@ -31,8 +31,8 @@ COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, 
 	  _backgroundColor (4, { 0x00, 0x00 }),
 	  _ROMMemoryConfigurationActive (false),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _numberPositionsNextInstruction (0),
-	  _raster (nullptr)
+	  _raster (nullptr),
+	  _debugCPU (nullptr)
 	  // At this point the rest internal variables will have random values...
 	  // The vector are initialized just to given them a default size!
 {
@@ -44,6 +44,8 @@ COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, 
 // ---
 void COMMODORE::TEDRegisters::initialize ()
 {
+	_debugCPU = nullptr;
+
 	MCHEmul::PhysicalStorageSubset::initialize ();
 
 	initializeInternalValues ();
@@ -88,6 +90,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		return; // Cannot work until initiated...
 
 	size_t pp = p % 0x20;
+
+	_IFDEBUG debugRegisterWrite (p, v, false);
 
 	// The 64 first bytes will keep the right value...
 	MCHEmul::PhysicalStorageSubset::setValue (p, v);
@@ -358,7 +362,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		case 0x1b:
 			{
 				_graphicalInfo._currentCharacterPosition =
-					(_graphicalInfo._currentCharacterPosition & 0xff00) | v.value ();
+					(_graphicalInfo._currentCharacterPosition & 0x0300) | v.value ();
 			}
 
 			break;
@@ -405,6 +409,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		default:
 			break;
 	}
+
+	_IFDEBUG debugRegisterWrite (p, v, true);
 }       
 
 // ---
@@ -615,11 +621,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			{
 				assert (_raster != nullptr);
 
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-				if (oP) rL++;
-				result = ((unsigned char) ((rL & 0xff00) >> 8)) | ~0b00000001; // The bits not used are 1...
+				result = (unsigned char)
+					((currentRasterLine () >> 8) & 0x01) | 0xfe;
 			}
 
 			break;
@@ -628,11 +631,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			{
 				assert (_raster != nullptr);
 
-				bool oP = false;
-				unsigned short rL = currentRasterLine ();
-				_raster -> simulateMoveCycles (_numberPositionsNextInstruction, oP);
-				if (oP) rL++;
-				result = (unsigned char) (rL & 0x00ff);
+				result = (unsigned char) (currentRasterLine () & 0xff);
 			}
 
 			break;
@@ -646,7 +645,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1f:
 			{
-				result = ((_graphicalInfo._currentCharacterRow & 0x0f) |
+				result = ((_graphicalInfo._currentCharacterRow & 0x07) |
 						 ((_flashCounter & 0x0f) << 3)) | ~0b01111111; // The bit 7 to 1!
 			}
 
@@ -657,12 +656,16 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			break;
 	}
 
+	_IFDEBUG debugRegisterRead (p, result);
+
 	return (_lastValueRead = result);
 }
 
 // ---
 void COMMODORE::TEDRegisters::initializeInternalValues ()
 {
+	_debugCPU = nullptr;
+
 	if (_soundWrapper == nullptr ||
 		_T1 == nullptr ||
 		_T2 == nullptr ||
@@ -733,3 +736,90 @@ void COMMODORE::TEDRegisters::setGraphicModeActive ()
 				 _graphicModeActive == COMMODORE::TEDRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE ||
 				 _graphicModeActive == COMMODORE::TEDRegisters::GraphicMode::_INVALIDTEXMODE);
 }
+
+//-----
+// ---
+std::string COMMODORE::TEDRegisters::debugInterruptAsString () const
+{
+	// Masks use FF09 source bits; ReasonCode retains the internal CPU reason encoding.
+	unsigned int pending = (_rasterIRQHappened ? 0x02 : 0) |
+		(_lightPenIRQHappened ? 0x04 : 0) |
+		(_T1 -> interruptRequested () ? 0x08 : 0) |
+		(_T2 -> interruptRequested () ? 0x10 : 0) |
+		(_T3 -> interruptRequested () ? 0x40 : 0);
+	unsigned int enabled = (_rasterIRQActive ? 0x02 : 0) |
+		(_lightPenIRQActive ? 0x04 : 0) |
+		(_T1 -> interruptEnabled () ? 0x08 : 0) |
+		(_T2 -> interruptEnabled () ? 0x10 : 0) |
+		(_T3 -> interruptEnabled () ? 0x40 : 0);
+	return ("PendingSources=" + std::to_string (pending) + "," +
+		"EnabledSources=" + std::to_string (enabled) + "," +
+		"ReasonCode=" + std::to_string (reasonIRQCode ()) + "," +
+		"TEDRequest=" + std::to_string (launchIRQ ()) + "," +
+		"RasterCompare=" + std::to_string (_IRQRasterLineAt));
+}
+
+// ---
+void COMMODORE::TEDRegisters::debugRegisterWrite
+	(size_t p, const MCHEmul::UByte& value, bool after) const
+{
+	if (_debugCPU == nullptr)
+		return; // Initialization has no instruction context and may contain uninitialized fields.
+
+	_deepDebugFile -> writeCompleteLine (className (), _debugCPU -> clockCycles (), "Register write observed",
+		{ { "Timing", "Reference=ObservedCPUClock,RasterReference=CurrentUnsynchronizedTED,Origin=Unknown" },
+		  { "Register access", std::string ("Phase=") + (after ? "After" : "Before") + ",Address=$" +
+			MCHEmul::removeAll0 ((initialAddress () + p).asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Register=$" +
+			MCHEmul::UByte ((unsigned char) (p % 0x20)).asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + ",Written=$" +
+			value.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) },
+		  { "Raster position", "Row=" + std::to_string (currentRasterLine ()) + "," +
+			"Column=" + std::to_string (currentRasterPositionInLine ()) },
+		  { "Register effect", "VCReload=" + std::to_string (_graphicalInfo._currentCharacterPosition) + "," +
+			"RC=" + std::to_string (_graphicalInfo._currentCharacterRow) + "," +
+			"Flash=" + std::to_string (_flashCounter) + "," +
+			"RasterRegisterRow=" + std::to_string (_graphicalInfo._currentRasterLine) + "," +
+			"RasterRegisterColumn=" + std::to_string (_graphicalInfo._currentRasterColumn) + "," +
+			"ScrollX=" + std::to_string (_horizontalScrollPosition) + "," +
+			"ScrollY=" + std::to_string (_verticalScrollPosition) + "," +
+			"DisplayEnabled=" + std::to_string (!_blankEntireScreen) + "," +
+			"Mode=" + std::to_string ((int) _graphicModeActive) + "," +
+			"ForcedSingleClock=" + std::to_string (_singleClockModeForced) + "," +
+			"Freeze=" + std::to_string (_freezeActive) + "," +
+			"KeyboardLatch=$" + _keyboardLatch.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) },
+		  { "Memory", "Screen=$" + MCHEmul::removeAll0
+			(_screenMemory.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Attributes=$" +
+			MCHEmul::removeAll0 (_attributeMemory.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Characters=$" +
+			MCHEmul::removeAll0 (_charDataMemory.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Bitmap=$" +
+			MCHEmul::removeAll0 (_bitmapMemory.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
+			"CPUROMActive=" + std::to_string (_ROMMemoryConfigurationActive) + "," +
+			"GraphicsROMSelected=" + std::to_string (_ROMActiveToFetchCharAndBitmap) },
+		  { "Timers", "T1Counter=" + std::to_string (_T1 -> currentValue ()) + "," +
+			"T1Reload=" + std::to_string (_T1 -> reloadValue ()) + "," +
+			"T2Counter=" + std::to_string (_T2 -> currentValue ()) + "," +
+			"T2Reload=" + std::to_string (_T2 -> reloadValue ()) + "," +
+			"T3Counter=" + std::to_string (_T3 -> currentValue ()) + "," +
+			"T3Reload=" + std::to_string (_T3 -> reloadValue ()) },
+		  { "Interrupt", debugInterruptAsString () } });
+}
+
+// ---
+void COMMODORE::TEDRegisters::debugRegisterRead (size_t p, const MCHEmul::UByte& value) const
+{
+	if (_debugCPU == nullptr)
+		return;
+	const size_t pp = p % 0x20;
+	if (!(pp <= 0x05 || (pp >= 0x09 && pp <= 0x0b) || pp >= 0x1a))
+		return;
+
+	_deepDebugFile -> writeCompleteLine (className (), _debugCPU -> clockCycles (), "Register read observed",
+		{ { "Timing", "Reference=ObservedCPUClock,RasterReference=CurrentUnsynchronizedTED,Origin=Unknown" },
+		  { "Register access", "Address=$" + MCHEmul::removeAll0
+			((initialAddress () + p).asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Register=$" +
+			MCHEmul::UByte ((unsigned char) pp).asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + ",Returned=$" +
+			value.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) },
+		  { "Raster position", "Row=" + std::to_string (currentRasterLine ()) + "," +
+			"Column=" + std::to_string (currentRasterPositionInLine ()) },
+		  { "Interrupt", debugInterruptAsString () } });
+}
+
+//-----

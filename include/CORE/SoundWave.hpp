@@ -86,8 +86,8 @@ namespace MCHEmul
 		virtual void clock (unsigned int nC = 1);
 		
 		/** To know the position from 0 to 1 of the internal clock.
-			It can not be overloaded. */
-		double clockValue () const
+			Specialized generators can derive it from their hardware counters. */
+		virtual double clockValue () const
 						{ return ((_cyclesPerWave <= 0.0f) 
 							? 0.0f : ((double) _counterInCyclesPerWave / (double) _cyclesPerWave)); }
 
@@ -183,7 +183,7 @@ namespace MCHEmul
 		inline void setPulseUpPercentage (double pU);
 
 		/* Returns true when the pulse is in the up situation. */
-		bool pulseUp () const
+		virtual bool pulseUp () const
 						{ return (_cyclesPerWave > 0.0)
 								? (clockValue () < _pulseUpPercentage)
 								: false; }

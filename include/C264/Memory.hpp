@@ -142,6 +142,11 @@ namespace C264
 		bool TEDROMactive () const
 							{ return (_TEDROMActive); }
 
+		/** Reads physical RAM using the address lines present in the configured machine. \n */
+		const MCHEmul::UByte& readTEDRAM (const MCHEmul::Address& a) const
+							{ return (_RAM1TED -> physicalStorage () -> value
+								(a.value () & ((0x4000u << _configuration) - 1u))); }
+
 		// Managing the configuration...
 		/** To change the configuration of the memory when it is accessed from CPU/TED (mcfg). \n
 			The way it is set will depend on the type of memory behind (cfg). \n
@@ -271,6 +276,10 @@ namespace C264
 		void loadDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
 		/** Verify a data block against RAM, including the zones hidden by IO/TED. */
 		bool verifyDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB);
+		/** Returns every RAM-backed destination present in the CPU view. \n
+			Includes inactive mappings, aliases and memory-mapped registers. \n
+			Does not change activation or buffering configuration. */
+		MCHEmul::PhysicalStorageSubsets cpuWriteSubsets () const;
 
 		protected:
 		virtual MCHEmul::Stack* lookForStack () override

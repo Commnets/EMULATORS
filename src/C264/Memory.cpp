@@ -555,6 +555,24 @@ bool C264::Memory::verifyDataBlockInRAM (const MCHEmul::DataMemoryBlock& dB)
 }
 
 // ---
+MCHEmul::PhysicalStorageSubsets C264::Memory::cpuWriteSubsets () const
+{
+	MCHEmul::PhysicalStorageSubsets result;
+
+	const MCHEmul::PhysicalStorageSubsets& subsets =
+		view (_CPU_VIEW) -> subsets ();
+
+	for (const auto& subset : subsets)
+	{
+		// Inactive destinations can become writable after a mapping change.
+		if (subset.second -> type () == MCHEmul::PhysicalStorage::Type::_RAM)
+			result.emplace (subset.first, subset.second);
+	}
+
+	return (result);
+}
+
+// ---
 MCHEmul::Memory::Content C264::Memory::standardMemoryContent ()
 {
 	/** All dirs in Little - endian format. */

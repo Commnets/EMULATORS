@@ -1,9 +1,11 @@
 #include <C264/TEDRegisters.hpp>
+#include <C264/C6529B1Registers.hpp>
 
 // ---
 C264::TEDRegisters::TEDRegisters 
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: COMMODORE::TEDRegisters (ps, pp, a, s),
+	  _keyboardRegisters (nullptr),
 	  _register8 (MCHEmul::UByte::_0)
 	  // The rest of the value sare initialized under the method initializeInternalValues...
 { 
@@ -36,6 +38,11 @@ void C264::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 				// This code is similar to the one in COMMODORE::TEDRegisters,
 				// but adapted to C264 behaviour...
 				// ...because the joysticks are connected directly to the TED keyboard port too!
+				// Sample current contacts without waiting for the periodic port event.
+				// During initialization the keyboard provider may not be connected yet.
+				if (_keyboardRegisters != nullptr)
+					setKeyboardPins (_keyboardRegisters -> keyboardPins ());
+
 				MCHEmul::UByte latched = _keyboardPins;
 				// $FB = 11111011: bit 2 low selects Joy Lo.
 				if (!v.bit (2))

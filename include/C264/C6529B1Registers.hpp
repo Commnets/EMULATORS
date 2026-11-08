@@ -30,6 +30,9 @@ namespace C264
 		/** The positions where the C6529B1 chip is reachable are constant. */
 		C6529B1Registers (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s);
 
+		/** Resolves current keyboard columns from the retained row selection. \n */
+		inline MCHEmul::UByte keyboardPins () const;
+
 		/** In the C264, this zone of the memory covers 0x10 (= 16) positions. */
 		virtual size_t numberRegisters () const override
 							{ return (0x10); }
@@ -40,6 +43,9 @@ namespace C264
 		/** The information about the keyboard has to be transfered to the port 
 			in the right way when a value is set into the data bus. */
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
+
+		/** Updates the published columns without clearing an already pending change. \n */
+		inline void refreshKeyboardPins ();
 
 		// Implementation
 		/** and these ones are to manage the matrix of keys pressed...
@@ -54,26 +60,56 @@ namespace C264
 		inline void initializeKeyboard ();
 
 		private:
-		/** 0 at the bit representing the key of the keyboard matrix pressed. 
+		// Implementation
+		/** Last row-selection value written to the keyboard port. \n */
+		MCHEmul::UByte _selectedRows;
+		/** A set bit represents a pressed key in the keyboard matrix. \n
 			In this case the matrix is always 8 * 8 = 64 positions. */
 		MCHEmul::UByte _keyboardStatusMatrix [8];
 		MCHEmul::UByte _rev_keyboardStatusMatrix [8];
 	};
 
 	// ---
-	inline void C6529B1Registers::setKeyboardStatusMatrix (size_t r, size_t c, bool s)
-	{ 
-		// Set both matrixes...
-		_keyboardStatusMatrix [r].setBit (c, s);
-		_rev_keyboardStatusMatrix [c].setBit (r, s);
+	inline MCHEmul::UByte C6529B1Registers::keyboardPins () const
+	{
+		MCHEmul::UByte pins = MCHEmul::UByte::_FF;
+
+		for (size_t i = 0; i < 8; i++)
+			if (!_selectedRows.bit (i))
+				pins &= ~_rev_keyboardStatusMatrix [i];
+
+		return (pins);
 	}
 
 	// ---
-	void C6529B1Registers::initializeKeyboard ()
+	inline void C6529B1Registers::refreshKeyboardPins ()
 	{
-		// Initialize the status of the keyboard...
+		MCHEmul::UByte pins = keyboardPins ();
+
+		// Repeated resolutions must not erase a change awaiting publication.
+		if (pins != portValue ())
+			setPortValue (pins);
+	}
+
+	// ---
+	inline void C6529B1Registers::setKeyboardStatusMatrix (size_t r, size_t c, bool s)
+	{
+		_keyboardStatusMatrix [r].setBit (c, s);
+		_rev_keyboardStatusMatrix [c].setBit (r, s);
+
+		refreshKeyboardPins ();
+	}
+
+	// ---
+	inline void C6529B1Registers::initializeKeyboard ()
+	{
+		_selectedRows = MCHEmul::UByte::_FF;
+
 		for (size_t i = 0; i < 8; i++)
-			_keyboardStatusMatrix [i] = _rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_0;
+			_keyboardStatusMatrix [i] =
+				_rev_keyboardStatusMatrix [i] = MCHEmul::UByte::_0;
+
+		refreshKeyboardPins ();
 	}
 }
 

@@ -49,9 +49,93 @@ namespace COMMODORE
 		mutable MCHEmul::UByte _lastValueRead;
 	};
 
-	/** A very simple wrapper trying to emulate 
-		all voices in the simpliest way possible. \n
-		All programmed by ICF after reading several articles about!!! */
+	/** TED tone divider. Frequency writes replace the reload without rescaling the active count. */
+	class TEDPulseSoundWave final : public MCHEmul::PulseSoundWave
+	{
+		public:
+		TEDPulseSoundWave (unsigned int cF);
+
+		void setFrequencyRegister (unsigned short value);
+		inline void setDCActive (bool active);
+		bool dcActive () const
+							{ return (_dcActive); }
+		/** True if the latest clock call contained a divider edge. */
+		bool dividerEdge () const
+							{ return (_dividerEdge); }
+
+		virtual void initialize () override;
+		virtual void initializeInternalCounters () override;
+		virtual void clock (unsigned int nC = 1) override;
+		virtual double clockValue () const override;
+		virtual bool pulseUp () const override
+							{ return (_output); }
+		virtual double data () const override
+							{ return (_active ? (_output ? 1.0 : -1.0) : 0.0); }
+
+		/**
+		  * The parent fields and the following attributes. \n
+		  * REGISTER = Programmed 10-bit frequency value. \n
+		  * RELOAD = Next divider reload, from 1 to 1024. \n
+		  * COUNTER = Remaining divider ticks in the current half-cycle. \n
+		  * HALFLENGTH = Reload used when the current half-cycle started. \n
+		  * PRESCALER = Position in the divide-by-four stage, from 0 to 3. \n
+		  * LEVEL = Current raw output bit, independently of output enable. \n
+		  * DC = Reload/DC control level. \n
+		  * OVERFLOW = Previous divider-overflow level. \n
+		  * FREQUENCY is nominal inspection data; timing uses the integer divider.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		private:
+		// TED registers control frequency and duty is fixed at 50 percent.
+		using MCHEmul::SoundWave::setFrequency;
+		using MCHEmul::PulseSoundWave::setPulseUpPercentage;
+
+		// Implementation
+		unsigned short _frequencyRegister;
+		unsigned short _reloadValue;
+		unsigned short _counter;
+		unsigned short _halfLength;
+		unsigned char _prescaler;
+		bool _output;
+		bool _previousOverflow;
+		bool _dividerEdge;
+		bool _dcActive;
+	};
+
+	/** Binary TED noise, advanced by the second tone divider rather than a free-running phase. */
+	class TEDNoiseSoundWave final : public MCHEmul::SoundWave
+	{
+		public:
+		TEDNoiseSoundWave (unsigned int cF);
+
+		virtual void initialize () override;
+		virtual void initializeInternalCounters () override;
+		/** No autonomous advance; Voice supplies divider events through shift (). */
+		virtual void clock (unsigned int nC = 1) override
+							{ }
+		inline void shift ();
+		void shiftOne ()
+							{ _shiftRegister = (unsigned char) ((_shiftRegister << 1) | 0x01); }
+		bool output () const
+							{ return ((_shiftRegister & 0x01) == 0); }
+		virtual double data () const override
+							{ return (_active ? (output () ? 1.0 : -1.0) : 0.0); }
+
+		/**
+		  * The parent fields and the following attributes. \n
+		  * LFSR = Current 8-bit shift-register value. \n
+		  * LEVEL = Current raw output bit, independently of output enable. \n
+		  * CLOCKSOURCE = Channel2Divider; no independent noise frequency is programmed.
+		  */
+		virtual MCHEmul::InfoStructure getInfoStructure () const override;
+
+		private:
+		// Implementation
+		unsigned char _shiftRegister;
+	};
+
+	/** TED digital generators using framework voices and specialized pulse/noise waves. */
 	class TEDSoundSimpleLibWrapper final : public TEDSoundLibWrapper
 	{
 		public:
@@ -63,6 +147,7 @@ namespace COMMODORE
 		  * @param sF	Sampling frequency in samples / second. It cannot be 0.
 		  */
 		TEDSoundSimpleLibWrapper (unsigned int tF, unsigned int dv, unsigned int sF);
+		virtual ~TEDSoundSimpleLibWrapper () override;
 
 		/** The volumen is a number between 0 and 1. */
 		double volumen () const
@@ -87,62 +172,37 @@ namespace COMMODORE
 		unsigned int voice1Register () const
 							{ return (((unsigned int) (_registers [0x10].value () & 0x03)) << 8) |
 									   ((unsigned int) _registers [0x0f].value ()); }
-		inline double tedToneFrequency (unsigned int r) const;
-		/** Reloads the tone phases and the noise generator without changing their configuration. */
-		void reloadSoundGenerators ()
-							{ for (auto i : _voices) i -> initializeInternalCounters (); }
+		void updateControl ();
 
 		private:
 		unsigned int _tedFrequency;
 		unsigned int _dividerValue;
 		unsigned int _samplingFrequency;
 		double _volumen;
-		/** Last status of the sound reload bit in register $FF11. */
-		bool _soundReloadActive;
 
-		/** Every TED voice contains pulse and noise waves,
-			with the effective type selected by the TED sound registers. */
+		/** The voice coordinates divider events and output selection; SoundVoice owns its waves. */
 		class Voice final : public MCHEmul::SoundVoice
 		{
 			public:
-			friend TEDSoundSimpleLibWrapper;
-
 			Voice (int id, unsigned int cF);
 
-			virtual void setActive (bool a) override
-							{ _active = a; }
+			virtual void setActive (bool active) override
+							{ _active = active; }
+			void setFrequencyRegister (unsigned short value)
+							{ _pulse -> setFrequencyRegister (value); }
+			void configure (bool toneEnabled, bool noiseEnabled, bool dcActive);
 
-			/** To know the value of the oscilator behind.
-				It is used sometimes for complex effects. \n
-				It returns a number from 0 to 255 depending on the wave that is moving behind!. */
-			unsigned char wavesClockValue () const
-							{ return ((unsigned char) (waves ()[0] /** whatever. */ -> clockValue () * 255)); }
-			bool wavesClockRestarted () const
-							{ bool r = true; 
-							  for (auto i : waves ()) r &= i -> clockRestarted (); /** One will be enought, but just to set all rest to 0. */
-							  return (r); }
-			unsigned char oscillatorValue () const
-							{ return (MCHEmul::normalizedSoundSampleToU8 (wavesData ())); }
-
-			/** To control the percentage of the pulse wave when active. */
-			double pulseUpPercentage () const
-							{ return (static_cast <MCHEmul::PulseSoundWave*> 
-								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> pulseUpPercentage ()); }
-			void setPulseUpPercentage (double pU)
-							{ static_cast <MCHEmul::PulseSoundWave*> 
-								(waves ()[(size_t) MCHEmul::SoundWave::Type::_PULSE]) -> setPulseUpPercentage (pU); }
-
-			/** To get the current normalized TED voice output between -1.0 and 1.0. */
+			virtual void initialize () override;
+			virtual void clock (unsigned int nC = 1) override;
+			/** Selected digital output, normalized to 0 or 1; disabled output is 0. */
 			virtual double data () const override;
 
 			private:
-			void setWavesActive (unsigned char wA)
-							{ _wavesActive = wA; }
-
-			private:
 			// Implementation
-			// Waves active..to speed up the calculus later
-			unsigned char _wavesActive;
+			/** Non-owning references; the base voice owns the waves. */
+			TEDPulseSoundWave* _pulse;
+			TEDNoiseSoundWave* _noise;
+			bool _noiseSelected;
 		};
 
 		/** The two TED sound voices. */
@@ -159,6 +219,26 @@ namespace COMMODORE
 	};
 
 	// ---
+	inline void TEDPulseSoundWave::setDCActive (bool active)
+	{
+		_dcActive = active;
+
+		if (_dcActive)
+			_output = true;
+	}
+
+	// ---
+	inline void TEDNoiseSoundWave::shift ()
+	{
+		// 8-bit feedback used by the reference digital model (taps 7, 5, 4 and 1).
+		const unsigned char feedback =
+			((_shiftRegister >> 7) ^ (_shiftRegister >> 5) ^
+			 (_shiftRegister >> 4) ^ (_shiftRegister >> 1)) & 0x01;
+
+		_shiftRegister = (unsigned char) ((_shiftRegister << 1) | feedback);
+	}
+
+	// ---
 	inline void TEDSoundSimpleLibWrapper::setVolumen (double v)
 	{
 		if (v < 0.0f) _volumen = 0.0f;
@@ -166,14 +246,6 @@ namespace COMMODORE
 		else _volumen = v;
 	}
 
-	// ---
-	inline double TEDSoundSimpleLibWrapper::tedToneFrequency (unsigned int r) const
-	{
-	    unsigned int divisor = 1024 - (r & 0x03ff);
-		if (divisor == 0) divisor = 1;
-		return ((double) _tedFrequency / (double) _dividerValue) /
-				(8.0f * (double) divisor);
-	}
 }
 
 #endif

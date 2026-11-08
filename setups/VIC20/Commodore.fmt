@@ -87,6 +87,17 @@ IRQ:@IRQ@(@IRQLINE@)
 @SoundLibWrapper>@
 #---
 #---
+;TEDPulseSoundWave
+Active:@ACTIVE@, Register:@REGISTER@, Frequency:@FREQUENCY@
+Reload:@RELOAD@, Counter:@COUNTER@, HalfLength:@HALFLENGTH@
+Prescaler:@PRESCALER@, Level:@LEVEL@, DC:@DC@, Overflow:@OVERFLOW@
+#---
+#---
+;TEDNoiseSoundWave
+Active:@ACTIVE@, LFSR:@LFSR@, Level:@LEVEL@
+Clock source:@CLOCKSOURCE@
+#---
+#---
 ;TEDVoice
 Id:@ID@, Active:@ACTIVE@
 ->Waves:

@@ -51,10 +51,18 @@ namespace COMMODORE
 
 			virtual bool initialize () override;
 
-			/** Adds CPU cycles converted later into the fixed TED sound clock. */
-			void addCPUCycles (unsigned int nC, bool singleClockMode);
+			/** Queues complete slow-clock pulses supplied by the TED scheduler. */
+			void addTEDCycles (unsigned int nC)
+							{ _pendingSoundClockCycles += nC; }
 
-			virtual bool simulate (MCHEmul::CPU* cpu) override;
+			/** Consumes queued pulses during regular chip simulation. */
+			virtual bool simulate (MCHEmul::CPU* cpu) override
+							{ return (simulatePendingCycles (cpu, cpu -> clockCycles (), false)); }
+			/** Consumes queued pulses before a scheduled CPU audio write. \n
+				The cycle argument identifies the write boundary for diagnostics. \n
+				It does not request additional clock advancement. */
+			bool simulateBeforeCPUWrite (MCHEmul::CPU* cpu, unsigned int cycle)
+							{ return (simulatePendingCycles (cpu, cycle, true)); }
 
 			/**
 			  *	The name of the fields are: \n
@@ -63,11 +71,24 @@ namespace COMMODORE
 			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
+			private:
+			/** Consumes only the complete pulses already queued by TED. \n
+				The reference cycle and cause affect diagnostics only. */
+			bool simulatePendingCycles
+				(MCHEmul::CPU* cpu, unsigned int referenceCycle,
+				 bool beforeCPUWrite);
+
+			//-----
+			void debugSoundBatch
+				(MCHEmul::CPU* cpu, unsigned int referenceCycle,
+				 bool beforeCPUWrite, unsigned int cyclesProcessed,
+				 size_t samplesGenerated) const;
+			//-----
+
+			public:
 			// Implementation
-			/** Sound clock cycles waiting to be simulated. */
+			/** Complete TED sound-clock pulses waiting to be simulated. */
 			unsigned int _pendingSoundClockCycles;
-			/** Half a sound clock cycle left from the previous CPU execution. */
-			unsigned int _pendingHalfSoundClockCycle;
 		};
 
 		static const unsigned int _ID = 101;
@@ -91,7 +112,7 @@ namespace COMMODORE
 
 		/** Specific classes for PAL & NTSC have been created giving this data as default. \n
 			The TED constructor receives info over the raster data, the frequency it works, the memory view to use,
-			The number of cycles of every raster line (different depending on the VICII version) 
+			The number of cycles of every raster line (different depending on the TED version)
 			and additional attributes. */
 		TED (int intId, unsigned short clkcpum, unsigned short sfq,
 			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
@@ -102,7 +123,7 @@ namespace COMMODORE
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
 							{ _drawRasterInterruptPositions = d; }
-		/** Whether to draw other events related with the raster of VICII. 
+		/** Whether to draw other events related with the TED raster.
 			Borders, bad lines mainly. */
 		void setDrawOtherEvents (bool d)
 							{ _drawOtherEvents = d; }
@@ -133,19 +154,30 @@ namespace COMMODORE
 		/** To get the raster info. */
 		const MCHEmul::Raster& raster () const
 							{ return (_raster); }
+		/** Returns and clears recovered time awaiting host pacing. \n
+			The returned unit is one fast CPU-clock period. */
+		inline unsigned int takePendingPacingCycles ();
 
 		virtual bool initialize () override;
 
-		/** The raster is a critical thing in the behaviour of the TED.
-			The content of several registers (0x1c, 0x1d,...) are "real time".
-			Any read instruction could read different values depending on the position of the raster 
-			when that instruction happens. */
+		/** Prepares the destinations used by CPU timed-write recovery. \n
+			Does not enable buffering, extract commands or execute writes. \n
+			Requires CPU execution in complete-transaction mode. */
+		bool prepareCPUTimedWrites (MCHEmul::CPU* cpu,
+			 const MCHEmul::PhysicalStorageSubsets& subsets);
+		/** Enables buffered CPU-write recovery after machine setup. */
+		bool enableCPUTimedWrites ();
+
+		/** Captures transaction metadata and prepares TED state for CPU reads. */
 		virtual void CPUAboutToExecute
 			(const MCHEmul::InstructionContextEventData* dt) override;
+		/** Receives an accepted interrupt before its launch changes CPU state. */
+		virtual void CPUAboutToExecute
+			(const MCHEmul::InterruptContextEventData* dt) override;
 
 		/** Simulates cycles in the TED. \n
 			It draws the border AFTER once graphics info has been drawn within the display zone. \n
-			So sprites can be drawn behing the border and collisions could take place out of the visible zone. */
+			Foreground graphics are composed with the background before the border is drawn. */
 		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		/**
@@ -209,9 +241,100 @@ namespace COMMODORE
 							{ }
 		};
 
+		/** Describes the latest CPU transaction notified to the TED. \n
+			CPU and bus-cycle references are non-owning. \n
+			BusCycleData belongs to the instruction or interrupt definition,
+			not to the reusable notification event. */
+		struct CPUTransactionContext final
+		{
+			CPUTransactionContext ()
+				: _cpu (nullptr), _busData (nullptr),
+				  _startCycle (0), _isInterrupt (false)
+							{ }
+
+			MCHEmul::CPU* _cpu;
+			const MCHEmul::BusCycleData* _busData;
+			unsigned int _startCycle;
+			bool _isInterrupt;
+		};
+
+		/** Describes one CPU cycle, not an entire instruction. \n
+			The selected clock mode remains fixed throughout this CPU cycle. */
+		struct CPUCycleContext final
+		{
+			CPUCycleContext (unsigned int cycle, bool singleClock)
+				: _cycle (cycle), _singleClock (singleClock)
+							{ }
+
+			unsigned int halfTEDCycles () const
+							{ return (_singleClock ? 2u : 1u); }
+
+			/** CPU clock coordinate of the cycle being processed. */
+			unsigned int _cycle;
+			/** Clock mode applied to this cycle, independently of later requests. */
+			bool _singleClock;
+		};
+
+		/** Recovery stages for one CPU cycle. \n
+			These are scheduler stages, not names of physical TED clock signals. */
+		enum class CPUCyclePhase
+		{
+			_NOTSTARTED,
+			_BEFOREACCESS,
+			_COMPLETE
+		};
+
+		/** CPU-cycle recovery contract. \n
+			1. Select and retain the duration of the CPU cycle. \n
+			2. Perform TED work preceding the CPU access. \n
+			3. Perform or apply the CPU access. \n
+			4. Complete the remaining TED work. \n
+			5. Advance the CPU recovery cursor only when the cycle is complete. \n
+			_NOTSTARTED has all work pending; _BEFOREACCESS awaits the CPU access
+			and subsequent work; _COMPLETE has no work pending for that CPU cycle. \n
+			A cycle suspended before its access must resume without repeating
+			the preceding TED work. Completing a fast CPU cycle does not necessarily
+			complete the surrounding slow TED cycle. */
+
+		/** Retains a CPU cycle suspended before its access. \n
+			The selected duration and already executed graphics work must survive
+			until CPU execution returns. \n
+			For a TED pulse completed after the CPU access, _graphicsStarted
+			retains whether its counters and graphics were enabled before access. */
+		struct CPUCycleRecovery final
+		{
+			CPUCycleRecovery ()
+				: _context (0, false),
+				  _phase (CPUCyclePhase::_NOTSTARTED),
+				  _halfCarryIn (0), _graphicsStarted (false)
+							{ }
+
+			CPUCycleContext _context;
+			CPUCyclePhase _phase;
+			unsigned int _halfCarryIn;
+			/** Graphics work already performed for a pulse awaiting completion. \n
+				That pulse must finish even if the access enables FREEZE. \n
+				A frozen pulse must not start graphics after the access. */
+			bool _graphicsStarted;
+		};
+
+		/** Diagnostic coordinates for a completed TED cycle. \n
+			CPUHalf expresses half a CPU-clock unit. \n
+			The timestamp identifies TED-cycle completion, not its beginning. \n
+			This structure does not drive simulation. */
+		struct DebugCycleContext
+		{
+			unsigned int _cpuCycle, _cpuHalf;
+			unsigned int _cpuBatchStart, _cpuBatchEnd;
+			unsigned int _cpuBatchIndex, _cpuBatchCycles;
+			unsigned int _halfCarryIn, _halfCarryOut;
+			unsigned int _irqRequestCycle;
+			bool _conversionSingleClock;
+		};
+
 		// Invoked from the method "simulation"....
 		/** Different actions are taken attending the raster cycle. */
-		virtual void treatRasterCycle ();
+		virtual void treatRasterCycle (const DebugCycleContext& dC);
 		/** Treat the visible zone.
 			Draws the graphics, detect collions, and finally draw the border. */
 		void drawVisibleZone (MCHEmul::CPU* cpu);
@@ -264,30 +387,97 @@ namespace COMMODORE
 		// The last part...
 		/** To move the graphics drawn to the screen. \n
 			The info move is the text/bitmap info that has been already draw to the screen. \n
-			That text/bitmap info included the sprite data as well ordered. */
+			The text/bitmap foreground pixels are composed with background and border colors. */
 		void drawResultToScreen (const DrawResult& cT, const DrawContext& dC);
 
 		// Very internal methods...
+		/** Reads RAM for video-matrix and attribute fetches, independently of CPU overlays. \n */
+		virtual const MCHEmul::UByte& readRAMForVideo
+			(const MCHEmul::Address& a) const = 0;
 		/** When the bit 2 at register 0x12 (= 18) is active, 
 			the fetch of dot or char data info has to be from ROM always. \n
 			The way the method are implemented will depend on the place where the chip is running. */
 		virtual bool ROMActiveToFetchCharData () const = 0;
 		virtual void activeROMtoFetchCharData (bool a) = 0;
 
-		// -----
-		// Different debug methods to simplify the internal code
-		// and to make simplier the modification in case it is needed...
-		/** Debug special situations...
-			Take care using this instructions _deepDebugFile could be == nullptr... */
-		void debugTEDCycle (MCHEmul::CPU* cpu, unsigned int i);
-		/** Records the CPU-cycle and TED-position projection for the notified instruction. */
+		/** Applies machine wiring effects after a scheduled CPU write. */
+		virtual void applyCPUWriteEffects
+			(const MCHEmul::SetMemoryCommand&)
+							{ }
+
+		private:
+		/** Advances to the final readable phase before the first write. */
+		bool advanceToCPURead (MCHEmul::CPU* cpu);
+		/** Recovers a CPU cycle, optionally stopping before its access. */
+		bool simulateCPUCycle
+			(MCHEmul::CPU* cpu,
+			 unsigned int batchStart, unsigned int batchEnd,
+			 bool completeCycle = true);
+		/** Executes the work preceding the current CPU access. */
+		void beginCPUCycle
+			(MCHEmul::CPU* cpu,
+			 unsigned int batchStart, unsigned int batchEnd);
+		/** Applies the access and completes the retained CPU cycle. */
+		bool finishCPUCycle
+			(MCHEmul::CPU* cpu,
+			 unsigned int batchStart, unsigned int batchEnd);
+		/** Processes graphics fetches before the scheduled CPU access. \n
+			Drawing and raster advancement follow in finishTEDCycle(). */
+		void beginTEDCycle (const DebugCycleContext& dC);
+		/** Draws and completes the current cycle, including raster, timers and IRQ. */
+		void finishTEDCycle
+			(MCHEmul::CPU* cpu, unsigned int requestCycle,
+			 const DebugCycleContext& dC);
+		/** Extracts one complete transaction's buffered CPU writes. \n
+			Requires all inventoried destinations to be buffered before execution. \n
+			The scheduler must consume the commands before another transaction starts. */
+		bool extractPendingWrites ();
+		/** Applies the next command when its scheduled CPU cycle is reached. */
+		bool executePendingWriteAt
+			(MCHEmul::CPU* cpu, unsigned int cycle);
+		/** Detects a new badline and retains the scroll value that caused it. */
+		inline bool detectNewBadLine ();
+		/** Returns the CPU clock decision for the current TED position. \n
+			Does not advance the raster or modify graphics state. */
+		inline bool singleClockModeForCurrentCycle () const;
+		/** Distributes one slow-clock pulse. \n
+			FREEZE gates timer clocks while sound retains its existing clock policy. */
+		inline void clockTEDCycle (bool countersEnabled);
+		/** Copies transaction coordinates without retaining the event object. */
+		inline bool prepareCPUTransaction
+			(MCHEmul::CPU* cpu,
+			 const MCHEmul::BusCycleData& busData, bool interrupt);
+		/** Returns the CPU coordinate of the next buffered write. \n
+			Requires a validated queue with a pending command. */
+		inline unsigned int pendingWriteCycle () const;
+
+		//-----
+		std::string debugRasterAsString () const;
+		std::string debugInternalAsString () const;
+		std::string debugTimersAsString () const;
+		std::string debugInterruptAsString () const
+							{ return (_TEDRegisters -> debugInterruptAsString ()); }
+		DebugCycleContext debugCycleContext
+			(const CPUCycleContext& cC,
+			 unsigned int batchStart, unsigned int batchEnd,
+			 unsigned int halfCarryIn, unsigned int halfCarryOut) const;
+		void debugTEDCycle (const DebugCycleContext& dC);
 		void debugCPUAboutToExecute
-			(const MCHEmul::InstructionContextEventData* dt,
-			 unsigned int cpuCycles, unsigned int positions);
-		void debugBadLine ();
-		void debugReadingVideoMatrix ();
-		void debugReadingGraphics ();
-		// -----
+			(const MCHEmul::InstructionContextEventData* dt);
+		void debugCPUAboutToExecute
+			(const MCHEmul::InterruptContextEventData* dt);
+		std::string debugCPUTransactionAsString () const;
+		void debugCPUReadAdvance
+			(MCHEmul::CPU* cpu, bool after) const;
+		void debugBadLine (const DebugCycleContext& dC);
+		void debugReadingVideoMatrix (const DebugCycleContext& dC);
+		void debugReadingGraphics (const DebugCycleContext& dC);
+		void debugTEDCycleEnd (const DebugCycleContext& dC);
+		void debugFrozenTEDCycle (const DebugCycleContext& dC) const;
+		void debugCPUWrite
+			(MCHEmul::CPU* cpu, unsigned int cycle,
+			 const MCHEmul::SetMemoryCommand& command, bool after) const;
+		//-----
 
 		protected:
 		/** The type of interrupt launched from the TED. */
@@ -318,12 +508,38 @@ namespace COMMODORE
 			This internal counetr is used to determine whether the internal cursor must blink. 
 			It reaches always just half of the frequency. */
 		unsigned short _timesFrameDrawn;
-		/** When the CPU is not stopped (sometimes the TED requires to stop it). \n
-			and a instruction is executed, the number of cycles that that instruction required, has to be taken into account
-			to define what the TED has to do. */
+		/** Latest notified transaction. \n
+			It remains available after recovery and is replaced by the next
+			notification; it does not indicate that execution is still active. */
+		CPUTransactionContext _cpuTransaction;
+		/** CPU bound to the timed-write scheduler. */
+		MCHEmul::CPU* _timedWriteCPU;
+		/** All CPU write destinations, including currently inactive aliases. */
+		MCHEmul::PhysicalStorageSubsets _timedWriteSubsets;
+		/** Extracted commands in original CPU write order. */
+		MCHEmul::SetMemoryCommands _pendingWrites;
+		/** Index of the next command to apply. */
+		size_t _nextPendingWrite;
+		/** Whether the scheduler owns buffered CPU writes. */
+		bool _cpuTimedWritesEnabled;
+		/** Whether the latest notified transaction awaits recovery. */
+		bool _cpuTransactionPending;
+		/** Retained CPU-cycle state, including a possible suspended access. */
+		CPUCycleRecovery _cpuCycleRecovery;
+		/** Prepared prefix length, including its final suspended CPU cycle. */
+		unsigned int _cpuReadAdvanceCycles;
+		/** Recovered time awaiting host pacing, in fast CPU-cycle units. \n
+			Consumed after each computer iteration; not an absolute TED clock. */
+		unsigned int _pendingPacingCycles;
+		/** CPU boundary reached by recovery. \n
+			The next CPU cycle to recover starts at this coordinate. \n
+			It advances after each completed CPU cycle. \n
+			Zero is an initial-synchronization sentinel only without timed writes enabled. */
 		unsigned int _lastCPUCycles;
-		/** Number of half TED cycles pending from the previous simulation. \n
-			The CPU consumes one half TED cycle at double speed and two half TED cycles at single speed. */
+		/** Time remainder in half-TED-cycle units, always 0 or 1. \n
+			One fast CPU cycle contributes one unit; one slow CPU cycle contributes two. \n
+			For a CPU cycle suspended before access, this already contains its output
+			remainder; CPUCycleRecovery retains the work still awaiting completion. */
 		unsigned int _pendingHalfCyclesFromLastExecution;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
@@ -334,10 +550,10 @@ namespace COMMODORE
 			is kept in the TED register about whether the video ir or not active. \n
 			In any other circunstance it kepts its value. */
 		bool _videoActive;
-		/** To identify whether the TED is not double the speed of the CPU. 
-			In the TED working is important because the number of dots that the TED draws per CPU cycle can be
-			4 (_inSingleClockMode = false) or 8 (_inSingleClockMode = true). \n
-			The single clock mode is always forced (even when possible) when bit 1 of register 0x13 (= 19) is set. */
+		/** Current single-clock decision produced by TED processing. \n
+			It is not a history of the modes used by previous CPU cycles. \n
+			Once a CPUCycleContext is constructed, later changes to this value
+			do not alter the duration represented by that context. */
 		bool _inSingleClockMode;
 		/** Whether the vertical raster has entered the last VBlank zone already. */
 		bool _lastVBlankEntered;
@@ -350,38 +566,15 @@ namespace COMMODORE
 			This variabe is desactivated at the end of the line, and when the graphical info is finally read. */
 		mutable bool _newBadLineCondition;
 
-		/** 
-		  * TED behaves quit similar to VICII. \n
-		  * So, the description of the internal behavior has been extracted from there:
-		  * \n
-		  *	Structure to control how the graphics are displayed in the screen. \n
-		  *	https://www.cebix.net/VIC-Article.txt. (points 3.7.1 & 3.7.2): \n
-		  *	The VICII can be in either "idle" state or "screen" state... \n
-		  *	In the idle state c and g accesses (code and color matrix and graphics data) takes place one, 
-		  *	Whilst in the second one only access to $3fff memory takes place
-		  *	(or $39ff when ECM = multicolor bit in register $d016 is set). \n
-		  *	The screen state is set as soon as a bad condition comes. \n
-		  *	The idle state is set at cycle 58 if RC == 7 and ther eis no bad condition. \n
-		  * There are a couple of important things that happen as the raster line moves accross the line. \n
-		  *	The rules to manipulate every value are decribed below attending to the cycle in the raster. \n
-		  * There are 3 important registers within the VICII related with the graphics: \n
-		  * VCBASE moves from 0 to 1000 (40 * 25) in a 40 step length. \n
-		  * VC moves from 0 to 1000 1 by 1. \n
-		  * Both will help to determine the position within the video matrix/color RAM to read. \n
-		  * RC counts from 0 to 7 one by one and determines the line the graphics data RAM where to find the final info. \n
-		  * RASTER LINE 0:			VCBASE is set to 0. \n
-		  * RASTER LINE $30 - $f7: \n
-		  *		CYCLE 14:			VC = VCBASE. If Bad Line => RC = 0 \n
-		  *		CYCLES 15 - 54:		VC = VC + 1 \n
-		  *		CYCLE 58:			if RC == 7 => VCBASE = VC; RC = RC + 1 \n
-		  * So VC goes from 0 to 40 7 times before VBASE incrementes in 40,
-		  * then 7 times more from 40 to 80 before VCBASE moves to 80 and so on and so forth.
-		  */
+		/** Graphics fetch state and buffers.
+			The 10-bit character position reload counter and the 3-bit vertical
+			subaddress are stored in TEDRegisters::GraphicalInfo and shared with
+			the CPU-visible registers. VC is the separate working counter.
+			The current fetch and counter phases are implemented in treatRasterCycle (). */
 		struct TEDGraphicInfo
 		{
 			TEDGraphicInfo ()
-				: _VCBASE (0), _VC (0), _VLMI (0),
-				  _RC (0),
+				: _VC (0), _VLMI (0),
 				  _idleState (true),
 				  _cursorHardwareStatus (false),
 				  _screenCodeData (std::vector <MCHEmul::UByte> (40, MCHEmul::UByte::_0)),
@@ -405,13 +598,12 @@ namespace COMMODORE
 							{ return (_cursorHardwareStatus); }
 
 
-			unsigned short _VCBASE, _VC, _VLMI;
-			unsigned char _RC;
+			unsigned short _VC, _VLMI;
 			bool _idleState; 
 			bool _cursorHardwareStatus;
 
 			// Implementation...
-			// This one doesn't actually exist "in" the VICII chip, 
+			// This one doesn't actually exist "in" the TED chip,
 			// but is used when he left border has to be partially drawn.
 			// After doing so, the _ffMBorder will become false...
 			mutable MCHEmul::UBytes _screenCodeData;
@@ -439,24 +631,36 @@ namespace COMMODORE
 		static const MCHEmul::Address _MEMORYPOSIDLE1, _MEMORYPOSIDLE2;
 	};
 
+	// ---
+	inline unsigned int TED::takePendingPacingCycles ()
+	{
+		const unsigned int result = _pendingPacingCycles;
+
+		_pendingPacingCycles = 0;
+
+		return (result);
+	}
+
+	// ---
 	inline void TED::readVideoMatrixAndColorRAM ()
 	{
-		memoryRef () -> setActiveView (_TEDView);
-		
-		const size_t vc = ((size_t)_tedGraphicInfo._VC) & 0x03ff;
+		const size_t vc = ((size_t) _tedGraphicInfo._VC) & 0x03ff;
+
 		_tedGraphicInfo._lastScreenCodeDataRead =
 			_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
-				memoryRef () -> value (_TEDRegisters -> screenMemory () + vc); 
+				readRAMForVideo (_TEDRegisters -> screenMemory () + vc);
+
 		_tedGraphicInfo._lastColorDataRead =
-			_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] = 
-				memoryRef () -> value (_TEDRegisters -> attributeMemory () + vc);
-		
-		memoryRef () -> setCPUView ();
+			_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] =
+				readRAMForVideo (_TEDRegisters -> attributeMemory () + vc);
 	}
 
 	// ---
 	inline void TED::readGraphicalInfo ()
 	{
+		const COMMODORE::TEDRegisters::GraphicalInfo& gI =
+			_TEDRegisters -> graphicalInfo ();
+
 		memoryRef () -> setActiveView (_TEDView);
 
 		if (_tedGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
@@ -485,16 +689,97 @@ namespace COMMODORE
 				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
 					_TEDRegisters -> textMode () 
 						? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
-							(charIndex /** See above. */ << 3) + (_tedGraphicInfo._RC & 0x07))
+							(charIndex /** See above. */ << 3) + gI._currentCharacterRow)
 						: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
 							(((size_t) (_tedGraphicInfo._VC & 0x03ff)) << 3) + 
-							  (size_t) _tedGraphicInfo._RC); // This is always between 0 and 7...
+							  (size_t) gI._currentCharacterRow); // This is always between 0 and 7...
 
 			if (oldTEDROM != wantedTEDROM)
 				activeROMtoFetchCharData (oldTEDROM); // and finally restore it...
 		}
 		
 		memoryRef () -> setCPUView ();
+	}
+
+	// ---
+	inline bool TED::detectNewBadLine ()
+	{
+		const unsigned char scrollY = _TEDRegisters -> verticalScrollPosition ();
+
+		const bool result =
+			_videoActive &&
+			_raster.currentLine () >= _FIRSTBADLINE &&
+			_raster.currentLine () <= _LASTBADLINE &&
+			(unsigned char) (_raster.currentLine () & 0x07) == scrollY &&
+			_lastBadLineScrollY != (int) scrollY;
+
+		if (result)
+			_lastBadLineScrollY = scrollY;
+
+		return (result);
+	}
+
+	// ---
+	inline bool TED::singleClockModeForCurrentCycle () const
+	{
+		return
+			(_TEDRegisters -> freezeActive () ||
+			 _TEDRegisters -> singleClockModeForced () ||
+			 (_cycleInRasterLine >= 49 && _cycleInRasterLine <= 52) ||
+			 (_cycleInRasterLine >= 5 && _cycleInRasterLine <= 48 &&
+			  _raster.currentLine () >= 0 && _raster.currentLine () <= 204));
+	}
+
+	// ---
+	inline void TED::clockTEDCycle (bool countersEnabled)
+	{
+		if (countersEnabled)
+		{
+			_T1.clock ();
+			_T2.clock ();
+			_T3.clock ();
+		}
+
+		_soundFunction -> addTEDCycles (1);
+	}
+
+	// ---
+	inline bool TED::prepareCPUTransaction
+		(MCHEmul::CPU* cpu,
+		 const MCHEmul::BusCycleData& busData, bool interrupt)
+	{
+		if (_cpuTimedWritesEnabled &&
+			(cpu != _timedWriteCPU ||
+			 _cpuTransactionPending ||
+			 _cpuCycleRecovery._phase == CPUCyclePhase::_BEFOREACCESS ||
+			 !_pendingWrites.empty () ||
+			 _lastCPUCycles != cpu -> clockCycles ()))
+		{
+			_error = MCHEmul::_CHIP_ERROR;
+
+			return (false);
+		}
+
+		_cpuTransaction._cpu = cpu;
+		_cpuTransaction._busData = &busData;
+		_cpuTransaction._startCycle = cpu -> clockCycles ();
+		_cpuTransaction._isInterrupt = interrupt;
+		_cpuTransactionPending = _cpuTimedWritesEnabled;
+		_cpuReadAdvanceCycles = 0;
+
+		return (true);
+	}
+
+	// ---
+	inline unsigned int TED::pendingWriteCycle () const
+	{
+		assert (_cpuTransaction._busData != nullptr);
+		assert (_nextPendingWrite < _pendingWrites.size ());
+
+		return
+			(_cpuTransaction._startCycle +
+			 (unsigned int) (_cpuTransaction._busData ->
+				writeCycle (_nextPendingWrite)));
 	}
 
 	/** The version para PAL systems. */

@@ -8,14 +8,9 @@ C264::ROMRAMSwitchRegisters::ROMRAMSwitchRegisters
 { 
 	initializeInternalValues ();
 
-	// The effect in any change in the configuration has to be inmediate!
-	// So, there is no possibility to buffer the changes...
-	// Imagine a instruction setting a new configuration...
-	// but, if it were buffered, the seeting won't really happen until the beginning of the next instruction...
-	// At that point the change is "marked" but it is not really executed until the "Selector" was exectuted
-	// Because it is simulated like a chip, the simulate method will be invoked after the execution of that
-	// previous instruction. If that next instruction tried to access positions of that new configuration
-	// it won't happen, because it will not be active yet!
+	// Setup and independent use apply writes directly.
+	// Connected C264 initialization enables buffering so TED can apply CPU
+	// writes and their mapping effects at the scheduled bus cycle.
 	setBufferMemorySetCommands (false);
 }
 

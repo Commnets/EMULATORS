@@ -1,4 +1,0 @@
-interface:
-  display_name: "C264 ACIA 6551 Audit"
-  short_description: "Auditar UART, IRQ y cableado ACIA del Plus4"
-  default_prompt: "Usa $c264-acia-audit para revisar la fidelidad del chip y su conexión en EMULATORS, aportando fuentes y pruebas reproducibles."

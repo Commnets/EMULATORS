@@ -24,8 +24,8 @@ C264::Commodore264::Commodore264 (
 		 cps,
 		 m,
 		 dvs,
-		 (vS == C264::Commodore264::VisualSystem::_PAL) 
-			? _PALCLOCK : _NTSCCLOCK,
+		 (vS == C264::Commodore264::VisualSystem::_PAL)
+			? (_PALCLOCK << 1) : (_NTSCCLOCK << 1),
 		 cnv,
 		 { }, { }, // The C264 series emulation has been done without neither Buses nor Wires!
 		 { { "Name", "C264 Series (C116/C16/CPlus4)" },
@@ -34,11 +34,7 @@ C264::Commodore264::Commodore264 (
 		 }),
 	  _visualSystem (vS),
 	  _configuration (cfg),
-	  _ted (nullptr),
-	  _slowClock ((vS == C264::Commodore264::VisualSystem::_PAL) 
-		  ? _PALCLOCK : _NTSCCLOCK),
-	  _fastClock ((vS == C264::Commodore264::VisualSystem::_PAL) 
-		  ? _PALCLOCK << 1 : _NTSCCLOCK << 1)
+	  _ted (nullptr)
 {
 	assert (_memory != nullptr);
 
@@ -61,18 +57,15 @@ bool C264::Commodore264::initialize (bool iM)
 	// zones of the 64k memory will or not be available as RAM...
 	setConfiguration (static_cast <C264::Memory*> (memory ()) -> configuration (), false /** Not restart. */);
 
-	// The CPU is observed by C264
-	// This is because when a instruction is about to be executed,
-	// the TED has to be aware about the number of cycles that the instruction will take
-	// in order to manage what $D012 result must returns properly!
+	// Observe CPU transaction notifications so TED can prepare readable prefixes
+	// and recover instruction and interrupt writes at their scheduled cycles.
 	observe (_cpu);
 
 	// It is also needed to observe the expansion port...
 	// Events when it is disonnected and connected are sent and with many implications
 	// in the structure of the memory...
 	observe (dynamic_cast <COMMODORE::ExpansionIOPort*> (device (COMMODORE::ExpansionIOPort::_ID)));
-	// The ted has to observe the events comming from the C6521B1 chip on regards 
-	// changes in the keyboard matrix...
+	// TED observes keyboard-matrix pin changes from the 6529B.
 	chip (COMMODORE::TED::_ID) -> observe (chip (C264::C6529B1::_ID));
 
 	// Links between memory and devices...
@@ -91,45 +84,84 @@ bool C264::Commodore264::initialize (bool iM)
 	if (cT != nullptr)
 		cT -> dumpDataInto (dynamic_cast <C264::Memory*> (memory ()), memory () -> activeView ());
 
+	// Setup writes consume no emulated transaction time.
+	_cpu -> executeBufferedCommands (true);
+
+	// Apply setup selector latches before the first CPU transaction.
+	if (!chip (C264::ROMRAMSwitch::_ID) -> simulate (_cpu) ||
+		!chip (C264::C1C2Selector::_ID) -> simulate (_cpu))
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
+	if (!_ted -> prepareCPUTimedWrites
+			(_cpu, static_cast <C264::Memory*> (memory ()) -> cpuWriteSubsets ()) ||
+		!_ted -> enableCPUTimedWrites ())
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
 	return (true);
 }
 
 // ---
-void C264::Commodore264::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+void C264::Commodore264::processEvent
+	(const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
-	// When a expansion element is inserted, then everything has to restart...
 	if (evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTIN ||
 		evnt.id () == COMMODORE::ExpansionIOPort::_EXPANSIONELEMENTOUT)
 	{
 		setExit (true);
 		setRestartAfterExit (true, 9999 /** Big enough */);
 	}
-	else
-	// The TED has to be informed when the CPU is about to execute an instruction...
-	// ...becuase it has to be taken into account to manage the information returned by TED registers properly
-	if (evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
+	else if (n == _cpu &&
+		evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINSTRUCTION)
 	{
-		static_cast <COMMODORE::TED*> (graphicalChip ()) -> CPUAboutToExecute
-			(static_cast <const MCHEmul::InstructionContextEventData*> (evnt.data ().get ()));
+		static_cast <COMMODORE::TED*> (graphicalChip ()) ->
+			CPUAboutToExecute
+				(static_cast <const MCHEmul::InstructionContextEventData*>
+					(evnt.data ().get ()));
+	}
+	else if (n == _cpu &&
+		evnt.id () == MCHEmul::CPU::_CPUTOEXECUTEINTERRUPT)
+	{
+		static_cast <COMMODORE::TED*> (graphicalChip ()) ->
+			CPUAboutToExecute
+				(static_cast <const MCHEmul::InterruptContextEventData*>
+					(evnt.data ().get ()));
 	}
 }
 
 // ---
-void C264::Commodore264::specificComputerCycle ()
+unsigned int C264::Commodore264::clockCyclesForPacing
+	(unsigned int cpuCycles)
 {
-	// The other clock moves also forward...
-	MCHEmul::Clock& oC = 
-		(_clock.cyclesPerSecond () == _slowClock.cyclesPerSecond ())
-			? _fastClock : _slowClock;
-	oC.countCycles (oC.tooQuick () 
-			? 0 : ((_cpu -> lastCPUClockCycles () == 0) ? 1 : _cpu -> lastCPUClockCycles ()));
-	// Maintaining the factor, 
-	// because it might changed externally (command)...
-	oC.setFactor (clock ().factor ()); 
+	const unsigned int pacingCycles = _ted -> takePendingPacingCycles ();
 
-	// For the next cycle...
-	// ...changes the speed of the CPU attending whether the TED is or not in single clock mode...
-	_clock = _ted -> inSingleClockMode () ? _slowClock : _fastClock;
+	if (deepDebug ())
+		debugClockPacing (cpuCycles, pacingCycles);
+
+	return (pacingCycles);
+}
+
+// ---
+bool C264::Commodore264::executeComputerHooks ()
+{
+	// External writes may have changed selector latches while stopped.
+	chip (C264::ROMRAMSwitch::_ID) -> simulate (_cpu);
+	chip (C264::C1C2Selector::_ID) -> simulate (_cpu);
+
+	const bool result = COMMODORE::Computer::executeComputerHooks ();
+
+	// Hooks may also change selectors before the next CPU transaction.
+	chip (C264::ROMRAMSwitch::_ID) -> simulate (_cpu);
+	chip (C264::C1C2Selector::_ID) -> simulate (_cpu);
+
+	return (result);
 }
 
 // ---
@@ -207,6 +239,23 @@ MCHEmul::IODevices C264::Commodore264::standardDevices (C264::Commodore264::Visu
 
 	return (result);
 }
+
+//-----
+// ---
+void C264::Commodore264::debugClockPacing
+	(unsigned int cpuCycles, unsigned int pacingCycles) const
+{
+	_deepDebug.writeCompleteLine
+		(className (), _cpu -> clockCycles (), "Clock pacing",
+		{ { "Timing", "Reference=ObservedCPUClock" },
+		  { "Pacing",
+			"Unit=FastCPUCycle,CPUCycles=" + std::to_string (cpuCycles) +
+			",ChargedCycles=" + std::to_string (pacingCycles) },
+		  { "Clock",
+			"BaseHz=" + std::to_string (_clock.cyclesPerSecond ()) +
+			",Factor=" + std::to_string (_clock.factor ()) } });
+}
+//-----
 
 // ---
 bool C264::Commodore16_116::initialize (bool iM)

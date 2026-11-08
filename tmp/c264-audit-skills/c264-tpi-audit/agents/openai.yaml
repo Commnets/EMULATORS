@@ -1,4 +1,0 @@
-interface:
-  display_name: "C264 TPI 6523 Audit"
-  short_description: "Auditar TPI/TIA y la interfaz paralela 1551"
-  default_prompt: "Usa $c264-tpi-audit para revisar la fidelidad del chip y su conexión en EMULATORS, aportando fuentes y pruebas reproducibles."

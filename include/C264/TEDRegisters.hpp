@@ -19,6 +19,7 @@
 namespace C264
 {
 	class C6529B1;
+	class C6529B1Registers;
 
 	/** NOTICE:
 		https://www.pagetable.com/docs/ted/TED%207360R0%20Preliminary%20Data%20Sheet.pdf 
@@ -44,6 +45,10 @@ namespace C264
 		void setJoystickStatusBit (size_t nj, size_t b, bool s)
 							{ _joystickStatus [nj].setBit (b, s); }
 
+		/** Connects the keyboard-column provider owned by the machine memory. \n */
+		void linkToKeyboardRegisters (const C6529B1Registers* r)
+							{ _keyboardRegisters = r; }
+
 		virtual void initialize () override;
 
 		private:
@@ -52,6 +57,9 @@ namespace C264
 		void initializeInternalValues ();
 
 		private:
+		/** Keyboard registers owned by the machine memory. \n */
+		const C6529B1Registers* _keyboardRegisters;
+
 		/** At the bit representing the direction/fire of the joystick pressed. \n
 			Remember that in the Commodore264 series 
 			the joysticks are connected directly to the keyboard data port of the TED,

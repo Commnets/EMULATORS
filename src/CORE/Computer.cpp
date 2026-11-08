@@ -545,14 +545,13 @@ bool MCHEmul::Computer::runComputerCycle (unsigned int a)
 		}
 	}
 
-	// After excuting the cycle, 
-	// the number of speed cycles are counted...
-	_clock.countCycles ((_cpu -> ticksCounter () == nullptr) 
-		? _cpu -> clockCycles () - cI
-		: ((_cpu -> lastCPUClockCycles () == 0) 
-			? 1 : _cpu -> lastCPUClockCycles ())
-				/** When the clock is external to the CPU the incrementl in one by one (usually), or 
-					if the last instruction took more than 1 (is very strange). */);
+	// Chips may supply time weights for CPUs whose clock changes within a transaction.
+	_clock.countCycles
+		(clockCyclesForPacing
+			((_cpu -> ticksCounter () == nullptr)
+				? _cpu -> clockCycles () - cI
+				: ((_cpu -> lastCPUClockCycles () == 0)
+					? 1 : _cpu -> lastCPUClockCycles ())));
 
 	// Every cycle is separated with a +....
 	if (deepDebug ())

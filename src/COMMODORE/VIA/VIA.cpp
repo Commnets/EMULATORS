@@ -34,10 +34,10 @@ bool COMMODORE::VIA::enableCPUTimedWrites (MCHEmul::CPU* cpu)
 	assert (_timedWriteCPU == nullptr);
 	assert (_pendingRegisterWrites.empty ());
 
-	if (cpu -> ticksCounter () != nullptr ||
-		!MCHEmul::Memory::configuration ().bufferMemorySetCommands (_VIARegisters))
+	if (cpu -> ticksCounter () != nullptr)
 	{
 		_error = MCHEmul::_INIT_ERROR;
+
 		return (false);
 	}
 

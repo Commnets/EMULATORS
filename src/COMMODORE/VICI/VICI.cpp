@@ -346,8 +346,7 @@ bool COMMODORE::VICI::enableCPUTimedWrites
 
 	for (const auto& subset : subsets)
 	{
-		if (subset.second == nullptr ||
-			!MCHEmul::Memory::configuration ().bufferMemorySetCommands (subset.second))
+		if (subset.second == nullptr)
 		{
 			_error = MCHEmul::_INIT_ERROR;
 
