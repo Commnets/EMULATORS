@@ -32,12 +32,6 @@ namespace C264
 		public:
 		enum class VisualSystem { _NTSC, _PAL };
 
-		/** Slow CPU-clock references. \n
-			Host pacing uses twice this frequency and charges one unit per fast
-			CPU cycle or two units per slow CPU cycle. */
-		static const unsigned int _PALCLOCK		= 886723; // 0.886 MHz = TED_PAL::_CLOCK / 20
-		static const unsigned int _NTSCCLOCK	= 894886; // 0.894 MHz = TED_NTSC::_CLOCK / 16
-
 		Commodore264 (
 			const MCHEmul::ASCIIToCodeConverter* cnv, 
 			const MCHEmul::Chips& cps, MCHEmul::Memory* m, const MCHEmul::IODevices& dvs, 

@@ -6,10 +6,10 @@
 #include <C264/OSIO.hpp>
 
 // ---
-C264::TED::TED (int intId, unsigned short clkcpum, unsigned short sfq,
-		const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+C264::TED::TED (int intId, bool initialPAL,
+		const COMMODORE::TED::Configuration& pal, const COMMODORE::TED::Configuration& ntsc,
 		int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs)
-	: COMMODORE::TED (intId, clkcpum, sfq, vd, hd, vV, sW, attrs),
+	: COMMODORE::TED (intId, initialPAL, pal, ntsc, vV, sW, attrs),
 	  _TEDRegisters (nullptr)
 {
 	// Nothing else to do...
@@ -43,12 +43,6 @@ bool C264::TED::initialize ()
 	_TEDRegisters -> linkToKeyboardRegisters (keyboardRegisters);
 
 	return (true);
-}
-
-// ---
-bool C264::TED::simulate (MCHEmul::CPU* cpu)
-{
-	return (COMMODORE::TED::simulate (cpu));
 }
 
 // ---
@@ -160,9 +154,9 @@ void C264::TED::applyCPUWriteEffects
 }
 
 // ---
-C264::TED_PAL::TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (intId, clkcpum, COMMODORE::TED_PAL::_SCREENFREQUENCY,
-		 COMMODORE::TED_PAL::_VRASTERDATA, COMMODORE::TED_PAL::_HRASTERDATA, vV, wS,
+C264::TED_PAL::TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS,
+	const COMMODORE::TED::Configuration& pal, const COMMODORE::TED::Configuration& ntsc)
+	: C264::TED (intId, true, pal, ntsc, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for PAL" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },
@@ -172,9 +166,9 @@ C264::TED_PAL::TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::Soun
 }
 
 // ---
-C264::TED_NTSC::TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS)
-	: C264::TED (intId, clkcpum, COMMODORE::TED_NTSC::_SCREENFREQUENCY,
-		 COMMODORE::TED_NTSC::_VRASTERDATA, COMMODORE::TED_NTSC::_HRASTERDATA, vV, wS,
+C264::TED_NTSC::TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS,
+	const COMMODORE::TED::Configuration& pal, const COMMODORE::TED::Configuration& ntsc)
+	: C264::TED (intId, false, pal, ntsc, vV, wS,
 		{ { "Name", "TED" },
 		  { "Code", "7360/8360 for NTSC" },
 		  { "Manufacturer", "Commodore Business Machines CBM" },

@@ -35,6 +35,14 @@ namespace COMMODORE
 		virtual const MCHEmul::UByte& peekValue (size_t p) const
 							{ return (readValue (p)); }
 
+		/** Fixed board crystal frequency. */
+		virtual unsigned int masterFrequency () const = 0;
+		/** Changes clock metadata without resetting running sound state. */
+		virtual void setClockDivider (unsigned int divider) = 0;
+		/** Advances one sound pulse with its actual elapsed crystal clocks. */
+		virtual bool getDataForTEDCycle
+			(MCHEmul::CPU* cpu, unsigned int masterCycles, MCHEmul::UBytes& dt) = 0;
+
 		/**
 		  *	The name of the fields are: \n
 		  *	The attributes and infostructures of the parent class, plus: \n
@@ -55,6 +63,7 @@ namespace COMMODORE
 		public:
 		TEDPulseSoundWave (unsigned int cF);
 
+		void setClockReference (unsigned int masterFrequency, unsigned int divider);
 		void setFrequencyRegister (unsigned short value);
 		inline void setDCActive (bool active);
 		bool dcActive () const
@@ -91,7 +100,10 @@ namespace COMMODORE
 		using MCHEmul::SoundWave::setFrequency;
 		using MCHEmul::PulseSoundWave::setPulseUpPercentage;
 
+		void updateFrequencyInfo ();
+
 		// Implementation
+		double _inputClockFrequency;
 		unsigned short _frequencyRegister;
 		unsigned short _reloadValue;
 		unsigned short _counter;
@@ -108,6 +120,9 @@ namespace COMMODORE
 	{
 		public:
 		TEDNoiseSoundWave (unsigned int cF);
+
+		void setClockReference (unsigned int masterFrequency, unsigned int divider)
+							{ _chipFrequency = masterFrequency / divider; }
 
 		virtual void initialize () override;
 		virtual void initializeInternalCounters () override;
@@ -159,7 +174,12 @@ namespace COMMODORE
 
 		virtual void initialize () override;
 
-		virtual bool getData (MCHEmul::CPU *cpu, MCHEmul::UBytes& dt) override;
+		virtual unsigned int masterFrequency () const override
+							{ return (_tedFrequency); }
+		virtual void setClockDivider (unsigned int divider) override;
+		virtual bool getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt) override;
+		virtual bool getDataForTEDCycle
+			(MCHEmul::CPU* cpu, unsigned int masterCycles, MCHEmul::UBytes& dt) override;
 
 		virtual MCHEmul::InfoStructure getVoiceInfoStructure (unsigned char nV) const override
 							{ return ((nV < 2) ? _voices [nV] -> getInfoStructure () : MCHEmul::InfoStructure ()); }
@@ -176,7 +196,7 @@ namespace COMMODORE
 
 		private:
 		unsigned int _tedFrequency;
-		unsigned int _dividerValue;
+		unsigned int _initialDivider;
 		unsigned int _samplingFrequency;
 		double _volumen;
 
@@ -190,6 +210,7 @@ namespace COMMODORE
 							{ _active = active; }
 			void setFrequencyRegister (unsigned short value)
 							{ _pulse -> setFrequencyRegister (value); }
+			void setClockReference (unsigned int masterFrequency, unsigned int divider);
 			void configure (bool toneEnabled, bool noiseEnabled, bool dcActive);
 
 			virtual void initialize () override;
@@ -212,10 +233,9 @@ namespace COMMODORE
 		std::vector <MCHEmul::UByte> _registers;
 
 		// Implementation
-		/** The number of cycles that a sample takes in the sound. */
-		double _cyclesPerSample;
-		/** Counter from 0 to _cyclesPerSample. */
-		double _counterCyclesPerSample;
+		unsigned int _dividerValue;
+		/** Fractional sample position, expressed against the crystal frequency. */
+		unsigned long long _samplePhase;
 	};
 
 	// ---

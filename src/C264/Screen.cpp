@@ -26,6 +26,32 @@ C264::Screen::Screen (const std::string& tt, double hz, int w, int h, const MCHE
 }
 
 // ---
+bool C264::Screen::initialize ()
+{
+	if (!MCHEmul::Screen::initialize ())
+		return (false);
+
+	setPresentationFrequency
+		(static_cast <const COMMODORE::TED*> (_graphicalChip) -> nominalFrameFrequency ());
+
+	return (true);
+}
+
+// ---
+void C264::Screen::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
+{
+	if (n == _graphicalChip && evnt.id () == COMMODORE::TED::_VIDEOCONFIGURATIONCHANGED)
+	{
+		// A pending image belongs to the previous capture; retain only the uploaded texture.
+		_graphicsReady = false;
+		setPresentationFrequency
+			(static_cast <const COMMODORE::TED*> (_graphicalChip) -> nominalFrameFrequency ());
+	}
+	else
+		MCHEmul::Screen::processEvent (evnt, n);
+}
+
+// ---
 void C264::Screen::drawAdditional ()
 {
 	if (gridColor ())
@@ -80,7 +106,7 @@ C264::ScreenPAL::ScreenPAL (const std::string& tt)
 		(int) COMMODORE::TED_PAL::_VRASTERDATA.visiblePositions (),
 		{ { "Name", "Screen PAL" },
 		  { "Type", "Output" },
-		  { "Frequency", "60.0Hz" } })
+		  { "Frequency", "50.0Hz" } })
 { 
 	// Nothing else to do...
 }

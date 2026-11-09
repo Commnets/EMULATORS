@@ -33,6 +33,7 @@ MCHEmul::RasterData::RasterData (
 	_lastVisiblePosition_0				= toBase0 (_lastVisiblePosition);
 	_retracePosition_0					= toBase0 (_retracePosition);
 	_lastPosition_0						= toBase0 (_lastPosition);
+	_currentPosition_0					= toBase0 (_currentPosition);
 
 	// This data is requested very often...
 	_firstDisplayPosition_inVisibleZone	= 
@@ -44,8 +45,6 @@ MCHEmul::RasterData::RasterData (
 	_lastScreenPosition_inVisibleZone	= 
 		_lastDisplayPosition_0 - _firstVisiblePosition_0;
 
-	_currentPosition_0				= toBase0 (_currentPosition_0);
-
 	// Everything matches?
 	assert (_lastPosition_0 == (_maxPositions - 1) &&
 		    (_lastPosition_0			>= _retracePosition_0) &&  
@@ -54,6 +53,21 @@ MCHEmul::RasterData::RasterData (
 			(_lastDisplayPosition_0		>= _firstDisplayPosition_0) && 
 			(_firstDisplayPosition_0	>= _firstVisiblePosition_0) &&
 			(_firstVisiblePosition_0	>= _firstPosition_0));
+}
+
+// ---
+void MCHEmul::RasterData::configure (const RasterData& data, unsigned short position)
+{
+	assert (position < data._maxPositions);
+
+	const bool reduced = _displayZoneReduced;
+	*this = data;
+
+	_currentPosition = position;
+	_currentPosition_0 = toBase0 (position);
+	_retraceJustOverPassed = false;
+
+	reduceDisplayZone (reduced);
 }
 
 // ---
@@ -72,6 +86,14 @@ MCHEmul::InfoStructure MCHEmul::RasterData::getInfoStructure () const
 	result.add ("LAST",			_lastPosition_0);
 
 	return (result);
+}
+
+// ---
+void MCHEmul::Raster::configure (const RasterData& vd, const RasterData& hd,
+	unsigned short line, unsigned short column)
+{
+	_vRasterData.configure (vd, line);
+	_hRasterData.configure (hd, column);
 }
 
 // ---

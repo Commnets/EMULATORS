@@ -7,7 +7,7 @@
     ".codex/documentation/debug-files/scripts/update_debug_doc_fields.ps1": "9c185f2a2866da347e5b0a975be84e4e9cc8dbf2f1b091245e45bd9b75dd22a6",
     ".codex/documentation/debug-files/sources/c64.yaml": "d6df774f9fc43f570c2cbd80bc05611701e9afb1102fc4862b0d36c4ec37e2d3",
     ".codex/documentation/debug-files/sources/vic20.yaml": "4eee1cd6dcf13dbdfc5b9139b865684a099c7efec3a19e153bdb2cf254ce76d7",
-    ".codex/documentation/debug-files/sources/c264.yaml": "7719c6766b0c659b4d936b2135a16c078a7e4cac290e6e8b7e0bf911d65999b3",
+    ".codex/documentation/debug-files/sources/c264.yaml": "834623c537866914c8b30b435c74d14df29ab468cd391a4c13c0b8f65345ae0f",
     ".codex/documentation/debug-files/sources/zx80-zx81.yaml": "5b5b285873e680c5542e6c54574a2c33301c2177500a1ea2c2cc5046a9d647fa",
     ".codex/documentation/debug-files/sources/zxspectrum.yaml": "1d193b66ad2b40c2f751460d6378fd099035441b3b6318f1daf0a0cf19532cce",
     ".codex/documentation/debug-files/sources/msx.yaml": "3451d41d76b66269dda4a01bdf1e0c61dee40d9364f5547b1a80d318099c7b72"
@@ -19,7 +19,7 @@
     "include/ZX81/ULARegisters.hpp": "2e08e91c93a06ef7d9d8c48a7619285f229178fb3eb34e56ab680b7e66457fec",
     "src/C264/1531Datasette.cpp": "b3193a1e7a13c9222cb3b17ebd1c12d22151068777de8aaca3ee3858267fa6b0",
     "src/C264/C1C2Selector.cpp": "5b045027f5807db370472178400535cd7ce7699dc513098d20c8585641753016",
-    "src/C264/C264.cpp": "5c400d85d1d382c7464d472c8c745878c0aae7363ae96c76a4dba7ca1c1c696e",
+    "src/C264/C264.cpp": "1ccbc16e7bab2db52ef38da955dbdc6b6e10091cb78cee58423bdc7f3129339c",
     "src/C264/ROMRAMSwitch.cpp": "dc40e4c3d42df9eff8b4b5c6b3445383356013fc0c6fec64b1e9d1adcf56e53d",
     "src/C64/C64.cpp": "d138533292275cb6c6a61ddc5ea2dc00d9598826c4dd4c1f84a8059c20d55312",
     "src/C64/CIA1.cpp": "9693b9f57351e53b7cfc86de05277311569f0117375cb9e8f41f420b68ab1019",
@@ -30,7 +30,7 @@
     "src/COMMODORE/CIA/CIA.cpp": "5d8f23f8ffb3e41911a299654a25920f91594a1e39208afd17b53a209f0d1e90",
     "src/COMMODORE/SID/SID.cpp": "cc8e23f2a5a22d911553d47fe808e938930fe933580b98fb01ddb12005f50ecf",
     "src/COMMODORE/SerialIOPeripherals.cpp": "2ffc973a62d588ca49a2e3a949a79f022154b0a74ebb7ae0f567c0be9845a0a8",
-    "src/COMMODORE/TED/TED.cpp": "135aadfb2d01303dd7ea5e0656b0accee9170c23063bd743863c27c00a54910e",
+    "src/COMMODORE/TED/TED.cpp": "7a7bf204e35e5d79b7398805dd69d9dc49d0ac2321ecf03fcd4accd7d868e149",
     "src/COMMODORE/VIA/VIA.cpp": "66acb3673ef761c04645bdf98ceda885d3310f9fab63108e81d801397de8373f",
     "src/COMMODORE/VICI/VICI.cpp": "ddf7a03baf4a0e09ca7a5a7449b48c34b51261cb975fb98f1ebb452fca822881",
     "src/COMMODORE/VICII/VICII.cpp": "37f9fe1f87ca47d8d83a2efc567d77e50856059382eed6ecbf9990bd31582d29",
@@ -58,9 +58,9 @@
     "src/ZXSpectrum/StdPrinter.cpp": "520d8d9aa8d3a52a6633461524af1b0cf761b321afe63bccc70eccd9b061565a",
     "src/ZXSpectrum/ULA.cpp": "aefff8581a96989bc2370e7c9fd9ff496f9e6ec4aef25bf2dc9502fd8a16fc3c",
     "src/ZXSpectrum/ZXSpectrum.cpp": "35ed52e597ce58c44678157d758fe7ffb2fa696ce6383e33d8b5b1f27c007ecd",
-    "src/COMMODORE/TED/TEDRegisters.cpp": "218ac28720aa5a7f289168223c6d5ae94dc2d8a37a2044ef918cca577a6bce8d",
-    "include/COMMODORE/TED/TED.hpp": "f7ae5237632d643b10dc95d9bb9368bb07c8ed234d29c29853afb54a8168e101",
-    "include/COMMODORE/TED/TEDRegisters.hpp": "87f7971cefdfb827ad884e6029b6403b205d9092cd4f9cbed72a0dad25b07a16"
+    "src/COMMODORE/TED/TEDRegisters.cpp": "84d5e75eaa5c553efa129f12747491516674149255bc31bd54c2acfd9716f3a3",
+    "include/COMMODORE/TED/TED.hpp": "756f1cc4c7ef201bb7033163a6df532a652f47f5ff85fede1fe2e325e8cd9cbb",
+    "include/COMMODORE/TED/TEDRegisters.hpp": "9fa9d514d4e1a89fbdc6036bd1d5c40382de37616d79f441814204db0c1666a0"
   },
   "producer_files": [
     "include/C264/C1C2Selector.hpp",
@@ -133,7 +133,7 @@
   "outputs": {
     "docs/C64Data/C64_DEBUG_File_Format.docx": "c85170ccd6aa3599eb4260ffc5cc914ee21e31856a78e97c508fb27a24c1bb1d",
     "docs/VIC20Data/VIC20_DEBUG_File_Format.docx": "996c4fd7c42839bfd2a6017dbca14d926bf001b8dd80ef1467d473a9a41e6598",
-    "docs/C264Data/C264_DEBUG_File_Format.docx": "597351e24f15713e4caaabb6a582cd2067708e0e1fadf4882d4434bad4eda1cf",
+    "docs/C264Data/C264_DEBUG_File_Format.docx": "dff5717ce4b9bb69b0c8d49ab3c37ddd91987d603523e9fac510e4d3ebf64d34",
     "docs/ZX81Data/ZX80_ZX81_DEBUG_File_Format.docx": "a60781074d51258a51c03bab457edefcd3457af556225bc33ec5225b0f552c4d",
     "docs/ZXSpectrumData/ZXSpectrum_DEBUG_File_Format.docx": "1c2eb9d119783c2693b095ca8bae6c9d66a266f47eea048d15992592968d108f",
     "docs/MSXData/MSX_DEBUG_File_Format.docx": "466d6119f14ada77db7f2dcd67bcd714e9ab5233caa64cf7af17c87de2cd437a"

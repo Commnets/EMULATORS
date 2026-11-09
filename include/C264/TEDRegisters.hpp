@@ -65,11 +65,6 @@ namespace C264
 			the joysticks are connected directly to the keyboard data port of the TED,
 			so the messages should come to here. */
 		MCHEmul::UByte _joystickStatus [2]; // two joysticks...
-
-		// Implementation
-		/** The value set in the register 8 that will be used later
-			when the value of this register was checked. */
-		MCHEmul::UByte _register8;
 	};
 }
 

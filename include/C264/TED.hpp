@@ -45,13 +45,11 @@ namespace C264
 		public:
 		static const unsigned int _ROMACCESSCHANGED = 300;
 
-		TED (int intId, unsigned short clkcpum, unsigned short sfq,
-			 const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd,
+		TED (int intId, bool initialPAL,
+			 const COMMODORE::TED::Configuration& pal, const COMMODORE::TED::Configuration& ntsc,
 			 int vV, MCHEmul::SoundLibWrapper* sW, const MCHEmul::Attributes& attrs = { });
 
 		virtual bool initialize () override;
-
-		virtual bool simulate (MCHEmul::CPU* cpu) override;
 
 		private:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
@@ -75,20 +73,24 @@ namespace C264
 	class TED_PAL final : public TED
 	{
 		public:
-		// This clock is never used, just for reference...
+		// Fixed board crystal, shared by sound timing and host pacing.
 		static const unsigned int _CLOCK		= 17734475; // 17.734475MHz = CPU Clock * 20
 
-		TED_PAL (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_PAL (int intId, int vV, MCHEmul::SoundLibWrapper* wS,
+			const COMMODORE::TED::Configuration& pal = COMMODORE::TED::_PALCONFIGURATION,
+			const COMMODORE::TED::Configuration& ntsc = COMMODORE::TED::_NTSCCONFIGURATION);
 	};
 
 	/** The version para NTSC systems for C264. */
 	class TED_NTSC final : public TED
 	{
 		public:
-		// This clock is never used, just for reference...
+		// Fixed board crystal, shared by sound timing and host pacing.
 		static const unsigned int _CLOCK		= 14318180; // 14.31818MHz = CPU Clock * 16
 
-		TED_NTSC (int intId, unsigned short clkcpum, int vV, MCHEmul::SoundLibWrapper* wS);
+		TED_NTSC (int intId, int vV, MCHEmul::SoundLibWrapper* wS,
+			const COMMODORE::TED::Configuration& pal = COMMODORE::TED::_PALCONFIGURATION,
+			const COMMODORE::TED::Configuration& ntsc = COMMODORE::TED::_NTSCCONFIGURATION);
 	};
 }
 

@@ -25,7 +25,7 @@ C264::Commodore264::Commodore264 (
 		 m,
 		 dvs,
 		 (vS == C264::Commodore264::VisualSystem::_PAL)
-			? (_PALCLOCK << 1) : (_NTSCCLOCK << 1),
+			? C264::TED_PAL::_CLOCK : C264::TED_NTSC::_CLOCK,
 		 cnv,
 		 { }, { }, // The C264 series emulation has been done without neither Buses nor Wires!
 		 { { "Name", "C264 Series (C116/C16/CPlus4)" },
@@ -189,11 +189,11 @@ MCHEmul::Chips C264::Commodore264::standardChips (const std::string& sS, C264::C
 	C264::TED* ted = 
 		vS == C264::Commodore264::VisualSystem::_PAL 
 			? (C264::TED*) new C264::TED_PAL 
-				(F6500::IRQInterrupt::_ID, (C264::TED_PAL::_CLOCK / C264::Commodore264::_PALCLOCK), /** = 20. */
+				(F6500::IRQInterrupt::_ID,
 					C264::Memory::_TED_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 						(C264::TED_PAL::_CLOCK, COMMODORE::TED_PAL::_DIVIDERCPUCLOCK, COMMODORE::TED::_SOUNDSAMPLINGCLOCK))
 			: (C264::TED*) new C264::TED_NTSC
-				(F6500::IRQInterrupt::_ID, (C264::TED_NTSC::_CLOCK / C264::Commodore264::_NTSCCLOCK), /** = 16. */
+				(F6500::IRQInterrupt::_ID,
 					C264::Memory::_TED_VIEW, new COMMODORE::TEDSoundSimpleLibWrapper 
 						(C264::TED_NTSC::_CLOCK, COMMODORE::TED_NTSC::_DIVIDERCPUCLOCK, COMMODORE::TED::_SOUNDSAMPLINGCLOCK));
 	result.insert (MCHEmul::Chips::value_type (COMMODORE::TED::_ID, (MCHEmul::Chip*) ted));
@@ -249,7 +249,7 @@ void C264::Commodore264::debugClockPacing
 		(className (), _cpu -> clockCycles (), "Clock pacing",
 		{ { "Timing", "Reference=ObservedCPUClock" },
 		  { "Pacing",
-			"Unit=FastCPUCycle,CPUCycles=" + std::to_string (cpuCycles) +
+			"Unit=MasterClock,CPUCycles=" + std::to_string (cpuCycles) +
 			",ChargedCycles=" + std::to_string (pacingCycles) },
 		  { "Clock",
 			"BaseHz=" + std::to_string (_clock.cyclesPerSecond ()) +

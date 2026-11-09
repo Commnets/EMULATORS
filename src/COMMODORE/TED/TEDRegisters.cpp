@@ -21,6 +21,7 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 	result.add ("RASTERY",		_currentRasterLine);
 	result.add ("RASTERX",		_currentRasterColumn);
 	result.add ("CHARPOS",		_currentCharacterPosition);
+	result.add ("CHARROW",		(unsigned int) _currentCharacterRow);
 
 	return (result);
 }
@@ -28,13 +29,18 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::GraphicalInfo::getInfoStructure 
 // ---
 COMMODORE::TEDRegisters::TEDRegisters (MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: MCHEmul::ChipRegisters (_TEDREGS_SUBSET, ps, pp, a, s),
+	  _soundWrapper (nullptr),
+	  _T1 (nullptr), _T2 (nullptr), _T3 (nullptr),
 	  _backgroundColor (4, { 0x00, 0x00 }),
+	  _reverseVideoActive (false),
+	  _cursorPosition (0),
+	  _graphicMulticolorTextModeActive (false),
+	  _IRQRasterLineAt (0),
 	  _ROMMemoryConfigurationActive (false),
+	  _characterIndexMask (0xff),
 	  _lastValueRead (MCHEmul::PhysicalStorage::_DEFAULTVALUE),
-	  _raster (nullptr),
+	  _rasterPosition (nullptr),
 	  _debugCPU (nullptr)
-	  // At this point the rest internal variables will have random values...
-	  // The vector are initialized just to given them a default size!
 {
 	setClassName ("TEDRegisters");
 
@@ -68,7 +74,14 @@ MCHEmul::InfoStructure COMMODORE::TEDRegisters::getInfoStructure () const
 	result.add ("BkColor4",			std::move (_backgroundColor [3].getInfoStructure ()));
 	result.add ("BorderColor",		std::move (_borderColor.getInfoStructure ()));
 	result.add ("SINGLECLK",		_singleClockModeForced);
+	result.add ("PAL",				_PALActive);
+	result.add ("FREEZE",			_freezeActive);
+	result.add ("FLASHCOUNTER",		(unsigned int) _flashCounter);
+	result.add ("FLASHPHASE",		flashCounterOn ());
 	result.add ("IRQ",				_rasterIRQActive);
+	result.add ("RASTERIRQPENDING",	_rasterIRQHappened);
+	result.add ("IRQREQUEST",		launchIRQ ());
+	result.add ("IRQREASON",			reasonIRQCode ());
 	result.add ("IRQLINE",			_IRQRasterLineAt);
 	result.add ("SCREENADDRESS",	screenMemory ());
 	result.add ("CHARADDRESS",		charDataMemory ());
@@ -201,11 +214,11 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// IRQ Mask Register
+		// IRQ mask and high raster-comparator bit.
 		case 0x0a:
 			{
-				_IRQRasterLineAt = (_IRQRasterLineAt & 0x00ff) | 
-					(v.bit (0) ? 0x0100 : 0x0000); // The MSB of the raster position...
+				_IRQRasterLineAt = (_IRQRasterLineAt & 0x00ff) |
+					(v.bit (0) ? 0x0100 : 0x0000);
 				_rasterIRQActive = v.bit (1);
 				_lightPenIRQActive = v.bit (2);
 				_T1 -> setInterruptEnabled (v.bit (3));
@@ -216,7 +229,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 
 			break;
 
-		// LSB Raster Position
+		// Low byte of the raster comparator.
 		case 0x0b:
 			{
 				_IRQRasterLineAt = ((unsigned short) v.value ()) | (_IRQRasterLineAt & 0x0100);
@@ -370,8 +383,7 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Vertical Raster Position MSB
 		case 0x1c:
 			{
-				_graphicalInfo._currentRasterLine = 
-					(_graphicalInfo._currentRasterLine & 0x00ff) | ((v.value () & 0x01) /** bits 0. */ << 8);
+				_rasterPosition -> writeVerticalHigh (v.value ());
 			}
 
 			break;
@@ -379,18 +391,15 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 		// Vertical Raster Position LSB
 		case 0x1d:
 			{
-				_graphicalInfo._currentRasterLine =
-					(_graphicalInfo._currentRasterLine & 0xff00) | v.value ();
+				_rasterPosition -> writeVerticalLow (v.value ());
 			}
 
 			break;
 
-		// Horizontal Raster Position MSB
-		// But only the 8 most significant bits...
-		// So the value received is always the 8 MSBits of a 9 bits value...
+		// Horizontal Raster Position
 		case 0x1e:
 			{
-				_graphicalInfo._currentRasterColumn = (v.value () << 1);
+				_rasterPosition -> queueHorizontalWrite (v.value ());
 			}
 
 			break;
@@ -414,7 +423,8 @@ void COMMODORE::TEDRegisters::setValue (size_t p, const MCHEmul::UByte& v)
 }       
 
 // ---
-const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
+const MCHEmul::UByte& COMMODORE::TEDRegisters::readRegisterValue
+	(size_t p, bool observed) const
 {
 	MCHEmul::UByte result = MCHEmul::PhysicalStorage::_DEFAULTVALUE;
 
@@ -509,30 +519,30 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 				/** bit 5 not used, and always to 1. */
 				result.setBit (6, _T3 -> interruptRequested ());
 				result.setBit (7, launchIRQ ());
-				// Notice that this bit only sets when a interruption has really happened...
-				// ...and not only when any of the conditions to launch it has been reched,
-				// as it is the case of any of the previous bits.
+				// Bit 7 combines enabled pending sources; it does not report CPU acceptance.
 			}
 
 			break;
 
 		case 0x0a:
 			{
-				result = MCHEmul::UByte::_FF; // The rest of the bits are up!
-				result.setBit (0, (_graphicalInfo._currentRasterLine & 0xff00) != 0); // The MSB of the raster position...
+				result = MCHEmul::UByte::_FF;
+
+				// Bit 0 reads the programmed raster comparator, not the current line.
+				result.setBit (0, (_IRQRasterLineAt & 0x0100) != 0);
 				result.setBit (1, _rasterIRQActive);
 				result.setBit (2, _lightPenIRQActive);
 				result.setBit (3, _T1 -> interruptEnabled ());
 				result.setBit (4, _T2 -> interruptEnabled ());
 				result.setBit (6, _T3 -> interruptEnabled ());
-				/** bits 5 & 7 are not used. */
+				/** Bits 5 and 7 are unused and read as one. */
 			}
 
 			break;
 
 		case 0x0b:
 			{
-				result = (unsigned char) (_graphicalInfo._currentRasterLine & 0x00ff);
+				result = (unsigned char) (_IRQRasterLineAt & 0x00ff);
 			}
 
 			break;
@@ -557,7 +567,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		case 0x10:
 		case 0x11:
 			{
-				result = _soundWrapper -> readValue (pp);
+				result = (observed ? _soundWrapper -> readValue (pp) : _soundWrapper -> peekValue (pp));
 			}
 
 			break;
@@ -565,7 +575,7 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 		case 0x12:
 			{
 				result = ((unsigned char) ((_bitmapMemory.value () & 0xff00) >> 10 /** to become the bits 3, 4 & 5 of the address. */)) | 
-					(_soundWrapper -> readValue (pp) & 0b0000011 /** Only the bits 0 and 1 are useful. */).value () | 
+					((observed ? _soundWrapper -> readValue (pp) : _soundWrapper -> peekValue (pp)) & 0b0000011 /** Only the bits 0 and 1 are useful. */).value () |
 					~0b00111011; // The rest of the bits to 1 until the next instruction...
 				result.setBit (2, _ROMActiveToFetchCharAndBitmap);
 			}
@@ -619,8 +629,6 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1c:
 			{
-				assert (_raster != nullptr);
-
 				result = (unsigned char)
 					((currentRasterLine () >> 8) & 0x01) | 0xfe;
 			}
@@ -629,8 +637,6 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1d:
 			{
-				assert (_raster != nullptr);
-
 				result = (unsigned char) (currentRasterLine () & 0xff);
 			}
 
@@ -638,7 +644,8 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 
 		case 0x1e:
 			{
-				result = (unsigned char) ((_graphicalInfo._currentRasterColumn >> 1) & 0x00ff); 
+				result = (unsigned char)
+					((currentRasterPositionInLine () >> 1) & 0xfe);
 			}
 
 			break;
@@ -656,7 +663,9 @@ const MCHEmul::UByte& COMMODORE::TEDRegisters::readValue (size_t p) const
 			break;
 	}
 
-	_IFDEBUG debugRegisterRead (p, result);
+	_IFDEBUG
+		if (observed)
+			debugRegisterRead (p, result);
 
 	return (_lastValueRead = result);
 }
@@ -777,8 +786,8 @@ void COMMODORE::TEDRegisters::debugRegisterWrite
 		  { "Register effect", "VCReload=" + std::to_string (_graphicalInfo._currentCharacterPosition) + "," +
 			"RC=" + std::to_string (_graphicalInfo._currentCharacterRow) + "," +
 			"Flash=" + std::to_string (_flashCounter) + "," +
-			"RasterRegisterRow=" + std::to_string (_graphicalInfo._currentRasterLine) + "," +
-			"RasterRegisterColumn=" + std::to_string (_graphicalInfo._currentRasterColumn) + "," +
+			"RasterRegisterRow=" + std::to_string (_rasterPosition -> _vertical) + "," +
+			"RasterRegisterColumn=" + std::to_string (_rasterPosition -> _horizontal) + "," +
 			"ScrollX=" + std::to_string (_horizontalScrollPosition) + "," +
 			"ScrollY=" + std::to_string (_verticalScrollPosition) + "," +
 			"DisplayEnabled=" + std::to_string (!_blankEntireScreen) + "," +

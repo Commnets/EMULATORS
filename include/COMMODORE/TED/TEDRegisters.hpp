@@ -45,6 +45,33 @@ namespace COMMODORE
 			_INVALIDBITMAPMODE2,
 		};
 
+		/** Effective raster counters shared with the owning TED. \n
+			Horizontal positions use dot units. \n
+			VideoLine is the internal vertical capture, not a framebuffer coordinate. */
+		struct RasterPosition final
+		{
+			RasterPosition ()
+				: _vertical (0), _horizontal (0), _videoLine (0),
+				  _horizontalWritePending (false), _horizontalWriteValue (0)
+							{ }
+
+			/** Replace only bit 8; values outside the normal frame remain valid. */
+			void writeVerticalHigh (unsigned char value)
+							{ _vertical = (_vertical & 0x00ff) | ((value & 0x01) << 8); }
+			/** Replace only bits 7..0 of the current counter. */
+			void writeVerticalLow (unsigned char value)
+							{ _vertical = (_vertical & 0x0100) | value; }
+
+			/** Retain the bus value until the following dot-clock tick. */
+			inline void queueHorizontalWrite (unsigned char value);
+
+			unsigned short _vertical;
+			unsigned short _horizontal;
+			unsigned short _videoLine;
+			bool _horizontalWritePending;
+			unsigned char _horizontalWriteValue;
+		};
+
 		/** Colors in TED are made always of a proper color (0 - 15)
 			and the luninance. (0 - 7). */
 		class Color final : public MCHEmul::InfoClass
@@ -82,8 +109,8 @@ namespace COMMODORE
 			unsigned char _luminance;
 		};
 
-		/** The TED has all infomation about the way the raster is made accesible. \n
-			This is a key difference between it and the rest of the CBM graphical chips, specially VICII. */
+		/** Shared character counters and a published diagnostic copy of the raster. \n
+			Raster coordinates and character counters have distinct update points. */
 		class GraphicalInfo final : public MCHEmul::InfoClass
 		{
 			public:
@@ -94,7 +121,7 @@ namespace COMMODORE
 							{ }
 
 			GraphicalInfo (unsigned short rL, unsigned short rC, 
-				unsigned short cP, unsigned char cR, unsigned char fC)
+				unsigned short cP, unsigned char cR)
 				: MCHEmul::InfoClass ("TEDGraphicalInfo"),
 				  _currentRasterLine (rL), _currentRasterColumn (rC),
 				  _currentCharacterPosition (cP), _currentCharacterRow (cR)
@@ -103,13 +130,14 @@ namespace COMMODORE
 			/**
 			  *	The name of the fields are: \n
 			  * The ones coming from the parent class and: \n
-			  * RASTERY	= Attribute: Current raster line. \n
-			  * RASTERX	= Attribute: Current raster column. \n
-			  * CHARPOS	= Attribute: Current character position.
+			  * RASTERY	= Attribute: Last published raster line, not the live counter. \n
+			  * RASTERX	= Attribute: Last published raster column in dot units. \n
+			  * CHARPOS	= Attribute: Character position reload counter, from 0 to 1023. \n
+			  * CHARROW	= Attribute: Shared vertical character subaddress, from 0 to 7.
 			  */
 			virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
-			/** Where the raster is now. */
+			/** Diagnostic raster coordinates copied by the owning TED. */
 			unsigned short _currentRasterLine;
 			unsigned short _currentRasterColumn; 
 			/** Character position reload counter. From 0 to 1023. */
@@ -166,6 +194,8 @@ namespace COMMODORE
 							{ return (_graphicMulticolorTextModeActive); }
 		GraphicMode graphicModeActive () const
 							{ return (_graphicModeActive); }
+		unsigned char characterIndexMask () const
+							{ return (_characterIndexMask); }
 		bool textMode () const
 							{ return (_textMode); }
 
@@ -178,11 +208,11 @@ namespace COMMODORE
 		// IRQs...
 		// To know whether a IRQ could be generated in different scenarios...
 		// To generate the IRQ the condition has to be reached
-		// To activate or desactivate this sources of IRQ the register $ff09 has to be accessed...
-		/** IRQ launched when raster was at line...? */
+		// FF0A enables sources; FF09 reports and acknowledges their pending flags.
+		/** Whether the raster IRQ source is enabled. */
 		bool rasterIRQActive () const
 							{ return (_rasterIRQActive); }
-		/** IRQ launched when lightpen touche the screen? */
+		/** Whether the reserved lightpen IRQ source is enabled. */
 		bool lightPenIRQActive () const
 							{ return (_lightPenIRQActive); }
 		/** Raster line number when the TED (if active) will generate an IRQ. */
@@ -194,8 +224,8 @@ namespace COMMODORE
 							{ _rasterIRQHappened = true; }
 		void activateLightPenOnScreenIRQ ()
 							{ _lightPenIRQHappened = true; }
-		/** To know whether the TED might launch a IRQ (from its internal perspective only).
-			The IRQ will be or not actually launched depending on other elements like whether the IRQ flag is or not active. */
+		/** Combined request from enabled pending TED sources. \n
+			CPU interrupt acceptance is independent of this level. */
 		inline bool launchIRQ () const;
 		/** To have a code for the reason of the interruption. 
 			There might be several reasons defined within the code. */
@@ -240,13 +270,7 @@ namespace COMMODORE
 		void setKeyboardPins (const MCHEmul::UByte& kp)
 							{ _keyboardPins = kp; }
 
-		// Related with the position of the raster line in the screen...
-		// This position is updated continiuously by the TED simulation...
-		// an it is latched here to be returned when needed...
-		void setCurrentRasterLine (unsigned short rL)
-							{ _graphicalInfo._currentRasterLine = rL; }
-		void setCurrentRasterColumn (unsigned short rC)
-							{ _graphicalInfo._currentRasterColumn = rC; }
+		/** Updates the derived raster coordinates used by diagnostics. */
 		void setCurrentRasterPosition (unsigned short rL, unsigned short rC)
 							{ _graphicalInfo._currentRasterLine = rL; _graphicalInfo._currentRasterColumn = rC; }
 
@@ -267,20 +291,32 @@ namespace COMMODORE
 		  * BkColor4			= InfoStructure; Background 4 color value. \n
 		  * BorderColor			= InfoStructure; Border color value. \n
 		  * SINGLECLK			= Attribute; Whether the single clock mode is or not forced. \n
-		  * IRQ					= Attribute; Whether the IRQ is or not requested. \n
+		  * PAL					= Attribute: PAL selection requested through the registers. \n
+		  * FREEZE				= Attribute: Requested FREEZE control. \n
+		  * FLASHCOUNTER		= Attribute: Full five-bit FLASH counter. \n
+		  * FLASHPHASE			= Attribute: Bit 4 of the FLASH counter. \n
+		  * IRQ					= Attribute: Raster IRQ enable, retained for compatibility. \n
+		  * RASTERIRQPENDING	= Attribute: Retained raster event, regardless of its enable. \n
+		  * IRQREQUEST			= Attribute: Combined TED request, not CPU acceptance. \n
+		  * IRQREASON			= Attribute: Internal request reason code, not an FF09 bitmask. \n
 		  * IRQLINE				= Attribute; The number of scan line where the IRQ should be requested if on. \n
 		  * SCREENADDRESS		= Attribute; The address of the video matrix. \n
 		  * CHARADDRESS			= Attribute; The address of the characters definition. \n
 		  * CHARSINROM			= Attribute; Whether the characters are in ROM or in RAM. \n
 		  * ATTRIBUTEADDRESS	= Attribute; The address of the attribute definition. \n
 		  * BITMAPADDRESS		= Attribute; The address of the bit maps. \n
-		  * GraphicalInfo		= InfoStructure; Info about how the graphics are being drawn.
+		  * GraphicalInfo		= InfoStructure: Shared character counters and published raster copy.
 		  */
 		virtual MCHEmul::InfoStructure getInfoStructure () const override;
 
 		protected:
 		virtual void setValue (size_t p, const MCHEmul::UByte& v) override;
-		virtual const MCHEmul::UByte& readValue (size_t p) const override;
+		/** Reads a register through the observed-access path. */
+		virtual const MCHEmul::UByte& readValue (size_t p) const override
+							{ return (readRegisterValue (p, true)); }
+		/** Inspects the same value without emitting register-access diagnostics. */
+		virtual const MCHEmul::UByte& peekValue (size_t p) const override
+							{ return (readRegisterValue (p, false)); }
 
 		// Implementation
 		/** To look at the chips & pieces related with this. */
@@ -289,21 +325,23 @@ namespace COMMODORE
 		void lookAtTimers (TEDTimer* t1, TEDTimer* t2, TEDTimer* t3)
 							{ _T1 = t1, _T2 = t2; _T3 = t3; }
 
+		/** Shared decoding for observed reads and debugger inspection. */
+		const MCHEmul::UByte& readRegisterValue (size_t p, bool observed) const;
 		/** Just to initialize the internal values. */
 		void initializeInternalValues ();
 		/** Depending on how bits ar set, a no valid mode could be set. */
 		void setGraphicModeActive ();
 
-		/** Non-owning raster link for live position reads and diagnostics. */
-		void linkToRaster (MCHEmul::Raster* r)
-							{ _raster = r; }
+		/** Non-owning raster-state link, established before register use. */
+		void linkToRasterPosition (RasterPosition* position)
+							{ _rasterPosition = position; }
 		/** Non-owning CPU reference for observed register-access diagnostics. */
 		void linkToDebugCPU (const MCHEmul::CPU* cpu)
 							{ _debugCPU = cpu; }
 		unsigned short currentRasterLine () const
-							{ return (_raster -> vData ().currentPosition ()); }
+							{ return (_rasterPosition -> _vertical); }
 		unsigned short currentRasterPositionInLine () const
-							{ return (_raster -> hData ().currentPosition ()); }
+							{ return (_rasterPosition -> _horizontal); }
 
 		/** The alignement of the char Data memory will depend on the mode,
 			so any time the mode is changed, it must be recalculated. */
@@ -347,8 +385,8 @@ namespace COMMODORE
 		/** IRQ Control. */
 		bool _rasterIRQActive;
 		bool _lightPenIRQActive;
-		/** Raster Control. */
-		unsigned short _IRQRasterLineAt; // To define where to launch the IRQ. When reading therre is other variable...
+		/** Nine-bit raster comparator programmed and read through FF0A.0/FF0B. */
+		unsigned short _IRQRasterLineAt;
 		/** Flash control counter. */
 		unsigned char _flashCounter;
 
@@ -377,13 +415,22 @@ namespace COMMODORE
 		MCHEmul::UByte _keyboardPins;
 
 		// Implementation
+		/** Character-code bits used by the current fetch configuration. */
+		unsigned char _characterIndexMask;
 		mutable MCHEmul::UByte _lastValueRead;
 
-		/** A reference to the raster. This class is not the owner of it. */
-		MCHEmul::Raster* _raster;
+		/** Non-owning link to raster state owned by TED. */
+		RasterPosition* _rasterPosition;
 		/** Non-owning diagnostic link, cleared before register initialization. */
 		const MCHEmul::CPU* _debugCPU;
 };
+
+	// ---
+	inline void TEDRegisters::RasterPosition::queueHorizontalWrite (unsigned char value)
+	{
+		_horizontalWriteValue = value;
+		_horizontalWritePending = true;
+	}
 
 	// ---
 	inline bool TEDRegisters::launchIRQ () const
@@ -408,11 +455,16 @@ namespace COMMODORE
 	// ---
 	inline void TEDRegisters::recalculateCharDataMemory ()
 	{
-	    const unsigned char mask =
-		    (_graphicExtendedColorTextModeActive || !_reverseVideoActive)
-			    ? 0xf8 : 0xfc; // Depends on the mode the bits kept will be one or others...
-	    _charDataMemory = MCHEmul::Address (2, 
-			(unsigned int) ((MCHEmul::PhysicalStorageSubset::readValue (0x13).value () & mask) << 8));
+		_characterIndexMask = _graphicExtendedColorTextModeActive
+			? 0x3f : (_reverseVideoActive ? 0x7f : 0xff);
+
+		// Only the 128-character configuration preserves the additional base bit.
+		const unsigned char mask =
+			(_characterIndexMask == 0x7f) ? 0xfc : 0xf8;
+
+		_charDataMemory = MCHEmul::Address
+			(2, (unsigned int)
+				((MCHEmul::PhysicalStorageSubset::readValue (0x13).value () & mask) << 8));
 	}
 }
 

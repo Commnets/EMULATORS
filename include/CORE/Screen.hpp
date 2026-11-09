@@ -144,6 +144,7 @@ namespace MCHEmul
 			const std::string& txt, unsigned int cb, unsigned int cf, bool t = false);
 
 		protected:
+		void setPresentationFrequency (double hz);
 		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
 		/** Before moving the graphs to the screen,
@@ -161,14 +162,17 @@ namespace MCHEmul
 		const std::vector <UBytes>& graphicData (size_t id) const
 							{ return ((id < _graphicsDef.size ()) ? _graphicsDef [id] : _defaultGraphicDef); }
 
+		private:
+		bool adaptToFrameBuffer ();
+
 		protected:
 		bool _CRTActive; // When CRT effect is visible...
 		const std::string _screenName;
-		const unsigned int _screenColumns;
-		const unsigned int _screenRows;
+		unsigned int _screenColumns;
+		unsigned int _screenRows;
 		const double _visibilityFactorX;
 		const double _visibilityFactorY;
-		const double _hertzs;
+		double _hertzs;
 		/** The clock to control the frenquency to print out the screen. */
 		Clock _clock;
 	

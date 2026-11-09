@@ -204,6 +204,9 @@ bool MCHEmul::Screen::simulate (MCHEmul::CPU* cpu)
 		so they are ready to be pull out to the screen. */
 	if (_graphicsReady)
 	{
+		if (!adaptToFrameBuffer ())
+			return (false);
+
 		// At this point the screen memory has the "computer screen" drawn
 		// it is needed to move to the real screen later using the raster...
 		// Additional things could be drawn on top of the "computer screen"...
@@ -254,8 +257,55 @@ MCHEmul::InfoStructure MCHEmul::Screen::getInfoStructure () const
 }
 
 // ---
+void MCHEmul::Screen::setPresentationFrequency (double hz)
+{
+	assert (hz > 0);
+
+	if (_hertzs == hz)
+		return;
+
+	_hertzs = hz;
+	_clock.setFactor (hz / (double) _clock.cyclesPerSecond ());
+}
+
+// ---
 void MCHEmul::Screen::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 {
 	if (evnt.id () == MCHEmul::GraphicalChip::_GRAPHICSREADY)
 		_graphicsReady = true; // To be processed in simulation...
+}
+
+// ---
+bool MCHEmul::Screen::adaptToFrameBuffer ()
+{
+	const MCHEmul::ScreenMemory* screenMemory = _graphicalChip -> screenMemory ();
+	const unsigned int columns = (unsigned int) screenMemory -> columns ();
+	const unsigned int rows = (unsigned int) screenMemory -> rows ();
+	if (columns == _screenColumns && rows == _screenRows)
+		return (true);
+
+	// Replace the texture only when a frame in the new geometry is ready.
+	SDL_Texture* texture = SDL_CreateTexture
+		(_renderer, SDL_PIXELFORMAT_ARGB8888, SDL_TEXTUREACCESS_STREAMING,
+		 (int) columns, (int) rows);
+	if (texture == nullptr)
+	{
+		_error = MCHEmul::_DEVICE_ERROR;
+		return (false);
+	}
+
+	SDL_SetTextureBlendMode (texture, SDL_BLENDMODE_BLEND);
+	if (SDL_RenderSetLogicalSize (_renderer, (int) columns, (int) rows) < 0)
+	{
+		SDL_DestroyTexture (texture);
+		_error = MCHEmul::_DEVICE_ERROR;
+		return (false);
+	}
+
+	SDL_DestroyTexture (_texture);
+	_texture = texture;
+	_screenColumns = columns;
+	_screenRows = rows;
+
+	return (true);
 }

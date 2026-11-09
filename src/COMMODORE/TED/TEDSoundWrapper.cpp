@@ -16,6 +16,7 @@ MCHEmul::InfoStructure COMMODORE::TEDSoundLibWrapper::getInfoStructure () const
 // ---
 COMMODORE::TEDPulseSoundWave::TEDPulseSoundWave (unsigned int cF)
 	: MCHEmul::PulseSoundWave (cF),
+	  _inputClockFrequency ((double) cF),
 	  _frequencyRegister (0),
 	  _reloadValue (1023),
 	  _counter (1023),
@@ -33,15 +34,22 @@ COMMODORE::TEDPulseSoundWave::TEDPulseSoundWave (unsigned int cF)
 }
 
 // ---
+void COMMODORE::TEDPulseSoundWave::setClockReference
+	(unsigned int masterFrequency, unsigned int divider)
+{
+	_chipFrequency = masterFrequency / divider;
+	_inputClockFrequency = (double) masterFrequency / (double) divider;
+
+	updateFrequencyInfo ();
+}
+
+// ---
 void COMMODORE::TEDPulseSoundWave::setFrequencyRegister (unsigned short value)
 {
 	_frequencyRegister = value & 0x03ff;
 	_reloadValue = (_frequencyRegister == 0x03ff) ? 1024 : 1023 - _frequencyRegister;
 
-	// Only inspection metadata is updated here; the running count and half-length are preserved.
-	_frequency = (_frequencyRegister == 0x03fe)
-		? 0.0 : (double) _chipFrequency / (8.0 * (double) _reloadValue);
-	_cyclesPerWave = (_frequency > 0.0) ? (double) _chipFrequency / _frequency : 0.0;
+	updateFrequencyInfo ();
 }
 
 // ---
@@ -137,6 +145,15 @@ MCHEmul::InfoStructure COMMODORE::TEDPulseSoundWave::getInfoStructure () const
 }
 
 // ---
+void COMMODORE::TEDPulseSoundWave::updateFrequencyInfo ()
+{
+	// Inspection metadata changes without touching the active divider or output phase.
+	_frequency = (_frequencyRegister == 0x03fe)
+		? 0.0 : _inputClockFrequency / (8.0 * (double) _reloadValue);
+	_cyclesPerWave = (_frequency > 0.0) ? 8.0 * (double) _reloadValue : 0.0;
+}
+
+// ---
 COMMODORE::TEDNoiseSoundWave::TEDNoiseSoundWave (unsigned int cF)
 	: MCHEmul::SoundWave (MCHEmul::SoundWave::Type::_NOISE, cF),
 	  _shiftRegister (0xff)
@@ -181,17 +198,17 @@ COMMODORE::TEDSoundSimpleLibWrapper::TEDSoundSimpleLibWrapper
 			{ "Year", "2023" }
 		}),
 	  _tedFrequency (tF), 
-	  _dividerValue (dv), // To get the CPU clock frequency...
+	  _initialDivider (dv),
 	  _samplingFrequency (sF),
 	  _volumen (0.0f), // There is no volumen at the beginning...
 	  _voices ( // Two voices...
 		{ new COMMODORE::TEDSoundSimpleLibWrapper::Voice (0, tF / dv), 
 		  new COMMODORE::TEDSoundSimpleLibWrapper::Voice (1, tF / dv) }),
 	  _registers (std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0)),
-	  _cyclesPerSample ((double) tF / (double (sF) * double (dv))), // It doesn't change ever...
-	  _counterCyclesPerSample (0.0f)
+	  _dividerValue (dv),
+	  _samplePhase (0)
 {
-	// Nothing else.
+	setClockDivider (dv);
 }
 
 // ---
@@ -290,33 +307,55 @@ void COMMODORE::TEDSoundSimpleLibWrapper::initialize ()
 
 	_registers = std::vector <MCHEmul::UByte> (0x20, MCHEmul::UByte::_0);
 	_volumen = 0.0;
-	_counterCyclesPerSample = 0.0;
+	_samplePhase = 0;
 
 	for (auto voice : _voices)
 		voice -> initialize ();
 
+	setClockDivider (_initialDivider);
 	updateControl ();
 }
 
 // ---
-bool COMMODORE::TEDSoundSimpleLibWrapper::getData (MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
+void COMMODORE::TEDSoundSimpleLibWrapper::setClockDivider
+	(unsigned int divider)
+{
+	_dividerValue = divider;
+
+	for (auto voice : _voices)
+		static_cast <Voice*> (voice) -> setClockReference (_tedFrequency, divider);
+}
+
+// ---
+bool COMMODORE::TEDSoundSimpleLibWrapper::getData
+	(MCHEmul::CPU* cpu, MCHEmul::UBytes& dt)
+{
+	return (getDataForTEDCycle (cpu, _dividerValue, dt));
+}
+
+// ---
+bool COMMODORE::TEDSoundSimpleLibWrapper::getDataForTEDCycle
+	(MCHEmul::CPU* cpu, unsigned int masterCycles, MCHEmul::UBytes& dt)
 {
 	for (auto voice : _voices)
 		voice -> clock ();
 
-	_counterCyclesPerSample += 1.0;
-	if (_cyclesPerSample <= 0.0 || _counterCyclesPerSample < _cyclesPerSample)
+	// Preserve fractional sample time across divider changes and mixed-duration pulses.
+	_samplePhase += (unsigned long long) _samplingFrequency * masterCycles;
+	if (_samplePhase < _tedFrequency)
 		return (false);
 
-	_counterCyclesPerSample = std::fmod (_counterCyclesPerSample, _cyclesPerSample);
+	const size_t samples = (size_t) (_samplePhase / _tedFrequency);
+	_samplePhase %= _tedFrequency;
 
-	// Fixed per-channel gain preserves channel 1 amplitude when a silent channel 2 is enabled.
+	// Fixed per-channel gain preserves channel 1 amplitude when channel 2 is silent.
 	double sample = 0.0;
 	for (auto voice : _voices)
 		sample += voice -> data ();
 	sample *= 0.5 * _volumen;
 
-	dt = MCHEmul::UBytes ({ MCHEmul::normalizedSoundSampleToU8 (sample) });
+	dt = MCHEmul::UBytes (std::vector <MCHEmul::UByte>
+		(samples, MCHEmul::normalizedSoundSampleToU8 (sample)));
 
 	return (true);
 }
@@ -349,6 +388,17 @@ COMMODORE::TEDSoundSimpleLibWrapper::Voice::Voice (int id, unsigned int cF)
 	  _noiseSelected (false)
 {
 	setClassName ("TEDVoice");
+}
+
+// ---
+void COMMODORE::TEDSoundSimpleLibWrapper::Voice::setClockReference
+	(unsigned int masterFrequency, unsigned int divider)
+{
+	_chipFrequency = masterFrequency / divider;
+	_pulse -> setClockReference (masterFrequency, divider);
+
+	if (_noise != nullptr)
+		_noise -> setClockReference (masterFrequency, divider);
 }
 
 // ---

@@ -52,8 +52,8 @@ First:@FIRST@, Last:@LAST@
 #---
 #---
 ;GraphicalInfo
-Raster:@RASTERY@,@RASTERX@
-Character Position:@CHARPOS@
+Published Raster Copy:Y=@RASTERY@, X=@RASTERX@
+Character Reload:@CHARPOS@, Character Row:@CHARROW@
 #---
 #---
 ;TEDTimer1
@@ -74,12 +74,15 @@ Graphic Mode:@MODE@
 40 Columns:@40C@, 25 Rows:@25R@
 Cursor Position:@CURSOR@
 ScrollX:@SCROLLX@, ScrollY:@SCROLLY@
-Single Clock Mode:@SINGLECLK@
+Single Clock Forced:@SINGLECLK@
+PAL Requested:@PAL@, FREEZE Requested:@FREEZE@
+FLASH Counter:@FLASHCOUNTER@, Phase Bit4:@FLASHPHASE@
 Border Color:@BorderColor>@
 Colors:@BkColor1>@, @BkColor2>@, @BkColor3>@, @BkColor4>@
 Memory:Screen($@SCREENADDRESS@), Chars($@CHARADDRESS@, ROM=@CHARSINROM@), Attributes($@ATTRIBUTEADDRESS@), Bitmap($@BITMAPADDRESS@)
-IRQ:@IRQ@(@IRQLINE@)
-->Current graphical position:
+Raster IRQ Enabled:@IRQ@, Pending:@RASTERIRQPENDING@, Compare:@IRQLINE@
+TED IRQ Request:@IRQREQUEST@, Internal Reason:@IRQREASON@
+->Graphics counters and published raster copy:
 @GraphicalInfo>@
 #---
 #---
@@ -104,9 +107,22 @@ Id:@ID@, Active:@ACTIVE@
 @WAVES?{fmter=.CLASS,empty=no waves}\n@
 #---
 #---
+;Execution
+Effective Counters:Y=@COUNTERY@, X=@COUNTERX@, VideoLine=@VIDEOLINE@
+Derived Raster Cycle:@RASTERCYCLE@, Working VC:@VC@
+PAL Profile:Selected=@SELECTEDPAL@, Presentation=@PRESENTATIONPAL@
+Presentation Change Pending:@PRESENTATIONPENDING@
+Selected Divider:@CLOCKDIVIDER@, Current Single Clock Decision:@SINGLECLOCK@
+Retained Graphics Cycle Active:@GRAPHICSCYCLEACTIVE@
+Pending:Vertical=@VERTICALCLOCKPENDING@, FLASH=@FLASHCLOCKPENDING@
+Horizontal Write Pending:@HORIZONTALWRITEPENDING@
+#---
+#---
 ;TED
 Id:@ID@
 @ATTRS?{key=YES,equal=:,empty=no attributes}\n@
+->TED execution:
+@Execution>@
 ->TEDRegisters:
 @TEDRegisters>@
 @Raster>@

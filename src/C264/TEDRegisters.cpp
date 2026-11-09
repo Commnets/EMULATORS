@@ -5,9 +5,7 @@
 C264::TEDRegisters::TEDRegisters 
 		(MCHEmul::PhysicalStorage* ps, size_t pp, const MCHEmul::Address& a, size_t s)
 	: COMMODORE::TEDRegisters (ps, pp, a, s),
-	  _keyboardRegisters (nullptr),
-	  _register8 (MCHEmul::UByte::_0)
-	  // The rest of the value sare initialized under the method initializeInternalValues...
+	  _keyboardRegisters (nullptr)
 { 
 	initializeInternalValues (); 
 }
@@ -16,8 +14,6 @@ C264::TEDRegisters::TEDRegisters
 void C264::TEDRegisters::initialize ()
 {
 	COMMODORE::TEDRegisters::initialize ();
-
-	_register8 = MCHEmul::UByte::_0;
 
 	initializeInternalValues ();
 }

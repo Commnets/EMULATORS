@@ -40,6 +40,13 @@ namespace MCHEmul
 
 		// The default copy constructors are ok...
 
+		/** Replaces geometry while preserving the display-zone reduction. */
+		void configure (const RasterData& data, unsigned short position);
+
+		unsigned short firstPosition () const
+							{ return (_firstPosition); }
+		unsigned short retracePosition () const
+							{ return (_retracePosition); }
 		unsigned short currentPosition () const
 						{ return (_currentPosition); }
 		unsigned short previousPosition () const // Without affecting the current one...
@@ -164,18 +171,18 @@ namespace MCHEmul
 						  return ((t < 0) ? (unsigned short) t + _maxPositions : (unsigned short) t); }
 
 		protected:
-		const unsigned short _firstPosition;
-		const unsigned short _firstVisiblePosition;
+		unsigned short _firstPosition;
+		unsigned short _firstVisiblePosition;
 		unsigned short _firstDisplayPosition;
-		const unsigned short _originalFirstDisplayPosition;
+		unsigned short _originalFirstDisplayPosition;
 		unsigned short _lastDisplayPosition;
-		const unsigned short _originalLastDisplayPosition;
-		const unsigned short _lastVisiblePosition;
-		const unsigned short _retracePosition;
-		const unsigned short _lastPosition;
-		const unsigned short _maxPositions;
-		const unsigned short _positionsToReduce1;
-		const unsigned short _positionsToReduce2;
+		unsigned short _originalLastDisplayPosition;
+		unsigned short _lastVisiblePosition;
+		unsigned short _retracePosition;
+		unsigned short _lastPosition;
+		unsigned short _maxPositions;
+		unsigned short _positionsToReduce1;
+		unsigned short _positionsToReduce2;
 
 		// Implementation
 		// To speed up calculus... They are also set at construction time.
@@ -318,6 +325,9 @@ namespace MCHEmul
 			    _step (st)
 						{ }
 
+		void configure (const RasterData& vd, const RasterData& hd,
+			unsigned short line, unsigned short column);
+
 		const RasterData& vData () const
 						{ return (_vRasterData); }
 		RasterData& vData ()
@@ -406,6 +416,8 @@ namespace MCHEmul
 			The parameter is the number of cycles to move the raster. \n
 			The raster moves _step pixels per cycle. */
 		inline bool moveCycles (unsigned short nC);
+		/** Advances one horizontal position and its vertical retrace carry. */
+		inline void moveDot ();
 		/** Similates whether the raster moves to the next line after adding nC cycles. \n
 			Returns true when the raster should move to another line, and false if not. \n
 			The internal variable rP is true when the retracePosition is overpassed. */
@@ -437,6 +449,15 @@ namespace MCHEmul
 		bool result = _hRasterData.retraceJustOverPassed (); // Passed over the retrace?
 		if (result) _vRasterData.next (); // ...so go to the next row...
 		return (result); // ...and also returns that situation...
+	}
+
+	// ---
+	inline void Raster::moveDot ()
+	{
+		_hRasterData.next ();
+
+		if (_hRasterData.retraceJustOverPassed ())
+			_vRasterData.next ();
 	}
 }
 

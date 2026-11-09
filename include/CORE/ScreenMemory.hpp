@@ -33,8 +33,7 @@ namespace MCHEmul
 
 		ScreenMemory& operator = (const ScreenMemory&) = delete;
 
-		virtual ~ScreenMemory ()
-							{ delete (_frameData); delete (_colorPalette);}
+		inline virtual ~ScreenMemory ();
 
 		ScreenMemory (ScreenMemory&&) = delete;
 
@@ -79,6 +78,13 @@ namespace MCHEmul
 		// The definition of the ascii codes...
 		static const std::vector <std::vector <UByte>> _CHARS;
 	};
+
+	// ---
+	inline ScreenMemory::~ScreenMemory ()
+	{
+		delete [] _frameData;
+		delete [] _colorPalette;
+	}
 
 	// ---
 	inline void ScreenMemory::setBox (size_t x1, size_t y1, size_t nPX, size_t nPY, unsigned int color)
