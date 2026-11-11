@@ -53,9 +53,6 @@ The implementation of the framework for VIC20 has been included.<br>
 Execute VIC20EmulatorC or VIC20Emulator /h to see the different options at starting, and the command HELP in the console to manipulate later the emulation.<br>
 The different configurations of the VIC20 can be simulated using the parameter /w at command line (0=default, 1=3k, 2=8k, 4=all).<br>
 The keyboard is configured as Commodore VIC20.<br><br>
-<img src="./docs/VIC20Data/Picture1.png"/><br>
-<img src="./docs/VIC20Data/Picture2.png"/><br>
-<img src="./docs/VIC20Data/Picture3.png"/>
 
 <h1><b>ZX81 emulator</b></h1>
 The implementation of the framework for ZX81 has been included.<br>
