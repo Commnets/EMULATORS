@@ -1,5 +1,11 @@
 #Formats used for the C264 series Emulation
 #(C) 2024 Ignacio Cea Fornies
+#C264 pacing counts TED master-clock periods.
+;CSPEED
+TED master clock:@SPEED@ periods/second (@PSPEED@% of nominal)
+Screen presentation:@HERTZS@ frames/second (@PHERTZS@% of nominal)
+CLOCKFACTOR scales the emulation target; percentages remain relative to nominal speed.
+#---
 ?./Commodore.fmt
 ?./LocalConsole.fmt
 #---

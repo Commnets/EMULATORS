@@ -25,7 +25,8 @@
  *	   deep debugging is active. \n
  *	4. With timed writes enabled, advanceToCPURead recovers the readable prefix
  *	   preceding the first write and leaves its final CPU cycle suspended
- *	   immediately before the prepared read-capture edge. \n
+ *	   immediately before the prepared read-capture edge. DMA waits advance
+ *	   TED time without consuming the retained logical CPU bus cycle. \n
  *
  *	Interrupt-entry notification. \n
  *	1. Obtain the interrupt BusCycleData and prepare the transaction. \n
@@ -36,15 +37,21 @@
  *	This notification describes CPU interrupt entry, not a TED IRQ request. \n
  *
  *	Recovery after CPU execution. \n
- *	simulate obtains the executed CPU boundary, validates the pending
- *	transaction and any prepared prefix, and extracts buffered writes. \n
- *	It repeatedly calls simulateCPUCycle until _lastCPUCycles reaches that
- *	boundary. An already suspended cycle resumes from its retained cursor;
- *	earlier TED work must not be repeated. \n
+ *	simulate validates nominal CPU duration and extracts buffered writes once.
+ *	The transaction can remain pending across subsequent CPU stop ticks. \n
+ *	It calls simulateCPUCycle only for time not already recovered by the
+ *	read prefix. A prefix may include DMA waits beyond the observed CPU clock;
+ *	those periods are not simulated again while the stopped CPU catches up. \n
+ *	An already suspended cycle resumes from its retained cursor. Each physical
+ *	period either consumes a logical bus cycle or accumulates one DMA wait;
+ *	writes use their declared bus position plus the preceding wait count. \n
  *	Each completed CPU cycle commits its half-pulse remainder and pacing time,
- *	publishes the diagnostic raster copy and advances _lastCPUCycles. \n
- *	After recovery, every scheduled write must have been consumed before the
- *	transaction state is released. Without timed writes, the first simulate
+ *	publishes the diagnostic raster copy and advances _cpuRecovery._nextCycle. \n
+ *	updateCPUStop requests only the remaining compensation through setStop,
+ *	outside CPUAboutToExecute. At the instruction end, BA can also retain the
+ *	next implicit opcode fetch. The transaction is released after its effective
+ *	CPU boundary, all writes and that next-fetch hold have been consumed. \n
+ *	Without timed writes, the first simulate
  *	call establishes the initial CPU synchronization boundary. \n
  *
  *	Single and double CPU speed. \n
@@ -60,31 +67,69 @@
  *	or 7 at double speed. These are recovery cursors, not absolute TED clocks. \n
  *
  *	Work within a slow TED pulse. \n
- *	advanceCPUQuarters skips quarter edges without TED work and calls
- *	processCPUQuarter for control and dot-clock edges. \n
+ *	advanceCPUQuarters visits control and dot-clock edges directly and calls
+ *	processCPUQuarter once for each relevant position. The retained cursor
+ *	stops before the read-access edge and resumes there without repeating work. \n
  *	Control edges process pending raster controls. At phase zero the graphics
- *	gate is captured and beginTEDCycle performs the existing fetch/counter
- *	work and prepares eight output entries. \n
+ *	gate is captured and beginTEDCycle performs retained row-end counter
+ *	work. Memory captures and retained-cell transfers run separately at phases
+ *	15 and 31, before coincident CPU writes. \n
  *	On emission edges, scheduled CPU writes precede pixel output. Raster IRQ
  *	sampling uses the operands captured before simultaneous CPU loads.
- *	The pixel is emitted before presentation and hardware-counter advancement. \n
+ *	clockBorders updates the retained vertical permission and horizontal
+ *	window after CPU writes and before output, including invisible dots.
+ *	RasterData supplies presentation geometry rather than the border mask.
+ *	The pixel is selected from the output shift register before shifting or
+ *	loading its next cell and before presentation/hardware-counter advancement. \n
+ *	ECM, bitmap, multicolor and reverse controls are accepted after output at
+ *	the end of the slow pulse, including frozen pulses. The preceding controls
+ *	govern that edge's pixel, shift, cell load and address preparation. \n
  *	At slow-pulse completion, finishTEDCycle performs the enabled counter,
  *	timer and sound work and propagates pending IRQ requests. Other request
  *	points preserve the existing raster-event and CPU-boundary handling. \n
+ *	CPU clock selection uses retained external-fetch and refresh windows. \n
+ *	H=296 closes external fetching and opens refresh, H=336 closes refresh,
+ *	and H=400 opens external fetching. Display enable qualifies only the
+ *	external-fetch request. The slow-boundary decision affects following
+ *	CPU periods; the current period retains its captured duration. \n
  *	Changing CPU speed does not multiply the timer or sound clocks. FREEZE
  *	gating is retained for the slow pulse; sound scheduling continues through
  *	the existing frozen-pulse path. \n
  *
+ *	DMA arbitration. \n
+ *	The selected FPGATED timing profile opens the request window after H=407
+ *	and closes it after the H=295 capture. Three slow-clock lead intervals
+ *	allow pending writes to finish; reads wait from the first BA request.
+ *	DMA ownership qualifies matrix/attribute RAM capture, independently of
+ *	the H=432..296 address-generation window and graphics-half fetches. \n
+ *	CPUTransactionContext retains logical CPU progress and pending work. \n
+ *	CPUTimedWrites retains the CPU binding, destinations and ordered writes. \n
+ *	CPURecoveryState retains elapsed time and a possibly suspended CPU cycle,
+ *	using the CPU recovery coordinate, with no absolute TED clock. \n
+ *	This remains instruction-granular CPU execution. Reads after writes,
+ *	interrupt vector reads and semantic side effects are not microcoded.
+ *	A frozen, asserted DMA request yields from prefix recovery to the CPU
+ *	stop scheduler instead of spinning indefinitely in the notification. \n
+ *
  *	Diagnostic event markers. \n
- *	TEDEVENTS marks accepted badline conditions, accepted raster-comparator
- *	events and the first propagation of each continuous TED IRQ request. \n
- *	Markers use presentation coordinates captured before dot advancement.
- *	They do not imply CPU interrupt acceptance or physical output latency.
+ *	TEDEVENTS draws accepted raster events as complete presentation rows,
+ *	using the captured raster number after that row has finished rendering.
+ *	Actual matrix/attribute captures mark two already emitted pixels each.
+ *	The first propagated TED IRQ request retains its separate point marker.
+ *	EventsStatus retains pending rows, labels and the current output-edge Marker.
+ *	The marker is reset before each emission phase with TEDEVENTS enabled.
+ *	A single-row mask preserves points under the completed raster line.
+ *	Top labels wait for their five glyph rows; geometry changes clear this state.
+ *	The diagnostic context is owned by TED and captured before each phase.
+ *	Internal methods consume that snapshot without passing it through the call chain.
+ *	Phase recovery is sequential and must not be recursively entered by callbacks.
+ *	These diagnostics do not imply CPU interrupt acceptance or physical latency.
  */
 
 #ifndef __COMMODORE_TED__
 #define __COMMODORE_TED__
 
+#include <algorithm>
 #include <array>
 #include <CORE/incs.hpp>
 #include <COMMODORE/C6529B/C6529B.hpp>
@@ -223,19 +268,8 @@ namespace COMMODORE
 		/** To draw or not to draw raster interrupt positions. */
 		void setDrawRasterInterruptPositions (bool d)
 							{ _drawRasterInterruptPositions = d; }
-		/** Enables markers for badlines, raster events and TED IRQ requests. */
-		void setDrawOtherEvents (bool d)
-		{
-			if (_drawOtherEvents == d)
-				return;
-
-			_drawOtherEvents = d;
-			_eventStatus = { };
-
-			// Enabling diagnostics must not turn an old request into a new event.
-			if (d && _TEDRegisters != nullptr)
-				_eventStatus._irqRequestMarked = _TEDRegisters -> launchIRQ ();
-		}
+		/** Enables transfer groups, accepted raster lines and TED IRQ request markers. */
+		inline void setDrawOtherEvents (bool d);
 
 		unsigned short screenFrequency () const
 							{ return (_initialConfiguration -> _screenFrequency); }
@@ -268,7 +302,8 @@ namespace COMMODORE
 
 		/** Returns and clears recovered time awaiting host pacing. \n
 			The returned unit is one board crystal-clock period. */
-		inline unsigned int takePendingPacingCycles ();
+		unsigned int takePendingPacingCycles ()
+							{ return (_cpuRecovery.takePendingPacingCycles ()); }
 
 		virtual bool initialize () override;
 
@@ -340,48 +375,101 @@ namespace COMMODORE
 		virtual MCHEmul::ScreenMemory* createScreenMemory () override;
 
 		// Draw the graphics in detail...
-		/** To simplify the use of some of the routines dedicated to draw graphics. */
-		struct DrawContext
+		/** Retained operands belonging to one graphics cell. */
+		struct VideoCell final
 		{
-			unsigned short _ICD;	// Initial Column of the Display (Not taken into account reductions in size).
-			unsigned short _SC;		// Scroll X
-			unsigned short _RCA;	// Raster X adjusted (Moves 8 by 8, so = Raster X >> 3 << 3)
-			unsigned short _RR;		// Raster Y (From the beginning of the visible zone.
-									// Moves 1 by 1. No adjusted needed)
-		};
-
-		/** Eight decoded output entries retained between preparation and emission. \n
-			Global background colors are resolved when each pixel is emitted. */
-		struct DrawResult
-		{
-			static const unsigned int _TRANSPARENT = ~0u;
-			static const unsigned int _BACKGROUNDREFERENCE = 0x100u;
-
-			DrawResult (unsigned int bC = _TRANSPARENT)
-				: _foregroundColorData { bC, bC, bC, bC, bC, bC, bC, bC },
-				  _invalid (false)
+			VideoCell ()
+				: _character (0), _attribute (0), _graphics (0),
+				  _cursor (false), _valid (false)
 							{ }
 
-			/** Literal palette color, or BACKGROUNDREFERENCE | background index. */
-			unsigned int _foregroundColorData [8];
-			bool _invalid;
+			unsigned char _character, _attribute, _graphics;
+			bool _cursor, _valid;
+		};
+
+		/** Transfers between memory capture and the live pixel shift register. */
+		struct VideoOutputState final
+		{
+			VideoOutputState ()
+				: _next (), _current (), _waiting (), _output (),
+				  _pixel (0), _scrollX (0), _control1 (0), _control2 (0),
+				  _doubleShift (false), _shiftActive (false),
+				  _verticalOpen (false), _horizontalOpen (false)
+							{ }
+
+			bool multicolor () const
+							{ return ((_control2 & 0x10) != 0 && (_control1 != 0 || (_output._attribute & 0x08) != 0)); }
+
+			VideoCell _next, _current, _waiting, _output;
+			unsigned char _pixel, _scrollX;
+			/** Effective FF06 bits 6..5 and FF07 bits 7,4, accepted at slow-pulse end. */
+			unsigned char _control1, _control2;
+			bool _doubleShift, _shiftActive;
+			/** Vertical permission and retained horizontal border window. */
+			bool _verticalOpen, _horizontalOpen;
 		};
 
 		/** Describes the latest CPU transaction notified to the TED. \n
 			CPU and bus-cycle references are non-owning. \n
 			BusCycleData belongs to the instruction or interrupt definition,
-			not to the reusable notification event. */
+			not to the reusable notification event. \n
+			Completed transaction metadata remains available for diagnostics. */
 		struct CPUTransactionContext final
 		{
-			CPUTransactionContext ()
-				: _cpu (nullptr), _busData (nullptr),
-				  _startCycle (0), _isInterrupt (false)
+			CPUTransactionContext
+				(MCHEmul::CPU* cpu = nullptr,
+				 const MCHEmul::BusCycleData* busData = nullptr,
+				 bool interrupt = false, bool pending = false)
+				: _cpu (cpu), _busData (busData),
+				  _startCycle (cpu == nullptr ? 0 : cpu -> clockCycles ()),
+				  _isInterrupt (interrupt),
+				  _logicalCycle (0), _waitCycles (0), _firstStopPosition (0),
+				  _writesExtracted (false), _stopRequested (false),
+				  _pending (pending), _readAdvanceCycles (0)
 							{ }
+
+			/** Releases pending work while retaining the last transaction for diagnostics. */
+			inline void finish ();
+			/** Accounts for one recovered logical cycle or DMA wait. */
+			inline void advance (bool held, unsigned int recoveryCycle);
 
 			MCHEmul::CPU* _cpu;
 			const MCHEmul::BusCycleData* _busData;
 			unsigned int _startCycle;
 			bool _isInterrupt;
+			/** Bus-cycle progress excludes recovered DMA wait periods. */
+			unsigned int _logicalCycle, _waitCycles, _firstStopPosition;
+			bool _writesExtracted, _stopRequested;
+			/** Whether bus work or wait compensation remains pending. */
+			bool _pending;
+			/** Planned logical prefix length; waits do not consume its bus cycles. */
+			unsigned int _readAdvanceCycles;
+		};
+
+		/** CPU binding, buffered destinations and ordered write commands. */
+		struct CPUTimedWrites final
+		{
+			CPUTimedWrites ()
+				: _cpu (nullptr), _subsets (), _commands (),
+				  _next (0), _enabled (false)
+							{ }
+
+			/** Consumes the queue while preserving its allocated capacity. */
+			inline void clearCommands ();
+
+			MCHEmul::CPU* _cpu;
+			/** Includes currently inactive aliases. */
+			MCHEmul::PhysicalStorageSubsets _subsets;
+			/** Commands retain their original CPU write order. */
+			MCHEmul::SetMemoryCommands _commands;
+			size_t _next;
+			bool _enabled;
+		};
+
+		/** BA lead intervals followed by TED ownership of the CPU bus phase. */
+		enum class DMAState : unsigned char
+		{
+			_IDLE, _WARNING1, _WARNING2, _WARNING3, _ACTIVE
 		};
 
 		/** Retained state of one CPU cycle. \n
@@ -397,7 +485,7 @@ namespace COMMODORE
 				  _halfCarryIn (halfCarryIn),
 				  _nextQuarter (0),
 				  _singleClock (singleClock),
-				  _accessPending (false)
+				  _accessPending (false), _held (false)
 							{ }
 
 			unsigned int halfTEDCycles () const
@@ -419,7 +507,32 @@ namespace COMMODORE
 			/** Input remainder and next unprocessed quarter-dot edge. */
 			unsigned int _halfCarryIn, _nextQuarter;
 			/** Retained clock mode and suspension before the CPU access. */
-			bool _singleClock, _accessPending;
+			bool _singleClock, _accessPending, _held;
+		};
+
+		/** Recovered CPU time and the possibly suspended CPU cycle. */
+		struct CPURecoveryState final
+		{
+			CPURecoveryState
+				(unsigned int nextCycle = 0, unsigned int halfCarry = 0)
+				: _cycle (), _nextCycle (nextCycle),
+				  _halfCarry (halfCarry), _pendingPacingCycles (0)
+							{ }
+
+			/** Commits elapsed time only after the retained cycle has completed. */
+			inline void commitElapsedTime ();
+			/** Returns and clears crystal clocks awaiting host pacing. */
+			inline unsigned int takePendingPacingCycles ();
+
+			CPUCycleState _cycle;
+			/** The next CPU cycle to recover starts at this coordinate. \n
+				Zero is an initial-synchronization sentinel only without timed writes. */
+			unsigned int _nextCycle;
+			/** Completed remainder in half-TED-cycle units, always zero or one. \n
+				A suspended cycle retains its input remainder in CPUCycleState. */
+			unsigned int _halfCarry;
+			/** Recovered crystal clocks awaiting host pacing, not an absolute clock. */
+			unsigned int _pendingPacingCycles;
 		};
 
 		/** Diagnostic coordinates for a TED phase event. \n
@@ -438,68 +551,160 @@ namespace COMMODORE
 			bool _conversionSingleClock;
 		};
 
-		/** Diagnostic events associated with one presentation position. */
-		struct EventMarker final
+		/** Capture boundaries within one slow TED pulse. \n
+			Values use CPUCycleState::phase (), not CPU-cycle indexes. \n
+			The opposite memory operation prepares its address at each boundary. */
+		enum class VideoFetchPhase : unsigned int
 		{
-			static const unsigned int _BADLINE = 0x01;
-			static const unsigned int _RASTER = 0x02;
-			static const unsigned int _IRQ = 0x04;
-
-			EventMarker ()
-				: _events (0), _column (0), _row (0), _visible (false)
-								{ }
-
-			unsigned int _events;
-			unsigned short _column, _row;
-			bool _visible;
+			_GRAPHICS = 15,
+			_MATRIX = 31
 		};
 
-		// Invoked from the method "simulation"....
-		/** Different actions are taken attending the raster cycle. */
-		virtual void treatRasterCycle (const DebugCycleContext& dC);
-		/** Emits one prepared pixel using the current output colors and border. */
-		void drawVisibleZone (unsigned int pixel);
+		/** Meaning of the address retained for the following memory half-cycle. */
+		enum class VideoReadKind
+		{
+			_NONE,
+			_MATRIX,
+			_CHARACTER,
+			_BITMAP,
+			_IDLE
+		};
+
+		/** One pending memory read, shared by alternating fetch half-cycles. \n
+			The address and destination slot are selected before data capture. \n
+			Matrix identifies a bus read; capture enables select its buffer destinations. */
+		struct PendingVideoRead final
+		{
+			PendingVideoRead ()
+				: _kind (VideoReadKind::_NONE), _address (), _index (0)
+							{ }
+
+			VideoReadKind _kind;
+			MCHEmul::Address _address;
+			size_t _index;
+		};
+
+		/** Video fetch timing contract. \n
+			At VideoFetchPhase::_GRAPHICS, capture the preceding graphics read
+			and prepare the following attribute or character-code address. \n
+			At VideoFetchPhase::_MATRIX, capture the preceding attribute or
+			character-code read and prepare the following graphics address. \n
+			A prepared address belongs to a pending read. Its later capture
+			must not reconstruct that address from registers modified meanwhile. \n
+			Attribute and character-code captures use distinct reload conditions
+			and update only their corresponding retained buffer. \n
+			The graphics reader consumes the character code available at its
+			address-selection boundary, not a future buffer value. \n
+			Capture uses the counter values preceding its increment. Counter
+			updates and buffer transfers on the same edge must have explicit order. \n
+			CPU double speed changes how much of this pulse is recovered by one
+			CPU cycle; it does not change these relative fetch boundaries. \n
+			FREEZE and the effective fetch windows qualify each operation. \n
+			The scheduler executes these captures before coincident CPU writes.
+			Row reloads retain the existing raster-cycle approximation. Output
+			loads retained cells after emission at the sampled scroll boundary. */
+
+		/** Current fetch integration status. \n
+			H=432 opens address generation and reloads working positions;
+			H=296 closes it without cancelling the last pending graphics read. \n
+			The circular-buffer index advances at enabled matrix boundaries,
+			independently of address reloads and the graphics working counter. \n
+			Row-end work retains its legacy cycle-57 approximation. Retained cells
+			feed the pixel shift register. Slow-boundary controls and retained border
+			windows follow the selected implementation profile, not a new silicon measurement. */
+
+		/** Normal horizontal traversal, with the existing phase alignment. \n
+			Matrix-plane address positions: 435, 443, ..., 291. \n
+			Matrix-plane capture positions: 439, 447, ..., 295. \n
+			Graphics address positions: 439, 447, ..., 295. \n
+			Graphics capture positions: 443, 451, ..., 299. \n
+			Each enabled traversal contains 40 entries and wraps through H=0. \n
+			These coordinates describe the normal sequence, not an index formula. \n
+			FF1E writes, interrupted windows and FREEZE require retained window
+			and counter state; do not reconstruct buffer indexes from H alone. */
+
+		/** Persistent diagnostic state and the marker for one output edge. */
+		struct EventsStatus final
+		{
+			static const unsigned short _NOROW = 0xffff;
+
+			/** Events captured before presentation advances. */
+			struct Marker final
+			{
+				static const unsigned int _BADLINE = 0x01;
+				static const unsigned int _RASTER = 0x02;
+				static const unsigned int _IRQ = 0x04;
+
+				Marker ()
+					: _events (0), _column (0), _row (0), _rasterLine (0),
+					  _visible (false), _rowVisible (false),
+					  _emitted (false), _afterVisible (false)
+							{ }
+
+				unsigned int _events;
+				unsigned short _column, _row, _rasterLine;
+				bool _visible, _rowVisible, _emitted, _afterVisible;
+			};
+
+			EventsStatus (size_t columns = 0)
+				: _marker (), _irqRequestMarked (false),
+				  _row (_NOROW), _rasterLine (0),
+				  _rowFinished (false), _rasterPending (false),
+				  _marks (columns, 0),
+				  _earlyRasterLines
+					{ _NOROW, _NOROW, _NOROW, _NOROW, _NOROW }
+							{ }
+
+			/** Resets diagnostics while reusing marker storage when geometry permits. */
+			inline void reset (size_t columns, bool irqMarked = false);
+			/** Starts a different presentation row and clears its point markers. */
+			inline void beginRow (unsigned short row);
+			/** Drops frame annotations without rearming a continuous IRQ request. */
+			inline void finishFrame ();
+
+			/** Events captured for the current output edge. */
+			Marker _marker;
+			bool _irqRequestMarked;
+			unsigned short _row, _rasterLine;
+			bool _rowFinished, _rasterPending;
+			/** Point markers already drawn in this row; zero means no marker. */
+			std::vector <unsigned char> _marks;
+			/** Top labels wait until their five text rows are complete. */
+			unsigned short _earlyRasterLines [5];
+		};
+
+		// Video output and diagnostic overlays.
+		/** Selects the current shift-register pixel using effective controls and live colors. \n
+			pixel identifies the phase-derived offset used by diagnostic annotations. \n
+			inScreen is the retained horizontal border window, not presentation geometry. */
+		void drawVisibleZone (unsigned int pixel, bool inScreen);
 		/** Draws diagnostic markers over already rendered pixels. */
-		void drawOtherEvents (const EventMarker& marker);
+		void drawOtherEvents ();
+		/** Draws an accepted raster event over its completed presentation row. */
+		void drawRasterIRQLine
+			(unsigned short row, unsigned short rasterLine);
 
-		// These all methods are invoked from the three ones above!
-		// They are here just to structure better the code...
-		// Read screen data
-		// Methods linked to the raster line to the read the graphics...
-		/** To read the video matrix and the RAM color. \n
-			Someting that happens during a badline. */
-		inline void readVideoMatrixAndColorRAM ();
-		/** To read the graphical info, considerig the info read in the previous method. \n
-			This method is executed per raster cycles. */
-		inline void readGraphicalInfo ();
+		// Retained video reads and output preparation.
+		/** Captures the preceding read and prepares the opposite memory half. */
+		void clockVideoFetch (VideoFetchPhase phase);
+		/** Retains a read after the preceding operation was consumed or cancelled. */
+		inline void prepareVideoRead
+			(VideoReadKind kind, const MCHEmul::Address& address, size_t index);
+		/** Captures the pending read and reports its effective operation. */
+		MCHEmul::UByte captureVideoRead (unsigned int targets);
+		/** Selects a graphics address using the operands available at selection. */
+		void prepareGraphicsRead
+			(size_t index, const MCHEmul::UByte& character,
+			 unsigned short position, unsigned char row, bool idle);
+		/** Reads an already selected graphics address and restores temporary mapping. */
+		MCHEmul::UByte readVideoGraphics
+			(const MCHEmul::Address& address, bool useGraphicsROMSelection);
 
-		/** To draw any type of graphic \n
-			This method uses the ones below it \n
-			The method receives: \n
-			dC = other info about the raster used to finally draw. \n
-			They all return a instance of DrawResult (@see above). */
-		DrawResult drawGraphics (const DrawContext& dC);
-		/**
-		  *	Draws a monocolor char. \n
-		  *	All methods receive: \n
-		  *	cb	= window column adjusted by the scrollX value where to start to draw 8 pixels. \n
-		  * Some of them receive: \n
-		  * inv = to point aout that the method is invoked from an invalid graphic mode. \n
-		  * The first method receives a flag to point out whether the cursor has or not to be drawn,
-		  * and also the position to draw the cursor (useful when the previous variable was true).
-		  */
-		DrawResult drawMonoColorChar (int cb, bool c, int cI, int cP);
-		/** Draws a multicolor char. \n
-			The mode can be used also as an invalid mode. */
-		DrawResult drawMultiColorChar (int cb, bool inv = false);
-		/** Draws an enhaced multicolor char. */
-		DrawResult drawMultiColorExtendedChar (int cb);
-		/** Draws a monocolor bitmap. \n
-			The mode can be used also as an invalid mode. */
-		DrawResult drawMonoColorBitMap (int cb, bool inv = false);
-		/** Draws a multicolor bitmap. \n
-			The mode can be used as an invalid mode. */
-		DrawResult drawMultiColorBitMap (int cb, bool inv = false);
+		/** Shifts the output byte or loads a retained cell at the scroll boundary. \n
+			The retained horizontal window permits shifting beyond the normal screen rectangle. */
+		void clockVideoOutput (bool halfEnd, bool inScreen, unsigned char scrollX);
+		/** Resolves the current output bits without advancing the shift register. */
+		unsigned int videoPixelColor () const;
 
 		// Very internal methods...
 		/** Reads RAM for video-matrix and attribute fetches, independently of CPU overlays. \n */
@@ -527,12 +732,18 @@ namespace COMMODORE
 
 		/** Advances to the final readable phase before the first write. */
 		bool advanceToCPURead (MCHEmul::CPU* cpu);
+		/** BA holds reads; writes may finish only before TED takes the bus. */
+		inline bool CPUAccessBlocked () const;
+		/** Compensates recovered wait time through the existing CPU stop mechanism. */
+		void updateCPUStop (MCHEmul::CPU* cpu);
 		/** Recovers a CPU cycle, optionally stopping before its access. */
 		bool simulateCPUCycle
 			(MCHEmul::CPU* cpu,
 			 unsigned int batchStart, unsigned int batchEnd,
 			 bool completeCycle = true);
-		/** Advances the relative recovery cursor, skipping edges without TED work. */
+		/** Visits control and dot edges directly using the retained recovery cursor. \n
+			target is exclusive and identifies the pre-access edge or CPU-cycle end. \n
+			Callers use quarterDots () - 9 or quarterDots (), preserving edge alignment. */
 		bool advanceCPUQuarters
 			(MCHEmul::CPU* cpu, unsigned int target,
 			 unsigned int batchStart, unsigned int batchEnd);
@@ -540,25 +751,31 @@ namespace COMMODORE
 		bool processCPUQuarter
 			(MCHEmul::CPU* cpu,
 			 unsigned int batchStart, unsigned int batchEnd);
+		/** Updates retained border windows before emitting the current dot. */
+		inline void clockBorders ();
+		/** Accepts the programmed graphics controls for subsequent output and fetches. */
+		inline void latchVideoControls ();
+		/** Updates BA/AEC arbitration after the current bus phase has completed. */
+		void clockDMA (bool slowEnd);
+		bool DMARequested () const
+							{ return (_dmaState != DMAState::_IDLE); }
+		bool DMAActive () const
+							{ return (_dmaState == DMAState::_ACTIVE); }
 		/** Selects timing without changing an already captured CPU period. */
-		void selectConfiguration ();
+		inline void selectConfiguration ();
 		/** Applies presentation geometry at its next frame origin. */
-		bool applyPresentationConfiguration (const DebugCycleContext& dC);
+		bool applyPresentationConfiguration ();
 		/** Decodes the effective horizontal counter and internal line capture. */
-		bool processRasterControl (const DebugCycleContext& dC);
+		bool processRasterControl ();
 		/** Advances the counters, respecting simultaneous CPU-load priorities. */
-		void clockRasterDot
-			(unsigned int phase, unsigned int writes,
-			 const DebugCycleContext& dC);
+		void clockRasterDot (bool slowEnd, unsigned int writes);
 		inline bool sampleRasterIRQ (bool matched, bool acknowledge);
 		/** Returns zero outside the normal horizontal traversal. */
 		inline unsigned short rasterCycle () const;
-		/** Retains the existing graphics processing at the beginning of a slow pulse. */
-		void beginTEDCycle (const DebugCycleContext& dC);
+		/** Processes slow-pulse display, badline and row-end controls. */
+		void beginTEDCycle ();
 		/** Completes slow-pulse work and draws events before image delivery. */
-		void finishTEDCycle
-			(MCHEmul::CPU* cpu, unsigned int requestCycle,
-			 const DebugCycleContext& dC, EventMarker& marker);
+		void finishTEDCycle (MCHEmul::CPU* cpu, unsigned int requestCycle);
 		/** Propagates the current request and reports its first diagnostic mark. */
 		bool requestIRQ (MCHEmul::CPU* cpu, unsigned int cycle);
 		/** Extracts one complete transaction's buffered CPU writes. \n
@@ -574,11 +791,11 @@ namespace COMMODORE
 		/** Returns the CPU clock decision for the current TED position. \n
 			Does not advance the raster or modify graphics state. */
 		inline bool singleClockModeForCurrentCycle () const;
-		/** Distributes one slow-clock pulse. \n
-			FREEZE gates timer clocks while sound retains its existing clock policy. */
 		/** Divider selected by the current FF07.6 value. */
 		unsigned int clockDivider () const
 							{ return (_configuration -> _divider); }
+		/** Distributes one slow-clock pulse. \n
+			FREEZE gates timer clocks while sound retains its existing clock policy. */
 		inline void clockTEDCycle (bool countersEnabled);
 		/** Copies transaction coordinates without retaining the event object. */
 		inline bool prepareCPUTransaction
@@ -592,17 +809,18 @@ namespace COMMODORE
 
 		//-----
 		std::string debugRasterAsString () const;
-		std::string debugTimingAsString (const DebugCycleContext& dC) const;
+		std::string debugTimingAsString () const;
 		/** Selected controls and retained slow-pulse gate; no CPU duration is inferred. */
 		std::string debugClockAsString () const;
 		std::string debugInternalAsString () const;
+		std::string debugVideoOutputAsString () const;
 		std::string debugTimersAsString () const;
 		std::string debugInterruptAsString () const
 							{ return (_TEDRegisters -> debugInterruptAsString ()); }
 		DebugCycleContext debugCycleContext
 			(const CPUCycleState& cS,
 			 unsigned int batchStart, unsigned int batchEnd) const;
-		void debugTEDCycle (const DebugCycleContext& dC);
+		void debugTEDCycle ();
 		void debugCPUAboutToExecute
 			(const MCHEmul::InstructionContextEventData* dt);
 		void debugCPUAboutToExecute
@@ -610,19 +828,25 @@ namespace COMMODORE
 		std::string debugCPUTransactionAsString () const;
 		void debugCPUReadAdvance
 			(MCHEmul::CPU* cpu, bool after) const;
-		void debugBadLine (const DebugCycleContext& dC);
-		void debugReadingVideoMatrix (const DebugCycleContext& dC);
-		void debugReadingGraphics (const DebugCycleContext& dC);
-		/** Logs the eight prepared codes without resolving background references. */
-		void debugPreparedGraphics (const DebugCycleContext& dC) const;
-		void debugTEDCycleEnd (const DebugCycleContext& dC);
-		void debugFrozenTEDCycle (const DebugCycleContext& dC) const;
+		void debugCPUStop (MCHEmul::CPU* cpu, unsigned int remaining) const;
+		void debugBadLine ();
+		void debugReadingVideoMatrix
+			(const MCHEmul::Address& address, size_t index,
+			 const MCHEmul::UByte& value);
+		void debugReadingVideoAttributes
+			(const MCHEmul::Address& address, size_t index,
+			 const MCHEmul::UByte& value);
+		void debugReadingGraphics
+			(const PendingVideoRead& pending, const MCHEmul::UByte& value);
+		/** Logs a shift-register load before slow-boundary control acceptance. */
+		void debugVideoOutputLoad () const;
+		void debugTEDCycleEnd ();
+		void debugFrozenTEDCycle () const;
 		void debugCPUWrite
 			(MCHEmul::CPU* cpu, unsigned int cycle,
 			 const MCHEmul::SetMemoryCommand& command, bool after) const;
 		void debugRasterEvent
-			(const DebugCycleContext& dC,
-			 const char* event, unsigned short sourceLine) const;
+			(const char* event, unsigned short sourceLine) const;
 		//-----
 
 		protected:
@@ -656,49 +880,24 @@ namespace COMMODORE
 		bool _rasterIRQMatched;
 		/** Counter/graphics gating retained for the complete slow-clock pulse. */
 		bool _graphicsCycleActive;
-		/** Latest notified transaction. \n
-			It remains available after recovery and is replaced by the next
-			notification; it does not indicate that execution is still active. */
+		/** Retained horizontal windows used by the CPU clock decision. */
+		bool _externalFetchClock, _refreshClock;
+		/** Arbitration window differs from the matrix-address generation window. */
+		DMAState _dmaState;
+		bool _dmaWindow;
+		/** Latest transaction, retained after recovery for diagnostics. */
 		CPUTransactionContext _cpuTransaction;
-		/** CPU bound to the timed-write scheduler. */
-		MCHEmul::CPU* _timedWriteCPU;
-		/** All CPU write destinations, including currently inactive aliases. */
-		MCHEmul::PhysicalStorageSubsets _timedWriteSubsets;
-		/** Extracted commands in original CPU write order. */
-		MCHEmul::SetMemoryCommands _pendingWrites;
-		/** Index of the next command to apply. */
-		size_t _nextPendingWrite;
-		/** Whether the scheduler owns buffered CPU writes. */
-		bool _cpuTimedWritesEnabled;
-		/** Whether the latest notified transaction awaits recovery. */
-		bool _cpuTransactionPending;
-		/** Retained CPU-cycle state, including a possible suspended access. */
-		CPUCycleState _cpuCycleState;
-		/** Prepared prefix length, including its final suspended CPU cycle. */
-		unsigned int _cpuReadAdvanceCycles;
-		/** Recovered time awaiting host pacing, in crystal-clock units. \n
-			Consumed after each computer iteration; not an absolute TED clock. */
-		unsigned int _pendingPacingCycles;
+		/** CPU binding and buffered-write scheduling. */
+		CPUTimedWrites _cpuTimedWrites;
+		/** Recovered time and suspended CPU-cycle progress. */
+		CPURecoveryState _cpuRecovery;
 		/** Crystal clocks accumulated within the current slow sound pulse. \n
 			Cleared when that pulse is queued; not an absolute TED clock. */
 		unsigned int _pendingSoundMasterCycles;
-		/** CPU boundary reached by recovery. \n
-			The next CPU cycle to recover starts at this coordinate. \n
-			It advances after each completed CPU cycle. \n
-			Zero is an initial-synchronization sentinel only without timed writes enabled. */
-		unsigned int _lastCPUCycles;
-		/** Completed time remainder in half-TED-cycle units, always 0 or 1. \n
-			Updated after completing a CPU cycle. \n
-			A suspended cycle retains its input remainder and progress in CPUCycleState. */
-		unsigned int _pendingHalfCyclesFromLastExecution;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
 		SDL_PixelFormat* _format;
 		/** Derived graphics-cycle position retained at the beginning of the slow pulse. */
 		unsigned short _cycleInRasterLine;
-		/** When the raster is in the first bad line this variable is set taking into account what 
-			is kept in the TED register about whether the video ir or not active. \n
-			In any other circunstance it kepts its value. */
-		bool _videoActive;
 		/** Current single-clock decision produced by TED processing. \n
 			It is not a history of the modes used by previous CPU cycles. \n
 			Once a CPU cycle is captured, later changes to this value
@@ -712,14 +911,16 @@ namespace COMMODORE
 			This variable is set to -1 at the beginning of every raster line. */
 		mutable int _lastBadLineScrollY;
 		/** When the situation of a new bad line araises, is latched in this variable. \n
-			This variabe is desactivated at the end of the line, and when the graphical info is finally read. */
+			This variable is cleared when the next internal video line is captured. */
 		mutable bool _newBadLineCondition;
 
-		/** Graphics fetch state and buffers.
-			The 10-bit character position reload counter and the 3-bit vertical
-			subaddress are stored in TEDRegisters::GraphicalInfo and shared with
-			the CPU-visible registers. VC is the separate working counter.
-			The current fetch and counter phases are implemented in treatRasterCycle (). */
+		/** Graphics fetch state and retained buffers. \n
+			The ten-bit character reload counter and three-bit vertical
+			subaddress are shared through TEDRegisters::GraphicalInfo. \n
+			VC is the graphics working counter. Matrix/attribute address
+			position and reload belong to VideoFetchState. \n
+			Fetches follow the retained window and phase boundaries. The output
+			consumes retained cell operands instead of reading these buffers live. */
 		struct TEDGraphicInfo
 		{
 			TEDGraphicInfo ()
@@ -727,10 +928,7 @@ namespace COMMODORE
 				  _idleState (true),
 				  _screenCodeData { },
 				  _graphicData { },
-				  _colorData { },
-				  _lastScreenCodeDataRead (MCHEmul::UByte::_0),
-				  _lastGraphicDataRead (MCHEmul::UByte::_0),
-				  _lastColorDataRead (MCHEmul::UByte::_0)
+				  _colorData { }
 							{ }
 
 			unsigned short _VC, _VLMI;
@@ -740,29 +938,73 @@ namespace COMMODORE
 			mutable std::array <MCHEmul::UByte, _GRAPHMAXCHARCOLUMNS> _screenCodeData;
 			mutable std::array <MCHEmul::UByte, _GRAPHMAXCHARCOLUMNS> _graphicData;
 			mutable std::array <MCHEmul::UByte, _GRAPHMAXCHARCOLUMNS> _colorData;
-			/** The last info read. */
-			mutable MCHEmul::UByte _lastScreenCodeDataRead;
-			mutable MCHEmul::UByte _lastGraphicDataRead;
-			mutable MCHEmul::UByte _lastColorDataRead;
+		};
+
+		/** Independent matrix/attribute reload state. \n
+			Address position and circular-buffer position are different counters. \n
+			Position advances at matrix boundaries; row reload retains cycle 57. */
+		struct VideoFetchState final
+		{
+			static const unsigned int _ATTRIBUTES = 0x01;
+			static const unsigned int _MATRIX = 0x02;
+
+			VideoFetchState ()
+				: _position (0), _reload (0), _bufferIndex (0),
+				  _scrollY (0), _displayActive (false),
+				  _matrixLine (false), _window (false)
+							{ }
+
+			/** Returns buffer-capture enables, not the selected bus address. */
+			unsigned int captureTargets (unsigned short videoLine) const
+			{
+				return
+					(((_displayActive && videoLine < 203 &&
+					   (videoLine & 0x07) == _scrollY)
+						? _ATTRIBUTES : 0u) |
+					 (_matrixLine ? _MATRIX : 0u));
+			}
+
+			/** Retains the preceding line condition before line/scroll updates. */
+			void latchNextLine (unsigned short previousVideoLine)
+							{ _matrixLine =
+								(captureTargets (previousVideoLine) & _ATTRIBUTES) != 0; }
+
+			/** Advances the RAM address counter after its qualified use. */
+			void advancePosition ()
+							{ _position = (_position + 1) & 0x03ff; }
+
+			/** Advances buffer circulation independently of address reloads. */
+			void advanceBuffer ()
+							{ _bufferIndex =
+								(_bufferIndex == _GRAPHMAXCHARCOLUMNS - 1)
+									? 0 : _bufferIndex + 1; }
+
+			/** Current ten-bit matrix/attribute address position. */
+			unsigned short _position;
+			/** Independent ten-bit address reload value. */
+			unsigned short _reload;
+			/** Circular-buffer position, advanced independently of address reloads. */
+			unsigned short _bufferIndex;
+			/** Scroll sampled at the qualified slow-clock boundary. */
+			unsigned char _scrollY;
+			/** Display enable retained for the fetch sequence. */
+			bool _displayActive;
+			/** Character-code capture condition retained from the preceding line. */
+			bool _matrixLine;
+			/** Address-generation and buffer-circulation window. */
+			bool _window;
 		};
 
 		TEDGraphicInfo _tedGraphicInfo;
-		/** Graphics prepared for the current eight-dot pulse. */
-		DrawResult _drawResult;
+		/** Active reload conditions, circular index and phased address state. */
+		VideoFetchState _videoFetchState;
+		/** Address and destination retained until the next qualified capture. */
+		PendingVideoRead _pendingVideoRead;
+		/** Retained cell transfers, effective controls and pixel shifting. */
+		VideoOutputState _videoOutput;
 
-		/** Diagnostic state retained between event positions. */
-		struct EventsStatus final
-		{
-			EventsStatus ()
-				: _badLinePending (false), _irqRequestMarked (false)
-								{ }
-
-			/** Accepted badline awaiting its first emission edge. */
-			bool _badLinePending;
-			/** The current continuous IRQ request has already been marked. */
-			bool _irqRequestMarked;
-		};
-
+		/** Snapshot captured before writes and advancement of the current phase. */
+		DebugCycleContext _debugCycleContext;
 		EventsStatus _eventStatus;
 
 		private:
@@ -770,7 +1012,59 @@ namespace COMMODORE
 	};
 
 	// ---
-	inline unsigned int TED::takePendingPacingCycles ()
+	inline void TED::setDrawOtherEvents (bool d)
+	{
+		if (_drawOtherEvents == d)
+			return;
+
+		_drawOtherEvents = d;
+
+		// An existing request must not become a new diagnostic event on activation.
+		_eventStatus.reset
+			(_raster.visibleColumns (),
+			 d && _TEDRegisters != nullptr && _TEDRegisters -> launchIRQ ());
+	}
+
+	// ---
+	inline void TED::CPUTransactionContext::finish ()
+	{
+		_pending = false;
+		_readAdvanceCycles = 0;
+	}
+
+	// ---
+	inline void TED::CPUTransactionContext::advance
+		(bool held, unsigned int recoveryCycle)
+	{
+		// A completed transaction can still recover waits before the next opcode.
+		if (held || _logicalCycle == _busData -> _numberCycles)
+		{
+			if (_waitCycles == 0)
+				_firstStopPosition = recoveryCycle - _startCycle;
+
+			++_waitCycles;
+		}
+		else
+			++_logicalCycle;
+	}
+
+	// ---
+	inline void TED::CPUTimedWrites::clearCommands ()
+	{
+		_commands.clear ();
+		_next = 0;
+	}
+
+	// ---
+	inline void TED::CPURecoveryState::commitElapsedTime ()
+	{
+		_halfCarry =
+			(_cycle._halfCarryIn + _cycle.halfTEDCycles ()) & 0x01;
+		_pendingPacingCycles += _cycle.masterCycles ();
+	}
+
+	// ---
+	inline unsigned int TED::CPURecoveryState::takePendingPacingCycles ()
 	{
 		const unsigned int result = _pendingPacingCycles;
 
@@ -780,57 +1074,114 @@ namespace COMMODORE
 	}
 
 	// ---
-	inline void TED::readVideoMatrixAndColorRAM ()
+	inline void TED::EventsStatus::reset
+		(size_t columns, bool irqMarked)
 	{
-		const size_t vc = ((size_t) _tedGraphicInfo._VC) & 0x03ff;
+		_marker = { };
+		_irqRequestMarked = irqMarked;
+		_rasterLine = 0;
 
-		_tedGraphicInfo._lastScreenCodeDataRead =
-			_tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI] =
-				readRAMForVideo (_TEDRegisters -> screenMemory () + vc);
+		finishFrame ();
 
-		_tedGraphicInfo._lastColorDataRead =
-			_tedGraphicInfo._colorData [_tedGraphicInfo._VLMI] =
-				readRAMForVideo (_TEDRegisters -> attributeMemory () + vc);
+		// Resizing to the current width preserves the existing allocation.
+		_marks.resize (columns);
+		std::fill (_marks.begin (), _marks.end (), 0);
 	}
 
 	// ---
-	inline void TED::readGraphicalInfo ()
+	inline void TED::EventsStatus::beginRow (unsigned short row)
 	{
-		const COMMODORE::TEDRegisters::GraphicalInfo& gI =
-			_TEDRegisters -> graphicalInfo ();
+		if (_row == row)
+			return;
 
-		memoryRef () -> setActiveView (_TEDView);
+		_row = row;
+		_rowFinished = false;
+		_rasterPending = false;
 
-		if (_tedGraphicInfo._idleState) // In this state the info is read from a specific place of the memory...
-			_tedGraphicInfo._lastGraphicDataRead =
-				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
-					_TEDRegisters -> graphicExtendedColorTextModeActive () 
-						? memoryRef () -> value (_MEMORYPOSIDLE1) : memoryRef () -> value (_MEMORYPOSIDLE2);
-		else // ..in the other one the info will be read attending to the situation of the memory...
-		{	 // ...and from ROM or RAM...
-			const bool oldTEDROM = ROMActiveToFetchCharData (); // What the configuration is...
-			const bool wantedTEDROM = _TEDRegisters -> ROMActiveToFetchCharAndBitmap (); // What is wanted...
-			if (oldTEDROM != wantedTEDROM) // If different activate the vision that is wanted...
-				activeROMtoFetchCharData (wantedTEDROM);
+		std::fill (_marks.begin (), _marks.end (), 0);
+	}
 
-			const size_t charIndex =
-				(size_t) _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value () &
-				_TEDRegisters -> characterIndexMask ();
+	// ---
+	inline void TED::EventsStatus::finishFrame ()
+	{
+		_row = _NOROW;
+		_rowFinished = false;
+		_rasterPending = false;
 
-			_tedGraphicInfo._lastGraphicDataRead =
-				_tedGraphicInfo._graphicData [_tedGraphicInfo._VLMI] = 
-					_TEDRegisters -> textMode () 
-						? memoryRef () -> value (_TEDRegisters -> charDataMemory () + 
-							(charIndex << 3) + gI._currentCharacterRow)
-						: memoryRef () -> value (_TEDRegisters -> bitmapMemory () + 
-							(((size_t) (_tedGraphicInfo._VC & 0x03ff)) << 3) + 
-							  (size_t) gI._currentCharacterRow); // This is always between 0 and 7...
+		for (size_t i = 0; i < 5; i++)
+			_earlyRasterLines [i] = _NOROW;
+	}
 
-			if (oldTEDROM != wantedTEDROM)
-				activeROMtoFetchCharData (oldTEDROM); // and finally restore it...
-		}
-		
-		memoryRef () -> setCPUView ();
+	// ---
+	inline void TED::prepareVideoRead
+		(VideoReadKind kind, const MCHEmul::Address& address, size_t index)
+	{
+		_pendingVideoRead._kind = kind;
+		_pendingVideoRead._address = address;
+		_pendingVideoRead._index = index;
+	}
+
+	// ---
+	inline bool TED::CPUAccessBlocked () const
+	{
+		if (!_cpuTransaction._pending || !DMARequested ())
+			return (false);
+
+		if (DMAActive () ||
+			_cpuTransaction._logicalCycle == _cpuTransaction._busData -> _numberCycles)
+			return (true);
+
+		// The next write is indexed by completed commands, not elapsed wait time.
+		return (_cpuTimedWrites._next == _cpuTransaction._busData -> _numberWriteCycles ||
+			_cpuTransaction._busData -> writeCycle (_cpuTimedWrites._next) !=
+				_cpuTransaction._logicalCycle);
+	}
+
+	// ---
+	inline void TED::clockBorders ()
+	{
+		const unsigned short line = _rasterPosition._videoLine,
+			horizontal = _rasterPosition._horizontal;
+		const bool rows25 = _TEDRegisters -> textDisplay25RowsActive ();
+		const bool columns40 = _TEDRegisters -> textDisplay40ColumnsActive ();
+
+		if (line == (rows25 ? 204 : 200))
+			_videoOutput._verticalOpen = false;
+		else if (line == (rows25 ? 4 : 8))
+			_videoOutput._verticalOpen = true;
+
+		// Vertical permission qualifies opening; it does not directly
+		// overwrite the horizontal window already retained for this line.
+		if (horizontal == (columns40 ? 320 : 312))
+			_videoOutput._horizontalOpen = false;
+		else if (horizontal == (columns40 ? 0 : 8) &&
+			_videoFetchState._displayActive && _videoOutput._verticalOpen)
+			_videoOutput._horizontalOpen = true;
+	}
+
+	// ---
+	inline void TED::latchVideoControls ()
+	{
+		_videoOutput._control1 =
+			(_TEDRegisters -> graphicExtendedColorTextModeActive () ? 0x40 : 0) |
+			(_TEDRegisters -> graphicBitModeActive () ? 0x20 : 0);
+		_videoOutput._control2 =
+			(_TEDRegisters -> reverseVideoActive () ? 0 : 0x80) |
+			(_TEDRegisters -> graphicMulticolorTextModeActive () ? 0x10 : 0);
+	}
+
+	// ---
+	inline void TED::selectConfiguration ()
+	{
+		const Configuration* configuration =
+			&_configurations [_TEDRegisters -> PALActive () ? 0 : 1];
+
+		if (_configuration == configuration)
+			return;
+
+		_configuration = configuration;
+		_soundFunction -> setClockDivider (_configuration -> _divider);
+		notify (MCHEmul::Event (_VIDEOCONFIGURATIONCHANGED));
 	}
 
 	// ---
@@ -865,17 +1216,13 @@ namespace COMMODORE
 	// ---
 	inline bool TED::detectNewBadLine ()
 	{
-		const unsigned char scrollY = _TEDRegisters -> verticalScrollPosition ();
-
 		const bool result =
-			_videoActive &&
-			_rasterPosition._videoLine >= _FIRSTBADLINE &&
-			_rasterPosition._videoLine <= _LASTBADLINE &&
-			(unsigned char) (_rasterPosition._videoLine & 0x07) == scrollY &&
-			_lastBadLineScrollY != (int) scrollY;
+			(_videoFetchState.captureTargets (_rasterPosition._videoLine) &
+				VideoFetchState::_ATTRIBUTES) != 0 &&
+			_lastBadLineScrollY != (int) _videoFetchState._scrollY;
 
 		if (result)
-			_lastBadLineScrollY = scrollY;
+			_lastBadLineScrollY = _videoFetchState._scrollY;
 
 		return (result);
 	}
@@ -883,14 +1230,11 @@ namespace COMMODORE
 	// ---
 	inline bool TED::singleClockModeForCurrentCycle () const
 	{
-		const unsigned short cycle = rasterCycle ();
-
 		return
 			(_TEDRegisters -> freezeActive () ||
 			 _TEDRegisters -> singleClockModeForced () ||
-			 (cycle >= 49 && cycle <= 52) ||
-			 (cycle >= 5 && cycle <= 48 &&
-			  _rasterPosition._videoLine <= 204));
+			 _refreshClock ||
+			 (_videoFetchState._displayActive && _externalFetchClock));
 	}
 
 	// ---
@@ -912,24 +1256,20 @@ namespace COMMODORE
 		(MCHEmul::CPU* cpu,
 		 const MCHEmul::BusCycleData& busData, bool interrupt)
 	{
-		if (_cpuTimedWritesEnabled &&
-			(cpu != _timedWriteCPU ||
-			 _cpuTransactionPending ||
-			 _cpuCycleState._accessPending ||
-			 !_pendingWrites.empty () ||
-			 _lastCPUCycles != cpu -> clockCycles ()))
+		if (_cpuTimedWrites._enabled &&
+			(cpu != _cpuTimedWrites._cpu ||
+			 _cpuTransaction._pending ||
+			 _cpuRecovery._cycle._accessPending ||
+			 !_cpuTimedWrites._commands.empty () ||
+			 _cpuRecovery._nextCycle != cpu -> clockCycles ()))
 		{
 			_error = MCHEmul::_CHIP_ERROR;
 
 			return (false);
 		}
 
-		_cpuTransaction._cpu = cpu;
-		_cpuTransaction._busData = &busData;
-		_cpuTransaction._startCycle = cpu -> clockCycles ();
-		_cpuTransaction._isInterrupt = interrupt;
-		_cpuTransactionPending = _cpuTimedWritesEnabled;
-		_cpuReadAdvanceCycles = 0;
+		_cpuTransaction = CPUTransactionContext
+			(cpu, &busData, interrupt, _cpuTimedWrites._enabled);
 
 		return (true);
 	}
@@ -938,12 +1278,12 @@ namespace COMMODORE
 	inline unsigned int TED::pendingWriteCycle () const
 	{
 		assert (_cpuTransaction._busData != nullptr);
-		assert (_nextPendingWrite < _pendingWrites.size ());
+		assert (_cpuTimedWrites._next < _cpuTimedWrites._commands.size ());
 
 		return
 			(_cpuTransaction._startCycle +
 			 (unsigned int) (_cpuTransaction._busData ->
-				writeCycle (_nextPendingWrite)));
+				writeCycle (_cpuTimedWrites._next)) + _cpuTransaction._waitCycles);
 	}
 
 	// ---

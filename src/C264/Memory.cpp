@@ -17,6 +17,7 @@ C264::Memory::Memory (const MCHEmul::Memory::Content& cnt,
 	  _3plus1Loaded (false),
 	  _cartridge1Loaded (false), _cartridge1Connected (false),
 	  _cartridge2Loaded (false), _cartridge2Connected (false),
+	  _tedRAMMask ((0x4000u << cfg) - 1u),
 	  _RAM1 (nullptr),
 	  _RAM2 (nullptr),
 	  _RAM2MirrorIO7501Port (nullptr),
@@ -280,6 +281,7 @@ void C264::Memory::setConfiguration (unsigned int cfg, bool ra, unsigned char mc
 
 	// New values for configuration...
 	_configuration = cfg; // 0 = 16k; 1 = 32k; 2 = 64k
+	_tedRAMMask = (0x4000u << _configuration) - 1u;
 	// The memory configuration...
 	_memoryConfiguration = mcfg;
 	// ...and ROM/RAM status...

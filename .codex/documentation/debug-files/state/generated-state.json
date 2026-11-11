@@ -7,7 +7,7 @@
     ".codex/documentation/debug-files/scripts/update_debug_doc_fields.ps1": "9c185f2a2866da347e5b0a975be84e4e9cc8dbf2f1b091245e45bd9b75dd22a6",
     ".codex/documentation/debug-files/sources/c64.yaml": "d6df774f9fc43f570c2cbd80bc05611701e9afb1102fc4862b0d36c4ec37e2d3",
     ".codex/documentation/debug-files/sources/vic20.yaml": "4eee1cd6dcf13dbdfc5b9139b865684a099c7efec3a19e153bdb2cf254ce76d7",
-    ".codex/documentation/debug-files/sources/c264.yaml": "834623c537866914c8b30b435c74d14df29ab468cd391a4c13c0b8f65345ae0f",
+    ".codex/documentation/debug-files/sources/c264.yaml": "09e604358ac49fce594d30edce3dfe619619370200aac123c507f7464e68e9c6",
     ".codex/documentation/debug-files/sources/zx80-zx81.yaml": "5b5b285873e680c5542e6c54574a2c33301c2177500a1ea2c2cc5046a9d647fa",
     ".codex/documentation/debug-files/sources/zxspectrum.yaml": "1d193b66ad2b40c2f751460d6378fd099035441b3b6318f1daf0a0cf19532cce",
     ".codex/documentation/debug-files/sources/msx.yaml": "3451d41d76b66269dda4a01bdf1e0c61dee40d9364f5547b1a80d318099c7b72"
@@ -30,14 +30,14 @@
     "src/COMMODORE/CIA/CIA.cpp": "5d8f23f8ffb3e41911a299654a25920f91594a1e39208afd17b53a209f0d1e90",
     "src/COMMODORE/SID/SID.cpp": "cc8e23f2a5a22d911553d47fe808e938930fe933580b98fb01ddb12005f50ecf",
     "src/COMMODORE/SerialIOPeripherals.cpp": "2ffc973a62d588ca49a2e3a949a79f022154b0a74ebb7ae0f567c0be9845a0a8",
-    "src/COMMODORE/TED/TED.cpp": "7a7bf204e35e5d79b7398805dd69d9dc49d0ac2321ecf03fcd4accd7d868e149",
+    "src/COMMODORE/TED/TED.cpp": "c027380df939186c68c03a07da6405500f8dfe8914020411f39249c4e1c3efda",
     "src/COMMODORE/VIA/VIA.cpp": "66acb3673ef761c04645bdf98ceda885d3310f9fab63108e81d801397de8373f",
     "src/COMMODORE/VICI/VICI.cpp": "ddf7a03baf4a0e09ca7a5a7449b48c34b51261cb975fb98f1ebb452fca822881",
     "src/COMMODORE/VICII/VICII.cpp": "37f9fe1f87ca47d8d83a2efc567d77e50856059382eed6ecbf9990bd31582d29",
     "src/CONSOLE/LocalConsole.cpp": "ca53f3cf921c94acdf9c4a91ea64a31cb3f22003fb92113f1fa0878acfb97a8d",
-    "src/CORE/CPU.cpp": "6e4bcadcfe3624cf3f90fc0870707ebd8797403f9a850c1bef09946eaed8bfea",
+    "src/CORE/CPU.cpp": "117ea146846b2874f98f0a44e0f334c214ffc8b69a49cbc9f894db3771f876af",
     "src/CORE/CPUInterrupt.cpp": "1ba9723e9c4be4edefe888e4fe418a0e3e4f2146f1afebf246615179660d1783",
-    "src/CORE/Computer.cpp": "67bc9229f242a39bba554bf80f1d5bb5cbcbdab76eee6c76aea8aa1d62601bb6",
+    "src/CORE/Computer.cpp": "676e0907130d2eed9d723150ce0d376c294c7e242afe96085f9707ce52bffea1",
     "src/CORE/DebugFile.cpp": "3caa132e9bba55ccd5207d4c43bcb48af71eb7e24d1eee8e2e1c0d9d050b83bb",
     "src/CORE/Memory.cpp": "53e27b27e351ffaeb1efe89844bfa683bebe29cdff9a97da4ede459c354f40a0",
     "src/CORE/StdCommands.cpp": "eae29ce8bf29709cf15cb0d720457798574f9716e0a8be1786cf356ff76d2f18",
@@ -59,7 +59,7 @@
     "src/ZXSpectrum/ULA.cpp": "aefff8581a96989bc2370e7c9fd9ff496f9e6ec4aef25bf2dc9502fd8a16fc3c",
     "src/ZXSpectrum/ZXSpectrum.cpp": "35ed52e597ce58c44678157d758fe7ffb2fa696ce6383e33d8b5b1f27c007ecd",
     "src/COMMODORE/TED/TEDRegisters.cpp": "84d5e75eaa5c553efa129f12747491516674149255bc31bd54c2acfd9716f3a3",
-    "include/COMMODORE/TED/TED.hpp": "756f1cc4c7ef201bb7033163a6df532a652f47f5ff85fede1fe2e325e8cd9cbb",
+    "include/COMMODORE/TED/TED.hpp": "5aad2f538706078c605a383a0ee9acd738c482c4e8c55057f3f74f1a4f3b6816",
     "include/COMMODORE/TED/TEDRegisters.hpp": "9fa9d514d4e1a89fbdc6036bd1d5c40382de37616d79f441814204db0c1666a0"
   },
   "producer_files": [
@@ -133,7 +133,7 @@
   "outputs": {
     "docs/C64Data/C64_DEBUG_File_Format.docx": "c85170ccd6aa3599eb4260ffc5cc914ee21e31856a78e97c508fb27a24c1bb1d",
     "docs/VIC20Data/VIC20_DEBUG_File_Format.docx": "996c4fd7c42839bfd2a6017dbca14d926bf001b8dd80ef1467d473a9a41e6598",
-    "docs/C264Data/C264_DEBUG_File_Format.docx": "dff5717ce4b9bb69b0c8d49ab3c37ddd91987d603523e9fac510e4d3ebf64d34",
+    "docs/C264Data/C264_DEBUG_File_Format.docx": "e4fd82ee5323ffde11ad334407ebf69cb822ef9380322722151a914cfdc4e6c5",
     "docs/ZX81Data/ZX80_ZX81_DEBUG_File_Format.docx": "a60781074d51258a51c03bab457edefcd3457af556225bc33ec5225b0f552c4d",
     "docs/ZXSpectrumData/ZXSpectrum_DEBUG_File_Format.docx": "1c2eb9d119783c2693b095ca8bae6c9d66a266f47eea048d15992592968d108f",
     "docs/MSXData/MSX_DEBUG_File_Format.docx": "466d6119f14ada77db7f2dcd67bcd714e9ab5233caa64cf7af17c87de2cd437a"

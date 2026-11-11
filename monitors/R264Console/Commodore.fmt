@@ -456,7 +456,11 @@ Light Green: Badline detection point (three pixels in phi2)
 #---
 ;CTEDEVENTS
 Legend:
-Light Cyan: Badline
+Light Yellow: Accepted raster event, full row with captured raster number
+Light Green: Effective badline transfer, two pixels per capture
+Light Cyan: First propagated TED IRQ request, visible emitted pixels only
+Light Purple on Orange: Captured raster number
+Raster row is drawn after its video; point markers are preserved
 #---
 #---
 ;CVIA

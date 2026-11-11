@@ -145,7 +145,7 @@ namespace C264
 		/** Reads physical RAM using the address lines present in the configured machine. \n */
 		const MCHEmul::UByte& readTEDRAM (const MCHEmul::Address& a) const
 							{ return (_RAM1TED -> physicalStorage () -> value
-								(a.value () & ((0x4000u << _configuration) - 1u))); }
+								(a.value () & _tedRAMMask)); }
 
 		// Managing the configuration...
 		/** To change the configuration of the memory when it is accessed from CPU/TED (mcfg). \n
@@ -310,6 +310,9 @@ namespace C264
 		bool _cartridge2Loaded, _cartridge2Connected;
 
 		// Implementation
+		/** Physical RAM address mask derived from the configured RAM size. \n */
+		unsigned int _tedRAMMask;
+
 		// Things that can be connected and disconnected...
 		// From the CPU perspective...
 		// B1

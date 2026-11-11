@@ -3,27 +3,19 @@
 #include <F6500/IRQInterrupt.hpp>
 
 // ---
-const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 3, 202, 245, 259, 259, 312, 4, 4);
-/** From the book TED (https://www.pagetable.com/docs/ted/TED%207360R0%20Preliminary%20Data%20Sheet.pdf) 
-	it can me understood:
-	There is an internal counter that goes from 0 to 455 (456 positions = dots).
-	The HSYNC happens at the value 358 of this counter,
-	The HANDSHAKING process with the processor happens between the values 400 and 432 (both included).
-	The CHARACTER DATA is fetched and drawn between the values 432 and 304 (both included),
-	what means that the counter reaches the limit and starts again at 0 at some point in the middle of the drawing,
-	and what is 8 characters more that the ones drawn in the visible area (40 characters visible, 48 characters fetched).
-	The REFRESH of the DMA memory happens between the values 304 and 344 (both included). \n
-	The documentation also says that the single clock mode happens mandatory always for these actions and when 
-	the processor is between the raster lines 0 and 204 (remeber that the first visible line happens at line 3
-	but the first bad line is at line 0 instead).
-	IN the rest of the lines (depending on PAL) the CPU can work at double speed except between the values 304 and 344
-	where the refresh has to happen too always (is mandatory). 
-	The HRASTERDATA is the same for PAL and for NTSC. */
+const MCHEmul::RasterData COMMODORE::TED_PAL::_VRASTERDATA (260, 274, 4, 203, 245, 259, 259, 312, 4, 4);
+/** Fetch windows and displayed pixels use different horizontal positions. \n
+	The selected timing profile prepares matrix-plane addresses from H=435
+	and graphics addresses from H=439; captures follow at H=439 and H=443. \n
+	Retained cell transfers place the 320 active output dots at H=0..319.
+	The presentation crop H=424..351 preserves 384 visible dots with 32-dot borders. \n
+	These defaults remain replaceable through Configuration; PAL and NTSC
+	share horizontal geometry and retain their independent vertical profiles. */
 const MCHEmul::RasterData COMMODORE::TED_PAL::_HRASTERDATA 
-	(360, 400, 432, 295, 327, 359, 359, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
-const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 3, 202, 220, 234, 234, 262, 4, 4);
+	(360, 424, 0, 319, 351, 359, 359, 456, 8, 8);
+const MCHEmul::RasterData COMMODORE::TED_NTSC::_VRASTERDATA (235, 249, 4, 203, 220, 234, 234, 262, 4, 4);
 const MCHEmul::RasterData COMMODORE::TED_NTSC::_HRASTERDATA 
-	(360, 400, 432, 295, 327, 359, 359, 456 /** For everyting to run, it has to be divisible by 8. */, 8, 8);
+	(360, 424, 0, 319, 351, 359, 359, 456, 8, 8);
 const COMMODORE::TED::Configuration COMMODORE::TED::_PALCONFIGURATION
 	(COMMODORE::TED_PAL::_VRASTERDATA, COMMODORE::TED_PAL::_HRASTERDATA,
 	 COMMODORE::TED_PAL::_DIVIDERCPUCLOCK, COMMODORE::TED_PAL::_SCREENFREQUENCY);
@@ -211,24 +203,22 @@ COMMODORE::TED::TED (int intId, bool initialPAL,
 	  _verticalClockPending (false), _flashClockPending (false),
 	  _rasterIRQMatched (false),
 	  _graphicsCycleActive (false),
+	  _externalFetchClock (false), _refreshClock (false),
+	  _dmaState (DMAState::_IDLE), _dmaWindow (false),
 	  _cpuTransaction (),
-	  _timedWriteCPU (nullptr),
-	  _timedWriteSubsets (),
-	  _pendingWrites (),
-	  _nextPendingWrite (0),
-	  _cpuTimedWritesEnabled (false), _cpuTransactionPending (false),
-	  _cpuCycleState (), _cpuReadAdvanceCycles (0),
-	  _pendingPacingCycles (0),
+	  _cpuTimedWrites (),
+	  _cpuRecovery (),
 	  _pendingSoundMasterCycles (0),
-	  _lastCPUCycles (0), _pendingHalfCyclesFromLastExecution (0),
 	  _format (nullptr),
 	  _cycleInRasterLine (1),
-	  _videoActive (true),
 	  _inSingleClockMode (false),
 	  _lastVBlankEntered (false),
 	  _lastBadLineScrollY (-1), _newBadLineCondition (false), 
 	  _tedGraphicInfo (),
-	  _drawResult (),
+	  _videoFetchState (),
+	  _pendingVideoRead (),
+	  _videoOutput (),
+	  _debugCycleContext (),
 	  _eventStatus ()
 {
 	assert (pal._divider == 20 && ntsc._divider == 16);
@@ -310,26 +300,18 @@ bool COMMODORE::TED::initialize ()
 	_rasterIRQMatched =
 		_rasterPosition._vertical == _TEDRegisters -> IRQRasterLineAt ();
 	_graphicsCycleActive = false;
+	_externalFetchClock = _refreshClock = false;
+	_dmaState = DMAState::_IDLE;
+	_dmaWindow = false;
 
 	publishRasterPosition ();
 
 	_cpuTransaction = { };
-
-	_timedWriteCPU = nullptr;
-	_timedWriteSubsets.clear ();
-	_pendingWrites.clear ();
-	_nextPendingWrite = 0;
-	_cpuTimedWritesEnabled = _cpuTransactionPending = false;
-	_cpuCycleState = { };
-	_cpuReadAdvanceCycles = 0;
-	_pendingPacingCycles = 0;
+	_cpuTimedWrites = { };
+	_cpuRecovery = { };
 	_pendingSoundMasterCycles = 0;
 
-	_lastCPUCycles = _pendingHalfCyclesFromLastExecution = 0;
-	
 	_cycleInRasterLine = 1;
-
-	_videoActive = true;
 
 	_inSingleClockMode = singleClockModeForCurrentCycle ();
 
@@ -339,8 +321,12 @@ bool COMMODORE::TED::initialize ()
 	_newBadLineCondition = false;
 
 	_tedGraphicInfo = { };
-	_drawResult = { };
-	_eventStatus = { };
+	_videoFetchState = { };
+	_pendingVideoRead = { };
+	_videoOutput = { };
+	latchVideoControls ();
+	_debugCycleContext = { };
+	_eventStatus.reset (_raster.visibleColumns ());
 
 	return (true);
 }
@@ -350,7 +336,7 @@ bool COMMODORE::TED::prepareCPUTimedWrites (MCHEmul::CPU* cpu,
 	 const MCHEmul::PhysicalStorageSubsets& subsets)
 {
 	assert (cpu != nullptr && _TEDRegisters != nullptr);
-	assert (_timedWriteCPU == nullptr && _pendingWrites.empty ());
+	assert (_cpuTimedWrites._cpu == nullptr && _cpuTimedWrites._commands.empty ());
 
 	const MCHEmul::PhysicalStorageSubsets::const_iterator registers =
 		subsets.find (_TEDRegisters -> id ());
@@ -378,8 +364,8 @@ bool COMMODORE::TED::prepareCPUTimedWrites (MCHEmul::CPU* cpu,
 		}
 	}
 
-	_timedWriteCPU = cpu;
-	_timedWriteSubsets = subsets;
+	_cpuTimedWrites._cpu = cpu;
+	_cpuTimedWrites._subsets = subsets;
 
 	return (true);
 }
@@ -387,7 +373,7 @@ bool COMMODORE::TED::prepareCPUTimedWrites (MCHEmul::CPU* cpu,
 // ---
 bool COMMODORE::TED::enableCPUTimedWrites ()
 {
-	if (_timedWriteCPU == nullptr || _cpuTimedWritesEnabled)
+	if (_cpuTimedWrites._cpu == nullptr || _cpuTimedWrites._enabled)
 	{
 		_error = MCHEmul::_INIT_ERROR;
 
@@ -395,16 +381,16 @@ bool COMMODORE::TED::enableCPUTimedWrites ()
 	}
 
 	// Include board registers that disable buffering in their constructors.
-	for (const auto& subset : _timedWriteSubsets)
+	for (const auto& subset : _cpuTimedWrites._subsets)
 		subset.second -> setBufferMemorySetCommands (true);
 
-	_lastCPUCycles = _timedWriteCPU -> clockCycles ();
 	_cpuTransaction = { };
-	_cpuTransactionPending = false;
-	_cpuCycleState = { };
-	_cpuReadAdvanceCycles = 0;
-	_pendingPacingCycles = 0;
-	_cpuTimedWritesEnabled = true;
+
+	// Preserve the existing completed half-pulse remainder on activation.
+	_cpuRecovery = CPURecoveryState
+		(_cpuTimedWrites._cpu -> clockCycles (), _cpuRecovery._halfCarry);
+
+	_cpuTimedWrites._enabled = true;
 
 	return (true);
 }
@@ -435,7 +421,7 @@ void COMMODORE::TED::CPUAboutToExecute
 		debugCPUAboutToExecute (dt);
 	}
 
-	if (_cpuTimedWritesEnabled && !advanceToCPURead (dt -> _cpu))
+	if (_cpuTimedWrites._enabled && !advanceToCPURead (dt -> _cpu))
 		_error = MCHEmul::_CHIP_ERROR;
 }
 
@@ -463,28 +449,21 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 {
 	const unsigned int batchEnd = cpu -> clockCycles ();
 
-	if (_cpuTimedWritesEnabled)
+	if (_cpuTimedWrites._enabled)
 	{
-		if (cpu != _timedWriteCPU || _error != MCHEmul::_NOERROR)
+		if (cpu != _cpuTimedWrites._cpu || _error != MCHEmul::_NOERROR)
 		{
 			_error = MCHEmul::_CHIP_ERROR;
 
 			return (false);
 		}
 
-		if (_cpuTransactionPending)
+		if (_cpuTransaction._pending && !_cpuTransaction._writesExtracted)
 		{
-			const unsigned int completedAdvanceCycles =
-				(_cpuReadAdvanceCycles == 0)
-					? 0 : _cpuReadAdvanceCycles - 1;
-			const bool suspended =
-				_cpuCycleState._accessPending;
-
+			// Only the first recovery follows semantic instruction execution.
+			// Later calls consume CPU stop time and keep the same buffered writes.
 			if (batchEnd - _cpuTransaction._startCycle !=
-					_cpuTransaction._busData -> _numberCycles ||
-				_lastCPUCycles !=
-					_cpuTransaction._startCycle + completedAdvanceCycles ||
-				suspended != (_cpuReadAdvanceCycles != 0))
+					_cpuTransaction._busData -> _numberCycles)
 			{
 				_error = MCHEmul::_CHIP_ERROR;
 
@@ -493,60 +472,57 @@ bool COMMODORE::TED::simulate (MCHEmul::CPU* cpu)
 
 			if (!extractPendingWrites ())
 				return (false);
+
+			_cpuTransaction._writesExtracted = true;
 		}
 	}
-	else if (_lastCPUCycles == 0)
+	else if (_cpuRecovery._nextCycle == 0)
 	{
-		_lastCPUCycles = batchEnd;
+		_cpuRecovery._nextCycle = batchEnd;
 
 		return (true);
 	}
 
-	const unsigned int batchStart = _cpuTransactionPending
-		? _cpuTransaction._startCycle : _lastCPUCycles;
+	const unsigned int batchStart = _cpuTransaction._pending
+		? _cpuTransaction._startCycle : _cpuRecovery._nextCycle;
 
 	// An advanced prefix already sampled the unchanged display-zone registers.
-	if (_cpuReadAdvanceCycles == 0)
+	if (_cpuTransaction._readAdvanceCycles == 0)
 		_raster.reduceDisplayZone
 			(!_TEDRegisters -> textDisplay25RowsActive (),
 			 !_TEDRegisters -> textDisplay40ColumnsActive ());
 
-	while (_lastCPUCycles != batchEnd)
+	// Prefix recovery may already include waits that the stopped CPU has yet
+	// to consume. The signed modular distance also admits a CPU-clock wrap.
+	while ((int) (batchEnd - _cpuRecovery._nextCycle) > 0)
 	{
 		if (!simulateCPUCycle (cpu, batchStart, batchEnd))
 			return (false);
 	}
 
-	if (_cpuTransactionPending)
+	if (_cpuTransaction._pending)
 	{
-		if (_nextPendingWrite != _pendingWrites.size ())
+		updateCPUStop (cpu);
+
+		if (_cpuTransaction._logicalCycle ==
+				_cpuTransaction._busData -> _numberCycles &&
+			!DMARequested () &&
+			_cpuRecovery._nextCycle == batchEnd)
 		{
-			_error = MCHEmul::_CHIP_ERROR;
+			if (_cpuTimedWrites._next != _cpuTimedWrites._commands.size ())
+			{
+				_error = MCHEmul::_CHIP_ERROR;
 
-			return (false);
-		}
+				return (false);
+			}
 
-		_pendingWrites.clear ();
-		_nextPendingWrite = 0;
-		_cpuTransactionPending = false;
-		_cpuReadAdvanceCycles = 0;
-	}
-
-	if (_TEDRegisters -> freezeActive ())
-	{
-		if (requestIRQ (cpu, batchEnd))
-		{
-			COMMODORE::TED::EventMarker marker;
-
-			marker._events = EventMarker::_IRQ;
-			marker._visible = _raster.isInVisibleZone ();
-
-			if (marker._visible)
-				_raster.currentVisiblePosition (marker._column, marker._row);
-
-			drawOtherEvents (marker);
+			_cpuTimedWrites.clearCommands ();
+			_cpuTransaction.finish ();
 		}
 	}
+
+	if (_cpuRecovery._nextCycle == batchEnd && _TEDRegisters -> freezeActive ())
+		requestIRQ (cpu, batchEnd);
 
 	return (true);
 }
@@ -799,99 +775,26 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 }
 
 // ---
-void COMMODORE::TED::treatRasterCycle (const DebugCycleContext& dC)
-{
-	COMMODORE::TEDRegisters::GraphicalInfo& gI =
-		_TEDRegisters -> graphicalInfo ();
-
-	switch (_cycleInRasterLine)
-	{
-		case 1:
-			{
-				_tedGraphicInfo._VC = gI._currentCharacterPosition;
-				_tedGraphicInfo._VLMI = 0;
-			}
-
-			break;
-
-		case 57:
-			{
-				if (gI._currentCharacterRow == 7)
-				{
-					gI._currentCharacterPosition =
-						_tedGraphicInfo._VC & 0x03ff;
-
-					// Reload the position before returning to idle.
-					if (!_newBadLineCondition)
-						_tedGraphicInfo._idleState = true;
-				}
-
-				gI._currentCharacterRow =
-					(gI._currentCharacterRow + 1) & 0x07;
-			}
-
-			break;
-
-		default:
-			break;
-	}
-
-	if (_cycleInRasterLine >= 9 && _cycleInRasterLine <= 48)
-	{
-		// Re-entering the window must not advance beyond the 40-byte buffers.
-		_tedGraphicInfo._VLMI = _cycleInRasterLine - 9;
-
-		// Matrix and attribute fetches retain the existing badline condition.
-		if (_newBadLineCondition)
-		{
-			readVideoMatrixAndColorRAM ();
-
-			_IFDEBUG debugReadingVideoMatrix (dC);
-		}
-
-		readGraphicalInfo ();
-
-		_IFDEBUG debugReadingGraphics (dC);
-
-		if (!_tedGraphicInfo._idleState)
-			_tedGraphicInfo._VC = (_tedGraphicInfo._VC + 1) & 0x03ff;
-	}
-}
-
-// ---
-void COMMODORE::TED::drawVisibleZone (unsigned int pixel)
+void COMMODORE::TED::drawVisibleZone (unsigned int pixel, bool inScreen)
 {
 	unsigned short column, row;
 	_raster.currentVisiblePosition (column, row);
 
 	MCHEmul::ScreenMemory* screen = screenMemory ();
-	unsigned int color = _TEDRegisters -> borderColor ().asChar ();
 
-	if (!_videoActive)
+	if (!_videoFetchState._displayActive)
 	{
-		screen -> setPixel (column, row, color);
+		screen -> setPixel
+			(column, row, _TEDRegisters -> borderColor ().asChar ());
 
 		return;
 	}
 
-	if (_raster.isInScreenZone ())
-	{
-		const unsigned int code = _drawResult._foregroundColorData [pixel];
-
-		if (code == DrawResult::_TRANSPARENT)
-			color = _drawResult._invalid
-				? 0x00 : _TEDRegisters -> backgroundColor ().asChar ();
-		else if ((code & DrawResult::_BACKGROUNDREFERENCE) != 0)
-			color = _TEDRegisters ->
-				backgroundColor ((size_t) (code & 0x03u)).asChar ();
-		else
-			color = code;
-	}
-
-	screen -> setPixel (column, row, color);
+	screen -> setPixel (column, row, inScreen
+		? videoPixelColor () : _TEDRegisters -> borderColor ().asChar ());
 
 	// Preserve the diagnostic raster line, emitting its horizontal positions individually.
-	if (_drawRasterInterruptPositions)
+	if (_drawRasterInterruptPositions && !_drawOtherEvents)
 	{
 		const unsigned short line =
 			_raster.lineInVisibleZone (_TEDRegisters -> IRQRasterLineAt ());
@@ -915,354 +818,469 @@ void COMMODORE::TED::drawVisibleZone (unsigned int pixel)
 }
 
 // ---
-void COMMODORE::TED::drawOtherEvents (const EventMarker& marker)
+void COMMODORE::TED::drawOtherEvents ()
 {
-	if (!_drawOtherEvents || !marker._visible || marker._events == 0)
+	const EventsStatus::Marker& marker = _eventStatus._marker;
+
+	if (!_drawOtherEvents || !marker._rowVisible)
 		return;
 
-	unsigned int color;
+	MCHEmul::ScreenMemory* screen = screenMemory ();
 
-	// A combined request takes priority over its raster source and badline.
-	if ((marker._events & EventMarker::_IRQ) != 0)
-		color = 128;
-	else if ((marker._events & EventMarker::_RASTER) != 0)
-		color = 129;
-	else
-		color = 132;
+	_eventStatus.beginRow (marker._row);
 
-	// End the marker at the event position: do not overwrite a future pixel.
-	const unsigned short firstColumn =
-		marker._column == 0 ? 0 : marker._column - 1;
-
-	screenMemory () -> setHorizontalLine
-		(firstColumn, marker._row,
-		 marker._column == 0 ? 1 : 2, color);
-}
-
-// ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawGraphics (const COMMODORE::TED::DrawContext& dC)
-{
-	// To draw is only valid in the graphical state...
-	if (_tedGraphicInfo._idleState)
-		return (COMMODORE::TED::DrawResult ());
-
-	// The "display" column being involved...
-	// In cb, the SCROLLX is involved, so it could be negative! starting from -7, 
-	// When e.g. the raster is at the very first "screen "dislay" column, 
-	// there are no reductions is the screen (display == screen) and SCROLLX = 0x00
-	int cb = (int) dC._RCA - (int) dC._ICD - (int) dC._SC;
-	// To draw just only when there is a possibility of at least draw a pixel!
-	if (cb <= -8)
-		return (COMMODORE::TED::DrawResult ());
-
-	// At this point rc positive for sure, and cb could be negative...
-	// Never invoke the methods within the swith case statements direcly
-	// a crash might be generated...
-
-	COMMODORE::TED::DrawResult result;
-	switch (_TEDRegisters -> graphicModeActive ())
+	if ((marker._events & EventsStatus::Marker::_RASTER) != 0)
 	{
-		case COMMODORE::TEDRegisters::GraphicMode::_CHARMODE:
-			{
-				// Calculates whether the position of the cursor is or not visible...
-				// ...as this is the only mode where the cursor can be drawn...
-				unsigned short cp = _TEDRegisters -> cursorPosition (); // This is number between 0 and 1000...
-				int cpy = ((((int) cp / 0x28)) << 3) + (int) _raster.vData ().firstDisplayPosition () 
-							+ ((int) _TEDRegisters -> verticalScrollPosition () - 3);
-				int cpx = (((cp % 0x28)) << 3) - dC._SC; // Not needed to add the border, but it can be negative because the scroll...
-				bool dCA = cpx >= cb && cpx <= (cb + 7); // Is the first part of the cursor visible?
-				bool dCB = (cpx + 7 + dC._SC) >= cb && (cpx + 7 + dC._SC) <= (cb + 7); // or the last one?
-				int dCI = 0, dCN = 8; // From what position to draw, and how many pixles should be drawn...
-				if (dCA) { dCI = dC._SC; dCN = 8 - dCI; }
-				else if (dCB) { dCI = 0; dCN = dC._SC; }
-
-				result = std::move (drawMonoColorChar (cb, 
-					(dC._RR >= cpy && dC._RR < (cpy + 8)) && (dCA || dCB), dCI, dCN));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_MULTICOLORCHARMODE:
-			{
-				result = std::move (drawMultiColorChar (cb));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_EXTENDEDBACKGROUNDMODE:
-			{
-				result = std::move (drawMultiColorExtendedChar (cb));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_BITMAPMODE:
-			{
-				result = std::move (drawMonoColorBitMap (cb));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_MULTICOLORBITMAPMODE:
-			{
-				result = std::move (drawMultiColorBitMap (cb));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_INVALIDTEXMODE:
-			{
-				// Like multicolor char mode, but invalid...
-				result = std::move (drawMultiColorChar (cb, result._invalid = true));
-			}
-
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_INVALIDBITMAPMODE1:
-			{
-				// Like moncocolor bitmap mode, but invalid...
-				result = std::move (drawMonoColorBitMap (cb, result._invalid = true));
-			}
-			break;
-
-		case COMMODORE::TEDRegisters::GraphicMode::_INVALIDBITMAPMODE2:
-			{
-				// Like multicolor bitmap mode, but invalid...
-				result = std::move (drawMultiColorBitMap (cb, result._invalid = true));
-			}
-
-			break;
-
-		default:
-			assert (0); // Not possible...the code shouldn't pass over this point!
-			break;
+		_eventStatus._rasterPending = true;
+		_eventStatus._rasterLine = marker._rasterLine;
 	}
 
-	return (result);
-}
-
-// ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorChar
-	(int cb, bool c, int dCI, int dCN)
-{
-	COMMODORE::TED::DrawResult result;
-
-	// Attribute blinking and cursor visibility share the same FLASH phase.
-	const bool flashOn = _TEDRegisters -> flashCounterOn ();
-
-	for (int i = 0; i < 8; i++)
+	if (marker._visible && marker._emitted)
 	{
-		int pp = cb + i;
-		if (pp < 0)
-			continue;
-		if (pp >= 320)
-			break;
+		unsigned int color = 0;
 
-		size_t iBy = ((size_t) pp) >> 3;
-		size_t iBt = 7 - (((size_t) pp) % 8);
+		if ((marker._events & EventsStatus::Marker::_BADLINE) != 0)
+			color = 132;
 
-		bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+		if ((marker._events & EventsStatus::Marker::_IRQ) != 0)
+			color = 128;
 
-		if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
-			_TEDRegisters -> reverseVideoActive ())
-			dP = !dP;
-
-		if (_tedGraphicInfo._colorData [iBy].bit (7) && flashOn)
-			dP = false;
-
-		if (c && !flashOn && i >= dCI && i < (dCI + dCN))
-			dP = !dP;
-
-		result._foregroundColorData [i] = dP
-			? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f)
-			: DrawResult::_BACKGROUNDREFERENCE;
-	}
-
-	return (result);
-}
-
-// ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorChar (int cb, bool inv)
-{
-	COMMODORE::TED::DrawResult result;
-
-	const bool reverseVideo = _TEDRegisters -> reverseVideoActive ();
-
-	for (size_t i = 0; i < 8; i++)
-	{
-		int pp = cb + (int) i;
-		if (pp < -1)
-			continue;
-		if (pp >= 320)
-			break;
-
-		size_t iBy = (pp >= 0) ? ((size_t) pp >> 3) : 0;
-
-		if (_tedGraphicInfo._colorData [iBy].bit (3))
+		if (color != 0)
 		{
-			// Derive the pair from the source position, independently of output alignment.
-			// This also handles a character-mode change inside the eight-pixel block.
-			size_t iBt = (pp >= 0)
-				? 3 - (((size_t) pp & 0x07) >> 1) : 3;
-			unsigned char cs =
-				(_tedGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03;
+			// Both pixels have already been emitted; never cross a row boundary.
+			const unsigned short firstColumn =
+				marker._column == 0 ? 0 : marker._column - 1;
 
-			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
-				reverseVideo)
-				cs = 0x03 - cs;
-
-			if (inv)
-				cs = 0x00;
-
-			result._foregroundColorData [i] = (cs == 0x03)
-				? (_tedGraphicInfo._colorData [iBy].value () & 0b01110111)
-				: (DrawResult::_BACKGROUNDREFERENCE | (unsigned int) cs);
+			for (size_t x = firstColumn; x <= marker._column; x++)
+			{
+				_eventStatus._marks [x] = (unsigned char) color;
+				screen -> setPixel (x, marker._row, color);
+			}
 		}
-		else
+
+		if ((size_t) marker._column + 1 == screen -> columns ())
+			_eventStatus._rowFinished = true;
+	}
+
+	// An event can arrive in the horizontal blank after the visible row ended.
+	if (marker._afterVisible)
+		_eventStatus._rowFinished = true;
+
+	if (_eventStatus._rowFinished && _eventStatus._rasterPending)
+	{
+		drawRasterIRQLine
+			(_eventStatus._row, _eventStatus._rasterLine);
+
+		_eventStatus._rasterPending = false;
+	}
+
+	if (_eventStatus._rowFinished &&
+		marker._row >= 4 && screen -> rows () >= 5)
+	{
+		for (size_t i = 0; i < 5; i++)
 		{
-			if (pp < 0)
+			if (_eventStatus._earlyRasterLines [i] == EventsStatus::_NOROW)
 				continue;
 
-			size_t iBt = 7 - ((size_t) pp & 0x07);
-			bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+			const std::string label = std::to_string
+				((unsigned int) _eventStatus._earlyRasterLines [i]);
+			const size_t width = label.size () * 6 + 2;
+			const size_t x = i * 24;
 
-			if (_tedGraphicInfo._screenCodeData [iBy].bit (7) &&
-				reverseVideo)
-				dP = !dP;
+			if (x + width <= screen -> columns ())
+			{
+				screen -> setBox (x, 0, width, 5, 130);
+				screen -> setString (x, 0, label, 131);
+			}
 
-			result._foregroundColorData [i] = inv
-				? 0x00
-				: dP
-					? (unsigned int) (_tedGraphicInfo._colorData [iBy].value () & 0x7f)
-					: DrawResult::_BACKGROUNDREFERENCE;
+			_eventStatus._earlyRasterLines [i] = EventsStatus::_NOROW;
 		}
 	}
-
-	return (result);
 }
 
 // ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorExtendedChar (int cb)
+void COMMODORE::TED::drawRasterIRQLine
+	(unsigned short row, unsigned short rasterLine)
 {
-	// The mode is quite similar to the standard text mode, 
-	// with the difference the 0 pixels (background) can have different background colors...
+	MCHEmul::ScreenMemory* screen = screenMemory ();
 
-	COMMODORE::TED::DrawResult result;
+	// Preserve point markers drawn before this row completed.
+	for (size_t x = 0; x < screen -> columns (); x++)
+		screen -> setPixel
+			(x, row, _eventStatus._marks [x] != 0
+				? _eventStatus._marks [x] : 129);
 
-	for (int i = 0; i < 8 /** To paint always 8 pixels */; i++)
+	if (row < 5)
 	{
-		int pp = cb + i;
-		if (pp < 0)
-			continue;
-		if (pp >= 320)
-			break;
+		_eventStatus._earlyRasterLines [row] = rasterLine;
 
-		// Calculate the byte and bit where the pixel info is...
-		size_t iBy = ((size_t) pp) >> 3 /** To determine the byte. */;
-		size_t iBt = 7 - (((size_t) pp) % 8); /** From MSB to LSB. */
-
-		// Status of the pixel...
-		// There is no neither blinking nor hardware cursor possibility in this mode either...
-		// Pixel must be on or off?
-		// In this mode there is no reverse mode or blinking...
-		bool dP = _tedGraphicInfo._graphicData [iBy].bit (iBt);
-		// The color of the pixel will depend on whether it is on or off...
-		// ...and also on the 2 MSB bites of the screen code byte...
-		// In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
-		unsigned int cs = ((_tedGraphicInfo._screenCodeData [iBy].value () & 0xc0) >> 6) & 0x03; // 0, 1, 2, or 3
-		unsigned int fc = 
-			dP 
-				? (_tedGraphicInfo._colorData [iBy].value ()) 
-				: (DrawResult::_BACKGROUNDREFERENCE | cs);
-		// ...and draws it!!
-		result._foregroundColorData [i] = fc;
+		return;
 	}
 
-	return (result);
+	const std::string label = std::to_string ((unsigned int) rasterLine);
+	const size_t width = label.size () * 6 + 2;
+
+	if (width <= screen -> columns ())
+	{
+		// The five glyph rows lie entirely above the completed IRQ row.
+		screen -> setBox (0, row - 5, width, 5, 130);
+		screen -> setString (0, row - 5, label, 131);
+	}
 }
 
 // ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMonoColorBitMap (int cb, bool inv)
+void COMMODORE::TED::clockVideoFetch
+	(VideoFetchPhase phase)
 {
-	COMMODORE::TED::DrawResult result;
-
-	for (int i = 0; i < 8 /** To paint always 8 pixels. */; i++)
+	if (phase == VideoFetchPhase::_GRAPHICS)
 	{
-		int pp = cb + i;
-		if (pp < 0)
-			continue;
-		if (pp >= 320)
-			break;
+		// Advance the previously captured graphics before replacing it.
+		if (_videoOutput._shiftActive)
+			_videoOutput._current._graphics =
+				_videoOutput._next._graphics;
 
-		size_t iBy = ((size_t) pp) >> 3; // To determine the byte...
-		size_t iBt = 7 - (((size_t) pp) % 8); // From MSB to LSB...
-		bool bS = _tedGraphicInfo._graphicData [iBy].bit (iBt);
+		_videoOutput._next._graphics =
+			captureVideoRead (0).value ();
 
-		// Determines the color as a function of the screen code and the attribute byte...
-		unsigned int fc =
-			inv
-				? 0x00 // When invalid, all pixels are black...
-				: bS
-					? (((_tedGraphicInfo._screenCodeData[iBy].value() & 0xf0) >> 4) // Moved to color info...
-						| ((_tedGraphicInfo._colorData[iBy].value() & 0x07) << 4))  // Moved to luminance info...
-					: ((_tedGraphicInfo._screenCodeData[iBy].value() & 0x0f)		// Idem...
-						| (_tedGraphicInfo._colorData[iBy].value() & 0x70));
+		if (!_videoFetchState._window ||
+			!_videoFetchState._displayActive)
+			return;
 
-		// ...and draws it!!
-		result._foregroundColorData [i] = fc;
+		const unsigned int targets =
+			_videoFetchState.captureTargets (_rasterPosition._videoLine);
+
+		if (targets == 0)
+			return;
+
+		const MCHEmul::Address address =
+			((targets & VideoFetchState::_ATTRIBUTES) != 0
+				? _TEDRegisters -> attributeMemory ()
+				: _TEDRegisters -> screenMemory ()) +
+			(size_t) _videoFetchState._position;
+
+		prepareVideoRead
+			(VideoReadKind::_MATRIX,
+			 address, _videoFetchState._bufferIndex);
+
+		return;
 	}
 
-	return (result);
+	if (_videoOutput._shiftActive)
+	{
+		// Snapshot the complete cell before advancing its metadata.
+		_videoOutput._waiting = _videoOutput._current;
+
+		_videoOutput._current._character =
+			_videoOutput._next._character;
+		_videoOutput._current._attribute =
+			_videoOutput._next._attribute;
+		_videoOutput._current._cursor =
+			_videoOutput._next._cursor;
+		_videoOutput._current._valid =
+			_videoOutput._next._valid;
+	}
+	else
+		// Outside the transfer window, retain metadata but supply zero graphics.
+		_videoOutput._waiting._graphics = 0;
+
+	const size_t index = _videoFetchState._bufferIndex;
+
+	// Attribute output uses the retained byte preceding its possible replacement.
+	const unsigned char previousAttribute =
+		_tedGraphicInfo._colorData [index].value ();
+
+	const unsigned int targets =
+		(_videoFetchState._window &&
+		 _videoFetchState._displayActive)
+			? _videoFetchState.captureTargets (_rasterPosition._videoLine)
+			: 0u;
+
+	_tedGraphicInfo._VLMI = (unsigned short) index;
+	captureVideoRead (targets);
+
+	if (!_videoFetchState._window)
+	{
+		_videoOutput._next._character = 0;
+		_videoOutput._next._attribute = 0;
+		_videoOutput._next._cursor = false;
+		_videoOutput._next._valid = false;
+
+		return;
+	}
+
+	const COMMODORE::TEDRegisters::GraphicalInfo& gI =
+		_TEDRegisters -> graphicalInfo ();
+
+	_videoOutput._next._character =
+		_tedGraphicInfo._screenCodeData [index].value ();
+	_videoOutput._next._attribute = previousAttribute;
+	_videoOutput._next._cursor =
+		_tedGraphicInfo._VC == _TEDRegisters -> cursorPosition ();
+	_videoOutput._next._valid = !_tedGraphicInfo._idleState;
+
+	prepareGraphicsRead
+		(index,
+		 _tedGraphicInfo._screenCodeData [index],
+		 _tedGraphicInfo._VC,
+		 gI._currentCharacterRow,
+		 _tedGraphicInfo._idleState);
+
+	if (_videoFetchState._displayActive)
+		_videoFetchState.advancePosition ();
+
+	if (!_tedGraphicInfo._idleState)
+		_tedGraphicInfo._VC = (_tedGraphicInfo._VC + 1) & 0x03ff;
+
+	_videoFetchState.advanceBuffer ();
 }
 
 // ---
-COMMODORE::TED::DrawResult COMMODORE::TED::drawMultiColorBitMap (int cb, bool inv)
+MCHEmul::UByte COMMODORE::TED::captureVideoRead
+	(unsigned int targets)
 {
-	COMMODORE::TED::DrawResult result;
+	PendingVideoRead& pending = _pendingVideoRead;
 
-	for (unsigned short i = 0 ; i < 8 /** To paint always 8 pixels but in blocks of 2. */; i += 2)
+	if (pending._kind == VideoReadKind::_NONE)
+		return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
+
+	MCHEmul::UByte result;
+
+	if (pending._kind == VideoReadKind::_MATRIX)
 	{
-		int pp = cb + i;
-		if (pp < -1)
-			continue;
-		if (pp >= 320)
-			break;
-
-		// After this point pp can be -1
-
-		size_t iBy = 0;
-		unsigned char cs = 0;
-		if (pp >= 0)
+		// A prepared address is not a grant of the CPU bus phase. Discard this
+		// opportunity without overwriting retained bytes or delaying the fetch.
+		if (!DMAActive ())
 		{
-			iBy = ((size_t) pp) >> 3; 
-			size_t iBt = 3 - ((((size_t) pp) % 8) >> 1);
-			cs = (_tedGraphicInfo._graphicData [iBy].value () >> (iBt << 1)) & 0x03; // 0, 1, 2 or 3
+			pending._kind = VideoReadKind::_NONE;
+
+			return (MCHEmul::PhysicalStorage::_DEFAULTVALUE);
 		}
-		// This is the case when pp == -1...
-		else
-			cs = (_tedGraphicInfo._graphicData [0].value () >> 6) & 0x03; // 0, 1, 2 or 3
 
-		// Determines the color...
-		unsigned fc = // The value 0x00 is not tested....
-				inv
-					? 0x00 // When invalid all pixels are black...
-					: (cs == 0x00) // In the case of cs == 0x00 it will be redudant as it is already background, but just in case...
-						? DrawResult::_BACKGROUNDREFERENCE
-						: ((cs == 0x01) // The color is the defined in the video matrix (color) & color data (luminance)...
-							? (((_tedGraphicInfo._screenCodeData [iBy].value () & 0xf0 /** bits 4, 5, 6 & 7. */) >> 4) /** to color position. */
-								// There is a mistake in the TED documentation, it shows bits 4, 5 & 6 instead of bits 0, 1 & 2...
-								| ((_tedGraphicInfo._colorData [iBy].value () & 0x07 /** bits 0, 1 & 2. */) << 4))
-							: ((cs == 0x02) // The color is defined in the video matrix (color) & color data (luminance)...
-								? ((_tedGraphicInfo._screenCodeData [iBy].value () & 0x0f /** bits 0, 1, 2 & 3 */)
-									| (_tedGraphicInfo._colorData [iBy].value () & 0x70 /** bits 4, 5 & 6. */) /** to luminance position. */)
-								: (DrawResult::_BACKGROUNDREFERENCE | 0x01u)));
+		// Both enabled destinations receive the same bus value.
+		result = readRAMForVideo (pending._address);
 
-		// ...and draws it!!
-		result._foregroundColorData [i] = fc;
-		result._foregroundColorData [i + 1] = fc;
+		// Record actual transfers before ownership changes for the next phase.
+		if (_drawOtherEvents && targets != 0)
+			_eventStatus._marker._events |= EventsStatus::Marker::_BADLINE;
+
+		if ((targets & VideoFetchState::_ATTRIBUTES) != 0)
+		{
+			_tedGraphicInfo._colorData [pending._index] = result;
+
+			_IFDEBUG debugReadingVideoAttributes
+				(pending._address, pending._index, result);
+		}
+
+		if ((targets & VideoFetchState::_MATRIX) != 0)
+		{
+			_tedGraphicInfo._screenCodeData [pending._index] = result;
+
+			_IFDEBUG debugReadingVideoMatrix
+				(pending._address, pending._index, result);
+		}
+	}
+	else
+	{
+		result = readVideoGraphics
+			(pending._address, pending._kind != VideoReadKind::_IDLE);
+
+		_tedGraphicInfo._graphicData [pending._index] = result;
+
+		// Report the selected operation before consuming its descriptor.
+		_IFDEBUG debugReadingGraphics (pending, result);
 	}
 
+	pending._kind = VideoReadKind::_NONE;
+
 	return (result);
+}
+
+// ---
+void COMMODORE::TED::prepareGraphicsRead
+	(size_t index, const MCHEmul::UByte& character,
+	 unsigned short position, unsigned char row, bool idle)
+{
+	if (idle)
+	{
+		prepareVideoRead
+			(VideoReadKind::_IDLE,
+			 (_videoOutput._control1 & 0x40) != 0
+				? _MEMORYPOSIDLE1 : _MEMORYPOSIDLE2,
+			 index);
+
+		return;
+	}
+
+	// Retain the complete address before a later capture can observe register changes.
+	if ((_videoOutput._control1 & 0x20) == 0)
+	{
+		const bool reverse = (_videoOutput._control2 & 0x80) == 0;
+		const size_t characterIndex = (size_t) character.value () &
+			((_videoOutput._control1 & 0x40) != 0 ? 0x3f : (reverse ? 0x7f : 0xff));
+
+		// FF13 remains programmed state; effective REVERSE selects the base alignment.
+		const unsigned int base =
+			(_TEDRegisters -> MCHEmul::PhysicalStorageSubset::readValue (0x13).value () & (reverse ? 0xfc : 0xf8)) << 8;
+
+		prepareVideoRead
+			(VideoReadKind::_CHARACTER,
+			 MCHEmul::Address (2, base + (characterIndex << 3) + row), index);
+	}
+	else
+	{
+		prepareVideoRead
+			(VideoReadKind::_BITMAP,
+			 _TEDRegisters -> bitmapMemory () +
+				(((size_t) (position & 0x03ff)) << 3) + row,
+			 index);
+	}
+}
+
+// ---
+MCHEmul::UByte COMMODORE::TED::readVideoGraphics
+	(const MCHEmul::Address& address, bool useGraphicsROMSelection)
+{
+	MCHEmul::Memory* memory = memoryRef ();
+	const int previousView = memory -> activeView () -> id ();
+	const bool previousTEDROM = ROMActiveToFetchCharData ();
+	const bool graphicsROM = useGraphicsROMSelection
+		? _TEDRegisters -> ROMActiveToFetchCharAndBitmap ()
+		: previousTEDROM;
+
+	if (previousView != _TEDView)
+		memory -> setActiveView (_TEDView);
+
+	if (previousTEDROM != graphicsROM)
+		activeROMtoFetchCharData (graphicsROM);
+
+	const MCHEmul::UByte result = memory -> value (address);
+
+	// The temporary TED mapping must not escape this memory operation.
+	if (previousTEDROM != graphicsROM)
+		activeROMtoFetchCharData (previousTEDROM);
+
+	if (previousView != _TEDView)
+		memory -> setActiveView (previousView);
+
+	return (result);
+}
+
+// ---
+void COMMODORE::TED::clockVideoOutput
+	(bool halfEnd, bool inScreen, unsigned char scrollX)
+{
+	if (_videoOutput._shiftActive || inScreen)
+	{
+		_videoOutput._pixel = (_videoOutput._pixel + 1) & 0x07;
+
+		if (((_rasterPosition._horizontal + 1) & 0x07) ==
+			_videoOutput._scrollX)
+		{
+			_videoOutput._output = _videoOutput._waiting;
+
+			// Cursor inversion belongs to this load, not later mode changes.
+			if (_videoOutput._output._cursor &&
+				!_TEDRegisters -> flashCounterOn () &&
+				_videoOutput._control1 == 0 &&
+				(_videoOutput._control2 & 0x10) == 0)
+				_videoOutput._output._graphics ^= 0xff;
+
+			_videoOutput._doubleShift = false;
+			_videoOutput._pixel = 0;
+
+			_IFDEBUG debugVideoOutputLoad ();
+		}
+		else
+		{
+			// The pair phase advances even in hires; a mode write does not restart it.
+			if (!_videoOutput.multicolor ())
+				_videoOutput._output._graphics <<= 1;
+			else if (_videoOutput._doubleShift)
+				_videoOutput._output._graphics <<= 2;
+
+			_videoOutput._doubleShift = !_videoOutput._doubleShift;
+		}
+	}
+	else
+	{
+		// Keep metadata and pair phase while zeroing the disabled shift register.
+		_videoOutput._output._graphics = 0;
+		_videoOutput._pixel = 0;
+	}
+
+	if (_rasterPosition._horizontal == 311)
+		_videoOutput._shiftActive = false;
+
+	// A coincident CPU write does not alter the sample taken before that write.
+	if (halfEnd)
+		_videoOutput._scrollX = scrollX;
+}
+
+// ---
+unsigned int COMMODORE::TED::videoPixelColor () const
+{
+	const VideoCell& cell = _videoOutput._output;
+
+	if (!cell._valid)
+		return (_TEDRegisters -> backgroundColor ().asChar ());
+
+	// The effective mode interprets remaining bits; it never reconstructs consumed ones.
+	switch ((_videoOutput._control1 >> 4) |
+		((_videoOutput._control2 >> 4) & 0x01))
+	{
+		case 0: // Standard character mode.
+		case 1: // Multicolor character mode, including hires cells.
+			{
+				if (_videoOutput.multicolor ())
+				{
+					const unsigned char pair = cell._graphics >> 6;
+					return (pair == 3 ? cell._attribute & 0x77
+						: _TEDRegisters -> backgroundColor (pair).asChar ());
+				}
+
+				bool foreground = (cell._graphics & 0x80) != 0;
+				if ((_videoOutput._control2 & 0x90) == 0)
+				{
+					if ((cell._attribute & 0x80) != 0 &&
+						_TEDRegisters -> flashCounterOn ())
+						foreground = false;
+
+					foreground ^= (cell._character & 0x80) != 0;
+				}
+
+				return (foreground ? cell._attribute & 0x7f
+					: _TEDRegisters -> backgroundColor ().asChar ());
+			}
+
+		case 2: // Hires bitmap.
+			{
+				return ((cell._graphics & 0x80) != 0
+					? (cell._character >> 4) | ((cell._attribute & 0x07) << 4)
+					: (cell._character & 0x0f) | (cell._attribute & 0x70));
+			}
+
+		case 3: // Multicolor bitmap.
+			{
+				const unsigned char pair = cell._graphics >> 6;
+				if (pair == 1)
+					return ((cell._character >> 4) | ((cell._attribute & 0x07) << 4));
+				if (pair == 2)
+					return ((cell._character & 0x0f) | (cell._attribute & 0x70));
+
+				return (_TEDRegisters -> backgroundColor (pair == 3 ? 1 : 0).asChar ());
+			}
+
+		case 4: // Extended-color character mode.
+			{
+				return ((cell._graphics & 0x80) != 0 ? cell._attribute & 0x7f
+					: _TEDRegisters -> backgroundColor (cell._character >> 6).asChar ());
+			}
+
+		default: // Unsupported ECM combinations produce black in the selected profile.
+			{
+				return (0);
+			}
+	}
 }
 
 // ---
@@ -1281,7 +1299,7 @@ bool COMMODORE::TED::advanceToCPURead (MCHEmul::CPU* cpu)
 		cycles > busData._firstWriteCycle)
 		cycles = (unsigned int) (busData._firstWriteCycle);
 
-	_cpuReadAdvanceCycles = cycles;
+	_cpuTransaction._readAdvanceCycles = cycles;
 
 	_IFDEBUG debugCPUReadAdvance (cpu, false);
 
@@ -1294,11 +1312,30 @@ bool COMMODORE::TED::advanceToCPURead (MCHEmul::CPU* cpu)
 			(!_TEDRegisters -> textDisplay25RowsActive (),
 			 !_TEDRegisters -> textDisplay40ColumnsActive ());
 
-	for (unsigned int i = 0; i < cycles; ++i)
+	while (_cpuTransaction._logicalCycle < cycles)
 	{
-		// Leave the final CPU cycle suspended immediately before its access.
-		if (!simulateCPUCycle
-			(cpu, batchStart, batchEnd, i + 1 != cycles))
+		if (!simulateCPUCycle (cpu, batchStart, batchEnd, false))
+			return (false);
+
+		if (_cpuRecovery._cycle._held)
+		{
+			// Recover the wait without consuming the pending logical read.
+			if (!simulateCPUCycle (cpu, batchStart, batchEnd))
+				return (false);
+
+			// A frozen DMA window cannot expire through raster advancement.
+			// Return to the scheduler instead of spinning inside a CPU callback.
+			if (!_graphicsCycleActive && _TEDRegisters -> freezeActive ())
+				break;
+
+			continue;
+		}
+
+		// Leave the final permitted read suspended at the existing capture edge.
+		if (_cpuTransaction._logicalCycle + 1 == cycles)
+			break;
+
+		if (!simulateCPUCycle (cpu, batchStart, batchEnd))
 			return (false);
 	}
 
@@ -1308,27 +1345,68 @@ bool COMMODORE::TED::advanceToCPURead (MCHEmul::CPU* cpu)
 }
 
 // ---
+void COMMODORE::TED::updateCPUStop (MCHEmul::CPU* cpu)
+{
+	// Recovery is at or ahead of the CPU here. The remaining logical bus
+	// cycles plus that lead give the compensation without summing old waits.
+	unsigned int remaining =
+		(unsigned int) _cpuTransaction._busData -> _numberCycles -
+			_cpuTransaction._logicalCycle + (_cpuRecovery._nextCycle - cpu -> clockCycles ());
+
+	// Even a completed instruction must not start its next opcode while BA
+	// is low. Reserve one scheduler tick; its actual wait is recovered once.
+	if (_cpuTransaction._logicalCycle == _cpuTransaction._busData -> _numberCycles &&
+		DMARequested ())
+	{
+		if (_cpuTransaction._waitCycles == 0)
+			_cpuTransaction._firstStopPosition = _cpuRecovery._nextCycle - _cpuTransaction._startCycle;
+
+		++remaining;
+	}
+
+	if (remaining == 0 ||
+		(_cpuTransaction._stopRequested && cpu -> stopped () &&
+		 cpu -> cyclesRemainStopped () == remaining))
+		return;
+
+	// setStop replaces its remaining counter. Never reload waits already
+	// consumed by the CPU, and never request a stop from CPUAboutToExecute.
+	cpu -> setStop
+		(true, MCHEmul::InstructionDefined::_CYCLEALL,
+		 _cpuTransaction._startCycle + _cpuTransaction._firstStopPosition, (int) remaining);
+
+	if (!_cpuTransaction._stopRequested)
+	{
+		_cpuTransaction._stopRequested = true;
+
+		_IFDEBUG debugCPUStop (cpu, remaining);
+	}
+}
+
+// ---
 bool COMMODORE::TED::simulateCPUCycle
 	(MCHEmul::CPU* cpu,
 	 unsigned int batchStart, unsigned int batchEnd,
 	 bool completeCycle)
 {
-	if (!_cpuCycleState._accessPending)
+	COMMODORE::TED::CPUCycleState& cS = _cpuRecovery._cycle;
+
+	if (!cS._accessPending)
 	{
 		selectConfiguration ();
 
 		// Capture the clock decision once; later writes cannot change this cycle.
-		_cpuCycleState = COMMODORE::TED::CPUCycleState
-			(_lastCPUCycles, _inSingleClockMode,
-			 clockDivider (), _pendingHalfCyclesFromLastExecution);
+		cS = COMMODORE::TED::CPUCycleState
+			(_cpuRecovery._nextCycle, _inSingleClockMode,
+			 clockDivider (), _cpuRecovery._halfCarry);
 
 		// Stop before the existing read-capture edge, leaving the bus write pending.
 		if (!advanceCPUQuarters
-			(cpu, _cpuCycleState.quarterDots () - 9,
-			 batchStart, batchEnd))
+			(cpu, cS.quarterDots () - 9, batchStart, batchEnd))
 			return (false);
 
-		_cpuCycleState._accessPending = true;
+		cS._accessPending = true;
+		cS._held = CPUAccessBlocked ();
 	}
 
 	if (!completeCycle)
@@ -1336,19 +1414,19 @@ bool COMMODORE::TED::simulateCPUCycle
 
 	// A suspended cycle continues from its retained cursor and divider.
 	if (!advanceCPUQuarters
-		(cpu, _cpuCycleState.quarterDots (), batchStart, batchEnd))
+		(cpu, cS.quarterDots (), batchStart, batchEnd))
 		return (false);
 
 	// Commit elapsed time only after the complete CPU cycle has been recovered.
-	_pendingHalfCyclesFromLastExecution =
-		(_cpuCycleState._halfCarryIn +
-		 _cpuCycleState.halfTEDCycles ()) & 0x01;
-	_pendingPacingCycles += _cpuCycleState.masterCycles ();
+	_cpuRecovery.commitElapsedTime ();
 
 	publishRasterPosition ();
 
-	_cpuCycleState._accessPending = false;
-	++_lastCPUCycles;
+	if (_cpuTransaction._pending)
+		_cpuTransaction.advance (cS._held, _cpuRecovery._nextCycle);
+
+	cS._accessPending = false;
+	++_cpuRecovery._nextCycle;
 
 	return (true);
 }
@@ -1358,26 +1436,20 @@ bool COMMODORE::TED::advanceCPUQuarters
 	(MCHEmul::CPU* cpu, unsigned int target,
 	 unsigned int batchStart, unsigned int batchEnd)
 {
-	while (_cpuCycleState._nextQuarter < target)
+	COMMODORE::TED::CPUCycleState& cS = _cpuRecovery._cycle;
+
+	// Callers stop before a read edge or at the CPU-cycle boundary.
+	// These positions preserve the control/dot sequence across resumptions.
+	while (cS._nextQuarter < target)
 	{
-		const unsigned int part = _cpuCycleState.phase () & 0x03;
-
-		if (part == 1 || part == 2)
-		{
-			// No counter, register or graphics event occurs on these edges.
-			unsigned int count = 3 - part;
-			if (count > target - _cpuCycleState._nextQuarter)
-				count = target - _cpuCycleState._nextQuarter;
-
-			_cpuCycleState._nextQuarter += count;
-
-			continue;
-		}
-
 		if (!processCPUQuarter (cpu, batchStart, batchEnd))
 			return (false);
 
-		++_cpuCycleState._nextQuarter;
+		// The half-pulse carry is a multiple of sixteen quarters, so the
+		// low two cursor bits also identify the current slow-pulse edge.
+		// Advance directly from control to dot, or from dot to control.
+		cS._nextQuarter +=
+			((cS._nextQuarter & 0x03) == 0) ? 3u : 1u;
 	}
 
 	return (true);
@@ -1388,24 +1460,25 @@ bool COMMODORE::TED::processCPUQuarter
 	(MCHEmul::CPU* cpu,
 	 unsigned int batchStart, unsigned int batchEnd)
 {
-	const COMMODORE::TED::CPUCycleState& cS = _cpuCycleState;
+	const COMMODORE::TED::CPUCycleState& cS = _cpuRecovery._cycle;
 	const unsigned int phase = cS.phase ();
 
-	COMMODORE::TED::DebugCycleContext dC = { };
-
-	_IFDEBUG
-		dC = debugCycleContext (cS, batchStart, batchEnd);
-
-	// Rearm the diagnostic marker when the combined request disappears.
-	if (_drawOtherEvents && !_TEDRegisters -> launchIRQ ())
-		_eventStatus._irqRequestMarked = false;
+	// Capture before CPU writes and raster advancement. Phase processing is
+	// sequential; callbacks must not recursively recover another TED phase.
+	_debugCycleContext = deepDebugActive ()
+		? debugCycleContext (cS, batchStart, batchEnd)
+		: DebugCycleContext { };
 
 	if ((phase & 0x03) == 0)
 	{
+		// Emission edges rearm after CPU writes, before sampling a new source.
+		if (_drawOtherEvents && !_TEDRegisters -> launchIRQ ())
+			_eventStatus._irqRequestMarked = false;
+
 		if (phase == 0)
 			_graphicsCycleActive = !_TEDRegisters -> freezeActive ();
 
-		if (_graphicsCycleActive && !processRasterControl (dC))
+		if (_graphicsCycleActive && !processRasterControl ())
 			return (false);
 
 		// A mismatch rearms the detector independently of IRQ acknowledgement.
@@ -1413,7 +1486,7 @@ bool COMMODORE::TED::processCPUQuarter
 			_rasterIRQMatched = false;
 
 		if (phase == 0 && _graphicsCycleActive)
-			beginTEDCycle (dC);
+			beginTEDCycle ();
 
 		return (true);
 	}
@@ -1422,10 +1495,51 @@ bool COMMODORE::TED::processCPUQuarter
 	const bool matched = sampledLine == _TEDRegisters -> IRQRasterLineAt ();
 	const bool cpuEnd =
 		cS._nextQuarter + 1 == cS.quarterDots ();
+	const bool slowEnd = phase == 31;
+	const bool halfEnd = phase == 15 || slowEnd;
+
+	if (_drawOtherEvents)
+	{
+		_eventStatus._marker = EventsStatus::Marker ();
+
+		_eventStatus._marker._rowVisible = _raster.vData ().isInVisibleZone ();
+		_eventStatus._marker._visible = _raster.isInVisibleZone ();
+
+		if (_eventStatus._marker._rowVisible)
+			_eventStatus._marker._row = _raster.vData ().currentVisiblePosition ();
+
+		if (_eventStatus._marker._visible)
+			_eventStatus._marker._column = _raster.hData ().currentVisiblePosition ();
+
+		_eventStatus._marker._afterVisible =
+			_graphicsCycleActive && _raster.hData ().isInLastBlankZone ();
+	}
+
+	unsigned char scrollX = 0;
+
+	if (_graphicsCycleActive && halfEnd)
+	{
+		clockVideoFetch
+			(slowEnd
+				? VideoFetchPhase::_MATRIX
+				: VideoFetchPhase::_GRAPHICS);
+
+		if (slowEnd)
+		{
+			// Retain the preceding line condition before line and scroll updates.
+			if (_verticalClockPending)
+				_videoFetchState.latchNextLine (_rasterPosition._videoLine);
+
+			_videoFetchState._scrollY =
+				_TEDRegisters -> verticalScrollPosition ();
+		}
+
+		scrollX = _TEDRegisters -> horizontalScrollPosition ();
+	}
 
 	unsigned int writes = 0;
 
-	if (cpuEnd && _cpuTimedWritesEnabled)
+	if (cpuEnd && _cpuTimedWrites._enabled && !cS._held)
 		if (!executePendingWriteAt (cpu, cS._cycle, writes))
 			return (false);
 
@@ -1438,85 +1552,113 @@ bool COMMODORE::TED::processCPUQuarter
 	const bool rasterRaised =
 		sampleRasterIRQ (matched, (writes & _ACKRASTER) != 0);
 
-	COMMODORE::TED::EventMarker marker;
-
-	if (_drawOtherEvents)
+	if (_drawOtherEvents && rasterRaised)
 	{
-		marker._visible = _raster.isInVisibleZone ();
-		if (marker._visible)
-			_raster.currentVisiblePosition (marker._column, marker._row);
-
-		if (_eventStatus._badLinePending)
-			marker._events |= EventMarker::_BADLINE;
-
-		if (rasterRaised)
-			marker._events |= EventMarker::_RASTER;
-
-		_eventStatus._badLinePending = false;
+		_eventStatus._marker._events |= EventsStatus::Marker::_RASTER;
+		_eventStatus._marker._rasterLine = sampledLine;
 	}
 
 	// Capture marker coordinates before presentation advancement.
 	// Normal video is rendered before any diagnostic overlay.
 	if (_graphicsCycleActive)
 	{
+		clockBorders ();
+
+		const bool inScreen = _videoOutput._horizontalOpen;
+
 		if (_raster.isInVisibleZone ())
-			drawVisibleZone (phase >> 2);
+		{
+			drawVisibleZone (phase >> 2, inScreen);
+			if (_drawOtherEvents)
+				_eventStatus._marker._emitted = true;
+		}
+
+		clockVideoOutput (halfEnd, inScreen, scrollX);
 
 		_raster.moveDot ();
 	}
 
-	clockRasterDot (phase, writes, dC);
+	// Complete the current memory phase before changing ownership of the next.
+	clockDMA (slowEnd);
+	clockRasterDot (slowEnd, writes);
 
 	_IFDEBUG
 		if (rasterRaised)
-			debugRasterEvent (dC, "RasterIRQ", sampledLine);
+			debugRasterEvent ("RasterIRQ", sampledLine);
 
 	// A slow pulse can contain halves captured with different selected dividers.
-	if (phase == 15 || phase == 31)
+	if (halfEnd)
 		_pendingSoundMasterCycles += cS.halfMasterCycles ();
 
-	if (phase == 31)
+	if (slowEnd)
 	{
+		latchVideoControls ();
+
 		if (_graphicsCycleActive)
-			finishTEDCycle (cpu, cS._cycle, dC, marker);
+			finishTEDCycle (cpu, cS._cycle);
 		else
 		{
 			clockTEDCycle (false);
 
-			_IFDEBUG debugFrozenTEDCycle (dC);
+			_IFDEBUG debugFrozenTEDCycle ();
 		}
 
 		// The next CPU cycle uses the decision retained at this slow boundary.
 		_inSingleClockMode = singleClockModeForCurrentCycle ();
 	}
 
-	if (phase != 31 || !_graphicsCycleActive)
+	if (!slowEnd || !_graphicsCycleActive)
 	{
 		if (rasterRaised || cpuEnd)
 			if (requestIRQ (cpu, cS._cycle))
-				marker._events |= EventMarker::_IRQ;
+				_eventStatus._marker._events |= EventsStatus::Marker::_IRQ;
 
 		if (_drawOtherEvents)
-			drawOtherEvents (marker);
+			drawOtherEvents ();
 	}
 
 	return (true);
 }
 
 // ---
-void COMMODORE::TED::selectConfiguration ()
+void COMMODORE::TED::clockDMA
+	(bool slowEnd)
 {
-	const Configuration* configuration = &_configurations [_TEDRegisters -> PALActive () ? 0 : 1];
-	if (_configuration == configuration)
-		return;
+	const DMAState previous = _dmaState;
 
-	_configuration = configuration;
-	_soundFunction -> setClockDivider (_configuration -> _divider);
-	notify (MCHEmul::Event (_VIDEOCONFIGURATIONCHANGED));
+	if (_graphicsCycleActive && slowEnd)
+	{
+		if (_rasterPosition._horizontal == 407)
+			_dmaWindow = true;
+		else if (_rasterPosition._horizontal == 295)
+			_dmaWindow = false;
+	}
+
+	if (!_dmaWindow || !_videoFetchState._displayActive ||
+		_videoFetchState.captureTargets (_rasterPosition._videoLine) == 0)
+		_dmaState = DMAState::_IDLE;
+	else if (_dmaState == DMAState::_IDLE)
+		_dmaState = DMAState::_WARNING1;
+	else if (slowEnd)
+	{
+		switch (_dmaState)
+		{
+			case DMAState::_WARNING1: _dmaState = DMAState::_WARNING2; break;
+			case DMAState::_WARNING2: _dmaState = DMAState::_WARNING3; break;
+			case DMAState::_WARNING3: _dmaState = DMAState::_ACTIVE; break;
+			default: break;
+		}
+	}
+
+	_IFDEBUG
+		if (previous != _dmaState)
+			debugRasterEvent (_dmaState == DMAState::_IDLE ? "DMABusReleased" :
+					(_dmaState == DMAState::_ACTIVE ? "DMABusGranted" : "DMAWarning"),
+				_rasterPosition._videoLine);
 }
 
 // ---
-bool COMMODORE::TED::applyPresentationConfiguration (const DebugCycleContext& dC)
+bool COMMODORE::TED::applyPresentationConfiguration ()
 {
 	const MCHEmul::Raster previousRaster = _raster;
 	_raster.configure (_configuration -> _vertical, _configuration -> _horizontal,
@@ -1538,22 +1680,40 @@ bool COMMODORE::TED::applyPresentationConfiguration (const DebugCycleContext& dC
 
 	delete (_screenMemory);
 	_screenMemory = screenMemory;
-	_drawResult = { };
 	_presentationConfiguration = _configuration;
 	_lastVBlankEntered = false;
-	_eventStatus._badLinePending = false;
+	_eventStatus.reset
+		(_raster.visibleColumns (), _TEDRegisters -> launchIRQ ());
 
-	_IFDEBUG debugRasterEvent (dC, "RasterConfiguration", _rasterPosition._videoLine);
+	_IFDEBUG debugRasterEvent ("RasterConfiguration", _rasterPosition._videoLine);
 	notify (MCHEmul::Event (_VIDEOCONFIGURATIONCHANGED));
 
 	return (true);
 }
 
 // ---
-bool COMMODORE::TED::processRasterControl (const DebugCycleContext& dC)
+bool COMMODORE::TED::processRasterControl ()
 {
 	switch (_rasterPosition._horizontal)
 	{
+		case 296:
+			{
+				_videoFetchState._window = false;
+
+				// Refresh keeps the CPU slow after external fetching ends.
+				_externalFetchClock = false;
+				_refreshClock = true;
+			}
+
+			break;
+
+		case 336:
+			{
+				_refreshClock = false;
+			}
+
+			break;
+
 		case 348:
 			{
 				_flashClockPending = true;
@@ -1575,23 +1735,72 @@ bool COMMODORE::TED::processRasterControl (const DebugCycleContext& dC)
 				// The previous capture qualifies this reset independently
 				// of a coincident vertical-counter load.
 				if (previousLine == _configuration -> _endOfScreen)
-				{
 					_TEDRegisters -> graphicalInfo ()._currentCharacterPosition = 0;
-					_tedGraphicInfo._VC = 0;
-				}
+
+				_tedGraphicInfo._VC = 0;
+
+				if (previousLine == 205)
+					_videoFetchState._reload = 0;
 
 				_rasterPosition._videoLine = _rasterPosition._vertical;
 				_lastBadLineScrollY = -1;
 				_newBadLineCondition = false;
 
+				if (_videoFetchState._matrixLine &&
+					_videoFetchState._displayActive &&
+					_rasterPosition._videoLine < 204)
+				{
+					_tedGraphicInfo._idleState = false;
+					_TEDRegisters -> graphicalInfo ()._currentCharacterRow = 0;
+				}
+
 				_IFDEBUG
-					debugRasterEvent (dC, "VideoLineLatch", previousLine);
+					debugRasterEvent ("VideoLineLatch", previousLine);
 
 				// Switch presentation at its new frame origin without resetting hardware counters.
 				if (_configuration != _presentationConfiguration &&
 					_rasterPosition._videoLine == _configuration -> _vertical.firstPosition () &&
-					!applyPresentationConfiguration (dC))
+					!applyPresentationConfiguration ())
 					return (false);
+			}
+
+			break;
+
+		case 400:
+			{
+				_externalFetchClock = true;
+			}
+
+			break;
+
+		case 432:
+			{
+				_videoFetchState._window = true;
+
+				if (_videoFetchState._displayActive)
+					_videoFetchState._position = _videoFetchState._reload;
+
+				_tedGraphicInfo._VC =
+					_TEDRegisters -> graphicalInfo ()._currentCharacterPosition;
+			}
+
+			break;
+
+		case 440:
+			{
+				// Opening is qualified; only the H=311 event closes retained transfers.
+				if (_videoFetchState._displayActive)
+					_videoOutput._shiftActive = true;
+
+				// Preparation clears bytes, retaining cursor/validity metadata and
+				// the independently running output cell, dot index and pair phase.
+				_videoOutput._next._graphics = 0;
+				_videoOutput._current._character =
+					_videoOutput._current._attribute =
+					_videoOutput._current._graphics = 0;
+				_videoOutput._waiting._character =
+					_videoOutput._waiting._attribute =
+					_videoOutput._waiting._graphics = 0;
 			}
 
 			break;
@@ -1605,7 +1814,7 @@ bool COMMODORE::TED::processRasterControl (const DebugCycleContext& dC)
 
 // ---
 void COMMODORE::TED::clockRasterDot
-	(unsigned int phase, unsigned int writes, const DebugCycleContext& dC)
+	(bool slowEnd, unsigned int writes)
 {
 	if (_rasterPosition._horizontalWritePending &&
 		(writes & _WRITEHORIZONTAL) == 0)
@@ -1617,14 +1826,14 @@ void COMMODORE::TED::clockRasterDot
 		_rasterPosition._horizontalWritePending = false;
 
 		_IFDEBUG
-			debugRasterEvent (dC, "HorizontalLoad", _rasterPosition._vertical);
+			debugRasterEvent ("HorizontalLoad", _rasterPosition._vertical);
 	}
 	else if (_graphicsCycleActive)
 		_rasterPosition._horizontal =
 			(_rasterPosition._horizontal == 455)
 				? 0 : ((_rasterPosition._horizontal + 1) & 0x01ff);
 
-	if (phase != 31)
+	if (!slowEnd)
 		return;
 
 	if (_graphicsCycleActive)
@@ -1638,7 +1847,7 @@ void COMMODORE::TED::clockRasterDot
 					? 0 : ((previousLine + 1) & 0x01ff);
 
 			_IFDEBUG
-				debugRasterEvent (dC, "VerticalClock", previousLine);
+				debugRasterEvent ("VerticalClock", previousLine);
 		}
 
 		if (_flashClockPending &&
@@ -1648,7 +1857,7 @@ void COMMODORE::TED::clockRasterDot
 			_TEDRegisters -> incrementFlashCounter ();
 
 			_IFDEBUG
-				debugRasterEvent (dC, "FlashClock", _rasterPosition._videoLine);
+				debugRasterEvent ("FlashClock", _rasterPosition._videoLine);
 		}
 	}
 
@@ -1656,64 +1865,66 @@ void COMMODORE::TED::clockRasterDot
 }
 
 // ---
-void COMMODORE::TED::beginTEDCycle (const DebugCycleContext& dC)
+void COMMODORE::TED::beginTEDCycle ()
 {
 	_cycleInRasterLine = rasterCycle ();
 
-	_IFDEBUG debugTEDCycle (dC);
+	_IFDEBUG debugTEDCycle ();
 
-	_videoActive = (_rasterPosition._videoLine == _FIRSTBADLINE)
-		? !_TEDRegisters -> blankEntireScreen () : _videoActive;
+	if (_rasterPosition._videoLine == 0 &&
+		!_TEDRegisters -> blankEntireScreen ())
+		_videoFetchState._displayActive = true;
+	else if (_rasterPosition._videoLine == 204)
+	{
+		_videoFetchState._displayActive = false;
+		_tedGraphicInfo._idleState = true;
+	}
 
 	if (detectNewBadLine ())
 	{
 		_newBadLineCondition = true;
-		_tedGraphicInfo._idleState = false;
-		_TEDRegisters -> graphicalInfo ()._currentCharacterRow = 0;
-		// Keep only a visible event awaiting the first following emission edge.
-		_eventStatus._badLinePending =
-			_drawOtherEvents && _raster.isInVisibleZone ();
 
-		_IFDEBUG debugBadLine (dC);
+		_IFDEBUG debugBadLine ();
 	}
 
-	treatRasterCycle (dC);
+	if (_cycleInRasterLine != 57)
+		return;
 
-	// The decoded graphics remain valid until the next slow-pulse preparation.
-	_drawResult = { };
+	COMMODORE::TEDRegisters::GraphicalInfo& gI =
+		_TEDRegisters -> graphicalInfo ();
 
-	if (_videoActive && _raster.isInVisibleZone ())
+	// Retain the existing row-reload approximation.
+	if (_videoFetchState._displayActive &&
+		!_tedGraphicInfo._idleState &&
+		gI._currentCharacterRow == 6)
+		_videoFetchState._reload = _videoFetchState._position;
+
+	if (gI._currentCharacterRow == 7)
 	{
-		unsigned short column, row;
-		_raster.currentVisiblePosition (column, row);
+		gI._currentCharacterPosition =
+			_tedGraphicInfo._VC & 0x03ff;
 
-		const COMMODORE::TED::DrawContext drawContext =
-		{
-			/** _ICD */ _raster.hData ().firstDisplayPosition (),
-			/** _SC  */ _TEDRegisters -> horizontalScrollPosition (),
-			/** _RCA */ (unsigned short) ((column >> 3) << 3),
-			/** _RR  */ row };
-
-		_drawResult = drawGraphics (drawContext);
+		if (!_newBadLineCondition)
+			_tedGraphicInfo._idleState = true;
 	}
 
-	_IFDEBUG debugPreparedGraphics (dC);
+	gI._currentCharacterRow =
+		(gI._currentCharacterRow + 1) & 0x07;
 }
 
 // ---
 void COMMODORE::TED::finishTEDCycle
-	(MCHEmul::CPU* cpu, unsigned int requestCycle,
-	 const DebugCycleContext& dC, EventMarker& marker)
+	(MCHEmul::CPU* cpu, unsigned int requestCycle)
 {
 	clockTEDCycle (true);
 
 	if (requestIRQ (cpu, requestCycle))
-		marker._events |= EventMarker::_IRQ;
+		_eventStatus._marker._events |= EventsStatus::Marker::_IRQ;
 
-	_IFDEBUG debugTEDCycleEnd (dC);
+	_IFDEBUG debugTEDCycleEnd ();
 
 	if (_drawOtherEvents)
-		drawOtherEvents (marker);
+		drawOtherEvents ();
 
 	if (_raster.isInLastVBlankZone ())
 	{
@@ -1722,7 +1933,10 @@ void COMMODORE::TED::finishTEDCycle
 			_lastVBlankEntered = true;
 
 			_IFDEBUG debugRasterEvent
-				(dC, "FrameReady", _rasterPosition._videoLine);
+				("FrameReady", _rasterPosition._videoLine);
+
+			if (_drawOtherEvents)
+				_eventStatus.finishFrame ();
 
 			notify (MCHEmul::Event (_GRAPHICSREADY));
 		}
@@ -1757,10 +1971,10 @@ bool COMMODORE::TED::requestIRQ (MCHEmul::CPU* cpu, unsigned int cycle)
 // ---
 bool COMMODORE::TED::extractPendingWrites ()
 {
-	assert (_pendingWrites.empty () && _nextPendingWrite == 0);
+	assert (_cpuTimedWrites._commands.empty () && _cpuTimedWrites._next == 0);
 
-	if (_timedWriteCPU == nullptr ||
-		_cpuTransaction._cpu != _timedWriteCPU ||
+	if (_cpuTimedWrites._cpu == nullptr ||
+		_cpuTransaction._cpu != _cpuTimedWrites._cpu ||
 		_cpuTransaction._busData == nullptr)
 	{
 		_error = MCHEmul::_CHIP_ERROR;
@@ -1769,10 +1983,10 @@ bool COMMODORE::TED::extractPendingWrites ()
 	}
 
 	MCHEmul::Memory::configuration ().extractMemorySetCommandsBuffered
-		(_timedWriteSubsets, _pendingWrites);
+		(_cpuTimedWrites._subsets, _cpuTimedWrites._commands);
 
 	// Matching every write is required before assigning bus-cycle coordinates.
-	if (_pendingWrites.size () !=
+	if (_cpuTimedWrites._commands.size () !=
 		_cpuTransaction._busData -> _numberWriteCycles)
 	{
 		_error = MCHEmul::_CHIP_ERROR;
@@ -1789,11 +2003,11 @@ bool COMMODORE::TED::executePendingWriteAt
 {
 	rasterWrites = 0;
 
-	if (_nextPendingWrite == _pendingWrites.size () ||
+	if (_cpuTimedWrites._next == _cpuTimedWrites._commands.size () ||
 		cycle != pendingWriteCycle ())
 		return (true);
 
-	MCHEmul::SetMemoryCommand& command = _pendingWrites [_nextPendingWrite];
+	MCHEmul::SetMemoryCommand& command = _cpuTimedWrites._commands [_cpuTimedWrites._next];
 
 	const bool tedWrite = command.subset () == _TEDRegisters;
 	const size_t position = tedWrite ? command.position () % 0x20 : 0;
@@ -1838,7 +2052,7 @@ bool COMMODORE::TED::executePendingWriteAt
 
 	_IFDEBUG debugCPUWrite (cpu, cycle, command, true);
 
-	++_nextPendingWrite;
+	++_cpuTimedWrites._next;
 
 	return (true);
 }
@@ -1859,13 +2073,13 @@ std::string COMMODORE::TED::debugRasterAsString () const
 }
 
 // ---
-std::string COMMODORE::TED::debugTimingAsString (const DebugCycleContext& dC) const
+std::string COMMODORE::TED::debugTimingAsString () const
 {
-	return ("CPUHalf=" + std::to_string (dC._cpuHalf) +
-		",CPUQuarter=" + std::to_string (dC._cpuQuarter) +
-		",CPUQuarterLength=" + std::to_string (dC._cpuQuarterLength) +
-		",ClockDivider=" + std::to_string (dC._clockDivider) +
-		",MasterCycles=" + std::to_string (dC._masterCycles) +
+	return ("CPUHalf=" + std::to_string (_debugCycleContext._cpuHalf) +
+		",CPUQuarter=" + std::to_string (_debugCycleContext._cpuQuarter) +
+		",CPUQuarterLength=" + std::to_string (_debugCycleContext._cpuQuarterLength) +
+		",ClockDivider=" + std::to_string (_debugCycleContext._clockDivider) +
+		",MasterCycles=" + std::to_string (_debugCycleContext._masterCycles) +
 		",Reference=TEDPhaseEvent");
 }
 
@@ -1874,12 +2088,22 @@ std::string COMMODORE::TED::debugClockAsString () const
 {
 	return ("SingleClock=" + std::to_string (_inSingleClockMode) +
 		",ForcedSingleClock=" + std::to_string (_TEDRegisters -> singleClockModeForced ()) +
+		",ExternalFetchClock=" + std::to_string (_externalFetchClock) +
+		",RefreshClock=" + std::to_string (_refreshClock) +
 		",Freeze=" + std::to_string (_TEDRegisters -> freezeActive ()) +
 		",SelectedPAL=" + std::to_string (_configuration == &_configurations [0]) +
 		",PresentationPAL=" + std::to_string (_presentationConfiguration == &_configurations [0]) +
 		",PresentationPending=" + std::to_string (_configuration != _presentationConfiguration) +
 		",SelectedDivider=" + std::to_string (_configuration -> _divider) +
-		",GraphicsCycleActive=" + std::to_string (_graphicsCycleActive));
+		",GraphicsCycleActive=" + std::to_string (_graphicsCycleActive) +
+		",VerticalWindow=" + std::to_string (_videoOutput._verticalOpen) +
+		",HorizontalWindow=" + std::to_string (_videoOutput._horizontalOpen) +
+		",EffectiveControl1=" + std::to_string (_videoOutput._control1) +
+		",EffectiveControl2=" + std::to_string (_videoOutput._control2) +
+		",DMAState=" + std::to_string ((unsigned int) _dmaState) +
+		",DMAWindow=" + std::to_string (_dmaWindow) +
+		",BA=" + std::to_string (!DMARequested ()) +
+		",DMABusGranted=" + std::to_string (DMAActive ()));
 }
 
 // ---
@@ -1891,6 +2115,27 @@ std::string COMMODORE::TED::debugInternalAsString () const
 		"RC=" + std::to_string (_TEDRegisters -> graphicalInfo ()._currentCharacterRow) + "," +
 		"VLMI=" + std::to_string (_tedGraphicInfo._VLMI) + "," +
 		"Idle=" + std::to_string (_tedGraphicInfo._idleState));
+}
+
+// ---
+std::string COMMODORE::TED::debugVideoOutputAsString () const
+{
+	const VideoCell& cell = _videoOutput._output;
+
+	return ("Graphics=$" + MCHEmul::UByte (cell._graphics).asString
+		(MCHEmul::UByte::OutputFormat::_HEXA, 2) +
+		",Character=$" + MCHEmul::UByte (cell._character).asString
+			(MCHEmul::UByte::OutputFormat::_HEXA, 2) +
+		",Attribute=$" + MCHEmul::UByte (cell._attribute).asString
+			(MCHEmul::UByte::OutputFormat::_HEXA, 2) +
+		",CursorMatch=" + std::to_string (cell._cursor) +
+		",Valid=" + std::to_string (cell._valid) +
+		",PixelIndex=" + std::to_string (_videoOutput._pixel) +
+		",DoubleShift=" + std::to_string (_videoOutput._doubleShift) +
+		",ScrollX=" + std::to_string (_videoOutput._scrollX) +
+		",Multicolor=" + std::to_string (_videoOutput.multicolor ()) +
+		",FlashPhase=" + std::to_string (_TEDRegisters -> flashCounterOn ()) +
+		",PixelColor=" + std::to_string (videoPixelColor ()));
 }
 
 // ---
@@ -1919,7 +2164,7 @@ COMMODORE::TED::DebugCycleContext COMMODORE::TED::debugCycleContext
 	(const CPUCycleState& cS,
 	 unsigned int batchStart, unsigned int batchEnd) const
 {
-	COMMODORE::TED::DebugCycleContext result = { };
+	COMMODORE::TED::DebugCycleContext result;
 
 	result._cpuQuarterLength = cS.quarterDots ();
 	result._clockDivider = cS._clockDivider;
@@ -1944,23 +2189,23 @@ COMMODORE::TED::DebugCycleContext COMMODORE::TED::debugCycleContext
 }
 
 // ---
-void COMMODORE::TED::debugTEDCycle (const DebugCycleContext& dC)
+void COMMODORE::TED::debugTEDCycle ()
 {
-	_deepDebugFile -> writeCompleteLine (className (), dC._cpuCycle, "Info Cycle",
+	_deepDebugFile -> writeCompleteLine (className (), _debugCycleContext._cpuCycle, "Info Cycle",
 		{ { "Timing",
-			debugTimingAsString (dC) + ",Snapshot=BeforeGraphics," +
-			"CPUBatchStart=" + std::to_string (dC._cpuBatchStart) + "," +
-			"CPUBatchEnd=" + std::to_string (dC._cpuBatchEnd) + "," +
-			"CPUBatchIndex=" + std::to_string (dC._cpuBatchIndex) + "," +
-			"CPUBatchCycles=" + std::to_string (dC._cpuBatchCycles) + "," +
-			"ConversionSingleClock=" + std::to_string (dC._conversionSingleClock) + "," +
-			"HalfCarryIn=" + std::to_string (dC._halfCarryIn) + "," +
-			"HalfCarryOut=" + std::to_string (dC._halfCarryOut) },
+			debugTimingAsString () + ",Snapshot=BeforeGraphics," +
+			"CPUBatchStart=" + std::to_string (_debugCycleContext._cpuBatchStart) + "," +
+			"CPUBatchEnd=" + std::to_string (_debugCycleContext._cpuBatchEnd) + "," +
+			"CPUBatchIndex=" + std::to_string (_debugCycleContext._cpuBatchIndex) + "," +
+			"CPUBatchCycles=" + std::to_string (_debugCycleContext._cpuBatchCycles) + "," +
+			"ConversionSingleClock=" + std::to_string (_debugCycleContext._conversionSingleClock) + "," +
+			"HalfCarryIn=" + std::to_string (_debugCycleContext._halfCarryIn) + "," +
+			"HalfCarryOut=" + std::to_string (_debugCycleContext._halfCarryOut) },
 		  { "Raster position", debugRasterAsString () },
 		  { "Internal", debugInternalAsString () },
 		  { "Display",
 			"DisplayEnabled=" + std::to_string (!_TEDRegisters -> blankEntireScreen ()) + "," +
-			"VideoActive=" + std::to_string (_videoActive) + "," +
+			"VideoActive=" + std::to_string (_videoFetchState._displayActive) + "," +
 			"ScrollX=" + std::to_string (_TEDRegisters -> horizontalScrollPosition ()) + "," +
 			"ScrollY=" + std::to_string (_TEDRegisters -> verticalScrollPosition ()) + "," +
 			"Rows25=" + std::to_string (_TEDRegisters -> textDisplay25RowsActive ()) + "," +
@@ -1969,7 +2214,7 @@ void COMMODORE::TED::debugTEDCycle (const DebugCycleContext& dC)
 			"Latched=" + std::to_string (_newBadLineCondition) + "," +
 			"LastScrollY=" + std::to_string (_lastBadLineScrollY) + "," +
 			"WithinBadlineRange=" + std::to_string
-				(_rasterPosition._videoLine >= _FIRSTBADLINE && _rasterPosition._videoLine <= _LASTBADLINE) },
+				(_rasterPosition._videoLine < 203) },
 		  { "Clock", debugClockAsString () },
 		  { "Graphics mode", "Mode=" + std::to_string ((int) _TEDRegisters -> graphicModeActive ()) },
 		  { "Memory",
@@ -2043,7 +2288,11 @@ std::string COMMODORE::TED::debugCPUTransactionAsString () const
 			(busData._lastReadCycle == MCHEmul::BusCycleData::_NOCYCLE
 				? std::string ("-")
 				: std::to_string (busData._lastReadCycle)) + "," +
-		 "TrailingWriteCycles=" + std::to_string (busData._trailingWriteCycles));
+		 "TrailingWriteCycles=" + std::to_string (busData._trailingWriteCycles) + "," +
+		 "LogicalCycle=" + std::to_string (_cpuTransaction._logicalCycle) + "," +
+		 "WaitCycles=" + std::to_string (_cpuTransaction._waitCycles) + "," +
+		 "WritesExtracted=" + std::to_string (_cpuTransaction._writesExtracted) + "," +
+		 "StopRequested=" + std::to_string (_cpuTransaction._stopRequested));
 }
 
 // ---
@@ -2055,137 +2304,169 @@ void COMMODORE::TED::debugCPUReadAdvance
 		{ { "Timing",
 			"Reference=ObservedCPUClock,StartCPU=" +
 				std::to_string (_cpuTransaction._startCycle) +
-			",RecoveryCPU=" + std::to_string (_lastCPUCycles) },
+			",RecoveryCPU=" + std::to_string (_cpuRecovery._nextCycle) },
 		  { "Advance",
 			"Phase=" + std::string (after ? "After" : "Before") +
-			",PreparedCPUCycles=" + std::to_string (_cpuReadAdvanceCycles) +
-			",NextQuarter=" + std::to_string (_cpuCycleState._nextQuarter) +
+			",PreparedCPUCycles=" + std::to_string (_cpuTransaction._readAdvanceCycles) +
+			",NextQuarter=" + std::to_string (_cpuRecovery._cycle._nextQuarter) +
 			",AccessPending=" + std::to_string
-				(_cpuCycleState._accessPending) },
+				(_cpuRecovery._cycle._accessPending) +
+			",AccessHeld=" + std::to_string (_cpuRecovery._cycle._held) +
+			",LogicalCycle=" + std::to_string (_cpuTransaction._logicalCycle) +
+			",WaitCycles=" + std::to_string (_cpuTransaction._waitCycles) },
 		  { "Raster position", debugRasterAsString () },
 		  { "Clock",
 			"HalfCarry=" +
-				std::to_string (_pendingHalfCyclesFromLastExecution) },
+				std::to_string (_cpuRecovery._halfCarry) },
 		  { "Timers", debugTimersAsString () } });
 }
 
 // ---
-void COMMODORE::TED::debugBadLine (const DebugCycleContext& dC)
+void COMMODORE::TED::debugCPUStop
+	(MCHEmul::CPU* cpu, unsigned int remaining) const
 {
-	_deepDebugFile -> writeCompleteLine (className (), dC._cpuCycle, "Badline detected",
-		{ { "Timing", debugTimingAsString (dC) },
-		  { "Raster position", debugRasterAsString () },
-		  { "Internal", debugInternalAsString () },
-		  { "Badline", "Latched=" + std::to_string (_newBadLineCondition) + "," +
-			"ScrollY=" + std::to_string (_TEDRegisters -> verticalScrollPosition ()) + "," +
-			"VideoActive=" + std::to_string (_videoActive) + ",Cause=ScrollMatch" } });
-}
-
-// ---
-void COMMODORE::TED::debugReadingVideoMatrix (const DebugCycleContext& dC)
-{
-	const size_t vc = (size_t) _tedGraphicInfo._VC & 0x03ff;
-	_deepDebugFile -> writeCompleteLine (className (), dC._cpuCycle, "Video matrix read",
-		{ { "Timing", debugTimingAsString (dC) },
-		  { "Raster position", debugRasterAsString () },
-		  { "Fetch", debugInternalAsString () },
-		  { "Matrix", "Address=$" + MCHEmul::removeAll0
-			((_TEDRegisters -> screenMemory () + vc).asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
-			"Value=$" + _tedGraphicInfo._lastScreenCodeDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + ",Source=RAM" },
-		  { "Attribute", "Address=$" + MCHEmul::removeAll0
-			((_TEDRegisters -> attributeMemory () + vc).asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + "," +
-			"Value=$" + _tedGraphicInfo._lastColorDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + ",Source=RAM" } });
-}
-
-// ---
-void COMMODORE::TED::debugReadingGraphics (const DebugCycleContext& dC)
-{
-	MCHEmul::Address address = _TEDRegisters -> graphicExtendedColorTextModeActive ()
-		? _MEMORYPOSIDLE1 : _MEMORYPOSIDLE2;
-	std::string kind = "Idle", source = "TEDView", characterData;
-	if (!_tedGraphicInfo._idleState)
-	{
-		source = _TEDRegisters -> ROMActiveToFetchCharAndBitmap () ? "ROM" : "RAM";
-		if (_TEDRegisters -> textMode ())
-		{
-			const unsigned char mask = _TEDRegisters -> characterIndexMask ();
-			const unsigned char code = _tedGraphicInfo._screenCodeData [_tedGraphicInfo._VLMI].value ();
-			kind = "Character";
-			address = _TEDRegisters -> charDataMemory () + ((size_t) (code & mask) << 3) +
-				_TEDRegisters -> graphicalInfo ()._currentCharacterRow;
-			characterData = ",CharacterCode=" + std::to_string (code) + "," +
-				"CharacterMask=" + std::to_string (mask) + ",CharacterIndex=" + std::to_string (code & mask);
-		}
-		else
-		{
-			kind = "Bitmap";
-			address = _TEDRegisters -> bitmapMemory () + ((size_t) (_tedGraphicInfo._VC & 0x03ff) << 3) +
-				_TEDRegisters -> graphicalInfo ()._currentCharacterRow;
-		}
-	}
-
-	_deepDebugFile -> writeCompleteLine (className (), dC._cpuCycle, "Graphics read",
-		{ { "Timing", debugTimingAsString (dC) },
-		  { "Raster position", debugRasterAsString () },
-		  { "Fetch", debugInternalAsString () },
-		  { "Memory access", "Kind=" + kind + ",Source=" + source + ",Address=$" +
-			MCHEmul::removeAll0 (address.asString (MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) + ",Value=$" +
-			_tedGraphicInfo._lastGraphicDataRead.asString (MCHEmul::UByte::OutputFormat::_HEXA, 2) + characterData } });
-}
-
-// ---
-void COMMODORE::TED::debugPreparedGraphics (const DebugCycleContext& dC) const
-{
-	std::string output;
-	for (size_t i = 0; i < 8; i++)
-	{
-		if (i != 0)
-			output += ",";
-
-		// Preserve background references: their palette values are resolved at emission.
-		const unsigned int code = _drawResult._foregroundColorData [i];
-		output += "P" + std::to_string (i) + "=" +
-			(code == DrawResult::_TRANSPARENT
-				? "T" : ((code & DrawResult::_BACKGROUNDREFERENCE) != 0)
-					? "B" + std::to_string (code & 0x03u) : "C" + std::to_string (code));
-	}
-
 	_deepDebugFile -> writeCompleteLine
-		(className (), dC._cpuCycle, "Graphics prepared",
-		{ { "Timing", debugTimingAsString (dC) + ",Snapshot=AfterPreparation" },
+		(className (), cpu -> clockCycles (), "CPU DMA stop",
+		{ { "Timing",
+			"Reference=ObservedCPUClock,RecoveryCPU=" + std::to_string (_cpuRecovery._nextCycle) },
+		  { "Bus cycles", debugCPUTransactionAsString () },
+		  { "CPU stop",
+			"FirstStopCPU=" + std::to_string
+				(_cpuTransaction._startCycle + _cpuTransaction._firstStopPosition) +
+			",RemainingCycles=" + std::to_string (remaining) },
 		  { "Raster position", debugRasterAsString () },
-		  { "Internal", debugInternalAsString () },
-		  { "Preparation",
-			"Decoded=" + std::to_string (_videoActive && _raster.isInVisibleZone ()) +
-			",Mode=" + std::to_string ((int) _TEDRegisters -> graphicModeActive ()) +
-			",ScrollX=" + std::to_string (_TEDRegisters -> horizontalScrollPosition ()) +
-			",FlashPhase=" + std::to_string (_TEDRegisters -> flashCounterOn ()) },
-		  { "Prepared output", output + ",Invalid=" + std::to_string (_drawResult._invalid) },
 		  { "Clock", debugClockAsString () } });
 }
 
 // ---
-void COMMODORE::TED::debugTEDCycleEnd (const DebugCycleContext& dC)
+void COMMODORE::TED::debugBadLine ()
 {
-	_deepDebugFile -> writeCompleteLine (className (), dC._cpuCycle, "Info Cycle End",
-		{ { "Timing", debugTimingAsString (dC) + ",Snapshot=AfterGraphics" },
+	_deepDebugFile -> writeCompleteLine (className (), _debugCycleContext._cpuCycle, "Badline detected",
+		{ { "Timing", debugTimingAsString () },
+		  { "Raster position", debugRasterAsString () },
+		  { "Internal", debugInternalAsString () },
+		  { "Badline", "Latched=" + std::to_string (_newBadLineCondition) + "," +
+			"ScrollY=" + std::to_string (_videoFetchState._scrollY) + "," +
+			"VideoActive=" + std::to_string (_videoFetchState._displayActive) + ",Cause=ScrollMatch" } });
+}
+
+// ---
+void COMMODORE::TED::debugReadingVideoMatrix
+	(const MCHEmul::Address& address, size_t index,
+	 const MCHEmul::UByte& value)
+{
+	_deepDebugFile -> writeCompleteLine
+		(className (), _debugCycleContext._cpuCycle, "Video matrix read",
+		{ { "Timing", debugTimingAsString () },
+		  { "Raster position", debugRasterAsString () },
+		  { "Fetch", debugInternalAsString () },
+		  { "Matrix",
+			"Address=$" + MCHEmul::removeAll0
+				(address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
+			",BufferIndex=" + std::to_string (index) +
+			",Value=$" + value.asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, 2) +
+			",Source=RAM" } });
+}
+
+// ---
+void COMMODORE::TED::debugReadingVideoAttributes
+	(const MCHEmul::Address& address, size_t index,
+	 const MCHEmul::UByte& value)
+{
+	_deepDebugFile -> writeCompleteLine
+		(className (), _debugCycleContext._cpuCycle, "Video attributes read",
+		{ { "Timing", debugTimingAsString () },
+		  { "Raster position", debugRasterAsString () },
+		  { "Fetch", debugInternalAsString () },
+		  { "Attribute",
+			"Address=$" + MCHEmul::removeAll0
+				(address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
+			",BufferIndex=" + std::to_string (index) +
+			",Value=$" + value.asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, 2) +
+			",Source=RAM" } });
+}
+
+// ---
+void COMMODORE::TED::debugReadingGraphics
+	(const PendingVideoRead& pending, const MCHEmul::UByte& value)
+{
+	const char* kind;
+
+	switch (pending._kind)
+	{
+		case VideoReadKind::_CHARACTER:
+			kind = "Character";
+			break;
+
+		case VideoReadKind::_BITMAP:
+			kind = "Bitmap";
+			break;
+
+		case VideoReadKind::_IDLE:
+			kind = "Idle";
+			break;
+
+		default:
+			return;
+	}
+
+	_deepDebugFile -> writeCompleteLine
+		(className (), _debugCycleContext._cpuCycle, "Graphics read",
+		{ { "Timing", debugTimingAsString () },
+		  { "Raster position", debugRasterAsString () },
+		  { "Fetch", debugInternalAsString () },
+		  { "Memory access",
+			std::string ("Kind=") + kind +
+			",Source=" +
+				(pending._kind == VideoReadKind::_IDLE
+					? "TEDView"
+					: (_TEDRegisters -> ROMActiveToFetchCharAndBitmap ()
+						? "ROM" : "RAM")) +
+			",Address=$" + MCHEmul::removeAll0
+				(pending._address.asString
+					(MCHEmul::UByte::OutputFormat::_HEXA, '\0', 2)) +
+			",BufferIndex=" + std::to_string (pending._index) +
+			",Value=$" + value.asString
+				(MCHEmul::UByte::OutputFormat::_HEXA, 2) } });
+}
+
+// ---
+void COMMODORE::TED::debugVideoOutputLoad () const
+{
+	_deepDebugFile -> writeCompleteLine
+		(className (), _debugCycleContext._cpuCycle, "Video output loaded",
+		{ { "Timing", debugTimingAsString () + ",Snapshot=AfterLoadBeforeControls" },
+		  { "Raster position", debugRasterAsString () },
+		  { "Internal", debugInternalAsString () },
+		  { "Output", debugVideoOutputAsString () },
+		  { "Clock", debugClockAsString () } });
+}
+
+// ---
+void COMMODORE::TED::debugTEDCycleEnd ()
+{
+	_deepDebugFile -> writeCompleteLine (className (), _debugCycleContext._cpuCycle, "Info Cycle End",
+		{ { "Timing", debugTimingAsString () + ",Snapshot=AfterGraphics" },
 		  { "Raster position", debugRasterAsString () },
 		  { "Internal", debugInternalAsString () },
 		  { "Clock", debugClockAsString () },
 		  { "Timers", debugTimersAsString () },
 		  { "Interrupt", debugInterruptAsString () + "," +
 			"CPURequestClockArgument=" + (_TEDRegisters -> reasonIRQCode () != 0
-				? std::to_string (dC._irqRequestCycle) : std::string ("-")) } });
+				? std::to_string (_debugCycleContext._irqRequestCycle) : std::string ("-")) } });
 }
 
 // ---
-void COMMODORE::TED::debugFrozenTEDCycle
-	(const DebugCycleContext& dC) const
+void COMMODORE::TED::debugFrozenTEDCycle () const
 {
 	_deepDebugFile -> writeCompleteLine
-		(className (), dC._cpuCycle, "Frozen clock",
+		(className (), _debugCycleContext._cpuCycle, "Frozen clock",
 		{ { "Timing",
-			debugTimingAsString (dC) },
+			debugTimingAsString () },
 		  { "Raster position", debugRasterAsString () },
 		  { "Clock distribution",
 			"RasterEnabled=0,TimersEnabled=0,SoundEnabled=1" },
@@ -2197,28 +2478,24 @@ void COMMODORE::TED::debugCPUWrite
 	(MCHEmul::CPU* cpu, unsigned int cycle,
 	 const MCHEmul::SetMemoryCommand& command, bool after) const
 {
-	const unsigned int code =
-		_drawResult._foregroundColorData [_cpuCycleState.phase () >> 2];
-	const std::string preparedCode = code == DrawResult::_TRANSPARENT
-		? "T" : ((code & DrawResult::_BACKGROUNDREFERENCE) != 0)
-			? "B" + std::to_string (code & 0x03u) : "C" + std::to_string (code);
-
 	_deepDebugFile -> writeCompleteLine
 		(className (), cycle, "CPU write",
 		{ { "Timing",
 			"Reference=ScheduledCPUCycle,ObservedCPUClock=" +
 				std::to_string (cpu -> clockCycles ()) +
 			",BoundaryCPU=" + std::to_string (cycle + 1) +
-			",CPUQuarterLength=" + std::to_string (_cpuCycleState.quarterDots ()) +
-			",TEDPhase=" + std::to_string (_cpuCycleState.phase ()) +
-			",PixelIndex=" + std::to_string (_cpuCycleState.phase () >> 2) +
-			",RetainedDivider=" + std::to_string (_cpuCycleState._clockDivider) +
-			",RetainedSingleClock=" + std::to_string (_cpuCycleState._singleClock) },
+			",CPUQuarterLength=" + std::to_string (_cpuRecovery._cycle.quarterDots ()) +
+			",TEDPhase=" + std::to_string (_cpuRecovery._cycle.phase ()) +
+			",PixelIndex=" + std::to_string (_cpuRecovery._cycle.phase () >> 2) +
+			",RetainedDivider=" + std::to_string (_cpuRecovery._cycle._clockDivider) +
+			",RetainedSingleClock=" + std::to_string (_cpuRecovery._cycle._singleClock) },
 		  { "Transaction",
 			"Type=" + std::string
 				(_cpuTransaction._isInterrupt ? "Interrupt" : "Instruction") +
 			",StartCPU=" + std::to_string (_cpuTransaction._startCycle) +
-			",WriteIndex=" + std::to_string (_nextPendingWrite) },
+			",WriteIndex=" + std::to_string (_cpuTimedWrites._next) +
+			",LogicalCycle=" + std::to_string (_cpuTransaction._logicalCycle) +
+			",WaitCycles=" + std::to_string (_cpuTransaction._waitCycles) },
 		  { "Memory access",
 			"Phase=" + std::string (after ? "After" : "Before") +
 			",Subset=" + std::to_string (command.subset () -> id ()) +
@@ -2231,12 +2508,10 @@ void COMMODORE::TED::debugCPUWrite
 		  { "Clock", debugClockAsString () },
 		  { "Output",
 			"GraphicsCycleActive=" + std::to_string (_graphicsCycleActive) +
-			",VideoActive=" + std::to_string (_videoActive) +
+			",VideoActive=" + std::to_string (_videoFetchState._displayActive) +
 			",Visible=" + std::to_string (_raster.isInVisibleZone ()) +
 			",Screen=" + std::to_string (_raster.isInScreenZone ()) +
-			",PixelIndex=" + std::to_string (_cpuCycleState.phase () >> 2) +
-			",PreparedCode=" + preparedCode +
-			",Invalid=" + std::to_string (_drawResult._invalid) },
+			"," + debugVideoOutputAsString () },
 		  { "Palette",
 			"Background0=" + std::to_string (_TEDRegisters -> backgroundColor (0).asChar ()) +
 			",Background1=" + std::to_string (_TEDRegisters -> backgroundColor (1).asChar ()) +
@@ -2248,12 +2523,11 @@ void COMMODORE::TED::debugCPUWrite
 
 // ---
 void COMMODORE::TED::debugRasterEvent
-	(const DebugCycleContext& dC,
-	 const char* event, unsigned short sourceLine) const
+	(const char* event, unsigned short sourceLine) const
 {
 	_deepDebugFile -> writeCompleteLine
-		(className (), dC._cpuCycle, "Raster event",
-		{ { "Timing", debugTimingAsString (dC) },
+		(className (), _debugCycleContext._cpuCycle, "Raster event",
+		{ { "Timing", debugTimingAsString () },
 		  { "Event",
 			std::string ("Kind=") + event +
 			",SourceLine=" + std::to_string (sourceLine) },
