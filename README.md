@@ -16,6 +16,8 @@ The implementation of the SID chip has been based on the resid libry found at: <
 <img src="./docs/C64Data/Picture2.png"/><br>
 <img src="./docs/C64Data/Picture3.png"/><br>
 <img src="./docs/C64Data/Picture4.png"/><br>
+<img src="./docs/C64Data/Picture5.png"/><br>
+<img src="./docs/C64Data/Picture6.png"/><br>
 
 It has been an intention to emulate the location of the keys as they are inthe original keyboard.<br>
 For this reason the position of the different key can be a little bit "strange"<br>
