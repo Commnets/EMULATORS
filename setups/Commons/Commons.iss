@@ -5,7 +5,7 @@
 #define MyAppPublisher "Community Networks"
 #define MyAppURL "http://www.commnets.com"
 #define MyCopyright "Copyright 2009 - 2022 by Community Networks"
-#define MyAppVersion "0.2.000-beta"
+#define MyAppVersion "2.0.000"
 #define CompilerPath '\'
 
 [Setup]
