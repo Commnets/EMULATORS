@@ -1,5 +1,6 @@
 """Finalize field refresh settings and save verification evidence."""
 from pathlib import Path
+import argparse
 import hashlib
 import json
 import zipfile
@@ -7,6 +8,11 @@ from lxml import etree
 from pypdf import PdfReader
 
 root = Path(__file__).resolve().parents[4]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--reviewed-pages', type=int, required=True,
+                    help='Actual page count after visual review of every rendered page.')
+parser.add_argument('--scope', default='Configuration guide update.')
+args = parser.parse_args()
 output = root / 'Configure.docx'
 work = root / '.codex/tmp/configure-guide'
 state = root / '.codex/documentation/configure/state'
@@ -29,7 +35,7 @@ temporary.replace(output)
 template = root / '.codex/skills/emulators-documentation-authoring/assets/emulators-documentation-template.docx'
 pages = PdfReader(work / 'Configure.pdf').pages
 texts = [p.extract_text() for p in pages]
-assert len(pages) == 21
+assert len(pages) == args.reviewed_pages
 assert 'FOREWORD' in texts[1] and 'EXTERNAL DEPENDENCIES' in texts[1]
 assert 'No se encontraron' not in '\n'.join(texts)
 assert 'NO SE ENCUENTRAN' not in '\n'.join(texts)
@@ -44,7 +50,7 @@ report = {
     'fields_updated_with': 'Microsoft Word',
     'rendered_with': 'Microsoft Word PDF export and Poppler',
     'compile_or_runtime_test_performed': False,
-    'scope': 'Documentation only; no framework source or build configuration changes.'
+    'scope': args.scope
 }
 (state / 'verified.json').write_text(json.dumps(report, indent=2) + '\n', encoding='utf-8')
 (state / 'template-contract.md').write_text((work / 'artifact.md').read_text(encoding='utf-8'), encoding='utf-8')

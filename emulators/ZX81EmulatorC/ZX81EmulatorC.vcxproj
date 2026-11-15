@@ -72,23 +72,19 @@
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
     <EmulatorsSDLLinkMain>true</EmulatorsSDLLinkMain>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
     <EmulatorsSDLLinkMain>true</EmulatorsSDLLinkMain>
   </PropertyGroup>
   <Import Project="..\..\build\SDL.props" />
@@ -123,7 +119,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SINCLAIRD.lib;ZX81D.lib;FZ80D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_Win32.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SINCLAIRD.lib;ZX81D.lib;FZ80D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -142,7 +138,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SINCLAIR.lib;ZX81.lib;FZ80.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_Win32.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SINCLAIR.lib;ZX81.lib;FZ80.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_Win32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -157,7 +153,7 @@
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SINCLAIRD.lib;ZX81D.lib;FZ80D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_x64.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SINCLAIRD.lib;ZX81D.lib;FZ80D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -176,7 +172,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>SINCLAIR.lib;ZX81.lib;FZ80.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_x64.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SINCLAIR.lib;ZX81.lib;FZ80.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_x64.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

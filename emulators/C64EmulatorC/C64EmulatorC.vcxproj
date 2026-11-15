@@ -72,7 +72,6 @@
   <PropertyGroup Label="EmulatorsSDLRequirements">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
     <EmulatorsSDLLinkMain Condition="'$(Configuration)' == 'Release'">true</EmulatorsSDLLinkMain>
   </PropertyGroup>
   <Import Project="..\..\build\SDL.props" />

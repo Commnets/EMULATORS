@@ -4,4 +4,8 @@
     <!-- SDL2 remains the default until the SDL3 migration is complete. -->
     <EmulatorsSDLVersion Condition="'$(EmulatorsSDLVersion)' == ''">2</EmulatorsSDLVersion>
   </PropertyGroup>
+  <PropertyGroup Label="EmulatorsRuntimeDeployment">
+    <!-- Runtime DLLs are deployed manually. -->
+    <VcpkgApplocalDeps>false</VcpkgApplocalDeps>
+  </PropertyGroup>
 </Project>

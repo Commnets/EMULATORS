@@ -51,6 +51,7 @@ No escribir sobre el asset ni sobre `docs/UserGuide.docx`. Trabajar siempre en l
 8. Localizar los rótulos fijos de estructura, leyendas y pie al idioma solicitado para el documento, conservando los campos, estilos, posiciones y orden de la plantilla. Por ejemplo, en inglés usar `Contents`, `Foreword`, `Appendices`, `Illustrations`, `Equations` y `Page X | Y`.
 9. Separar visualmente las entradas repetitivas de referencia. En guías de comandos, parámetros u otros catálogos, aplicar al encabezado de cada entrada al menos 14 pt de espacio anterior, sin insertar párrafos vacíos.
 10. Impedir títulos huérfanos. Aplicar `keep with next` (`w:keepNext`) a `Title`, `Heading 1`, `Heading 2`, `Heading 3` y a cualquier otro estilo de título utilizado, de modo que ningún título termine una página sin al menos el primer párrafo que le sigue. Si hay varios títulos consecutivos, mantener unida toda la cadena hasta el primer párrafo de contenido.
+11. Después de una tabla o de un bloque de código, insertar una única línea en blanco mediante un párrafo vacío de estilo `Normal` cuando el siguiente párrafo de contenido sea texto normal. No añadir esa línea cuando el siguiente párrafo sea un título. No duplicar una línea en blanco ya existente ni conservar el formato de código en el párrafo separador.
 
 ## Mantener guías ligadas al código
 
@@ -92,7 +93,7 @@ No escribir sobre el asset ni sobre `docs/UserGuide.docx`. Trabajar siempre en l
 
 3. Usar el skill `documents` para renderizar el DOCX y revisar todas las páginas al 100 %. Si LibreOffice no está disponible y Word sí, exportar a PDF con Word y rasterizar el PDF para la revisión.
 4. Corregir y repetir la actualización de campos, validación estructural y revisión visual hasta que no haya marcadores, errores de campo, recortes, solapamientos ni páginas en blanco accidentales.
-5. Durante la revisión visual, comprobar expresamente que todos los títulos conservan debajo al menos su primer párrafo y que los encabezados de entradas repetitivas mantienen la separación anterior establecida.
+5. Durante la revisión visual, comprobar expresamente que todos los títulos conservan debajo al menos su primer párrafo, que los encabezados de entradas repetitivas mantienen la separación anterior establecida y que las tablas y bloques de código quedan separados del texto normal siguiente por una única línea en blanco de estilo `Normal`, sin añadirla ante títulos.
 6. Entregar solo el DOCX final, salvo que el usuario pida también PDF u otros artefactos.
 
 ## Recursos

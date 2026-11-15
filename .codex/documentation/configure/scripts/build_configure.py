@@ -79,6 +79,8 @@ def add_markdown(doc, source):
             continue
         if in_code:
             p = doc.add_paragraph(style='Configuration Code')
+            p.paragraph_format.keep_with_next = (
+                i + 1 < len(lines) and not lines[i + 1].startswith('```'))
             # Explicit line continuations are used in the guide to fit the template width.
             p.add_run(line)
         elif line.startswith('|'):
@@ -95,6 +97,12 @@ def add_markdown(doc, source):
         elif line.startswith('### '):
             doc.add_paragraph(line[4:], style='Heading 2')
         elif line.strip():
+            previous = doc.element.body[-2]
+            previous_style = previous.find('w:pPr/w:pStyle', namespaces=previous.nsmap)
+            if previous.tag == qn('w:tbl') or (
+                    previous_style is not None and
+                    previous_style.get(qn('w:val')) == doc.styles['Configuration Code'].style_id):
+                doc.add_paragraph(style='Normal')
             p = doc.add_paragraph()
             if re.match(r'^\d+\. ', line):
                 p.paragraph_format.left_indent = Cm(0.5)
@@ -177,8 +185,6 @@ def main():
                 outline = OxmlElement('w:outlineLvl')
                 props.append(outline)
             outline.set(qn('w:val'), level)
-        if p.text == 'Switching SDL versions':
-            p.paragraph_format.page_break_before = True
     for section in doc.sections:
         for footer in [section.footer, section.first_page_footer, section.even_page_footer]:
             for p in footer.paragraphs:

@@ -1,7 +1,7 @@
 {
   "document": "Configure.docx",
   "language": "English",
-  "pages_including_cover": 21,
+  "pages_including_cover": 23,
   "visually_reviewed_pages": [
     1,
     2,
@@ -23,12 +23,14 @@
     18,
     19,
     20,
-    21
+    21,
+    22,
+    23
   ],
   "template_sha256": "5e17d131537a43c7f893b3e9cb064ee4049fc3bf498828e9ace3163d486b822d",
-  "document_sha256": "96cf252d204dbf5ed85e97eb8569c113b3925d81d4e2103770d118ec562a9e72",
+  "document_sha256": "886e73fa4471e8f80446f6f7e89cc0edce64a3d2b356a2f6db23d6c0b8eb6c52",
   "fields_updated_with": "Microsoft Word",
   "rendered_with": "Microsoft Word PDF export and Poppler",
   "compile_or_runtime_test_performed": false,
-  "scope": "Documentation only; no framework source or build configuration changes."
+  "scope": "Disabled vcpkg automatic DLL deployment centrally with VcpkgApplocalDeps=false. Verified effective property using MSBuild evaluation only on CORE, C64EmulatorC, RMSXConsole and Test6500 in Debug Win32. No compilation, execution or DLL copying."
 }

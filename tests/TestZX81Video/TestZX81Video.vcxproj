@@ -68,22 +68,18 @@
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <EmulatorsSDLLink>true</EmulatorsSDLLink>
     <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
-    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
   </PropertyGroup>
   <Import Project="..\..\build\SDL.props" />
   <PropertyGroup Label="UserMacros" />

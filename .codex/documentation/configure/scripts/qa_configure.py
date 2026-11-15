@@ -13,6 +13,9 @@ out.mkdir(exist_ok=True)
 renderer = shutil.which('pdftoppm')
 if not renderer:
     raise RuntimeError('Poppler pdftoppm is required')
+for pattern in ['page-*.png', 'overview-*.png']:
+    for previous in out.glob(pattern):
+        previous.unlink()
 subprocess.run([renderer, '-png', '-scale-to', '1600', str(pdf), str(out / 'page')], check=True)
 reader = PdfReader(pdf)
 texts = [p.extract_text() for p in reader.pages]

@@ -62,6 +62,7 @@ Permitir cualquier número de capítulos y subcapítulos dentro del bloque de co
 - Identificar versiones, modelos o plataformas cuando el comportamiento difiera.
 - Separar hechos verificados de inferencias y de trabajo pendiente.
 - Preferir diagramas y tablas solo cuando aclaren relaciones que serían difíciles de seguir en prosa.
+- Después de una tabla o bloque de código, dejar una única línea en blanco con un párrafo vacío de estilo `Normal` si el párrafo de contenido siguiente es texto normal. No añadirla si el siguiente párrafo es un título; no duplicar separadores existentes ni usar el estilo del código en la línea vacía.
 
 ## Criterios de aceptación
 

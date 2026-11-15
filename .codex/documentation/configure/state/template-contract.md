@@ -6,6 +6,8 @@ Preserve A4 portrait, 3 cm side margins, 2.5 cm top and bottom margins, the temp
 
 Keep the template style system. Title is 28 pt and starts a new page; Heading 1 is 16 pt and Heading 2 is 13 pt. Internal Heading 1 page breaks are disabled so subsections remain continuous. All headings keep with the following paragraph. Add a 9 pt Consolas code style for commands, with explicit line continuations for readable widths. Tables use a 15 cm content width, 9 pt text, light borders and repeated header rows.
 
+After a table or code block, insert one empty Normal paragraph when the next content paragraph is normal text. Do not insert that separator before a heading or duplicate an existing separator.
+
 Editable slots: replace template Contents, Foreword, content placeholder and Appendices with the guide; localize list headings and footer Page label into English. Preserve TOC and list fields. Empty Illustrations and Equations lists share a final page.
 
 Preserve media byte-for-byte. Preserve header/footer graphics and watermark; only translate the footer label. Extend the body with chapter styles and real tables. Working render and PDF files are temporary QA artifacts and are not final deliverables. Update fields in Word and inspect every rendered page before delivery.

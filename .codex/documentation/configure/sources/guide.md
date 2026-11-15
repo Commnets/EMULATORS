@@ -69,13 +69,13 @@ The following versions identify the installations used during environment prepar
 
 Get SDL and the image, mixer and ttf extensions from their upstream projects and release archives, listed as S2 through S6. Get SDL2_gfx from the original author's project, S7. The SDL3_gfx installation is a separate SDL3-compatible port; use a source package that supplies the SDL3_gfxPrimitives.h header and the other files listed below. An identically named package should be checked against these requirements. Record its source revision locally. The installed SDL3_mixer main snapshot is not pinned to a release or commit, so its exact revision cannot be recovered from the folder name alone.
 
-Header search paths are needed for all five components. Linking currently uses core, image and mixer according to each project's profile; gfx and ttf are available as headers for future development. No gfx or ttf import libraries are added automatically.
+Header search paths are needed for all five components. Current project profiles link core and image where required. Mixer, gfx and ttf remain available as headers for future development; no current project enables mixer linking, and no gfx or ttf import libraries are added automatically. Framework audio uses SDL core directly.
 
 ## Prepare SDL2 binaries
 
 Prebuilt release-only development archives may not supply the Debug binaries expected by this repository. Build the matching sources, or obtain an equivalent prepared dependency set. The installed legacy SDL2 Visual Studio projects were configured to produce Debug names ending in D. A fresh upstream package may require this setup explicitly.
 
-1. Extract each dependency to its own directory. Build SDL core before image, mixer and ttf.
+1. Extract each dependency to its own directory. Build SDL core before image. Build mixer and ttf only if their functions will actually be linked or deployed.
 2. Open the source solution in Visual Studio. Reference solutions are VisualC/SDL.sln, VisualC/SDL_image.sln, VisualC/SDL_mixer.sln and VisualC/SDL_ttf.sln. The gfx solution is SDL2_gfx.sln in its root.
 3. If Visual Studio requests conversion, retain the source backup and retarget the library projects to your installed Windows SDK and v143 toolset. Select Debug Win32.
 4. In each required DLL project's Debug properties, set Target Name to the expected D filename. For example, SDL2 becomes SDL2D and SDL2_image becomes SDL2_imageD. Let the import library follow the target name, or set its name explicitly under Linker, Advanced, Import Library.
@@ -101,7 +101,7 @@ Renaming an existing import library alone does not change the DLL it references.
 dumpbin /dependents "$env:SDLIMAGE_HOME\VisualC\Win32\Debug\SDL2_imageD.dll"
 ```
 
-Repeat for mixer. Keep the codec DLLs supplied or built with those versions. They may be loaded dynamically when particular formats are used. Gfx needs its four public headers in its root, and legacy ttf needs SDL_ttf.h in its root. Building their DLLs is only necessary when their functions are actually linked or deployed.
+Repeat for mixer only if enabling its link option in future development. The mixer binary paths above describe the optional binary layout; current projects need its header, not its import library or DLL. Keep the codec DLLs required by the image formats actually used. They may be loaded dynamically. Gfx needs its four public headers in its root, and legacy ttf needs SDL_ttf.h in its root. Building their DLLs is only necessary when their functions are actually linked or deployed.
 
 ## Prepare SDL3 dependencies when needed
 
@@ -169,7 +169,7 @@ Each Test-Path should return True. Defining a variable does not install a librar
 
 Compiler include paths and linker library paths do not control Windows DLL lookup. For a reproducible manual launch, place the matching runtime DLLs beside the executable. An existing PATH entry can otherwise supply an unexpected DLL from an older installation.
 
-Do not add codec files to the Windows system directories. Keep a coherent dependency set in the execution folder, including RakNet and extension codec DLLs when required. Debug binaries may require the Debug C++ runtime installed by the Visual Studio development environment; the normal redistributable is intended for Release deployment.
+Keep codec DLLs out of Windows system directories. Debug binaries require the Visual Studio Debug runtime; the standard redistributable targets Release.
 
 # SDL configuration reference
 
@@ -190,9 +190,9 @@ The C++ selector headers CORE/SDL.hpp, CORE/SDLImage.hpp, CORE/SDLGfx.hpp and CO
 
 ## Project options and inherited settings
 
-Declare project requirements before importing SDL.props. EmulatorsSDLLink enables core linking. EmulatorsSDLLinkImage and EmulatorsSDLLinkMixer add their components only when core linking is enabled. EmulatorsSDLLinkMain adds SDL2main only for SDL2. All four link options default to false.
+Declare project requirements before importing SDL.props. EmulatorsSDLLink enables core linking. EmulatorsSDLLinkImage and EmulatorsSDLLinkMixer add their components only when core linking is enabled. EmulatorsSDLLinkMain adds SDL2main only for SDL2. All four link options default to false. EmulatorsSDLLinkMixer is retained for future use but is not enabled by any current project.
 
-EmulatorsSDLHeadersGfx and EmulatorsSDLHeadersTtf default to true. Keep them enabled for consumers of CORE/incs.hpp. They provide headers and validation, not linking. A header-only framework library can import the sheet without enabling SDL link options. Existing project profiles retain their individual Debug and Release component choices.
+EmulatorsSDLHeadersGfx and EmulatorsSDLHeadersTtf default to true. Keep them enabled for consumers of CORE/incs.hpp. They provide headers and validation, not linking. A header-only framework library can import the sheet without enabling SDL link options. Importing the sheet alone does not enable linking; VIC20CRTGenerator and RMSXConsole currently use that profile.
 
 Preserve %(AdditionalIncludeDirectories), %(PreprocessorDefinitions), %(AdditionalLibraryDirectories) and %(AdditionalDependencies) in project-local lists. These inherited entries bring in the shared configuration. Do not reintroduce direct SDL root paths and SDL import libraries into every vcxproj.
 
@@ -202,7 +202,7 @@ Preserve %(AdditionalIncludeDirectories), %(PreprocessorDefinitions), %(Addition
 | --- | --- | --- |
 | Core | SDL2D.lib | SDL3.lib |
 | Images | SDL2_imageD.lib | SDL3_image.lib |
-| Mixer | SDL2_mixerD.lib | SDL3_mixer.lib |
+| Mixer if enabled | SDL2_mixerD.lib | SDL3_mixer.lib |
 | Main if enabled | SDL2mainD.lib | No main import library |
 
 SDL2 Release omits D. SDL3 Release keeps the same names as SDL3 Debug but selects the Release directory. The common search layout is VisualC/$(Platform)/$(Configuration) under each linked component root.
@@ -210,6 +210,43 @@ SDL2 Release omits D. SDL3 Release keeps the same names as SDL3 Debug but select
 EMULATORS products follow their own convention independently: CORED.lib and C64EmulatorCD.exe are Debug products; CORE.lib and C64EmulatorC.exe are Release products. The SDL sheet does not rewrite TargetName or existing output directories.
 
 # Build and validation
+
+## Explicit library project dependencies
+
+The main solution declares every internal library prerequisite explicitly, including transitive prerequisites. For example, a library depending on COMMODORE also declares CORE and F6500 rather than relying only on the COMMODORE edge. These entries establish build order; they are separate from an executable's linker input list.
+
+The following table records the static library dependency graph. Solution build dependencies and executable linker inputs are separate settings; the table does not mean that every consumer links every object in each listed library.
+
+| Library | Explicit internal prerequisites |
+| --- | --- |
+| CORE | None |
+| RESID | None |
+| ASSEMBLER | CORE |
+| COMMS | CORE |
+| F6500 | CORE |
+| FZ80 | CORE |
+| TEXASINSTRUMENTS | CORE |
+| GENERALINSTRUMENTS | CORE |
+| SINCLAIR | CORE |
+| EMULS | CORE, ASSEMBLER, COMMS |
+| CONSOLE | CORE, ASSEMBLER, COMMS, EMULS |
+| COMMODORE | CORE, F6500, RESID, ASSEMBLER, COMMS, EMULS |
+| C64 | CORE, F6500, RESID, ASSEMBLER, COMMS, EMULS, COMMODORE |
+| VIC20 | CORE, F6500, RESID, ASSEMBLER, COMMS, EMULS, COMMODORE |
+| C264 | CORE, F6500, RESID, ASSEMBLER, COMMS, EMULS, COMMODORE |
+| ZX81 | CORE, FZ80, SINCLAIR, ASSEMBLER, COMMS, EMULS |
+| ZXSpectrum | CORE, FZ80, SINCLAIR, ASSEMBLER, COMMS, EMULS |
+| MSX | CORE, FZ80, TEXASINSTRUMENTS, GENERALINSTRUMENTS, ASSEMBLER, COMMS, EMULS |
+
+SINCLAIR currently uses CORE only. Console implementation dependencies belong to consumers that actually use the CONSOLE library; the machine libraries in this table do not depend on it. VIC20 and C264 list RESID because their shared COMMODORE prerequisite contains the SID integration. These solution dependencies apply to all four solution configurations. Their structural consistency has been checked; a complete build remains the separate compilation check.
+
+## Executable linker inputs
+
+Current projects no longer enable SDL_mixer linking. The six emulator variants without the final C in their names omit CONSOLE; their local console counterparts retain it. ZX81Emulator, ZX81EmulatorC, RZX81Console, ZXSpectrumEmulator, ZXSpectrumEmulatorC and RZXSpectrumConsole omit RESID. Each rule applies to Debug and Release on Win32 and x64, preserving the framework's Debug D suffix.
+
+VIC20CRTGenerator links CORE as its only internal library and does not enable SDL linking. Its VIC20 namespace belongs to local generator classes. RMSXConsole currently contains an empty main and declares no additional libraries beyond inherited toolchain inputs. Both projects retain the SDL property-sheet import and its header validation; neither import enables SDL linking by itself.
+
+Other existing SDL core, image, SDL2main and RakNet link choices are preserved pending a separate review of the object files brought into each executable. An unused-looking API at the entry point is insufficient evidence to remove a library: shared framework code can introduce references. The static library build-order table above is maintained separately from these linker inputs.
 
 ## Validate before compiling
 
@@ -289,10 +326,10 @@ If the downloaded archive does not contain those images, supply the exact matchi
 
 ## Place the Debug runtime DLLs
 
-For SDL2 Debug Win32, copy SDL2D.dll, SDL2_imageD.dll and SDL2_mixerD.dll from their corresponding VisualC/Win32/Debug directories. Copy the auxiliary codec DLLs supplied with image and mixer as well. Copy RakNet_VS2008_DLL_Debug_Win32.dll from RAKNET_HOME/Lib.
+For SDL2 Debug Win32, copy SDL2D.dll and SDL2_imageD.dll from their corresponding VisualC/Win32/Debug directories. Copy the auxiliary codec DLLs required by image as well. Copy RakNet_VS2008_DLL_Debug_Win32.dll from RAKNET_HOME/Lib. Current projects do not link SDL_mixer and do not require its DLL for framework audio.
 
 ```powershell
-foreach ($root in $env:SDL_HOME,$env:SDLIMAGE_HOME,$env:SDLMIXER_HOME) {
+foreach ($root in $env:SDL_HOME,$env:SDLIMAGE_HOME) {
   Get-ChildItem "$root\VisualC\Win32\Debug" -Filter '*.dll' -File |
     Copy-Item -Destination $run -Force
 }
@@ -333,7 +370,7 @@ MSXCommons is referenced by the distribution script but is absent from the inspe
 
 # Distribution and setup
 
-Runtime deployment remains manual. A successful build does not copy SDL DLLs, assemble machine resources or update installer inputs. Keep the selected version, architecture and configuration consistent in each destination folder.
+Runtime deployment remains manual. Directory.Build.props sets VcpkgApplocalDeps to false, disabling vcpkg automatic DLL copying after linking and its applocal.ps1 invocation. Build does not deploy SDL DLLs, assemble resources or update installer inputs. Keep version, architecture and configuration consistent in each destination folder.
 
 The existing all.bat script is an assembly and packaging script, not a prerequisite installer or an MSBuild entry point. It copies executables from exe/x86, refreshes resource files in project execution directories and setup staging areas, and calls Inno Setup. It also deletes and replaces resource files and references multiple machine tools. Review the whole script and its expected outputs before using it on a fresh checkout. Do not use it as the quick-start command.
 
@@ -358,11 +395,11 @@ CORE and other headers-only profiles do not require SDL import libraries. Execut
 
 ## Compiler and linker errors
 
-Missing MCHEMUL_SDL_VERSION means the source is compiled without the shared preprocessor definition. Check the SDL.props import and %(PreprocessorDefinitions) inheritance. Missing SDL3 or extension headers usually means the root points at the wrong package level or the project overwrote inherited include directories.
+For missing MCHEMUL_SDL_VERSION, check the SDL.props import and %(PreprocessorDefinitions) inheritance. For missing SDL3 or extension headers, check the dependency root, package layout and inherited include directories.
 
-LNK1104 for SDL2D.lib means the Debug file is missing, named differently or outside the selected directory. LNK1104 for a framework library such as CORED.lib can mean a prerequisite project was not built. Use the solution and inspect project dependencies. LNK1112 or similar machine-type conflicts require checking x86 versus x64 across every object and library.
+For LNK1104 on SDL2D.lib, check its filename and selected directory. For CORED.lib or another framework library, ensure its prerequisite project was built through the solution. For LNK1112 or similar conflicts, check x86 versus x64 across all objects and libraries.
 
-Missing nlohmann/json.hpp in TestInst6500 requires the test-only include path described earlier. Missing Windows SDK or v143 tools requires modifying Visual Studio installation or deliberately retargeting the affected projects. SDL validation does not cover these prerequisites.
+For missing nlohmann/json.hpp in TestInst6500, configure the test-only include path described earlier. Install missing Windows SDK or v143 tools, or deliberately retarget the affected projects. SDL validation does not check these prerequisites.
 
 ## Startup and resource errors
 
@@ -386,7 +423,7 @@ For missing C64.fmt or BIOS files, check the working directory, formatter includ
 
 ## Sources and verification scope
 
-The guide was checked against Directory.Build.props, Directory.Build.targets, build/SDL.props, build/SDLValidation.targets, Emulators.sln, the C64EmulatorC entry point, C64 memory ROM paths, canonical formatter includes, all.bat and the Inno Setup scripts. The environment validation ran successfully for 51 integrated projects with both SDL versions in Debug Win32. That validation did not compile or run SDL3, and it did not establish a fresh-machine installation result.
+The guide was checked against Directory.Build.props, Directory.Build.targets, build/SDL.props, build/SDLValidation.targets, Emulators.sln, the C64EmulatorC entry point, C64 memory ROM paths, canonical formatter includes, all.bat and the Inno Setup scripts. During initial SDL preparation, environment validation succeeded for 51 integrated project files with both SDL versions in Debug Win32. The unused legacy IO project has since been removed, leaving 50 SDL-integrated projects. Those validation runs did not compile or run SDL3 and did not establish a fresh-machine installation result. The static library dependency graph was subsequently checked for explicit transitive closure, valid project identifiers and absence of cycles. The five linker cleanup groups described above were checked structurally across all four project configurations, without compilation or execution. Further executable and test dependency normalization remains pending.
 
 S1 Microsoft C++ installation instructions
 https://learn.microsoft.com/en-us/cpp/build/vscpp-step-0-installation
