@@ -239,6 +239,18 @@
     <ClInclude Include="..\..\include\CORE\OSIO.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SDL.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SDLImage.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SDLGfx.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\include\CORE\SDLTtf.hpp">
+      <Filter>Archivos de encabezado\IO</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\include\CORE\Screen.hpp">
       <Filter>Archivos de encabezado\IO</Filter>
     </ClInclude>

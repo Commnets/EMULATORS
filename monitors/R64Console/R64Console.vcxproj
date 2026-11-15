@@ -69,6 +69,29 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <EmulatorsSDLLink>true</EmulatorsSDLLink>
+    <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
+    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
+  </PropertyGroup>
+  <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <EmulatorsSDLLink>true</EmulatorsSDLLink>
+    <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
+    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
+    <EmulatorsSDLLinkMain>true</EmulatorsSDLLinkMain>
+  </PropertyGroup>
+  <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <EmulatorsSDLLink>true</EmulatorsSDLLink>
+    <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
+    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
+  </PropertyGroup>
+  <PropertyGroup Label="EmulatorsSDLRequirements" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <EmulatorsSDLLink>true</EmulatorsSDLLink>
+    <EmulatorsSDLLinkImage>true</EmulatorsSDLLinkImage>
+    <EmulatorsSDLLinkMixer>true</EmulatorsSDLLinkMixer>
+    <EmulatorsSDLLinkMain>true</EmulatorsSDLLinkMain>
+  </PropertyGroup>
+  <Import Project="..\..\build\SDL.props" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>..\..\exe\$(PlatformShortName)\</OutDir>
@@ -94,13 +117,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration);$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>COMMODORED.lib;C64D.lib;F6500D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;RakNet_VS2008_DLL_Debug_Win32.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>COMMODORED.lib;C64D.lib;F6500D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_Win32.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -111,15 +134,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration);$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>COMMODORE.lib;C64.lib;F6500.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;RakNet_VS2008_DLL_Release_Win32.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>COMMODORE.lib;C64.lib;F6500.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_Win32.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -128,13 +151,13 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration);$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>COMMODORED.lib;C64D.lib;F6500D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;SDL2D.lib;SDL2_imageD.lib;SDL2_mixerD.lib;RakNet_VS2008_DLL_Debug_x64.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>COMMODORED.lib;C64D.lib;F6500D.lib;ASSEMBLERD.lib;COMMSD.lib;EMULSD.lib;CORED.lib;CONSOLED.lib;RakNet_VS2008_DLL_Debug_x64.lib;RESIDD.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,15 +168,15 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(SDL_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLIMAGE_HOME)\VisualC\$(Platform)\$(Configuration);$(SDLMIXER_HOME)\VisualC\$(Platform)\$(Configuration);$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>COMMODORE.lib;C64.lib;F6500.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_mixer.lib;RakNet_VS2008_DLL_Release_x64.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>..\..\lib\$(PlatformShortName)\;$(RAKNET_HOME)\Lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>COMMODORE.lib;C64.lib;F6500.lib;ASSEMBLER.lib;COMMS.lib;EMULS.lib;CORE.lib;CONSOLE.lib;RakNet_VS2008_DLL_Release_x64.lib;RESID.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

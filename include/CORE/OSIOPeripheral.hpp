@@ -18,7 +18,7 @@
 
 #include <CORE/IOPeripheral.hpp>
 #include <CORE/OBool.hpp>
-#include <SDL_events.h>
+#include <CORE/SDL.hpp>
 
 namespace MCHEmul
 {

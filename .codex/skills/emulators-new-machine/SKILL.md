@@ -7,6 +7,8 @@ description: Plan, scaffold, implement, and integrate a complete new emulated co
 
 When compiling, testing, or executing on Windows, use `$emulators-windows-build-runtime`.
 
+Keep the root `Configure.docx` synchronized whenever a new machine or variant changes installation prerequisites, build configuration, dependency setup, resource/ROM requirements, first-run procedures or packaging. Update the relevant guide sections in the same change using **Mantener Configure.docx** in [emulators-documentation-authoring](../emulators-documentation-authoring/SKILL.md); preserve its English text, official template and ARGOS branding. Pure emulation changes that leave these instructions accurate do not require regenerating the guide.
+
 ## Core Workflow
 
 1. Read `references/workspace-artifacts.md`, then read `references/machine-contract.md`. When the scope spans more than one subsystem, copy `assets/machine-spec.yaml` into a task-specific directory under `.codex/work/emulators/<machine>/<model-or-variant>/<scope>/`; never use `docs/` for this working material.

@@ -2,7 +2,7 @@
 #include <CORE/global.hpp>
 #include <CORE/FmterBuilder.hpp>
 #include <CORE/Formatter.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::_theSystem = 
 	std::shared_ptr <MCHEmul::IODeviceSystem> (new MCHEmul::IODeviceSystem);

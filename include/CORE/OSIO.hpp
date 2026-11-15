@@ -16,7 +16,7 @@
 
 #include <CORE/IO.hpp>
 #include <CORE/Clock.hpp>
-#include <SDL_events.h>
+#include <CORE/SDL.hpp>
 
 namespace MCHEmul
 {

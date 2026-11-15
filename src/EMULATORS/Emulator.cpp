@@ -1,5 +1,5 @@
 #include <EMULATORS/Emulator.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 // ---
 const unsigned char MCHEmul::Emulator::_PARAMHELP = 'h';

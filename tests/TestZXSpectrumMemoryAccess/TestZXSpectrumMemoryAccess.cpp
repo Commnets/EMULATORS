@@ -21,7 +21,7 @@
 #include <FZ80/INTInterrupt.hpp>
 #include <FZ80/NMIInterrupt.hpp>
 #include <CORE/Ticks.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 #include <algorithm>
 #include <iostream>

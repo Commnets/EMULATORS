@@ -17,7 +17,7 @@
 #include <CORE/IO.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/Clock.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 namespace MCHEmul
 {

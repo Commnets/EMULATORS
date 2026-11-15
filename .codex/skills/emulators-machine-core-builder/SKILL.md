@@ -27,6 +27,7 @@ When compiling, testing, or executing on Windows, use `$emulators-windows-build-
 8. Register commands, formatters, project files, solution dependencies, runtime resources, and emulator entry points by following the nearest maintained pattern.
 9. Build the narrowest library and executable targets. Exercise reset, a bounded execution interval, and one observable machine behavior.
 10. Hand cross-component scenarios to `$emulators-system-test-builder`.
+11. When integration changes prerequisites, project/solution configuration, dependency wiring, resource/ROM layout, working directories, first-run instructions or distribution, update the root `Configure.docx` in the same change. Follow **Mantener Configure.docx** in [emulators-documentation-authoring](../emulators-documentation-authoring/SKILL.md), including source synchronization, regeneration and visual verification.
 
 ## Architectural Boundaries
 

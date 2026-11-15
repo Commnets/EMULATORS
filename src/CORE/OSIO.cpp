@@ -1,6 +1,6 @@
 #include <CORE/OSIO.hpp>
 #include <CORE/OSIOPeripheral.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 // ---
 MCHEmul::InputOSSystem::InputOSSystem (int id, const MCHEmul::Attributes& attrs)

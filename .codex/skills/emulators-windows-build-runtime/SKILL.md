@@ -14,3 +14,9 @@ For every local build, test, launch, smoke test or log-capture operation in this
 - Treat Windows exit status `0xC000007B` as a likely executable/DLL architecture mismatch. Verify that the executable and loaded SDL DLLs are both 32-bit before diagnosing emulator behavior.
 
 Report the exact configuration and platform used whenever build or execution results are part of the evidence.
+
+## Keep the configuration guide synchronized
+
+When changing the persistent build or runtime setup, update the root `Configure.docx` in the same change. This includes toolchains, dependency versions/layouts, environment variables, SDL selection, project/solution integration, include and linker settings, Debug naming, output paths, validation, working directories, runtime resources, DLL deployment and installer preparation. Follow the maintained source, regeneration and visual-verification workflow under **Mantener Configure.docx** in [emulators-documentation-authoring](../emulators-documentation-authoring/SKILL.md).
+
+A routine build or a temporary invocation override does not require regenerating an otherwise accurate guide. Preserve the user's current manual DLL/setup workflow and shared output directories unless the task explicitly changes them.

@@ -14,6 +14,10 @@
 #ifndef __CORE_INCS__
 #define __CORE_INCS__
 
+#include <CORE/SDL.hpp>
+#include <CORE/SDLImage.hpp>
+#include <CORE/SDLGfx.hpp>
+#include <CORE/SDLTtf.hpp>
 #include <CORE/global.hpp>
 #include <CORE/OBool.hpp>
 #include <CORE/Pulse.hpp>

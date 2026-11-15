@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <Target Name="ValidateEmulatorsSDL"
+          BeforeTargets="PrepareForBuild"
+          Condition="'$(EmulatorsSDLConfigured)' == 'true' and '$(DesignTimeBuild)' != 'true'">
+    <Error Code="SDL001"
+           Condition="'$(EmulatorsSDLVersion)' != '2' and '$(EmulatorsSDLVersion)' != '3'"
+           Text="$(MSBuildProjectName): EmulatorsSDLVersion debe ser 2 o 3. Valor recibido: '$(EmulatorsSDLVersion)'." />
+
+    <ItemGroup Condition="'$(EmulatorsSDLVersion)' == '2'">
+      <_EmulatorsSDLRequiredRoot Include="SDL_HOME">
+        <Value>$(EmulatorsSDLRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDLIMAGE_HOME">
+        <Value>$(EmulatorsSDLImageRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDLMIXER_HOME">
+        <Value>$(EmulatorsSDLMixerRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDLGFX_HOME" Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'">
+        <Value>$(EmulatorsSDLGfxRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDLTTF_HOME" Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'">
+        <Value>$(EmulatorsSDLTtfRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(EmulatorsSDLVersion)' == '3'">
+      <_EmulatorsSDLRequiredRoot Include="SDL3_HOME">
+        <Value>$(EmulatorsSDLRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDL3IMAGE_HOME">
+        <Value>$(EmulatorsSDLImageRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDL3MIXER_HOME">
+        <Value>$(EmulatorsSDLMixerRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDL3GFX_HOME" Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'">
+        <Value>$(EmulatorsSDLGfxRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+      <_EmulatorsSDLRequiredRoot Include="SDL3TTF_HOME" Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'">
+        <Value>$(EmulatorsSDLTtfRoot)</Value>
+      </_EmulatorsSDLRequiredRoot>
+    </ItemGroup>
+
+    <Error Code="SDL002"
+           Condition="'%(_EmulatorsSDLRequiredRoot.Value)' == ''"
+           Text="$(MSBuildProjectName): la variable %(_EmulatorsSDLRequiredRoot.Identity) no tiene una raiz SDL definida." />
+    <Error Code="SDL003"
+           Condition="!Exists('%(_EmulatorsSDLRequiredRoot.Value)')"
+           Text="$(MSBuildProjectName): no existe la raiz seleccionada por %(_EmulatorsSDLRequiredRoot.Identity): '%(_EmulatorsSDLRequiredRoot.Value)'." />
+
+    <ItemGroup Condition="'$(EmulatorsSDLVersion)' == '2'">
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLRoot)\include\SDL.h;$(EmulatorsSDLImageRoot)\SDL_image.h;$(EmulatorsSDLMixerRoot)\SDL_mixer.h" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLGfxRoot)\SDL2_gfxPrimitives.h;$(EmulatorsSDLGfxRoot)\SDL2_framerate.h;$(EmulatorsSDLGfxRoot)\SDL2_imageFilter.h;$(EmulatorsSDLGfxRoot)\SDL2_rotozoom.h"
+                                Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLTtfRoot)\SDL_ttf.h"
+                                Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(EmulatorsSDLVersion)' == '3'">
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLRoot)\include\SDL3\SDL.h;$(EmulatorsSDLImageRoot)\include\SDL3_image\SDL_image.h;$(EmulatorsSDLMixerRoot)\include\SDL3_mixer\SDL_mixer.h" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLGfxRoot)\SDL3_gfxPrimitives.h;$(EmulatorsSDLGfxRoot)\SDL3_framerate.h;$(EmulatorsSDLGfxRoot)\SDL3_imageFilter.h;$(EmulatorsSDLGfxRoot)\SDL3_rotozoom.h"
+                                Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLTtfRoot)\include\SDL3_ttf\SDL_ttf.h"
+                                Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(EmulatorsSDLLink)' == 'true'">
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLRoot)\VisualC\$(Platform)\$(Configuration)\$(EmulatorsSDLCoreLibrary)" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLImageRoot)\VisualC\$(Platform)\$(Configuration)\$(EmulatorsSDLImageLibrary)"
+                                Condition="'$(EmulatorsSDLLinkImage)' == 'true'" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLMixerRoot)\VisualC\$(Platform)\$(Configuration)\$(EmulatorsSDLMixerLibrary)"
+                                Condition="'$(EmulatorsSDLLinkMixer)' == 'true'" />
+      <_EmulatorsSDLRequiredFile Include="$(EmulatorsSDLRoot)\VisualC\$(Platform)\$(Configuration)\$(EmulatorsSDLMainLibrary)"
+                                Condition="'$(EmulatorsSDLVersion)' == '2' and '$(EmulatorsSDLLinkMain)' == 'true'" />
+    </ItemGroup>
+
+    <Error Code="SDL004"
+           Condition="!Exists('%(_EmulatorsSDLRequiredFile.Identity)')"
+           Text="$(MSBuildProjectName), SDL$(EmulatorsSDLVersion) $(Configuration)|$(Platform): no existe la dependencia requerida '%(_EmulatorsSDLRequiredFile.Identity)'. Revise las raices SDL y los binarios instalados para esta configuracion." />
+  </Target>
+</Project>

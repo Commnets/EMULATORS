@@ -3,7 +3,7 @@
 #include <MSX/incs.hpp>
 
 #ifndef _CONSOLE
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 #ifdef __cplusplus
 #define C_LINKAGE "C"
 #else

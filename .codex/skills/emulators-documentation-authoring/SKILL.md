@@ -10,6 +10,7 @@ Crear documentos DOCX técnicamente rigurosos a partir de la plantilla incluida.
 ## Higiene del repositorio
 
 - Reservar `docs/` exclusivamente para entregables finales y colocarlos en el subdirectorio propio del emulador o tema. No guardar allí fuentes estructuradas, generadores, scripts, estados, cachés ni material de control de calidad.
+- Mantener `Configure.docx` en la raíz del repositorio por decisión expresa del usuario: es la guía general de instalación, configuración y primer arranque. Esta ubicación es una excepción a la organización de entregables bajo `docs/`.
 - Los planes, especificaciones de trabajo, contratos, workbooks, matrices y demás soporte para generar código no son entregables documentales: guardarlos bajo una jerarquía descriptiva en `.codex/work/`, conforme a `.codex/skills/emulators-new-machine/references/workspace-artifacts.md`.
 - Guardar recursos mantenidos por Codex bajo una jerarquía descriptiva en `.codex/`. Para una familia documental, separar como mínimo `sources/`, `scripts/` y `state/` cuando existan esos tipos de recurso.
 - Crear cualquier material temporal bajo `.codex/tmp/<tarea>/`, nunca en `tmp/` o `temp/` en la raíz del repositorio. Eliminar el directorio de la tarea al finalizar una vez que los entregables hayan sido verificados.
@@ -52,6 +53,18 @@ No escribir sobre el asset ni sobre `docs/UserGuide.docx`. Trabajar siempre en l
 10. Impedir títulos huérfanos. Aplicar `keep with next` (`w:keepNext`) a `Title`, `Heading 1`, `Heading 2`, `Heading 3` y a cualquier otro estilo de título utilizado, de modo que ningún título termine una página sin al menos el primer párrafo que le sigue. Si hay varios títulos consecutivos, mantener unida toda la cadena hasta el primer párrafo de contenido.
 
 ## Mantener guías ligadas al código
+
+### Mantener Configure.docx
+
+- Tratar `Configure.docx` como documentación mantenida del contrato de configuración del framework. Todo cambio persistente que altere cómo se instala, configura, compila, valida, ejecuta por primera vez o distribuye EMULATORS debe actualizar las instrucciones afectadas en este documento en el mismo cambio. Esto incluye herramientas y SDK, versiones y preparación de dependencias, variables de entorno, estructura de directorios, proyectos y dependencias de solución, includes y macros, enlace y nombres Debug/Release, plataformas, validaciones, recursos y ROM, directorio de trabajo, DLL e instaladores.
+- Revisar especialmente cambios en `Directory.Build.props`, `Directory.Build.targets`, `build/*.props`, `build/*.targets`, `.vcxproj`, `.sln`, cabeceras selectoras SDL, `CORE/incs.hpp`, `all.bat`, scripts de instalación y `setups/*.iss` o sus subdirectorios. La lista es orientativa: el criterio es si cambian los pasos que debe seguir una persona para configurar o usar el framework.
+- Actualizar primero la fuente mantenida `.codex/documentation/configure/sources/guide.md` y después regenerar `Configure.docx` con los helpers de `.codex/documentation/configure/scripts/`, adaptándolos cuando sea necesario. Actualizar campos en Word, validar y revisar visualmente todas las páginas según este skill; renovar la evidencia en `.codex/documentation/configure/state/` solo después de verificar el resultado actual. No asumir un número fijo de páginas ni reutilizar una verificación anterior como prueba del documento regenerado.
+- Conservar el inglés, la plantilla oficial, el logo ARGOS, el índice y los campos de paginación. Mantener el enlace de entrada en `README.md` y `docs/SDLConfiguration.md` como referencia breve a la guía principal; no crear una segunda guía de configuración divergente.
+- Reflejar las decisiones vigentes del usuario, incluidas la gestión manual de DLL e instaladores y la limpieza/recompilación completa al cambiar de SDL con directorios compartidos. Si un cambio modifica esas decisiones, actualizar su descripción; no introducir automatizaciones o reorganizaciones solo para facilitar la documentación.
+- Distinguir configuración declarada, soporte implementado y comprobaciones realmente ejecutadas. Una validación de rutas no acredita compilación, compatibilidad binaria ni primer arranque. No presentar SDL3 como funcional hasta que la migración y su verificación lo sustenten.
+- No regenerar por una compilación rutinaria o una selección temporal de parámetros que no altere el contrato documentado. Respetar las restricciones expresas de la tarea; una petición de análisis sin modificaciones no autoriza editar la guía.
+
+### Mantener las guías de los emuladores
 
 - Tratar `docs/C64Emulator_UserGuide.docx`, `docs/VIC20Data/VIC20Emulator_UserGuide.docx`, `docs/C264Data/C264Emulator_UserGuide.docx`, `docs/ZX81Data/ZX81Emulator_UserGuide.docx`, `docs/ZXSpectrumData/ZXSpectrumEmulator_UserGuide.docx` y `docs/MSXData/MSXEmulator_UserGuide.docx` como artefactos mantenidos. Todo cambio que añada, elimine, renombre o altere un parámetro de arranque, un comando, su sintaxis, parámetros, consecuencias o salida visible del sistema correspondiente debe revisar y, cuando corresponda, actualizar su guía en el mismo cambio.
 - Para parámetros de arranque, recorrer el punto de entrada del ejecutable y toda la jerarquía de la clase `Emulator`; no confiar únicamente en el texto breve de ayuda de `main`.

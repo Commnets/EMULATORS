@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project>
+  <PropertyGroup Label="EmulatorsSDLDefaults">
+    <EmulatorsSDLConfigured>true</EmulatorsSDLConfigured>
+    <EmulatorsSDLLink Condition="'$(EmulatorsSDLLink)' == ''">false</EmulatorsSDLLink>
+    <EmulatorsSDLLinkImage Condition="'$(EmulatorsSDLLinkImage)' == ''">false</EmulatorsSDLLinkImage>
+    <EmulatorsSDLLinkMixer Condition="'$(EmulatorsSDLLinkMixer)' == ''">false</EmulatorsSDLLinkMixer>
+    <EmulatorsSDLLinkMain Condition="'$(EmulatorsSDLLinkMain)' == ''">false</EmulatorsSDLLinkMain>
+    <EmulatorsSDLHeadersGfx Condition="'$(EmulatorsSDLHeadersGfx)' == ''">true</EmulatorsSDLHeadersGfx>
+    <EmulatorsSDLHeadersTtf Condition="'$(EmulatorsSDLHeadersTtf)' == ''">true</EmulatorsSDLHeadersTtf>
+  </PropertyGroup>
+
+  <PropertyGroup Label="EmulatorsSDLResolvedDefaults">
+    <EmulatorsSDLIncludeDirectories></EmulatorsSDLIncludeDirectories>
+    <EmulatorsSDLLibraryDirectories></EmulatorsSDLLibraryDirectories>
+    <EmulatorsSDLLibraries></EmulatorsSDLLibraries>
+    <EmulatorsSDLExternalDebugSuffix></EmulatorsSDLExternalDebugSuffix>
+    <EmulatorsSDLMainLibrary></EmulatorsSDLMainLibrary>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLVersion)' == '2'">
+    <EmulatorsSDLRoot>$(SDL_HOME)</EmulatorsSDLRoot>
+    <EmulatorsSDLImageRoot>$(SDLIMAGE_HOME)</EmulatorsSDLImageRoot>
+    <EmulatorsSDLMixerRoot>$(SDLMIXER_HOME)</EmulatorsSDLMixerRoot>
+    <EmulatorsSDLGfxRoot>$(SDLGFX_HOME)</EmulatorsSDLGfxRoot>
+    <EmulatorsSDLTtfRoot>$(SDLTTF_HOME)</EmulatorsSDLTtfRoot>
+
+    <EmulatorsSDLIncludeDirectories>$(EmulatorsSDLRoot)\include;$(EmulatorsSDLImageRoot);$(EmulatorsSDLMixerRoot)</EmulatorsSDLIncludeDirectories>
+    <EmulatorsSDLIncludeDirectories Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'">$(EmulatorsSDLIncludeDirectories);$(EmulatorsSDLGfxRoot)</EmulatorsSDLIncludeDirectories>
+    <EmulatorsSDLIncludeDirectories Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'">$(EmulatorsSDLIncludeDirectories);$(EmulatorsSDLTtfRoot)</EmulatorsSDLIncludeDirectories>
+
+    <EmulatorsSDLExternalDebugSuffix Condition="'$(Configuration)' == 'Debug'">D</EmulatorsSDLExternalDebugSuffix>
+
+    <EmulatorsSDLCoreLibrary>SDL2$(EmulatorsSDLExternalDebugSuffix).lib</EmulatorsSDLCoreLibrary>
+    <EmulatorsSDLImageLibrary>SDL2_image$(EmulatorsSDLExternalDebugSuffix).lib</EmulatorsSDLImageLibrary>
+    <EmulatorsSDLMixerLibrary>SDL2_mixer$(EmulatorsSDLExternalDebugSuffix).lib</EmulatorsSDLMixerLibrary>
+    <EmulatorsSDLMainLibrary>SDL2main$(EmulatorsSDLExternalDebugSuffix).lib</EmulatorsSDLMainLibrary>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLVersion)' == '3'">
+    <EmulatorsSDLRoot>$(SDL3_HOME)</EmulatorsSDLRoot>
+    <EmulatorsSDLImageRoot>$(SDL3IMAGE_HOME)</EmulatorsSDLImageRoot>
+    <EmulatorsSDLMixerRoot>$(SDL3MIXER_HOME)</EmulatorsSDLMixerRoot>
+    <EmulatorsSDLGfxRoot>$(SDL3GFX_HOME)</EmulatorsSDLGfxRoot>
+    <EmulatorsSDLTtfRoot>$(SDL3TTF_HOME)</EmulatorsSDLTtfRoot>
+
+    <EmulatorsSDLIncludeDirectories>$(EmulatorsSDLRoot)\include;$(EmulatorsSDLImageRoot)\include;$(EmulatorsSDLMixerRoot)\include</EmulatorsSDLIncludeDirectories>
+    <EmulatorsSDLIncludeDirectories Condition="'$(EmulatorsSDLHeadersGfx)' == 'true'">$(EmulatorsSDLIncludeDirectories);$(EmulatorsSDLGfxRoot)</EmulatorsSDLIncludeDirectories>
+    <EmulatorsSDLIncludeDirectories Condition="'$(EmulatorsSDLHeadersTtf)' == 'true'">$(EmulatorsSDLIncludeDirectories);$(EmulatorsSDLTtfRoot)\include</EmulatorsSDLIncludeDirectories>
+
+    <EmulatorsSDLCoreLibrary>SDL3.lib</EmulatorsSDLCoreLibrary>
+    <EmulatorsSDLImageLibrary>SDL3_image.lib</EmulatorsSDLImageLibrary>
+    <EmulatorsSDLMixerLibrary>SDL3_mixer.lib</EmulatorsSDLMixerLibrary>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLLink)' == 'true'">
+    <EmulatorsSDLLibraryDirectories>$(EmulatorsSDLRoot)\VisualC\$(Platform)\$(Configuration)</EmulatorsSDLLibraryDirectories>
+    <EmulatorsSDLLibraries>$(EmulatorsSDLCoreLibrary)</EmulatorsSDLLibraries>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLLink)' == 'true' and '$(EmulatorsSDLLinkImage)' == 'true'">
+    <EmulatorsSDLLibraryDirectories>$(EmulatorsSDLLibraryDirectories);$(EmulatorsSDLImageRoot)\VisualC\$(Platform)\$(Configuration)</EmulatorsSDLLibraryDirectories>
+    <EmulatorsSDLLibraries>$(EmulatorsSDLLibraries);$(EmulatorsSDLImageLibrary)</EmulatorsSDLLibraries>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLLink)' == 'true' and '$(EmulatorsSDLLinkMixer)' == 'true'">
+    <EmulatorsSDLLibraryDirectories>$(EmulatorsSDLLibraryDirectories);$(EmulatorsSDLMixerRoot)\VisualC\$(Platform)\$(Configuration)</EmulatorsSDLLibraryDirectories>
+    <EmulatorsSDLLibraries>$(EmulatorsSDLLibraries);$(EmulatorsSDLMixerLibrary)</EmulatorsSDLLibraries>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(EmulatorsSDLVersion)' == '2' and '$(EmulatorsSDLLink)' == 'true' and '$(EmulatorsSDLLinkMain)' == 'true'">
+    <EmulatorsSDLLibraries>$(EmulatorsSDLLibraries);$(EmulatorsSDLMainLibrary)</EmulatorsSDLLibraries>
+  </PropertyGroup>
+
+  <ItemDefinitionGroup>
+    <ClCompile>
+      <AdditionalIncludeDirectories>$(EmulatorsSDLIncludeDirectories);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>MCHEMUL_SDL_VERSION=$(EmulatorsSDLVersion);%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+  </ItemDefinitionGroup>
+
+  <ItemDefinitionGroup Condition="'$(EmulatorsSDLLink)' == 'true'">
+    <Link>
+      <AdditionalLibraryDirectories>$(EmulatorsSDLLibraryDirectories);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>$(EmulatorsSDLLibraries);%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

@@ -1,6 +1,6 @@
 #include <CORE/Screen.hpp>
 #include <CORE/GraphicalChip.hpp>
-#include <SDL_image.h>
+#include <CORE/SDLImage.hpp>
 
 // ---
 MCHEmul::Screen::Screen (const std::string& n, int id, 

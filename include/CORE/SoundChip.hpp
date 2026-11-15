@@ -17,7 +17,7 @@
 #include <CORE/Chip.hpp>
 #include <CORE/SoundMemory.hpp>
 #include <CORE/SoundLibWrapper.hpp>
-#include <SDL.h>
+#include <CORE/SDL.hpp>
 
 namespace MCHEmul
 {

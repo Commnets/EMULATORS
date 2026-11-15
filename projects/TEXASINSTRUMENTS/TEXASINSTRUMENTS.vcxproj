@@ -93,6 +93,7 @@
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
   </ImportGroup>
+  <Import Project="..\..\build\SDL.props" />
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>..\..\lib\$(PlatformShortName)\</OutDir>
@@ -120,7 +121,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -138,7 +139,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -156,7 +157,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -174,7 +175,7 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(SDL_HOME)\include;$(SDLIMAGE_HOME);$(SDLMIXER_HOME);$(RAKNET_HOME)\Source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\include;..\..\thirdparties;$(RAKNET_HOME)\Source;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>

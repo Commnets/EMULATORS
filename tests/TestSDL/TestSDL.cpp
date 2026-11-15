@@ -1,7 +1,7 @@
 #include "stdafx.h"
 
-#include <SDL.h>
-#include <SDL_image.h>
+#include <CORE/SDL.hpp>
+#include <CORE/SDLImage.hpp>
 #include <iostream>
 
 #define FREQUENCY 44100
