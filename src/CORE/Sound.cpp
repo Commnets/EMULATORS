@@ -1,10 +1,11 @@
 #include <CORE/Sound.hpp>
 #include <CORE/LogChannel.hpp>
 #include <cmath>
+#include <limits>
 
 // ---
 MCHEmul::SoundSystem::SoundSystem (int id, 
-		unsigned short tp, int sF, unsigned char nC,
+		SDL_AudioFormat tp, int sF, unsigned char nC,
 		const MCHEmul::Attributes& attrs, double mADelay)
 	: MCHEmul::IODevice (Type::_OUTPUT, id, attrs),
 	  _type (tp),
@@ -13,10 +14,18 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 	  _silence (false), // By default it always sound!
 	  _soundChip (nullptr),
 	  _soundReady (false),
-	  _audioSpec (), _deviceId (0), // Defined later...
+	  _deviceId (0),
+	  _audioSpec (),
+#if MCHEMUL_SDL_VERSION == 2
 	  _conversionNeeded (false),
-	  _conversionData (), // Set when the system is initialized (becuase is when the sound chip will be finally linked)...
+	  _conversionData (),
+#elif MCHEMUL_SDL_VERSION == 3
+	  _conversionStream (nullptr),
+	  _playbackStream (nullptr),
+#endif
 	  _conversionBuffer (),
+	  _normalBufferCapacity (0),
+	  _maximumQueuedAudioBytes (0),
 	  _maxAllowedDelay (mADelay),
 	  _outputFrameSize (0),
 	  _maximumAdditionalFrames (0),
@@ -35,34 +44,31 @@ MCHEmul::SoundSystem::SoundSystem (int id,
 
 	setClassName ("SoundSystem");
 
-	SDL_AudioSpec specIn;
-	SDL_zero (specIn);
-	specIn.freq = _samplingFrequency;
-	specIn.format = _type;
-	specIn.channels = (unsigned char) _numberChannels;
-	specIn.callback = nullptr; // SDL_QueueAudio will be used instead...
-	specIn.userdata = nullptr; // No callback no special data to be passed...
-	if ((_deviceId = // When the device is opened the parameters can be changed by the sound card driver...
-			SDL_OpenAudioDevice (nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE)) != 0) // ..and cannot be 0!
-	{	
-		bool changed = false;
-		if (_audioSpec.freq != _samplingFrequency) { _samplingFrequency = _audioSpec.freq; changed = true; }
-		if (_audioSpec.format != _type) { _type = _audioSpec.format; changed = true; }
-		if (_audioSpec.channels != _numberChannels) { _numberChannels = _audioSpec.channels; changed = true; }
-		if (changed)
-			_LOG ("Original sound format has been changed");
+#if MCHEMUL_SDL_VERSION == 2
+	bool result = openAudioSDL2 ();
+#elif MCHEMUL_SDL_VERSION == 3
+	bool result = openAudioSDL3 ();
+#endif
+	if (!result)
+	{
+		_error = MCHEmul::_INIT_ERROR;
 
-		SDL_PauseAudioDevice (_deviceId, 0); // 0 to start...
-	}
-	else
 		_LOG ("Failed to open audio device");
+	}
 }
 
 // ---
 MCHEmul::SoundSystem::~SoundSystem ()
 {
+#if MCHEMUL_SDL_VERSION == 2
 	if (_deviceId != 0)
 		SDL_CloseAudioDevice (_deviceId);
+#elif MCHEMUL_SDL_VERSION == 3
+	if (_conversionStream != nullptr)
+		SDL_DestroyAudioStream (_conversionStream);
+	if (_playbackStream != nullptr)
+		SDL_DestroyAudioStream (_playbackStream);
+#endif
 }
 
 // ---
@@ -80,11 +86,8 @@ void MCHEmul::SoundSystem::linkToChips (const MCHEmul::Chips& c)
 // ---
 bool MCHEmul::SoundSystem::initialize ()
 {
-	bool result = false;
-
 	_soundReady = false;
-	// A new execution cannot use the timestamp or the pending decision from a
-	// previous one. The first new sound-ready event will only establish a baseline.
+	// A new execution must not inherit timestamps or a pending compensation decision.
 	_lastSoundReadyCounter = 0;
 	_lastSoundReadyElapsedCounters = 0;
 	_soundReadyDelayCounters = 0;
@@ -93,132 +96,360 @@ bool MCHEmul::SoundSystem::initialize ()
 	_addAdditionalSoundData = false;
 	_nominalSoundReadyCounters = 0;
 	_maximumAllowedDelayCounters = 0;
+	_normalBufferCapacity = 0;
+	_maximumQueuedAudioBytes = 0;
+	_outputFrameSize = 0;
+	_maximumAdditionalFrames = 0;
+
+	if (_deviceId == 0 || _soundChip == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (false);
+	}
+
 	_performanceCounterFrequency =
-		static_cast <unsigned long long> (SDL_GetPerformanceFrequency ());
+		(unsigned long long) (SDL_GetPerformanceFrequency ());
 	assert (_performanceCounterFrequency != 0);
 
-	SDL_ClearQueuedAudio (_deviceId);
+	const size_t sourceFrameSize =
+		(size_t) _soundChip -> sampleSize () *
+		(size_t) _soundChip -> numberChannels ();
+	assert (sourceFrameSize != 0);
+	assert (_soundChip -> soundBufferSize () > 0);
+	assert (((size_t) _soundChip -> soundBufferSize () % sourceFrameSize) == 0);
+	assert (_soundChip -> samplingFrecuency () > 0);
 
-	SDL_memset (&_conversionData, 0, sizeof (_conversionData));
-	int tC = SDL_BuildAudioCVT 
-			(&_conversionData, 
-			 _soundChip -> type (), (unsigned char) _soundChip -> numberChannels (), _soundChip -> samplingFrecuency (),
-			 _type, _numberChannels, _samplingFrequency);
+	// Both backends use the duration represented by one complete chip block.
+	const double nominalSoundReadyTime =
+		((double) _soundChip -> soundBufferSize () / (double) sourceFrameSize) /
+		(double) _soundChip -> samplingFrecuency ();
+	// Keep runtime delay calculations in high-resolution counter units.
+	_nominalSoundReadyCounters = (unsigned long long) (std::ceil (
+		nominalSoundReadyTime * (double) _performanceCounterFrequency));
+	_maximumAllowedDelayCounters = (unsigned long long) (std::ceil (
+		nominalSoundReadyTime * _maxAllowedDelay *
+		(double) _performanceCounterFrequency));
+	assert (_nominalSoundReadyCounters != 0);
 
-	result = (tC >= 0);
+	_outputFrameSize =
+		(size_t) (SDL_AUDIO_BITSIZE (_type) >> 3) *
+		(size_t) _numberChannels;
+	assert (_outputFrameSize != 0);
+	const double maximumAdditionalFrames = std::ceil (
+		nominalSoundReadyTime * (double) _samplingFrequency * _maxAllowedDelay);
 
-	_conversionNeeded = (tC != 0);
-
-	size_t normalBufferCapacity =
-		(size_t) _soundChip -> soundBufferSize ();
-	if (result && _conversionNeeded)
+	// SDL3's transfer lengths are signed ints. Check the full workspace before narrowing.
+	const size_t maximumBufferSize = (size_t) std::numeric_limits <int>::max ();
+	bool result = maximumAdditionalFrames <= (double) (maximumBufferSize / _outputFrameSize);
+	if (result)
 	{
-		assert (_conversionData.len_mult > 0);
-
-		normalBufferCapacity *= (size_t) _conversionData.len_mult;
+		_maximumAdditionalFrames = (size_t) maximumAdditionalFrames;
+#if MCHEMUL_SDL_VERSION == 2
+		result = initializeAudioSDL2 (_normalBufferCapacity);
+#elif MCHEMUL_SDL_VERSION == 3
+		result = initializeAudioSDL3 (_normalBufferCapacity);
+#endif
 	}
+	if (result)
+		result = _normalBufferCapacity <=
+			maximumBufferSize - _maximumAdditionalFrames * _outputFrameSize;
 
 	if (result)
 	{
-		const size_t sourceFrameSize =
-			(size_t) _soundChip -> sampleSize () *
-			(size_t) _soundChip -> numberChannels ();
-		assert (sourceFrameSize != 0);
-		assert (((size_t) _soundChip -> soundBufferSize () % sourceFrameSize) == 0);
-		assert (_soundChip -> samplingFrecuency () > 0);
-
-		// This is the actual duration represented by a complete source block. It is
-		// normally 10 ms, but deriving it avoids assuming a fixed buffer duration.
-		const double nominalSoundReadyTime =
-			(((double) _soundChip -> soundBufferSize () / (double) sourceFrameSize) /
-			 (double) _soundChip -> samplingFrecuency ());
-		// Runtime comparisons remain in counter units: the conversion from seconds
-		// and the rounding cost are therefore paid only once during initialization.
-		_nominalSoundReadyCounters =
-			static_cast <unsigned long long> (std::ceil (
-				nominalSoundReadyTime * (double) _performanceCounterFrequency));
-		_maximumAllowedDelayCounters =
-			static_cast <unsigned long long> (std::ceil (
-				nominalSoundReadyTime * _maxAllowedDelay *
-				(double) _performanceCounterFrequency));
-		assert (_nominalSoundReadyCounters != 0);
-
-		// The extra capacity is expressed in complete output frames. This keeps the
-		// reserved area independent of the sample format and the number of channels.
-		_outputFrameSize =
-			(size_t) (SDL_AUDIO_BITSIZE (_type) >> 3) *
-			(size_t) _numberChannels;
-		assert (_outputFrameSize != 0);
-		_maximumAdditionalFrames = (size_t) std::ceil (
-			nominalSoundReadyTime * (double) _samplingFrequency * _maxAllowedDelay);
-
-		// SDL requires the original size multiplied by len_mult for a conversion.
-		// The additional area follows that workspace and remains unused for now.
+		// The tail is reserved for compensation, never used as conversion workspace.
 		_conversionBuffer.resize (
-			normalBufferCapacity + (_maximumAdditionalFrames * _outputFrameSize));
+			_normalBufferCapacity + _maximumAdditionalFrames * _outputFrameSize);
+#if MCHEMUL_SDL_VERSION == 2
 		_conversionData.buf = _conversionBuffer.data ();
+#endif
+		result = MCHEmul::IODevice::initialize ();
 	}
-	else
+
+	if (!result)
 	{
+		_normalBufferCapacity = 0;
+		_maximumQueuedAudioBytes = 0;
 		_outputFrameSize = 0;
 		_maximumAdditionalFrames = 0;
+		_nominalSoundReadyCounters = 0;
+		_maximumAllowedDelayCounters = 0;
 		_conversionBuffer.clear ();
+#if MCHEMUL_SDL_VERSION == 2
 		_conversionData.buf = nullptr;
+#elif MCHEMUL_SDL_VERSION == 3
+		if (_conversionStream != nullptr)
+		{
+			SDL_DestroyAudioStream (_conversionStream);
+			_conversionStream = nullptr;
+		}
+#endif
+		_error = MCHEmul::_INIT_ERROR;
 	}
+	else
+		_error = MCHEmul::_NOERROR;
 
-	// If the conversion action is not possible the initialization doesn't progress...
-	return (result ? MCHEmul::IODevice::initialize () : result);
+	return (result);
 }
 
 // ---
 bool MCHEmul::SoundSystem::simulate (MCHEmul::CPU* cpu)
 {
-	if (_deviceId == 0)
+	if (_deviceId == 0 || _normalBufferCapacity == 0)
 		return (false);
 
 	if (!MCHEmul::IODevice::simulate (cpu))
 		return (false);
 
-	// When a chunck of sound is ready to be sent to the sound card...
 	bool result = true;
 	if (_soundReady)
 	{
 		if (!_silence)
 		{
- 			if (SDL_GetQueuedAudioSize (_deviceId) >= (_audioSpec.size * 20))
-				SDL_ClearQueuedAudio (_deviceId); // If the data queued is too much...it is taken off!
-
-			// Both converted and already compatible data use the same reusable buffer.
-			// Only the nominal valid size is queued; the reserved tail is untouched.
-			_conversionData.len = _soundChip -> soundBufferSize ();
-			memcpy ((void*) _conversionBuffer.data (),
-				(const void*) _soundChip -> soundMemory () -> samplingData (),
-				(size_t) _conversionData.len);
-			size_t soundSize = (size_t) _conversionData.len;
-
-			if (_conversionNeeded)
-			{
-				_conversionData.buf = _conversionBuffer.data ();
-				if (SDL_ConvertAudio (&_conversionData) < 0)
-					result = false;
-				else
-					soundSize = (size_t) _conversionData.len_cvt;
-			}
-
-			if (result)
-			{
-				soundSize = fillAdditionalSoundData (
-					_conversionBuffer, soundSize, _additionalSoundData);
-				result = (SDL_QueueAudio (_deviceId,
-					(const void*) _conversionBuffer.data (), (unsigned int) soundSize) != -1);
-			}
+#if MCHEMUL_SDL_VERSION == 2
+			result = queueSoundSDL2 ();
+#elif MCHEMUL_SDL_VERSION == 3
+			result = queueSoundSDL3 ();
+#endif
 		}
 
 		_soundReady = false;
 	}
 
+	if (!result)
+		_error = MCHEmul::_DEVICE_ERROR;
+
 	return (result);
 }
+
+#if MCHEMUL_SDL_VERSION == 2
+// ---
+bool MCHEmul::SoundSystem::openAudioSDL2 ()
+{
+	SDL_AudioSpec specIn;
+	SDL_zero (specIn);
+	specIn.freq = _samplingFrequency;
+	specIn.format = _type;
+	specIn.channels = _numberChannels;
+	specIn.callback = nullptr;
+	specIn.userdata = nullptr;
+
+	_deviceId = SDL_OpenAudioDevice (
+		nullptr, 0, &specIn, &_audioSpec, SDL_AUDIO_ALLOW_ANY_CHANGE);
+	if (_deviceId == 0)
+		return (false);
+
+	bool changed = false;
+	if (_audioSpec.freq != _samplingFrequency)
+	{
+		_samplingFrequency = _audioSpec.freq;
+		changed = true;
+	}
+	if (_audioSpec.format != _type)
+	{
+		_type = _audioSpec.format;
+		changed = true;
+	}
+	if (_audioSpec.channels != _numberChannels)
+	{
+		_numberChannels = _audioSpec.channels;
+		changed = true;
+	}
+	if (changed)
+		_LOG ("Original sound format has been changed");
+
+	SDL_PauseAudioDevice (_deviceId, 0);
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::SoundSystem::initializeAudioSDL2 (size_t& normalBufferCapacity)
+{
+	SDL_ClearQueuedAudio (_deviceId);
+
+	SDL_memset (&_conversionData, 0, sizeof (_conversionData));
+	int conversion = SDL_BuildAudioCVT (
+		&_conversionData,
+		_soundChip -> type (), _soundChip -> numberChannels (),
+		_soundChip -> samplingFrecuency (), _type, _numberChannels, _samplingFrequency);
+	if (conversion < 0)
+		return (false);
+
+	_conversionNeeded = conversion != 0;
+	normalBufferCapacity = (size_t) _soundChip -> soundBufferSize ();
+	if (_conversionNeeded)
+	{
+		assert (_conversionData.len_mult > 0);
+		if (normalBufferCapacity >
+			(size_t) std::numeric_limits <int>::max () / (size_t) _conversionData.len_mult)
+			return (false);
+
+		normalBufferCapacity *= (size_t) _conversionData.len_mult;
+	}
+
+	if ((size_t) _audioSpec.size > std::numeric_limits <size_t>::max () / 20)
+		return (false);
+	_maximumQueuedAudioBytes = (size_t) _audioSpec.size * 20;
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::SoundSystem::queueSoundSDL2 ()
+{
+	if ((size_t) SDL_GetQueuedAudioSize (_deviceId) >= _maximumQueuedAudioBytes)
+		SDL_ClearQueuedAudio (_deviceId);
+
+	_conversionData.len = _soundChip -> soundBufferSize ();
+	memcpy (
+		(void*) _conversionBuffer.data (),
+		(const void*) _soundChip -> soundMemory () -> samplingData (),
+		(size_t) _conversionData.len);
+
+	size_t soundSize = (size_t) _conversionData.len;
+	if (_conversionNeeded)
+	{
+		_conversionData.buf = _conversionBuffer.data ();
+		if (SDL_ConvertAudio (&_conversionData) < 0)
+			return (false);
+
+		soundSize = (size_t) _conversionData.len_cvt;
+	}
+
+	soundSize = fillAdditionalSoundData (
+		_conversionBuffer, soundSize, _additionalSoundData);
+
+	return (SDL_QueueAudio (
+		_deviceId, (const void*) _conversionBuffer.data (), (unsigned int) soundSize) == 0);
+}
+#elif MCHEMUL_SDL_VERSION == 3
+// ---
+bool MCHEmul::SoundSystem::openAudioSDL3 ()
+{
+	SDL_zero (_audioSpec);
+	_audioSpec.freq = _samplingFrequency;
+	_audioSpec.format = _type;
+	_audioSpec.channels = _numberChannels;
+
+	_playbackStream = SDL_OpenAudioDeviceStream (
+		SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &_audioSpec, nullptr, nullptr);
+	if (_playbackStream == nullptr)
+		return (false);
+
+	_deviceId = SDL_GetAudioStreamDevice (_playbackStream);
+	if (_deviceId == 0 || !SDL_ResumeAudioStreamDevice (_playbackStream))
+	{
+		SDL_DestroyAudioStream (_playbackStream);
+		_playbackStream = nullptr;
+		_deviceId = 0;
+
+		return (false);
+	}
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::SoundSystem::initializeAudioSDL3 (size_t& normalBufferCapacity)
+{
+	if (!SDL_ClearAudioStream (_playbackStream))
+		return (false);
+
+	if (_conversionStream != nullptr)
+	{
+		SDL_DestroyAudioStream (_conversionStream);
+		_conversionStream = nullptr;
+	}
+
+	SDL_AudioSpec sourceSpec;
+	SDL_zero (sourceSpec);
+	sourceSpec.freq = _soundChip -> samplingFrecuency ();
+	sourceSpec.format = _soundChip -> type ();
+	sourceSpec.channels = _soundChip -> numberChannels ();
+
+	_conversionStream = SDL_CreateAudioStream (&sourceSpec, &_audioSpec);
+	if (_conversionStream == nullptr)
+		return (false);
+
+	const size_t sourceFrames = (size_t) _soundChip -> soundBufferSize () /
+		((size_t) _soundChip -> sampleSize () * (size_t) _soundChip -> numberChannels ());
+	const double outputFrames = std::ceil (
+		(double) sourceFrames * (double) _samplingFrequency / (double) sourceSpec.freq);
+	if (outputFrames > (double) ((size_t) std::numeric_limits <int>::max () / _outputFrameSize))
+		return (false);
+	normalBufferCapacity = (size_t) outputFrames * _outputFrameSize;
+
+	SDL_AudioSpec deviceSpec;
+	int deviceFrames = 0;
+	if (!SDL_GetAudioDeviceFormat (_deviceId, &deviceSpec, &deviceFrames) ||
+		deviceSpec.freq <= 0 || deviceFrames <= 0)
+		return (false);
+
+	// Express twenty hardware buffers in the playback stream's input frames.
+	const double queuedFrames = std::ceil (
+		20.0 * (double) deviceFrames * (double) _samplingFrequency / (double) deviceSpec.freq);
+	if (queuedFrames > (double) ((size_t) std::numeric_limits <int>::max () / _outputFrameSize))
+		return (false);
+	_maximumQueuedAudioBytes = (size_t) queuedFrames * _outputFrameSize;
+
+	return (true);
+}
+
+// ---
+bool MCHEmul::SoundSystem::queueSoundSDL3 ()
+{
+	int queued = SDL_GetAudioStreamQueued (_playbackStream);
+	if (queued < 0)
+		return (false);
+
+	if ((size_t) queued >= _maximumQueuedAudioBytes)
+	{
+		// Drop both stages so pending conversion cannot reintroduce old audio.
+		if (!SDL_ClearAudioStream (_playbackStream))
+			return (false);
+		if (!SDL_ClearAudioStream (_conversionStream))
+			return (false);
+	}
+
+	if (!SDL_PutAudioStreamData (_conversionStream,
+			(const void*) _soundChip -> soundMemory () -> samplingData (),
+			_soundChip -> soundBufferSize ()))
+		return (false);
+
+	// Resampling may yield no output yet, or more than one buffer-sized portion.
+	for (;;)
+	{
+		int available = SDL_GetAudioStreamAvailable (_conversionStream);
+		if (available < 0)
+			return (false);
+		if (available == 0)
+			return (true);
+
+		size_t requested = (size_t) available;
+		if (requested > _normalBufferCapacity)
+			requested = _normalBufferCapacity;
+		requested -= requested % _outputFrameSize;
+		if (requested == 0)
+			return (true);
+
+		int received = SDL_GetAudioStreamData (
+			_conversionStream, (void*) _conversionBuffer.data (), (int) requested);
+		if (received < 0)
+			return (false);
+		if (received == 0)
+			return (true);
+
+		assert (((size_t) received % _outputFrameSize) == 0);
+		size_t soundSize = fillAdditionalSoundData (
+			_conversionBuffer, (size_t) received, _additionalSoundData);
+		// SDL copies this data, allowing immediate reuse of the conversion buffer.
+		if (!SDL_PutAudioStreamData (
+				_playbackStream, (const void*) _conversionBuffer.data (), (int) soundSize))
+			return (false);
+	}
+}
+#endif
 
 // ---
 size_t MCHEmul::SoundSystem::fillAdditionalSoundData (

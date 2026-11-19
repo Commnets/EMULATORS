@@ -2,37 +2,40 @@
 ; Copyright 2013 by Community Networks S.L.
 ; Ignacio Cea Forniés
 
-#define MyAppName "C264Emulator"
-#define MyAppExeName "C264Emulator.exe"
-#define MyProductName "Community Networks VIC20Emulator"
-#define MyProductInfo "Community Networks VIC20Emulator"
-#include "..\Commons\Commons.iss"
+#define MyAppName "C64Emulator"
+#define MyAppExeName "C64Emulator.exe"
+#define MyProductName "Community Networks C64Emulator"
+#define MyProductInfo "Community Networks C64Emulator"
+#include "..\Commons\CommonsSDL2.iss"
 
 [Setup]
-AppId={{BB21CEFB-9F1C-49BE-8C3A-CF2474F2590C}
-SetupIconFile=C264Logo.ico
-UninstallDisplayIcon={app}\C264Logo.ico
+AppId={{53469E2A-24AE-4EEB-91CD-22CDF21BD7ED}
+SetupIconFile=C64Logo.ico
+UninstallDisplayIcon={app}\C64Logo.ico
 
 [Files]
-Source: "C264EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C264Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "R264Console.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C64Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C64EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "R64Console.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "bios/basic.318006-01.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.318004-05-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.318005-05-FRA.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.318030-02-HUN.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernel.325155-03-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/CP4/3-plus-1.317053-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
-Source: "bios/CP4/3-plus-1.317054-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
-Source: "C264Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C264.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/basic.901226-01.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/characters.901225-01-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/characters.325018-02-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/characters.325056-03-ESP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/characters.901225-01-DKA.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/characters.906143-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.901227-03-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.325017-02-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.901227-03-DKA.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.906145-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "C64.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C64Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "console.def"; DestDir: "{app}"; Flags: ignoreversion
-Source: "C264.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C64.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Commodore.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion

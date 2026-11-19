@@ -225,7 +225,11 @@ COMMODORE::TED::TED (int intId, bool initialPAL,
 
 	setClassName ("TED");
 
+#if MCHEMUL_SDL_VERSION == 2
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+#elif MCHEMUL_SDL_VERSION == 3
+	_format = SDL_GetPixelFormatDetails (SDL_PIXELFORMAT_ARGB8888);
+#endif
 }
 
 // ---
@@ -237,7 +241,9 @@ COMMODORE::TED::~TED ()
 		managed as a different chip from the computer on regards simulation.
 		That chip is owned by the computer and then destroyed by it. */
 
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_FreeFormat (_format);
+#endif
 }
 
 // ---
@@ -705,6 +711,13 @@ MCHEmul::Strings COMMODORE::TED::charsDrawSnapshot (MCHEmul::CPU* cpu,
 // ---
 MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 {
+	if (_format == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (nullptr);
+	}
+
 	static struct RGBStr { unsigned int R,G,B; } _COLORS [128] =
 		{ 
 			// Black
@@ -761,15 +774,15 @@ MCHEmul::ScreenMemory* COMMODORE::TED::createScreenMemory ()
 	unsigned int* cP = new unsigned int [128 + 5];
 	for (size_t i = 0; i < 16; i++)
 		for (size_t j = 0; j < 8; j++)
-			cP [i + (j << 4)] = SDL_MapRGBA (_format, 
+			cP [i + (j << 4)] = mapRGBA (
 				_COLORS [(i << 3) + j].R, _COLORS [(i << 3) + j].G, _COLORS [(i << 3) + j].B, 0xe0);
 
 	// More colors just to reflect events...
-	cP [128] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
-	cP [129] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
-	cP [130] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
-	cP [131] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
-	cP [132] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light Green
+	cP [128] = mapRGBA (0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [129] = mapRGBA (0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [130] = mapRGBA (0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [131] = mapRGBA (0Xea, 0X04, 0x7e, 0xff); // light Purple
+	cP [132] = mapRGBA (0X3e, 0Xc7, 0x0b, 0xff); // light Green
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

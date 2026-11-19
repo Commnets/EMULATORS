@@ -1,3 +1,63 @@
+REM BAT file to build up the solution
+REM Ignacio Cea Forniés.
+REM EMULATORS frameowrk
+REM 1.1.2024
+
+setlocal DisableDelayedExpansion
+
+REM Read the same SDL selection used by the Visual Studio projects.
+set "SDLVERSION="
+set "SDLMSBUILD="
+set "SDLVSWHERE=%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe"
+if not exist "%SDLVSWHERE%" (
+	echo ERROR: Cannot locate vswhere.exe. Install the Visual Studio Installer.
+	exit /b 1
+)
+if not defined TEMP (
+	echo ERROR: TEMP is not defined. Cannot query the SDL version.
+	exit /b 1
+)
+
+set "SDLQUERYDIR=%TEMP%\EMULATORS-SDL-%RANDOM%-%RANDOM%"
+mkdir "%SDLQUERYDIR%" >nul 2>&1
+if errorlevel 1 (
+	echo ERROR: Cannot create the temporary directory for the SDL version query.
+	exit /b 1
+)
+
+"%SDLVSWHERE%" -latest -products * -requires Microsoft.Component.MSBuild -version "[17.8,)" -find MSBuild\Current\Bin\MSBuild.exe >"%SDLQUERYDIR%\msbuild.txt"
+if errorlevel 1 (
+	del /q "%SDLQUERYDIR%\msbuild.txt" >nul 2>&1
+	rd "%SDLQUERYDIR%" >nul 2>&1
+	echo ERROR: Visual Studio discovery failed.
+	exit /b 1
+)
+for /f "usebackq delims=" %%M in ("%SDLQUERYDIR%\msbuild.txt") do set "SDLMSBUILD=%%M"
+del /q "%SDLQUERYDIR%\msbuild.txt" >nul 2>&1
+if not defined SDLMSBUILD (
+	rd "%SDLQUERYDIR%" >nul 2>&1
+	echo ERROR: MSBuild 17.8 or later was not found.
+	exit /b 1
+)
+
+"%SDLMSBUILD%" "%~dp0Directory.Build.props" /nologo -getProperty:EmulatorsSDLVersion >"%SDLQUERYDIR%\version.txt"
+if errorlevel 1 (
+	type "%SDLQUERYDIR%\version.txt"
+	del /q "%SDLQUERYDIR%\version.txt" >nul 2>&1
+	rd "%SDLQUERYDIR%" >nul 2>&1
+	echo ERROR: Cannot read EmulatorsSDLVersion from Directory.Build.props.
+	exit /b 1
+)
+for /f "usebackq delims=" %%V in ("%SDLQUERYDIR%\version.txt") do set "SDLVERSION=%%V"
+del /q "%SDLQUERYDIR%\version.txt" >nul 2>&1
+rd "%SDLQUERYDIR%" >nul 2>&1
+
+if not "%SDLVERSION%"=="2" if not "%SDLVERSION%"=="3" (
+	echo ERROR: SDLVERSION must be 2 or 3.
+	exit /b 1
+)
+echo SDL version selected for packaging: %SDLVERSION%
+
 Echo --------------------------------------------------------------------
 Echo PHASE 1: Copying exe and configuration files to the right destination
 Echo --------------------------------------------------------------------
@@ -411,7 +471,11 @@ COPY .\projects\CORE\*.hlp .\setups\C64\ /Y
 COPY .\projects\CORE\*.ps .\setups\C64\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C64\ /Y
 COPY .\docs\C64Data\C64Emulator_UserGuide.docx .\setups\C64\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64SDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C64\C64SDL3.iss"
+)	
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.2: VIC20
@@ -436,7 +500,11 @@ COPY .\projects\CORE\*.hlp .\setups\VIC20\ /Y
 COPY .\projects\CORE\*.ps .\setups\VIC20\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\VIC20\ /Y
 COPY .\docs\VIC20Data\VIC20Emulator_UserGuide.docx .\setups\VIC20\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20SDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\VIC20\VIC20SDL3.iss"
+)	
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.3: 264 Series
@@ -460,7 +528,11 @@ COPY .\projects\CORE\*.hlp .\setups\C264\ /Y
 COPY .\projects\CORE\*.ps .\setups\C264\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\C264\ /Y
 COPY .\docs\C264Data\C264Emulator_UserGuide.docx .\setups\C264\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264SDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\C264\C264SDL3.iss"
+)	
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.4: ZX81
@@ -487,7 +559,11 @@ COPY .\projects\ASSEMBLER\*.fmt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX80SysVars.txt .\setups\ZX81\ /Y
 COPY .\projects\ZX81\ZX81SysVars.txt .\setups\ZX81\ /Y
 COPY .\docs\ZX81Data\ZX81Emulator_UserGuide.docx .\setups\ZX81\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81SDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZX81\ZX81SDL3.iss"
+)	
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.5: ZXSpectrum
@@ -513,7 +589,11 @@ COPY .\projects\CORE\*.ps .\setups\ZXSpectrum\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\ZXSpectrum\ /Y
 COPY .\projects\ZXSpectrum\ZXSpectrumSysVars.txt .\setups\ZXSpectrum\ /Y
 COPY .\docs\ZXSpectrumData\ZXSpectrumEmulator_UserGuide.docx .\setups\ZXSpectrum\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrum.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrumSDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\ZXSpectrum\ZXSpectrumSDL3.iss"
+)	
 Echo ********************************************************************
 Echo ********************************************************************
 Echo 3.6: MSX
@@ -540,7 +620,11 @@ COPY .\projects\CORE\*.ps .\setups\MSX\ /Y
 COPY .\projects\ASSEMBLER\*.fmt .\setups\MSX\ /Y
 COPY .\projects\MSX\MSXSysVars.txt .\setups\MSX\ /Y
 COPY .\docs\MSXData\MSXEmulator_UserGuide.docx .\setups\MSX\ /Y
-"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSX.iss"
+if "%SDLVERSION%"=="2" (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSXSDL2.iss"
+) else (
+	"C:\Program files (x86)\Inno Setup 6\iscc" ".\setups\MSX\MSXSDL3.iss"
+)	
 Echo ********************************************************************
 Echo
 Echo

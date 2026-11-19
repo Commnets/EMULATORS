@@ -1411,9 +1411,20 @@ int MemoryContentionTests::run ()
 	// Dummy video cannot create the production screen's OpenGL surface.
 	// Its unused presentation handles can remain null: no runIOCycle is called.
 	// Audio uses SDL's dummy device and never reaches a physical speaker.
+#if MCHEMUL_SDL_VERSION == 2
 	if (SDL_setenv ("SDL_VIDEODRIVER", "dummy", 1) != 0 ||
 		SDL_setenv ("SDL_AUDIODRIVER", "dummy", 1) != 0 ||
 		SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0)
+#elif MCHEMUL_SDL_VERSION == 3
+	SDL_Environment* environment = SDL_GetEnvironment ();
+
+	if (environment == nullptr ||
+		!SDL_SetEnvironmentVariable (
+			environment, "SDL_VIDEODRIVER", "dummy", true) ||
+		!SDL_SetEnvironmentVariable (
+			environment, "SDL_AUDIODRIVER", "dummy", true) ||
+		!SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO))
+#endif
 	{
 		std::cerr << "FAIL: headless SDL initialization: " << SDL_GetError () << '\n';
 

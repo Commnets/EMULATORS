@@ -1,5 +1,5 @@
 #include <EMULATORS/Emulator.hpp>
-#include <CORE/SDL.hpp>
+#include <CORE/IO.hpp>
 
 // ---
 const unsigned char MCHEmul::Emulator::_PARAMHELP = 'h';
@@ -28,14 +28,8 @@ MCHEmul::Emulator::Emulator (const MCHEmul::CommandLineArguments& args, MCHEmul:
 	  _running (false),
 	  _error (MCHEmul::_NOERROR)
 {
-	// The graphical and IO system used is based on SDL...
-	int sdlE = 0;
-	sdlE += SDL_Init (SDL_INIT_VIDEO);
-	sdlE += SDL_InitSubSystem (SDL_INIT_JOYSTICK);
-	if (sdlE != 0)
-		_error = MCHEmul::_INIT_ERROR;
-	else
-		SDL_JoystickEventState (SDL_ENABLE);
+	// Initialize SDL before creating the computer and its devices.
+	MCHEmul::IODeviceSystem::system ();
 }
 
 // ---
@@ -52,8 +46,6 @@ MCHEmul::Emulator::~Emulator ()
 	delete (_peripheralBuilder);
 
 	delete (_fileReader);
-
-	SDL_Quit ();
 }
 
 // ---

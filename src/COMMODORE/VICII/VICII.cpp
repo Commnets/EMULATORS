@@ -85,7 +85,11 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 
 	setClassName ("VICII");
 
+#if MCHEMUL_SDL_VERSION == 2
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+#elif MCHEMUL_SDL_VERSION == 3
+	_format = SDL_GetPixelFormatDetails (SDL_PIXELFORMAT_ARGB8888);
+#endif
 
 	for (size_t i = 0; i < 8; _vicSpriteInfo [i++] = VICSpriteInfo ());
 }
@@ -93,7 +97,9 @@ COMMODORE::VICII::VICII (int intId, MCHEmul::PhysicalStorageSubset* cR, const MC
 // ---
 COMMODORE::VICII::~VICII ()
 {
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_FreeFormat (_format);
+#endif
 }
 
 // ---
@@ -771,51 +777,58 @@ void COMMODORE::VICII::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifi
 // ---
 MCHEmul::ScreenMemory* COMMODORE::VICII::createScreenMemory ()
 {
+	if (_format == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (nullptr);
+	}
+
 	unsigned int* cP = new unsigned int [37];
 
 	// The colors are partially transparents to allow the blending...
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xe0); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xe0); // Orange
-	cP [9]  = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xe0); // Brown
-	cP [10] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xe0); // Light Red
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xe0); // Dark Gray
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xe0); // Medium Gray
-	cP [13] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xe0); // Light Green
-	cP [14] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xe0); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xe0); // Light Gray
+	cP [0]  = mapRGBA (0x00, 0x00, 0x00, 0xe0); // Black
+	cP [1]  = mapRGBA (0xff, 0xff, 0xff, 0xe0); // White
+	cP [2]  = mapRGBA (0x92, 0x4a, 0x40, 0xe0); // Red
+	cP [3]  = mapRGBA (0x84, 0xc5, 0xcc, 0xe0); // Cyan
+	cP [4]  = mapRGBA (0x93, 0x51, 0xb6, 0xe0); // Violet
+	cP [5]  = mapRGBA (0x72, 0xb1, 0x4b, 0xe0); // Green
+	cP [6]  = mapRGBA (0x48, 0x3a, 0xaa, 0xe0); // Blue
+	cP [7]  = mapRGBA (0xd5, 0xdf, 0x7c, 0xe0); // Yellow
+	cP [8]  = mapRGBA (0x99, 0x69, 0x2d, 0xe0); // Orange
+	cP [9]  = mapRGBA (0x67, 0x52, 0x00, 0xe0); // Brown
+	cP [10] = mapRGBA (0xc1, 0x81, 0x78, 0xe0); // Light Red
+	cP [11] = mapRGBA (0x60, 0x60, 0x60, 0xe0); // Dark Gray
+	cP [12] = mapRGBA (0x8a, 0x8a, 0x8a, 0xe0); // Medium Gray
+	cP [13] = mapRGBA (0xb3, 0xec, 0x91, 0xe0); // Light Green
+	cP [14] = mapRGBA (0x86, 0x7a, 0xde, 0xe0); // Light Blue
+	cP [15] = mapRGBA (0xb3, 0xb3, 0xb3, 0xe0); // Light Gray
 
 	// Colors used for the borders and so! (16)
 	// Same than the original ones, but with full light!
-	cP [16] = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xff); // Black
-	cP [17] = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xff); // White
-	cP [18] = SDL_MapRGBA (_format, 0x92, 0x4a, 0x40, 0xff); // Red
-	cP [19] = SDL_MapRGBA (_format, 0x84, 0xc5, 0xcc, 0xff); // Cyan
-	cP [20] = SDL_MapRGBA (_format, 0x93, 0x51, 0xb6, 0xff); // Violet
-	cP [21] = SDL_MapRGBA (_format, 0x72, 0xb1, 0x4b, 0xff); // Green
-	cP [22] = SDL_MapRGBA (_format, 0x48, 0x3a, 0xaa, 0xff); // Blue
-	cP [23] = SDL_MapRGBA (_format, 0xd5, 0xdf, 0x7c, 0xff); // Yellow
-	cP [24] = SDL_MapRGBA (_format, 0x99, 0x69, 0x2d, 0xff); // Brown
-	cP [25] = SDL_MapRGBA (_format, 0x67, 0x52, 0x00, 0xff); // Light Red
-	cP [26] = SDL_MapRGBA (_format, 0xc1, 0x81, 0x78, 0xff); // Orange
-	cP [27] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xff); // Dark Grey
-	cP [28] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Medium Grey
-	cP [29] = SDL_MapRGBA (_format, 0xb3, 0xec, 0x91, 0xff); // Light Green
-	cP [30] = SDL_MapRGBA (_format, 0x86, 0x7a, 0xde, 0xff); // Light Blue
-	cP [31] = SDL_MapRGBA (_format, 0xb3, 0xb3, 0xb3, 0xff); // Light Grey
+	cP [16] = mapRGBA (0x00, 0x00, 0x00, 0xff); // Black
+	cP [17] = mapRGBA (0xff, 0xff, 0xff, 0xff); // White
+	cP [18] = mapRGBA (0x92, 0x4a, 0x40, 0xff); // Red
+	cP [19] = mapRGBA (0x84, 0xc5, 0xcc, 0xff); // Cyan
+	cP [20] = mapRGBA (0x93, 0x51, 0xb6, 0xff); // Violet
+	cP [21] = mapRGBA (0x72, 0xb1, 0x4b, 0xff); // Green
+	cP [22] = mapRGBA (0x48, 0x3a, 0xaa, 0xff); // Blue
+	cP [23] = mapRGBA (0xd5, 0xdf, 0x7c, 0xff); // Yellow
+	cP [24] = mapRGBA (0x99, 0x69, 0x2d, 0xff); // Brown
+	cP [25] = mapRGBA (0x67, 0x52, 0x00, 0xff); // Light Red
+	cP [26] = mapRGBA (0xc1, 0x81, 0x78, 0xff); // Orange
+	cP [27] = mapRGBA (0x60, 0x60, 0x60, 0xff); // Dark Grey
+	cP [28] = mapRGBA (0x8a, 0x8a, 0x8a, 0xff); // Medium Grey
+	cP [29] = mapRGBA (0xb3, 0xec, 0x91, 0xff); // Light Green
+	cP [30] = mapRGBA (0x86, 0x7a, 0xde, 0xff); // Light Blue
+	cP [31] = mapRGBA (0xb3, 0xb3, 0xb3, 0xff); // Light Grey
 
 	// Colors used for events!
-	cP [32] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
-	cP [33] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
-	cP [34] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
-	cP [35] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
-	cP [36] = SDL_MapRGBA (_format, 0X3e, 0Xc7, 0x0b, 0xff); // light Green
+	cP [32] = mapRGBA (0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [33] = mapRGBA (0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [34] = mapRGBA (0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [35] = mapRGBA (0Xea, 0X04, 0x7e, 0xff); // light Purple
+	cP [36] = mapRGBA (0X3e, 0Xc7, 0x0b, 0xff); // light Green
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

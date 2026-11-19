@@ -251,7 +251,11 @@ COMMODORE::VICI::VICI (const MCHEmul::RasterData& vd, const MCHEmul::RasterData&
 
 	setClassName ("VICI");
 
+#if MCHEMUL_SDL_VERSION == 2
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+#elif MCHEMUL_SDL_VERSION == 3
+	_format = SDL_GetPixelFormatDetails (SDL_PIXELFORMAT_ARGB8888);
+#endif
 }
 
 // ---
@@ -263,7 +267,9 @@ COMMODORE::VICI::~VICI ()
 		managed as a different chip from the computer on regards simulation.
 		That chip is owned by the computer and then destroyed by it. */
 
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_FreeFormat (_format);
+#endif
 }
 
 // ---
@@ -627,26 +633,33 @@ void COMMODORE::VICI::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifie
 // ---
 MCHEmul::ScreenMemory* COMMODORE::VICI::createScreenMemory ()
 {
+	if (_format == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (nullptr);
+	}
+
 	unsigned int* cP = new unsigned int [16];
 
 	// Mike PAL reference palette; retain the renderer's existing alpha.
 	// Source: https://raw.githubusercontent.com/VICE-Team/svn-mirror/main/vice/data/VIC20/mike-pal.vpl
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
-	cP [2]  = SDL_MapRGBA (_format, 0xb6, 0x1f, 0x21, 0xe0); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x4d, 0xf0, 0xff, 0xe0); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0xb4, 0x3f, 0xff, 0xe0); // Purple
-	cP [5]  = SDL_MapRGBA (_format, 0x44, 0xe2, 0x37, 0xe0); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x1a, 0x34, 0xff, 0xe0); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xdc, 0xd7, 0x1b, 0xe0); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0xca, 0x54, 0x00, 0xe0); // Orange
-	cP [9]  = SDL_MapRGBA (_format, 0xe9, 0xb0, 0x72, 0xe0); // Light orange
-	cP [10] = SDL_MapRGBA (_format, 0xe7, 0x92, 0x93, 0xe0); // Light red
-	cP [11] = SDL_MapRGBA (_format, 0x9a, 0xf7, 0xfd, 0xe0); // Light cyan
-	cP [12] = SDL_MapRGBA (_format, 0xe0, 0x9f, 0xff, 0xe0); // Light purple
-	cP [13] = SDL_MapRGBA (_format, 0x8f, 0xe4, 0x93, 0xe0); // Light green
-	cP [14] = SDL_MapRGBA (_format, 0x82, 0x90, 0xff, 0xe0); // Light blue
-	cP [15] = SDL_MapRGBA (_format, 0xe5, 0xde, 0x85, 0xe0); // Light yellow
+	cP [0]  = mapRGBA (0x00, 0x00, 0x00, 0xe0); // Black
+	cP [1]  = mapRGBA (0xff, 0xff, 0xff, 0xe0); // White
+	cP [2]  = mapRGBA (0xb6, 0x1f, 0x21, 0xe0); // Red
+	cP [3]  = mapRGBA (0x4d, 0xf0, 0xff, 0xe0); // Cyan
+	cP [4]  = mapRGBA (0xb4, 0x3f, 0xff, 0xe0); // Purple
+	cP [5]  = mapRGBA (0x44, 0xe2, 0x37, 0xe0); // Green
+	cP [6]  = mapRGBA (0x1a, 0x34, 0xff, 0xe0); // Blue
+	cP [7]  = mapRGBA (0xdc, 0xd7, 0x1b, 0xe0); // Yellow
+	cP [8]  = mapRGBA (0xca, 0x54, 0x00, 0xe0); // Orange
+	cP [9]  = mapRGBA (0xe9, 0xb0, 0x72, 0xe0); // Light orange
+	cP [10] = mapRGBA (0xe7, 0x92, 0x93, 0xe0); // Light red
+	cP [11] = mapRGBA (0x9a, 0xf7, 0xfd, 0xe0); // Light cyan
+	cP [12] = mapRGBA (0xe0, 0x9f, 0xff, 0xe0); // Light purple
+	cP [13] = mapRGBA (0x8f, 0xe4, 0x93, 0xe0); // Light green
+	cP [14] = mapRGBA (0x82, 0x90, 0xff, 0xe0); // Light blue
+	cP [15] = mapRGBA (0xe5, 0xde, 0x85, 0xe0); // Light yellow
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

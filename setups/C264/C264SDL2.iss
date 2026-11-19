@@ -2,44 +2,47 @@
 ; Copyright 2013 by Community Networks S.L.
 ; Ignacio Cea Forniés
 
-#define MyAppName "MSXEmulator"
-#define MyAppExeName "MSXEmulator.exe"
-#define MyProductName "Community Networks MSXEmulator"
-#define MyProductInfo "Community Networks MSXEmulator"
-#include "..\Commons\Commons.iss"
+#define MyAppName "C264Emulator"
+#define MyAppExeName "C264Emulator.exe"
+#define MyProductName "Community Networks VIC20Emulator"
+#define MyProductInfo "Community Networks VIC20Emulator"
+#include "..\Commons\CommonsSDL2.iss"
 
 [Setup]
-AppId={{1496EB42-7A0D-4FB9-A451-8586E8BA567A}
-SetupIconFile=MSXLogo.ico
-UninstallDisplayIcon={app}\MSXLgo.ico
+AppId={{BB21CEFB-9F1C-49BE-8C3A-CF2474F2590C}
+SetupIconFile=C264Logo.ico
+UninstallDisplayIcon={app}\C264Logo.ico
 
 [Files]
-Source: "MSXEmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "MSXEmulator.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "RMSXConsole.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "MSXEmulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
-Source: "MSX.hlp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "TexasInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "GeneralInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C264EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C264Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "R264Console.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/basic.318006-01.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.318004-05-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.318005-05-FRA.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernal.318030-02-HUN.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/kernel.325155-03-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/CP4/3-plus-1.317053-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
+Source: "bios/CP4/3-plus-1.317054-01.bin"; DestDir: "{app}/bios/CP4"; Flags: ignoreversion
+Source: "C264Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C264.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "console.def"; DestDir: "{app}"; Flags: ignoreversion
-Source: "MSX.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "TexasInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "GeneralInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "C264.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Commodore.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMPS801MatrixPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMPS801MatrixPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMPS802MatrixPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSMPS802MatrixPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "bios/svi728_basic-bios_ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/svi728_basic-bios_ESP.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/svi738_basic-bios_DEU.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/svi738_basic-bios_ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/svi738_basic-bios_SEW.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "MSXSysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

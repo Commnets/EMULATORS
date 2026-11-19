@@ -4,8 +4,7 @@
 #include <CORE/Formatter.hpp>
 #include <CORE/SDL.hpp>
 
-std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::_theSystem = 
-	std::shared_ptr <MCHEmul::IODeviceSystem> (new MCHEmul::IODeviceSystem);
+std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::_theSystem;
 
 // ---
 MCHEmul::IODevice::IODevice (MCHEmul::IODevice::Type t, int id, const MCHEmul::Attributes& attrs)
@@ -159,14 +158,32 @@ MCHEmul::IODeviceSystem::IODeviceSystem ()
 	if (_theSystem != nullptr)
 		exit (1); // it shouldn't...but just in case...
 
-	if (SDL_Init (SDL_INIT_EVERYTHING))
+#if MCHEMUL_SDL_VERSION == 2
+	if (SDL_Init (SDL_INIT_EVERYTHING) != 0)
+#elif MCHEMUL_SDL_VERSION == 3
+	if (!SDL_Init (SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK))
+#endif
 		exit (1); // the system has to be initialized...
+
+#if MCHEMUL_SDL_VERSION == 2
+	SDL_JoystickEventState (SDL_ENABLE);
+#elif MCHEMUL_SDL_VERSION == 3
+	SDL_SetJoystickEventsEnabled (true);
+#endif
 }
 
 // ---
 MCHEmul::IODeviceSystem::~IODeviceSystem ()
 {
 	SDL_Quit ();
+}
 
-	_theSystem = nullptr;
+// ---
+std::shared_ptr <MCHEmul::IODeviceSystem> MCHEmul::IODeviceSystem::system ()
+{
+	if (_theSystem == nullptr)
+		_theSystem = std::shared_ptr <MCHEmul::IODeviceSystem>
+			(new MCHEmul::IODeviceSystem);
+
+	return (_theSystem);
 }

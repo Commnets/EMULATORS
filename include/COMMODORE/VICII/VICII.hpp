@@ -239,6 +239,15 @@ namespace COMMODORE
 		MCHEmul::Strings charsDrawSnapshot (MCHEmul::CPU* cpu, 
 			const std::vector <size_t>& chrs = { }) const;
 
+		private:
+		unsigned int mapRGBA (
+			unsigned char r, unsigned char g, unsigned char b, unsigned char a) const
+#if MCHEMUL_SDL_VERSION == 2
+							{ return (SDL_MapRGBA (_format, r, g, b, a)); }
+#elif MCHEMUL_SDL_VERSION == 3
+							{ return (SDL_MapRGBA (_format, nullptr, r, g, b, a)); }
+#endif
+
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
@@ -986,7 +995,11 @@ namespace COMMODORE
 			current CPU clock, irrespective of whether that interval includes CPU stops. */
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. It has to be the same that is used by the Screen object. */
-		SDL_PixelFormat* _format;
+#if MCHEMUL_SDL_VERSION == 2
+		SDL_PixelFormat* _format; // Owned.
+#elif MCHEMUL_SDL_VERSION == 3
+		const SDL_PixelFormatDetails* _format; // Shared, owned by SDL.
+#endif
 		/** When a raster line is processed, it is necessary to know which cycle is being processed. 
 			The number of max cycles is get from the method (@see) "cyclesPerRasterLine". */
 		unsigned short _cycleInRasterLine;

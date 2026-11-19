@@ -144,9 +144,8 @@ namespace MCHEmul
 
 		IODeviceSystem& operator = (IODeviceSystem&&) = delete;
 
-		/** To get the pointer to the singleton instance of the class. */
-		static std::shared_ptr <IODeviceSystem> system ()
-							{ return (_theSystem); }
+		/** To get the singleton instance, creating it on first use. */
+		static std::shared_ptr <IODeviceSystem> system ();
 
 		// To manage the list of devices...
 		const IODevices& devices () const

@@ -164,6 +164,13 @@ namespace MCHEmul
 
 		private:
 		bool adaptToFrameBuffer ();
+		/** Capture at four times the texture dimensions. \n
+			Returns a newly allocated surface owned by the caller, or nullptr on failure. */
+#if MCHEMUL_SDL_VERSION == 2
+		SDL_Surface* capturePictureSDL2 () const;
+#elif MCHEMUL_SDL_VERSION == 3
+		SDL_Surface* capturePictureSDL3 () const;
+#endif
 
 		protected:
 		bool _CRTActive; // When CRT effect is visible...

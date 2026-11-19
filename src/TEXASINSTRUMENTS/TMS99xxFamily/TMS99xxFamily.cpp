@@ -43,13 +43,19 @@ TEXASINSTRUMENTS::TMS99xxFamily::TMS99xxFamily (const MCHEmul::RasterData& vd, c
 	if (_TMS99xxFamilyRegisters == nullptr)
 		_internalRegisters = _TMS99xxFamilyRegisters = new TEXASINSTRUMENTS::TMS99xxFamilyRegisters;
 
+#if MCHEMUL_SDL_VERSION == 2
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+#elif MCHEMUL_SDL_VERSION == 3
+	_format = SDL_GetPixelFormatDetails (SDL_PIXELFORMAT_ARGB8888);
+#endif
 }
 
 // ---
 TEXASINSTRUMENTS::TMS99xxFamily::~TMS99xxFamily ()
 {
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_FreeFormat (_format);
+#endif
 
 	// That could be nullptr, it they would have been created externally!
 	delete (_internalRegisters); // ...and in that case, nothing will happen...
@@ -190,30 +196,37 @@ void TEXASINSTRUMENTS::TMS99xxFamily::processEvent (const MCHEmul::Event& evnt, 
 // ---
 MCHEmul::ScreenMemory* TEXASINSTRUMENTS::TMS99xxFamily::createScreenMemory ()
 {
+	if (_format == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (nullptr);
+	}
+
 	unsigned int* cP = new unsigned int [20];
 	// The colors are partially transparents to allow the blending...
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0x00); // Transparent
-	cP [1]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [2]  = SDL_MapRGBA (_format, 0x3e, 0xb8, 0x49, 0xe0); // Medium Green
-	cP [3]  = SDL_MapRGBA (_format, 0x74, 0xd0, 0x7d, 0xe0); // Light Green
-	cP [4]  = SDL_MapRGBA (_format, 0x59, 0x55, 0xe0, 0xe0); // Dark Blue
-	cP [5]  = SDL_MapRGBA (_format, 0x80, 0x76, 0xf1, 0xe0); // Light Blue
-	cP [6]  = SDL_MapRGBA (_format, 0xb9, 0x5e, 0x51, 0xe0); // Dark Red
-	cP [7]  = SDL_MapRGBA (_format, 0x65, 0xdb, 0xef, 0xe0); // Cyan
-	cP [8]  = SDL_MapRGBA (_format, 0xdb, 0x65, 0x69, 0xe0); // Medium Red
-	cP [9]  = SDL_MapRGBA (_format, 0xff, 0x89, 0x7d, 0xe0); // Light Red
-	cP [10] = SDL_MapRGBA (_format, 0xcc, 0xc3, 0x5e, 0xe0); // Dark Yellow
-	cP [11] = SDL_MapRGBA (_format, 0xde, 0xd0, 0x87, 0xe0); // Light Yellow
-	cP [12] = SDL_MapRGBA (_format, 0x3a, 0xa2, 0x42, 0xe0); // Dark Green
-	cP [13] = SDL_MapRGBA (_format, 0xb7, 0x66, 0xb5, 0xe0); // Magenta
-	cP [14] = SDL_MapRGBA (_format, 0xcc, 0xcc, 0xcc, 0xe0); // Gray
-	cP [15] = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
+	cP [0]  = mapRGBA (0x00, 0x00, 0x00, 0x00); // Transparent
+	cP [1]  = mapRGBA (0x00, 0x00, 0x00, 0xe0); // Black
+	cP [2]  = mapRGBA (0x3e, 0xb8, 0x49, 0xe0); // Medium Green
+	cP [3]  = mapRGBA (0x74, 0xd0, 0x7d, 0xe0); // Light Green
+	cP [4]  = mapRGBA (0x59, 0x55, 0xe0, 0xe0); // Dark Blue
+	cP [5]  = mapRGBA (0x80, 0x76, 0xf1, 0xe0); // Light Blue
+	cP [6]  = mapRGBA (0xb9, 0x5e, 0x51, 0xe0); // Dark Red
+	cP [7]  = mapRGBA (0x65, 0xdb, 0xef, 0xe0); // Cyan
+	cP [8]  = mapRGBA (0xdb, 0x65, 0x69, 0xe0); // Medium Red
+	cP [9]  = mapRGBA (0xff, 0x89, 0x7d, 0xe0); // Light Red
+	cP [10] = mapRGBA (0xcc, 0xc3, 0x5e, 0xe0); // Dark Yellow
+	cP [11] = mapRGBA (0xde, 0xd0, 0x87, 0xe0); // Light Yellow
+	cP [12] = mapRGBA (0x3a, 0xa2, 0x42, 0xe0); // Dark Green
+	cP [13] = mapRGBA (0xb7, 0x66, 0xb5, 0xe0); // Magenta
+	cP [14] = mapRGBA (0xcc, 0xcc, 0xcc, 0xe0); // Gray
+	cP [15] = mapRGBA (0xff, 0xff, 0xff, 0xe0); // White
 
 	// Colors used for events!
-	cP [16] = SDL_MapRGBA (_format, 0X00, 0Xf5, 0xff, 0xff); // light Cyan
-	cP [17] = SDL_MapRGBA (_format, 0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
-	cP [18] = SDL_MapRGBA (_format, 0Xff, 0X6d, 0x28, 0xff); // light Orange
-	cP [19] = SDL_MapRGBA (_format, 0Xea, 0X04, 0x7e, 0xff); // light Purple
+	cP [16] = mapRGBA (0X00, 0Xf5, 0xff, 0xff); // light Cyan
+	cP [17] = mapRGBA (0Xfc, 0Xe7, 0x00, 0xff); // light Yellow
+	cP [18] = mapRGBA (0Xff, 0X6d, 0x28, 0xff); // light Orange
+	cP [19] = mapRGBA (0Xea, 0X04, 0x7e, 0xff); // light Purple
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

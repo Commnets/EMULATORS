@@ -110,6 +110,8 @@ namespace MCHEmul
 
 		InputOSSystem (int id, const Attributes& attrs = { });
 
+		virtual ~InputOSSystem () override;
+
 		// Managing the conversions between joysticks...
 		// ..this is important is many emulators...
 		const std::map <int, int>& conversionJoystick () const
@@ -175,15 +177,9 @@ namespace MCHEmul
 									std::shared_ptr <Event::Data> ((Event::Data*) 
 										new JoystickMovementEvent (joystickEquivalentId (i.first), i.second)))); }
 		/** What to do when the joystick button is pressed. */
-		void whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb)
-							{ notify (Event (_JOYSTICKBUTTONPRESSED, 0,
-								std::shared_ptr <Event::Data> ((Event::Data*) 
-									new JoystickButtonEvent (joystickEquivalentId (jb.which), jb.button, true)))); }
+		inline void whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb);
 		/** What to do when the joystick button is released. */
-		void whenJoystickButtonReleased (const SDL_JoyButtonEvent& jb)
-							{ notify (Event (_JOYSTICKBUTTONRELEASED, 0,
-								std::shared_ptr <Event::Data> ((Event::Data*) 
-									new JoystickButtonEvent (joystickEquivalentId (jb.which), jb.button, false)))); }
+		inline void whenJoystickButtonReleased (const SDL_JoyButtonEvent& jb);
 
 		// To manage the events related with the mouse...
 		/** The situation of the different axis in the different mouses loaded in the system are tracked 
@@ -191,7 +187,8 @@ namespace MCHEmul
 		void whenMouseMoved (const SDL_MouseMotionEvent& mm)
 							{ notify (Event (_MOUSEMOVED, 0,
 									std::shared_ptr <Event::Data> ((Event::Data*) 
-										new MouseMovementEvent (mm.which, mm.x, mm.y)))); }
+										new MouseMovementEvent (
+											(int) (mm.which), (int) (mm.x), (int) (mm.y))))); }
 		/** What to do when the mouse button is pressed. */
 		void whenMouseButtonPressed (const SDL_MouseButtonEvent& mb)
 							{ notify (Event (_MOUSEBUTTONPRESSED, 0,
@@ -204,9 +201,24 @@ namespace MCHEmul
 									new MouseButtonEvent (mb.which, mb.button, false)))); }
 
 		private:
-		// Joystick movements...
-		/** Just to control all the joystick events at the same time. */
+		/** Joystick axis events accumulated during an input cycle. */
 		using SDL_JoyAxisEvents = std::vector <SDL_JoyAxisEvent>;
+
+		/** Dispatch a supported event and report whether its type was recognized. */
+#if MCHEMUL_SDL_VERSION == 2
+		bool manageEventSDL2 (const SDL_Event& event, SDL_JoyAxisEvents& js);
+#elif MCHEMUL_SDL_VERSION == 3
+		bool manageEventSDL3 (const SDL_Event& event, SDL_JoyAxisEvents& js);
+		/** Convert native mouse coordinates before notifying framework observers. */
+		bool convertMouseEventSDL3 (SDL_Event& event) const;
+#endif
+
+#if MCHEMUL_SDL_VERSION == 2
+		bool openJoysticksSDL2 ();
+#elif MCHEMUL_SDL_VERSION == 3
+		bool openJoysticksSDL3 ();
+#endif
+		void closeJoysticks ();
 		void treatJoystickMovementEvents (SDL_JoyAxisEvents&& js);
 
 		// Implementation
@@ -215,9 +227,16 @@ namespace MCHEmul
 							{ std::map <int, int>::const_iterator i = _conversionJoystickMap.find (a);
 							  return ((i == _conversionJoystickMap.end ()) ? a : (*i).second); }
 
+		/** Translate a native instance ID to its framework enumeration index. \n
+			Consecutive events from the same device use the cached result. \n
+			A cache miss scans the small contiguous device list. \n
+			Returns -1 for devices not opened by this instance. */
+		inline int joystickIndex (SDL_JoystickID id) const;
+
 		protected:
 		bool _quitRequested;
 		using SDLJoysticks = std::vector <SDL_Joystick*>;
+		/** Owned open joystick references, released on reinitialization or destruction. */
 		SDLJoysticks _joysticks;
 		std::map <int, int> _conversionJoystickMap; // between the internal id and the one to be notified...
 		/** The clock to control the frenquency to read the keyboard. */
@@ -226,6 +245,19 @@ namespace MCHEmul
 		// Implementation
 		/** To track the movement of the josyticks in the different directions. */
 		JoystickMovementMap _joyMovementMap;
+
+		private:
+		/** Native instance IDs paired with framework enumeration indices. \n
+			The expected device count is small, so contiguous storage is preferred
+			over a node-based lookup structure. \n
+			Entries retain enumeration order and are added only after successful
+			opening; their indices need not be consecutive if opening fails. */
+		std::vector <std::pair <SDL_JoystickID, int>> _joystickIndices;
+		/** Last successful native-ID translation. \n
+			The index is -1 while the cache is invalid. \n
+			This is derived lookup state, accessed only by the input-processing thread. */
+		mutable SDL_JoystickID _lastJoystickInstanceId;
+		mutable int _lastJoystickIndex;
 	};
 
 	// ---
@@ -236,6 +268,48 @@ namespace MCHEmul
 			if (i.second == id) toDelete.push_back (i.first);
 		for (const auto& i : toDelete)
 			_conversionJoystickMap.erase (i);
+	}
+
+	// ---
+	inline void InputOSSystem::whenJoystickButtonPressed (const SDL_JoyButtonEvent& jb)
+	{
+		int index = joystickIndex (jb.which);
+		if (index < 0)
+			return;
+
+		notify (Event (_JOYSTICKBUTTONPRESSED, 0,
+			std::shared_ptr <Event::Data> ((Event::Data*)
+				new JoystickButtonEvent (joystickEquivalentId (index), jb.button, true))));
+	}
+
+	// ---
+	inline void InputOSSystem::whenJoystickButtonReleased (const SDL_JoyButtonEvent& jb)
+	{
+		int index = joystickIndex (jb.which);
+		if (index < 0)
+			return;
+
+		notify (Event (_JOYSTICKBUTTONRELEASED, 0,
+			std::shared_ptr <Event::Data> ((Event::Data*)
+				new JoystickButtonEvent (joystickEquivalentId (index), jb.button, false))));
+	}
+
+	// ---
+	inline int InputOSSystem::joystickIndex (SDL_JoystickID id) const
+	{
+		if (_lastJoystickIndex >= 0 && _lastJoystickInstanceId == id)
+			return (_lastJoystickIndex);
+
+		for (const auto& i : _joystickIndices)
+			if (i.first == id)
+			{
+				_lastJoystickInstanceId = id;
+				_lastJoystickIndex = i.second;
+
+				return (_lastJoystickIndex);
+			}
+
+		return (-1);
 	}
 }
 

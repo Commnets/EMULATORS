@@ -28,9 +28,9 @@
     23
   ],
   "template_sha256": "5e17d131537a43c7f893b3e9cb064ee4049fc3bf498828e9ace3163d486b822d",
-  "document_sha256": "886e73fa4471e8f80446f6f7e89cc0edce64a3d2b356a2f6db23d6c0b8eb6c52",
+  "document_sha256": "3c47d4c2aa32540aeec12623b231c6512130a6ccfb285041b5eeac300625fe47",
   "fields_updated_with": "Microsoft Word",
   "rendered_with": "Microsoft Word PDF export and Poppler",
   "compile_or_runtime_test_performed": false,
-  "scope": "Disabled vcpkg automatic DLL deployment centrally with VcpkgApplocalDeps=false. Verified effective property using MSBuild evaluation only on CORE, C64EmulatorC, RMSXConsole and Test6500 in Debug Win32. No compilation, execution or DLL copying."
+  "scope": "Synchronize all.bat SDLVERSION with the evaluated EmulatorsSDLVersion in Directory.Build.props; isolated tool discovery and failure tests without deployment."
 }

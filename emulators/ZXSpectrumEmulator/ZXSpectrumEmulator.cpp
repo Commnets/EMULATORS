@@ -4,15 +4,26 @@
 
 #ifndef _CONSOLE
 #include <CORE/SDL.hpp>
+
+#if MCHEMUL_SDL_VERSION == 2
 #ifdef __cplusplus
 #define C_LINKAGE "C"
 #else
 #define C_LINKAGE
 #endif /* __cplusplus */
+
 #if _MSC_VER >= 1900
 extern C_LINKAGE FILE __iob_func[3] = { *stdin,*stdout,*stderr };
 #endif
-extern C_LINKAGE int main(int argc, char* argv[])
+
+extern C_LINKAGE int main (int argc, char* argv[])
+#elif MCHEMUL_SDL_VERSION == 3
+// SDL3 supplies the Windows entry point from this header.
+#include <SDL3/SDL_main.h>
+
+int main (int argc, char* argv[])
+#endif
+
 #else
 int _tmain (int argc, _TCHAR* argv[])
 #endif /* _CONSOLE */

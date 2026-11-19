@@ -2,50 +2,43 @@
 ; Copyright 2013 by Community Networks S.L.
 ; Ignacio Cea Forniés
 
-#define MyAppName "VIC20Emulator"
-#define MyAppExeName "VIC20Emulator.exe"
-#define MyProductName "Community Networks VIC20Emulator"
-#define MyProductInfo "Community Networks VIC20Emulator"
-#include "..\Commons\Commons.iss"
+#define MyAppName "ZXSpectrumEmulator"
+#define MyAppExeName "ZXSpectrumEmulator.exe"
+#define MyProductName "Community Networks ZXSpectrumEmulator"
+#define MyProductInfo "Community Networks ZXSpectrumEmulator"
+#include "..\Commons\CommonsSDL2.iss"
 
 [Setup]
-AppId={{2B5ED34E-1866-4519-89C6-86711509E171}
-SetupIconFile=VIC20Logo.ico
-UninstallDisplayIcon={app}\VIC20Logo.ico
+AppId={{259C2F33-B626-461F-BD63-DF727A6FDFF6}
+SetupIconFile=ZXSpectrumLogo.ico
+UninstallDisplayIcon={app}\ZXSpectrumLogo.ico
 
 [Files]
-Source: "VIC20EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "VIC20Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "RVIC20Console.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "6500Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Test6500.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "VIC20CRTGenerator.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "bios/basic.901486-01.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/characters.901460-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/characters.901460-03-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/characters.DK901460-03-DKK.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.901486-02-JAP.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.901486-07-DKK.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.901486-07-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.901486-04-ENG.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/kernal.NecP22081-206-SWE.bin"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "VIC20Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
-Source: "VIC20.hlp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Commodore.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrumEmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrumEmulator.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "RZXSpectrumConsole.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrumEmulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrum.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "SINCLAIR.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "console.def"; DestDir: "{app}"; Flags: ignoreversion
-Source: "VIC20.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Commodore.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "ZXSpectrum.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "SINCLAIR.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSMPS801MatrixPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSMPS801MatrixPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSMPS802MatrixPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSMPS802MatrixPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSThermalPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
+Source: "PSThermalPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/48Standard-ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-ESP.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-NOR.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/48Standard-ARA.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "ZXSpectrumSysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

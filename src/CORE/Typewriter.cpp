@@ -104,20 +104,45 @@ bool MCHEmul::Typewriter::connectData (MCHEmul::FileData* dt)
 
 	_eventNumber = 0; // Just in case...
 
-	// The connection of the keystrokes has to be done using the specifc InputOSSystem of the emulation...
+	// Events are consumed directly by InputOSSystem, not by SDL's event queue.
 	std::vector <SDL_Event> events;
 	std::map <size_t, unsigned int> waitingTimes;
 	auto addKeyPress = [&](SDL_Scancode sc) -> void
 		{
-			SDL_Event evnt; 
-			evnt.type = SDL_KEYDOWN; evnt.key.keysym.scancode = sc;
+			// Unused fields remain zero: no native window or keyboard is required.
+			SDL_Event evnt = { };
+
+#if MCHEMUL_SDL_VERSION == 2
+			evnt.type = SDL_KEYDOWN;
+			evnt.key.keysym.scancode = sc;
+			evnt.key.state = SDL_PRESSED;
+			evnt.key.repeat = 0;
+#elif MCHEMUL_SDL_VERSION == 3
+			evnt.type = SDL_EVENT_KEY_DOWN;
+			evnt.key.scancode = sc;
+			evnt.key.down = true;
+			evnt.key.repeat = false;
+#endif
+
 			events.emplace_back (evnt);
 		};
 
 	auto addKeyRelease = [&](SDL_Scancode sc) -> void
 		{
-			SDL_Event evnt;
-			evnt.type = SDL_KEYUP; evnt.key.keysym.scancode = sc;
+			SDL_Event evnt = { };
+
+#if MCHEMUL_SDL_VERSION == 2
+			evnt.type = SDL_KEYUP;
+			evnt.key.keysym.scancode = sc;
+			evnt.key.state = SDL_RELEASED;
+			evnt.key.repeat = 0;
+#elif MCHEMUL_SDL_VERSION == 3
+			evnt.type = SDL_EVENT_KEY_UP;
+			evnt.key.scancode = sc;
+			evnt.key.down = false;
+			evnt.key.repeat = false;
+#endif
+
 			events.emplace_back (evnt);
 		};
 

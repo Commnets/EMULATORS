@@ -61,13 +61,19 @@ ZX81::ULA::ULA (const MCHEmul::RasterData& vd, const MCHEmul::RasterData& hd, ZX
 
 	_pendingCharacters.reserve (64);
 
+#if MCHEMUL_SDL_VERSION == 2
 	_format = SDL_AllocFormat (SDL_PIXELFORMAT_ARGB8888);
+#elif MCHEMUL_SDL_VERSION == 3
+	_format = SDL_GetPixelFormatDetails (SDL_PIXELFORMAT_ARGB8888);
+#endif
 }
 
 // ---
 ZX81::ULA::~ULA ()
 {
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_FreeFormat (_format);
+#endif
 }
 
 // ---
@@ -336,26 +342,33 @@ void ZX81::ULA::processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n)
 // ---
 MCHEmul::ScreenMemory* ZX81::ULA::createScreenMemory ()
 {
+	if (_format == nullptr)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return (nullptr);
+	}
+
 	unsigned int* cP = new unsigned int [16];
 	// The colors are partially transparents to allow the blending...
-	cP [0]  = SDL_MapRGBA (_format, 0x00, 0x00, 0x00, 0xe0); // Black
-	cP [1]  = SDL_MapRGBA (_format, 0xff, 0xff, 0xff, 0xe0); // White
+	cP [0]  = mapRGBA (0x00, 0x00, 0x00, 0xe0); // Black
+	cP [1]  = mapRGBA (0xff, 0xff, 0xff, 0xe0); // White
 
 	// These other colors doesn't exist in ZX81, but are used to draw borders, bebug information, etc...
-	cP [2]  = SDL_MapRGBA (_format, 0xff, 0x00, 0x00, 0xff); // Red
-	cP [3]  = SDL_MapRGBA (_format, 0x00, 0xff, 0xff, 0xff); // Cyan
-	cP [4]  = SDL_MapRGBA (_format, 0xff, 0x00, 0xff, 0xff); // Violet
-	cP [5]  = SDL_MapRGBA (_format, 0x00, 0xff, 0x00, 0xff); // Green
-	cP [6]  = SDL_MapRGBA (_format, 0x00, 0x00, 0xff, 0xff); // Blue
-	cP [7]  = SDL_MapRGBA (_format, 0xff, 0xff, 0x00, 0xff); // Yellow
-	cP [8]  = SDL_MapRGBA (_format, 0xff, 0x00, 0x7f, 0xff); // Light Pink
-	cP [9]  = SDL_MapRGBA (_format, 0x80, 0x00, 0x80, 0xff); // Purple
-	cP [10] = SDL_MapRGBA (_format, 0xff, 0xa5, 0x00, 0xff); // Orange
-	cP [11] = SDL_MapRGBA (_format, 0x60, 0x60, 0x60, 0xff); // Dark Grey
-	cP [12] = SDL_MapRGBA (_format, 0x8a, 0x8a, 0x8a, 0xff); // Light Grey
-	cP [13] = SDL_MapRGBA (_format, 0x32, 0xc8, 0x32, 0xff); // Green Lime
-	cP [14] = SDL_MapRGBA (_format, 0x00, 0xa0, 0xff, 0xff); // Light Blue
-	cP [15] = SDL_MapRGBA (_format, 0xff, 0x33, 0x33, 0xff); // Light Red
+	cP [2]  = mapRGBA (0xff, 0x00, 0x00, 0xff); // Red
+	cP [3]  = mapRGBA (0x00, 0xff, 0xff, 0xff); // Cyan
+	cP [4]  = mapRGBA (0xff, 0x00, 0xff, 0xff); // Violet
+	cP [5]  = mapRGBA (0x00, 0xff, 0x00, 0xff); // Green
+	cP [6]  = mapRGBA (0x00, 0x00, 0xff, 0xff); // Blue
+	cP [7]  = mapRGBA (0xff, 0xff, 0x00, 0xff); // Yellow
+	cP [8]  = mapRGBA (0xff, 0x00, 0x7f, 0xff); // Light Pink
+	cP [9]  = mapRGBA (0x80, 0x00, 0x80, 0xff); // Purple
+	cP [10] = mapRGBA (0xff, 0xa5, 0x00, 0xff); // Orange
+	cP [11] = mapRGBA (0x60, 0x60, 0x60, 0xff); // Dark Grey
+	cP [12] = mapRGBA (0x8a, 0x8a, 0x8a, 0xff); // Light Grey
+	cP [13] = mapRGBA (0x32, 0xc8, 0x32, 0xff); // Green Lime
+	cP [14] = mapRGBA (0x00, 0xa0, 0xff, 0xff); // Light Blue
+	cP [15] = mapRGBA (0xff, 0x33, 0x33, 0xff); // Light Red
 
 	return (new MCHEmul::ScreenMemory (numberColumns (), numberRows (), cP));
 }

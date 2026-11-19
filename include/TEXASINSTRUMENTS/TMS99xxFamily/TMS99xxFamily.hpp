@@ -128,6 +128,15 @@ namespace TEXASINSTRUMENTS
 		MCHEmul::Strings spritesDrawSnapShot (const std::vector <size_t>& nS) const // From 1 to 32 or empty for everything...
 							{ return (std::move (_TMS99xxFamilyRegisters -> spritesDrawSnapShot (nS))); }
 
+		private:
+		unsigned int mapRGBA (
+			unsigned char r, unsigned char g, unsigned char b, unsigned char a) const
+#if MCHEMUL_SDL_VERSION == 2
+							{ return (SDL_MapRGBA (_format, r, g, b, a)); }
+#elif MCHEMUL_SDL_VERSION == 3
+							{ return (SDL_MapRGBA (_format, nullptr, r, g, b, a)); }
+#endif
+
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
@@ -197,7 +206,11 @@ namespace TEXASINSTRUMENTS
 		bool _showEvents;
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
-		SDL_PixelFormat* _format;
+#if MCHEMUL_SDL_VERSION == 2
+		SDL_PixelFormat* _format; // Owned.
+#elif MCHEMUL_SDL_VERSION == 3
+		const SDL_PixelFormatDetails* _format; // Shared, owned by SDL.
+#endif
 
 		/** The events that can be drawn
 			associated to the movement of the raster line. */

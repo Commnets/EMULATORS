@@ -53,7 +53,7 @@ namespace ZXSPECTRUM
 
 			/** The main characteristics of the SoundChip. */
 			virtual SDL_AudioFormat type () const override
-								{ return (_SOUNDSAMPLINGFORMAT); }
+							{ return (static_cast <SDL_AudioFormat> (_SOUNDSAMPLINGFORMAT)); }
 			virtual int maxFrequency () const override
 								{ return (_SOUNDSAMPLINGCLOCK >> 1); }
 			virtual unsigned char numberChannels () const override
@@ -103,7 +103,11 @@ namespace ZXSPECTRUM
 		/** 44, 1MHz (more or less standard in current sound cards) */
 		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
 		/** 8 bits sound data, very simple nothing complicated... */
+#if MCHEMUL_SDL_VERSION == 2
 		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
+#elif MCHEMUL_SDL_VERSION == 3
+		static const unsigned short _SOUNDSAMPLINGFORMAT	= SDL_AUDIO_U8;
+#endif
 		/** Number of channels.. */
 		static const unsigned char _SOUNDCHANNELS			= 1;
 
@@ -223,6 +227,15 @@ namespace ZXSPECTRUM
 			This method does not advance clocks or stop the CPU. */
 		void notifyContention ();
 
+		private:
+		unsigned int mapRGBA (
+			unsigned char r, unsigned char g, unsigned char b, unsigned char a) const
+#if MCHEMUL_SDL_VERSION == 2
+							{ return (SDL_MapRGBA (_format, r, g, b, a)); }
+#elif MCHEMUL_SDL_VERSION == 3
+							{ return (SDL_MapRGBA (_format, nullptr, r, g, b, a)); }
+#endif
+
 		protected:
 		virtual void processEvent (const MCHEmul::Event& evnt, MCHEmul::Notifier* n) override;
 
@@ -338,7 +351,11 @@ namespace ZXSPECTRUM
 		unsigned int _lastCPUCycles;
 		/** The format used to draw. 
 			It has to be the same that is used by the Screen object. */
-		SDL_PixelFormat* _format;
+#if MCHEMUL_SDL_VERSION == 2
+		SDL_PixelFormat* _format; // Owned.
+#elif MCHEMUL_SDL_VERSION == 3
+		const SDL_PixelFormatDetails* _format; // Shared, owned by SDL.
+#endif
 
 		/** The events that can be drawn
 			associated to the movement of the raster line. */

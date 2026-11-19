@@ -68,7 +68,7 @@ namespace MCHEmul
 		int samplingFrecuency () const
 							{ return (maxFrequency () << 1); }
 		unsigned char sampleSize () const
-							{ return ((type () & 0x00ff) >> 3); } // From the type always... (@see format of SDL_AudioSpec)
+							{ return ((unsigned char) (SDL_AUDIO_BITSIZE (type ()) >> 3)); }
 		virtual unsigned char numberChannels () const = 0;
 		// The theoretical number of elements of the buffer (frequency * channels * sampleSize) is divided by 10...
 		// ..meaning that the buffer will be filled 100 times per second to guaranttee the continuity of the sound!...

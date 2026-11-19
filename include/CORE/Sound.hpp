@@ -73,6 +73,16 @@ namespace MCHEmul
 		virtual void processEvent (const Event& evnt, Notifier* n) override;
 
 		private:
+#if MCHEMUL_SDL_VERSION == 2
+		bool openAudioSDL2 ();
+		bool initializeAudioSDL2 (size_t& normalBufferCapacity);
+		bool queueSoundSDL2 ();
+#elif MCHEMUL_SDL_VERSION == 3
+		bool openAudioSDL3 ();
+		bool initializeAudioSDL3 (size_t& normalBufferCapacity);
+		bool queueSoundSDL3 ();
+#endif
+
 		/** Completes a sound block with the requested number of additional bytes. \n
 			The buffer is modified in place and the returned value is its final valid
 			size. No data is added unless _addAdditionalSoundData is true. \n
@@ -101,17 +111,25 @@ namespace MCHEmul
 		/** To indicate that the sounds at chip level are ready
 			and the soundc ard can be actualized. */
 		bool _soundReady;
-		/** The audio data. */
+		/** SDL2 owns this device directly. SDL3's playback stream owns it. */
 		SDL_AudioDeviceID _deviceId;
+		/** SDL2's obtained output format, or SDL3's playback stream input format. */
 		SDL_AudioSpec _audioSpec;
-		/** To convert the sound data from the chip format to the sound card format when needed. \n
-			To identify whether the conversion of info is needed. */
+#if MCHEMUL_SDL_VERSION == 2
 		bool _conversionNeeded;
 		SDL_AudioCVT _conversionData;
-		/** Common sound buffer allocated during initialization and reused continuously. \n
-			It is used whether the source data needs conversion or not, and includes
-			unused room for the maximum delay that could be compensated later. */
+#elif MCHEMUL_SDL_VERSION == 3
+		/** Owned conversion stream: chip samples to SoundSystem output frames. */
+		SDL_AudioStream* _conversionStream;
+		/** Owned playback stream; destroying it also closes its device. */
+		SDL_AudioStream* _playbackStream;
+#endif
+		/** Reusable conversion workspace followed by the delay compensation area. */
 		std::vector <unsigned char> _conversionBuffer;
+		/** Bytes available for normal conversion, excluding compensation space. */
+		size_t _normalBufferCapacity;
+		/** Playback queue limit in bytes of the submitted audio format. */
+		size_t _maximumQueuedAudioBytes;
 
 		// Special parameters dedicated to adjust the buffer simulated...
 		/** The maximum delay allowed in the buffer. \n

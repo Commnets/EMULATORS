@@ -280,7 +280,12 @@ int VideoTests::run ()
 		model (static_cast <ZX81::Type> (t), true);
 	}
 	// Headless SDL prevents host windows; these checks only exercise CPU/memory/ULA state.
+#if MCHEMUL_SDL_VERSION == 2
 	SDL_setenv ("SDL_VIDEODRIVER", "dummy", 1);
+#elif MCHEMUL_SDL_VERSION == 3
+	SDL_SetEnvironmentVariable (
+		SDL_GetEnvironment (), "SDL_VIDEODRIVER", "dummy", true);
+#endif
 	for (unsigned int t = 0; t < 4; t++)
 	{
 		romMirrors (static_cast <ZX81::Type> (t), ZX81::Memory::Configuration::_NOEXPANDED);

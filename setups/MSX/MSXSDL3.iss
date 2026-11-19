@@ -2,44 +2,44 @@
 ; Copyright 2013 by Community Networks S.L.
 ; Ignacio Cea Forniés
 
-#define MyAppName "ZX81Emulator"
-#define MyAppExeName "ZX81Emulator.exe"
-#define MyProductName "Community Networks ZX81Emulator"
-#define MyProductInfo "Community Networks ZX81Emulator"
-#include "..\Commons\Commons.iss"
+#define MyAppName "MSXEmulator"
+#define MyAppExeName "MSXEmulator.exe"
+#define MyProductName "Community Networks MSXEmulator"
+#define MyProductInfo "Community Networks MSXEmulator"
+#include "..\Commons\CommonsSDL3.iss"
 
 [Setup]
-AppId={{801E5813-3CEE-4BE0-B0F1-CC823D9912A9}
-SetupIconFile=ZX81Logo.ico
-UninstallDisplayIcon={app}\ZX81Logo.ico
+AppId={{1496EB42-7A0D-4FB9-A451-8586E8BA567A}
+SetupIconFile=MSXLogo.ico
+UninstallDisplayIcon={app}\MSXLgo.ico
 
 [Files]
-Source: "ZX81EmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ZX81Emulator.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "RZX81Console.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSXEmulatorC.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSXEmulator.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "RMSXConsole.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Z80Compiler.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "TestZ80.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "bios/zx80.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/zx81_1.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/zx81_2.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "bios/zx81_3.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
-Source: "ZX81Emulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ZX81.hlp"; DestDir: "{app}"; Flags: ignoreversion
-Source: "SINCLAIR.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSXEmulator_UserGuide.docx"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSX.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TexasInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GeneralInstruments.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.hlp"; DestDir: "{app}"; Flags: ignoreversion
 Source: "console.def"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ZX81.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "SINCLAIR.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "MSX.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "TexasInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "GeneralInstruments.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "LocalConsole.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Standard.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Default.fmt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "PSBasicPrinter.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSThermalPrinterI.ps"; DestDir: "{app}"; Flags: ignoreversion
-Source: "PSThermalPrinterII.ps"; DestDir: "{app}"; Flags: ignoreversion
 Source: "blkFormatter.fmt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ZX80SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
-Source: "ZX81SysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "bios/svi728_basic-bios_ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/svi728_basic-bios_ESP.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/svi738_basic-bios_DEU.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/svi738_basic-bios_ENG.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "bios/svi738_basic-bios_SEW.rom"; DestDir: "{app}/bios"; Flags: ignoreversion
+Source: "MSXSysVars.txt"; DestDir: "{app}"; Flags: ignoreversion
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"

@@ -37,7 +37,11 @@ namespace COMMODORE
 		// 44,1MHz (more or less standard in current sound cards)
 		static const unsigned int _SOUNDSAMPLINGCLOCK		= 44100;
 		// 8 bits sound data, very simple nothing complicated...
+#if MCHEMUL_SDL_VERSION == 2
 		static const unsigned short _SOUNDSAMPLINGFORMAT	= AUDIO_U8;
+#elif MCHEMUL_SDL_VERSION == 3
+		static const unsigned short _SOUNDSAMPLINGFORMAT	= SDL_AUDIO_U8;
+#endif
 		// Number of channels..
 		static const unsigned char _SOUNDCHANNELS			= 1;
 
@@ -55,7 +59,7 @@ namespace COMMODORE
 
 		/** The main characteristics of the SID. */
 		virtual SDL_AudioFormat type () const override
-							{ return (_SOUNDSAMPLINGFORMAT); }
+							{ return (static_cast <SDL_AudioFormat> (_SOUNDSAMPLINGFORMAT)); }
 		virtual int maxFrequency () const override
 							{ return (_SOUNDSAMPLINGCLOCK >> 1); }
 		virtual unsigned char numberChannels () const override
