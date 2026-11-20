@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project>
   <PropertyGroup Label="EmulatorsDependencySelection">
-    <!-- SDL2 remains the default until the SDL3 migration is complete. -->
-    <EmulatorsSDLVersion Condition="'$(EmulatorsSDLVersion)' == ''">2</EmulatorsSDLVersion>
+    <!-- Select one SDL version for a complete clean rebuild of the solution. -->
+    <EmulatorsSDLVersion Condition="'$(EmulatorsSDLVersion)' == ''">3</EmulatorsSDLVersion>
   </PropertyGroup>
   <PropertyGroup Label="EmulatorsRuntimeDeployment">
     <!-- Runtime DLLs are deployed manually. -->

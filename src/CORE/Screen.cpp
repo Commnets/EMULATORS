@@ -1,6 +1,7 @@
 #include <CORE/Screen.hpp>
 #include <CORE/GraphicalChip.hpp>
 #include <CORE/SDLImage.hpp>
+#include <cmath>
 #include <limits>
 
 // ---
@@ -34,13 +35,57 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 	_window = SDL_CreateWindow (
 		_screenName.c_str (),
 		(int) ((double) _screenColumns * _visibilityFactorX),
-		(int) ((double) _screenRows * _visibilityFactorY), SDL_WINDOW_RESIZABLE);
+		(int) ((double) _screenRows * _visibilityFactorY),
+		SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIDDEN);
 #endif
 	if (_window == nullptr)
 	{
 		_error = MCHEmul::_INIT_ERROR;
 		return;
 	}
+
+#if MCHEMUL_SDL_VERSION == 3
+	SDL_DisplayID display = SDL_GetDisplayForWindow (_window);
+	float displayScale = SDL_GetWindowDisplayScale (_window);
+	if (display == 0 || displayScale <= 0.0f)
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return;
+	}
+
+	// Apply the desktop scale once, keeping the emulator's own zoom unchanged.
+	double width = std::round (
+		(double) _screenColumns * _visibilityFactorX * (double) displayScale);
+	double height = std::round (
+		(double) _screenRows * _visibilityFactorY * (double) displayScale);
+
+	if (!std::isfinite (width) || !std::isfinite (height) ||
+		width < 1.0 || height < 1.0 ||
+		width > (double) std::numeric_limits <int>::max () ||
+		height > (double) std::numeric_limits <int>::max ())
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return;
+	}
+
+	if (!SDL_SetWindowSize (_window, (int) width, (int) height))
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return;
+	}
+
+	// Center the final size on the display whose scale was used above.
+	if (!SDL_SetWindowPosition (_window,
+			SDL_WINDOWPOS_CENTERED_DISPLAY (display), SDL_WINDOWPOS_CENTERED_DISPLAY (display)))
+	{
+		_error = MCHEmul::_INIT_ERROR;
+
+		return;
+	}
+#endif
 
 #if MCHEMUL_SDL_VERSION == 2
 	_renderer = SDL_CreateRenderer (_window, -1, SDL_RENDERER_ACCELERATED);
@@ -88,7 +133,16 @@ MCHEmul::Screen::Screen (const std::string& n, int id,
 #endif
 
 	if (!result)
+	{
 		_error = MCHEmul::_INIT_ERROR;
+
+		return;
+	}
+
+#if MCHEMUL_SDL_VERSION == 3
+	if (!SDL_ShowWindow (_window))
+		_error = MCHEmul::_INIT_ERROR;
+#endif
 }
 
 // ---

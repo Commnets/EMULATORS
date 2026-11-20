@@ -28,9 +28,9 @@
     23
   ],
   "template_sha256": "5e17d131537a43c7f893b3e9cb064ee4049fc3bf498828e9ace3163d486b822d",
-  "document_sha256": "3c47d4c2aa32540aeec12623b231c6512130a6ccfb285041b5eeac300625fe47",
+  "document_sha256": "4901399011ef6aaf8ad556e3742892193113df00990f2be0165be361937985a4",
   "fields_updated_with": "Microsoft Word",
   "rendered_with": "Microsoft Word PDF export and Poppler",
-  "compile_or_runtime_test_performed": false,
-  "scope": "Synchronize all.bat SDLVERSION with the evaluated EmulatorsSDLVersion in Directory.Build.props; isolated tool discovery and failure tests without deployment."
+  "compile_or_runtime_test_performed": true,
+  "scope": "SDL3 initial window centered after applying DPI size on the same display. Debug x86 solution build and SDL2 Screen.cpp syntax check passed. Actual Screen runtime probe measured scale 2.50, size 1920x1370 and centered position 960,395 matching the expected monitor center."
 }

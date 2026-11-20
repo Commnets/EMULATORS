@@ -2,7 +2,7 @@
 
 This guide is for a developer who has downloaded EMULATORS and wants to configure Windows, build the framework and start an emulator manually. It follows the repository projects and the dependency layout used by the maintained development environment. No AI agent or automated installation service is required.
 
-Start with SDL2 and Debug x86. SDL2 is the working baseline. The shared build configuration can select SDL3 headers and libraries, but the application code still requires a separate SDL3 API migration. Selecting SDL3 or passing dependency validation is not evidence that a complete SDL3 emulator can be built or run.
+The repository now selects SDL3 by default. Start with Debug x86 and prepare the SDL3 dependencies described below. The framework contains separate SDL2 and SDL3 implementations selected at compile time. SDL2 remains available by selecting version 2 and rebuilding the whole solution. Dependency validation, successful linking and functional emulator testing are separate checks; complete the first-run checks for your own build.
 
 Commands assume PowerShell in the repository root unless a different directory is stated. Replace example installation roots with your own paths. Build dependencies must match the executable architecture. The 64-bit Visual Studio application can build the required 32-bit binaries.
 
@@ -10,12 +10,12 @@ Commands assume PowerShell in the repository root unless a different directory i
 
 1. Install Visual Studio 2022 with Desktop development with C++, the MSVC v143 x86/x64 tools and a Windows 10 or 11 SDK.
 2. Extract the complete framework, including Directory.Build.props, Directory.Build.targets, build, include, src, projects, thirdparties and the machine resource folders.
-3. Prepare the SDL2 dependencies listed in External dependencies. Supply Debug import libraries and DLLs with the expected trailing D names.
+3. Prepare the SDL3 dependencies listed in External dependencies. SDL3 Debug import libraries and DLLs retain their installed names without a trailing D.
 4. Prepare RakNet and set RAKNET_HOME. Resolve the additional test-only JSON include path if you build the entire solution.
-5. Define the five SDL2 environment variables. Restart Visual Studio and your developer shell after changing environment variables.
-6. Keep EmulatorsSDLVersion set to 2. Open Emulators.sln and select Debug and x86 at solution level.
+5. Define the five SDL3 environment variables. Restart Visual Studio and your developer shell after changing environment variables.
+6. Keep EmulatorsSDLVersion set to 3. Open Emulators.sln and select Debug and x86 at solution level.
 7. Run the validation target for C64EmulatorC. Resolve every reported missing dependency before building.
-8. Build the solution. Prepare the C64 execution folder with the new executable, matching DLLs, bios directory and formatter resources.
+8. Clean and rebuild the entire solution, especially when replacing an SDL2 build. Prepare the C64 execution folder with the new executable, matching DLLs, bios directory and formatter resources.
 9. Start C64EmulatorCD.exe from that execution folder. Enter RUN in its console and confirm that the machine reaches its BASIC startup screen.
 
 The following chapters give the exact variables, filenames, commands and checks needed for these steps. A prebuilt executable included in a download is not a substitute for the executable produced by your own build.
@@ -103,19 +103,19 @@ dumpbin /dependents "$env:SDLIMAGE_HOME\VisualC\Win32\Debug\SDL2_imageD.dll"
 
 Repeat for mixer only if enabling its link option in future development. The mixer binary paths above describe the optional binary layout; current projects need its header, not its import library or DLL. Keep the codec DLLs required by the image formats actually used. They may be loaded dynamically. Gfx needs its four public headers in its root, and legacy ttf needs SDL_ttf.h in its root. Building their DLLs is only necessary when their functions are actually linked or deployed.
 
-## Prepare SDL3 dependencies when needed
+## Prepare SDL3 dependencies
 
 SDL3 uses include/SDL3/SDL.h. Image, mixer and ttf use include/SDL3_image, include/SDL3_mixer and include/SDL3_ttf. The gfx port has SDL3_gfxPrimitives.h, SDL3_framerate.h, SDL3_imageFilter.h and SDL3_rotozoom.h in its root.
 
 The configured SDL3 import libraries are SDL3.lib, SDL3_image.lib and SDL3_mixer.lib in both Debug and Release. Keep the names produced by these installations. Place the binaries under VisualC/Win32/Debug or VisualC/Win32/Release as appropriate. If your build system emits another layout, stage the matching headers and binaries into the expected layout or deliberately update the shared properties. Do not alter the framework executable naming convention to match the dependency names.
 
-Prepare SDL3 dependencies for validation and later migration work. Continue using SDL2 for a first complete framework build.
+Prepare SDL3 dependencies before the default framework build. SDL3 Debug and Release use the same DLL filenames; select binaries from the directory matching your configuration and architecture.
 
 ## RakNet and bundled third party code
 
 The reference RakNet installation is 4.081. RAKNET_HOME points to its root, with Source containing headers and Lib containing the import libraries and runtime DLLs. The upstream archive is S8. An arbitrary current checkout is not guaranteed to produce the historical filenames expected by this framework.
 
-For an equivalent source build, open RakNet_VS2008.sln, convert the required DLL project to the installed toolset, select Win32 and build that project rather than every sample. Supply these outputs under RAKNET_HOME/Lib:
+For a source build, open RakNet_VS2008.sln, retarget the required DLL project to the installed toolset and build it in Win32. The samples are not required. Supply these outputs under RAKNET_HOME/Lib:
 
 ```text
 RakNet_VS2008_DLL_Debug_Win32.lib
@@ -132,7 +132,7 @@ The repository includes thirdparties/resid and its RESID.vcxproj. Build it throu
 
 TestInst6500 includes nlohmann/json.hpp. Its vcxproj currently contains the absolute include path C:\Workspaces\CPPTOOLS\json-develop\include. Obtain the nlohmann JSON headers from S9 and either provide that layout or change this include path in all affected configurations to your installation. The emulator itself does not require that test-specific absolute directory. Do not remove all tests from the solution merely to conceal a missing prerequisite.
 
-CORE contains an optional import of packages/Microsoft.Windows.CppWinRT.2.0.220531.1/build/native/Microsoft.Windows.CppWinRT.props, guarded by Exists. Preserve an existing package folder. If additional project requirements in your checkout request it, restore the indicated NuGet package through Visual Studio. The optional import alone is not evidence that every source build needs that package restored.
+CORE optionally imports packages/Microsoft.Windows.CppWinRT.2.0.220531.1/build/native/Microsoft.Windows.CppWinRT.props when it exists. Preserve existing packages; restore this NuGet package through Visual Studio only if your checkout requires it.
 
 Inno Setup is needed only to build installers. The current distribution script invokes Inno Setup 6 from C:\Program Files (x86)\Inno Setup 6\iscc. Check or adapt that path to your installation before packaging. Source S10 provides the upstream installer and documentation.
 
@@ -157,8 +157,8 @@ The variable names are exact. SDLIMAGE_HOME is not SDL_IMAGEHOME, and SDL3_HOME 
 ```powershell
 Get-ChildItem Env:SDL*
 Get-Item Env:RAKNET_HOME
-Test-Path "$env:SDL_HOME\include\SDL.h"
-Test-Path "$env:SDL_HOME\VisualC\Win32\Debug\SDL2D.lib"
+Test-Path "$env:SDL3_HOME\include\SDL3\SDL.h"
+Test-Path "$env:SDL3_HOME\VisualC\Win32\Debug\SDL3.lib"
 Test-Path "$env:RAKNET_HOME\Source\RakPeerInterface.h"
 Test-Path "$env:RAKNET_HOME\Lib\RakNet_VS2008_DLL_Debug_Win32.lib"
 ```
@@ -175,7 +175,7 @@ Keep codec DLLs out of Windows system directories. Debug binaries require the Vi
 
 ## The selector and its propagation
 
-Directory.Build.props defines EmulatorsSDLVersion as 2 unless a value was already supplied. Set it to 2 or 3, or pass /p:EmulatorsSDLVersion=3 to an individual MSBuild command. Use the same value for every project and every command involved in one build.
+Directory.Build.props defines EmulatorsSDLVersion as 3 unless a value was already supplied. Set it to 2 or 3, or pass /p:EmulatorsSDLVersion=2 to build the SDL2 backend explicitly. Use the same value for every project and every command involved in one build.
 
 Each integrated vcxproj imports build/SDL.props. That sheet chooses dependency roots, fills EmulatorsSDLIncludeDirectories and resolves the import-library list. It also supplies MCHEMUL_SDL_VERSION through ClCompile PreprocessorDefinitions. The compiler therefore receives /DMCHEMUL_SDL_VERSION=2 or 3 for every source file inheriting that metadata.
 
@@ -261,13 +261,13 @@ The target checks the selector, dependency roots and concrete header files. It c
 
 Directory.Build.targets imports this target automatically. It runs before PrepareForBuild and is skipped for Visual Studio design-time builds and projects not importing SDL.props. Success proves file presence, not binary architecture, ABI compatibility, complete source compilation or runtime resolution. It does not validate RakNet, ROMs or DLLs.
 
-## Compile the working SDL2 baseline
+## Compile the selected SDL backend
 
 Open Emulators.sln. In Configuration Manager select Debug and x86. Ensure the required library projects, RESID and the emulator are enabled for build. Use Build Solution. For a clean command-line build:
 
 ```powershell
 msbuild Emulators.sln /t:Rebuild `
-  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=2
+  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=3
 ```
 
 Use the solution to build dependencies in their declared order. An individual executable vcxproj may also depend on libraries supplied through solution dependencies; building it alone from a clean checkout is not a substitute for the complete solution build.
@@ -285,12 +285,16 @@ Output directories remain shared between SDL2 and SDL3 by design. When changing 
 
 ```powershell
 msbuild Emulators.sln /t:Clean `
-  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=2
+  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=3
 msbuild Emulators.sln /t:Rebuild `
-  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=2
+  /p:Configuration=Debug /p:Platform=x86 /p:EmulatorsSDLVersion=3
 ```
 
-Retain SDL2 for normal use until the SDL3 API migration is complete. A successful SDL3 dependency check does not remove that requirement.
+The examples above select SDL3. To return to SDL2, use version 2 for both commands and replace the runtime DLL set manually. Rebuild the whole framework; an existing executable or import library may belong to the previous backend. The six emulator entry-point files include SDL3/SDL_main.h only for their Windows-subsystem branch; console entry points remain native. SDL3 does not use an SDLmain import library. Debug console startup does not validate the Windows-subsystem startup used by Release.
+
+SDL3 sizes the initial window using the emulator's visibility factors and SDL_GetWindowDisplayScale for the monitor where the window is created. It creates the window hidden, requests the scaled size, centers it on that same monitor and shows it after renderer setup. On Windows at 250 percent, a 384 by 274 framebuffer with a twofold visibility factor requests a 1920 by 1370 client area. Logical rendering resolution stays unchanged. Manual resizing remains available; moving between monitors does not automatically resize the window. SDL2 retains its previous behavior.
+
+Functional verification remains necessary after switching: check video, resizing, audio, keyboard, joystick assignments, captures, injected keystrokes and shutdown. ZX81 and ZX Spectrum regression tests have known SDL2 execution failures; a passing build does not mean those regression suites pass. Keep their results separate from new SDL3 runtime checks.
 
 # First run with C64
 
@@ -326,10 +330,10 @@ If the downloaded archive does not contain those images, supply the exact matchi
 
 ## Place the Debug runtime DLLs
 
-For SDL2 Debug Win32, copy SDL2D.dll and SDL2_imageD.dll from their corresponding VisualC/Win32/Debug directories. Copy the auxiliary codec DLLs required by image as well. Copy RakNet_VS2008_DLL_Debug_Win32.dll from RAKNET_HOME/Lib. Current projects do not link SDL_mixer and do not require its DLL for framework audio.
+For SDL3 Debug Win32, copy SDL3.dll and SDL3_image.dll from their corresponding VisualC/Win32/Debug directories. Copy the auxiliary codec DLLs required by image as well. Copy RakNet_VS2008_DLL_Debug_Win32.dll from RAKNET_HOME/Lib. Current projects do not link SDL_mixer and do not require its DLL for framework audio. For an SDL2 build, instead use SDL2D.dll and SDL2_imageD.dll from the SDL2 roots.
 
 ```powershell
-foreach ($root in $env:SDL_HOME,$env:SDLIMAGE_HOME) {
+foreach ($root in $env:SDL3_HOME,$env:SDL3IMAGE_HOME) {
   Get-ChildItem "$root\VisualC\Win32\Debug" -Filter '*.dll' -File |
     Copy-Item -Destination $run -Force
 }
@@ -337,7 +341,7 @@ Copy-Item "$env:RAKNET_HOME\Lib\RakNet_VS2008_DLL_Debug_Win32.dll" `
   $run -Force
 ```
 
-Inspect duplicate filenames if your dependency packages contain multiple copies of SDL core. Use the core DLL from SDL_HOME as the authority and restore it after extension copies if necessary. The gfx and ttf functions are not currently linked, so including their headers alone does not require their DLLs.
+Inspect duplicate filenames if your dependency packages contain multiple copies of SDL core. Use the core DLL from SDL3_HOME as the authority for SDL3 builds and restore it after extension copies if necessary. For SDL2 use SDL_HOME. The gfx and ttf functions are not currently linked, so including their headers alone does not require their DLLs.
 
 ## Launch and verify
 
